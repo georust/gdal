@@ -4,6 +4,8 @@ use std::vec::Vec;
 use std::io::net::ip::{SocketAddr, Ipv4Addr};
 use std::io::Writer;
 use http::server::{Config, Server, Request, ResponseWriter};
+use http::server::request::AbsolutePath;
+use http::status::NotFound;
 use http::headers;
 
 
@@ -27,14 +29,26 @@ impl Server for TileServer {
         }
     }
 
-    fn handle_request(&self, _r: &Request, w: &mut ResponseWriter) {
+    fn handle_request(&self, r: &Request, w: &mut ResponseWriter) {
         w.headers.content_type = Some(headers::content_type::MediaType {
             type_: ~"text",
             subtype: ~"html",
             parameters: Vec::new(),
         });
 
-        w.write(bytes!("Hello world!\n")).unwrap();
+        match r.request_uri {
+            AbsolutePath(ref url) => {
+                if url == &~"/" {
+                    w.write(index_html.as_bytes()).unwrap();
+                    return;
+                }
+            },
+            _ => {}
+        };
+
+        w.status = NotFound;
+        w.write("Page not found :(\n".as_bytes()).unwrap();
+
     }
 }
 
@@ -42,3 +56,9 @@ impl Server for TileServer {
 fn main() {
     TileServer.serve_forever();
 }
+
+
+static index_html: &'static str = "<!doctype html>\
+<meta charset='utf-8'>\n\
+Hello world!\n\
+";
