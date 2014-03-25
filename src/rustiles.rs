@@ -60,5 +60,17 @@ fn main() {
 
 static index_html: &'static str = "<!doctype html>\
 <meta charset='utf-8'>\n\
-Hello world!\n\
+<link rel='stylesheet' href='//cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.2/leaflet.css'>\n\
+<style>
+html, body, #map { margin: 0; height: 100%; }
+</style>
+<div id='map'></div>
+<script src='//cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.2/leaflet.js'></script>\n\
+<script>
+var map = L.map('map').setView([51.505, -0.09], 13);
+L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+  attribution: '&copy; <a href=\\'http://osm.org/copyright\\'>' +
+               'OpenStreetMap</a> contributors'
+}).addTo(map);
+</script>
 ";
