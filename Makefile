@@ -8,10 +8,10 @@ build/testsuite: src/rustiles.rs
 	mkdir -p build
 	$(RUSTC) --test -o build/testsuite src/rustiles.rs
 
-test: build/testsuite
+check: build/testsuite
 	./build/testsuite
 
 clean:
 	rm -rf build
 
-.PHONY: test clean
+.PHONY: check clean
