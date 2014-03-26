@@ -60,6 +60,7 @@ fn main() {
 
 static index_html: &'static str = "<!doctype html>\
 <meta charset='utf-8'>\n\
+<title>RusTiles demo</title>\n\
 <link rel='stylesheet' href='//cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.2/leaflet.css'>\n\
 <style>
 html, body, #map { margin: 0; height: 100%; }
