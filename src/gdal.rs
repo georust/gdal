@@ -34,12 +34,10 @@ pub fn open(path: &Path) -> Option<Dataset> {
     let c_dataset = filename.with_c_str(|c_filename| {
         return unsafe { GDALOpen(c_filename, GA_ReadOnly) };
     });
-    if c_dataset.is_null() {
-        return None;
-    }
-    else {
-        return Some(Dataset{c_dataset: c_dataset});
-    }
+    return match c_dataset.is_null() {
+        true  => None,
+        false => Some(Dataset{c_dataset: c_dataset}),
+    };
 }
 
 
