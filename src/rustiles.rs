@@ -8,6 +8,9 @@ use http::server::request::AbsolutePath;
 use http::status::NotFound;
 use http::headers;
 
+mod gdal;
+
+
 
 #[test]
 fn test_nothing() {

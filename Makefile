@@ -1,13 +1,17 @@
 RUSTC ?= rustc
 RUSTFLAGS ?=
 
-rustiles: src/rustiles.rs
+src_files=\
+	        src/rustiles.rs \
+	        src/gdal.rs
+
+rustiles: $(src_files)
 	mkdir -p build
 	$(RUSTC) $(RUSTFLAGS) -o build/rustiles src/rustiles.rs
 
-build/testsuite: src/rustiles.rs
+build/testsuite: $(src_files)
 	mkdir -p build
-	$(RUSTC) $(RUSTFLAGS) --test -o build/testsuite src/rustiles.rs
+	$(RUSTC) $(RUSTFLAGS) -A dead_code --test -o build/testsuite src/rustiles.rs
 
 check: build/testsuite
 	./build/testsuite
