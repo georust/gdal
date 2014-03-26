@@ -14,7 +14,7 @@ build/testsuite: $(src_files)
 	$(RUSTC) $(RUSTFLAGS) -A dead_code --test -o build/testsuite src/rustiles.rs
 
 check: build/testsuite
-	./build/testsuite
+	RUSTILES_TEST_FIXTURES=`pwd`/fixtures ./build/testsuite
 
 clean:
 	rm -rf build

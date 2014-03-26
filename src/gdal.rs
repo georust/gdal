@@ -1,11 +1,23 @@
 use std::libc;
 use std::str::raw;
+use std::os::getenv;
+use std::path::Path;
+use std::ptr;
+
+
+struct Dataset {
+    c_dataset: *int,
+}
 
 
 #[link(name = "gdal")]
 extern {
     fn GDALVersionInfo(key: *libc::c_char) -> *libc::c_char;
+    fn GDALOpen(pszFilename: *libc::c_char, eAccess: int) -> *int;
+    fn GDALAllRegister();
 }
+static GA_ReadOnly: int = 0;
+static GA_Update: int = 1;
 
 
 pub fn version_info(key: &str) -> ~str {
@@ -13,6 +25,21 @@ pub fn version_info(key: &str) -> ~str {
         return unsafe { raw::from_c_str(GDALVersionInfo(c_key)) };
     });
     return info;
+}
+
+
+pub fn open(path: &Path) -> Option<Dataset> {
+    unsafe { GDALAllRegister(); }  // TODO call once
+    let filename = path.as_str().unwrap();
+    let c_dataset = filename.with_c_str(|c_filename| {
+        return unsafe { GDALOpen(c_filename, GA_ReadOnly) };
+    });
+    if c_dataset.is_null() {
+        return None;
+    }
+    else {
+        return Some(Dataset{c_dataset: c_dataset});
+    }
 }
 
 
@@ -27,4 +54,25 @@ fn test_version_info() {
         release_date.slice(4, 6) + "/" + release_date.slice(6, 8);
 
     assert_eq!(version_text.into_owned(), expected_text);
+}
+
+
+fn fixture_path(name: &str) -> Path {
+    let envvar = "RUSTILES_TEST_FIXTURES";
+    let fixtures = match getenv(envvar) {
+        Some(p) => Path::new(p),
+        None => fail!("Environment variable {} not set", envvar)
+    };
+    let rv = fixtures.join(name);
+    return rv;
+}
+
+
+#[test]
+fn test_open() {
+    let dataset = open(&fixture_path("tinymarble.jpeg"));
+    assert!(dataset.is_some());
+
+    let missing_dataset = open(&fixture_path("no_such_file.jpeg"));
+    assert!(missing_dataset.is_none());
 }
