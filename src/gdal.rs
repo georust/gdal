@@ -2,22 +2,22 @@ use std::libc;
 use std::str::raw;
 use std::os::getenv;
 use std::path::Path;
-use std::ptr;
+use std::libc::c_int;
 
 
 struct Dataset {
-    c_dataset: *int,
+    c_dataset: *(),
 }
 
 
 #[link(name = "gdal")]
 extern {
     fn GDALVersionInfo(key: *libc::c_char) -> *libc::c_char;
-    fn GDALOpen(pszFilename: *libc::c_char, eAccess: int) -> *int;
+    fn GDALOpen(pszFilename: *libc::c_char, eAccess: c_int) -> *();
     fn GDALAllRegister();
 }
-static GA_ReadOnly: int = 0;
-static GA_Update: int = 1;
+static GA_ReadOnly: c_int = 0;
+static GA_Update: c_int = 1;
 
 
 pub fn version_info(key: &str) -> ~str {
