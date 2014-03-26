@@ -1,8 +1,7 @@
-use std::libc;
 use std::str::raw;
 use std::os::getenv;
 use std::path::Path;
-use std::libc::c_int;
+use std::libc::{c_int, c_char};
 
 
 struct Dataset {
@@ -12,8 +11,8 @@ struct Dataset {
 
 #[link(name = "gdal")]
 extern {
-    fn GDALVersionInfo(key: *libc::c_char) -> *libc::c_char;
-    fn GDALOpen(pszFilename: *libc::c_char, eAccess: c_int) -> *();
+    fn GDALVersionInfo(key: *c_char) -> *c_char;
+    fn GDALOpen(pszFilename: *c_char, eAccess: c_int) -> *();
     fn GDALAllRegister();
 }
 static GA_ReadOnly: c_int = 0;
