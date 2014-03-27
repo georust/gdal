@@ -4,20 +4,6 @@ use std::path::Path;
 use std::libc::{c_int, c_char};
 use sync::mutex::{StaticMutex, MUTEX_INIT};
 
-static mut LOCK: StaticMutex = MUTEX_INIT;
-
-static mut registered_drivers: bool = false;
-
-
-struct Dataset {
-    c_dataset: *(),
-}
-
-
-struct Driver {
-    c_driver: *(),
-}
-
 
 #[link(name = "gdal")]
 extern {
@@ -35,9 +21,13 @@ extern {
     fn GDALGetDriverShortName(hDriver: *()) -> *c_char;
     fn GDALGetDriverLongName(hDriver: *()) -> *c_char;
 }
+
 static GA_ReadOnly: c_int = 0;
 static GA_Update: c_int = 1;
 
+
+static mut LOCK: StaticMutex = MUTEX_INIT;
+static mut registered_drivers: bool = false;
 
 fn register_drivers() {
     unsafe {
@@ -61,16 +51,8 @@ pub fn version_info(key: &str) -> ~str {
 }
 
 
-pub fn open(path: &Path) -> Option<Dataset> {
-    register_drivers();
-    let filename = path.as_str().unwrap();
-    let c_dataset = filename.with_c_str(|c_filename| {
-        return unsafe { GDALOpen(c_filename, GA_ReadOnly) };
-    });
-    return match c_dataset.is_null() {
-        true  => None,
-        false => Some(Dataset{c_dataset: c_dataset}),
-    };
+struct Dataset {
+    c_dataset: *(),
 }
 
 
@@ -112,15 +94,21 @@ impl Dataset {
 }
 
 
-pub fn get_driver(name: &str) -> Option<Driver> {
+pub fn open(path: &Path) -> Option<Dataset> {
     register_drivers();
-    let c_driver = name.with_c_str(|c_name| {
-        return unsafe { GDALGetDriverByName(c_name) };
+    let filename = path.as_str().unwrap();
+    let c_dataset = filename.with_c_str(|c_filename| {
+        return unsafe { GDALOpen(c_filename, GA_ReadOnly) };
     });
-    return match c_driver.is_null() {
+    return match c_dataset.is_null() {
         true  => None,
-        false => Some(Driver{c_driver: c_driver}),
+        false => Some(Dataset{c_dataset: c_dataset}),
     };
+}
+
+
+struct Driver {
+    c_driver: *(),
 }
 
 
@@ -138,6 +126,18 @@ impl Driver {
             return raw::from_c_str(rv);
         }
     }
+}
+
+
+pub fn get_driver(name: &str) -> Option<Driver> {
+    register_drivers();
+    let c_driver = name.with_c_str(|c_name| {
+        return unsafe { GDALGetDriverByName(c_name) };
+    });
+    return match c_driver.is_null() {
+        true  => None,
+        false => Some(Driver{c_driver: c_driver}),
+    };
 }
 
 
