@@ -22,6 +22,8 @@ extern {
     fn GDALGetRasterXSize(hDataset: *()) -> c_int;
     fn GDALGetRasterYSize(hDataset: *()) -> c_int;
     fn GDALGetRasterCount(hDataset: *()) -> c_int;
+    fn GDALGetProjectionRef(hDS: *()) -> *c_char;
+    fn GDALSetProjection(hDS: *(), pszProjection: *c_char) -> c_int;
     fn GDALAllRegister();
 }
 static GA_ReadOnly: c_int = 0;
@@ -87,6 +89,22 @@ impl Dataset {
             return GDALGetRasterCount(self.c_dataset) as int;
         }
     }
+
+    pub fn get_projection(&self) -> ~str {
+        unsafe {
+            let _g = LOCK.lock();
+            return raw::from_c_str(GDALGetProjectionRef(self.c_dataset));
+        }
+    }
+
+    pub fn set_projection(&self, projection: &str) {
+        projection.with_c_str(|c_projection| {
+            unsafe {
+                let _g = LOCK.lock();
+                GDALSetProjection(self.c_dataset, c_projection);
+            }
+        });
+    }
 }
 
 
@@ -139,4 +157,13 @@ fn test_get_raster_count() {
     let dataset = open(&fixture_path("tinymarble.jpeg")).unwrap();
     let count = dataset.get_raster_count();
     assert_eq!(count, 3);
+}
+
+
+#[test]
+fn test_get_projection() {
+    let dataset = open(&fixture_path("tinymarble.jpeg")).unwrap();
+    //dataset.set_projection("WGS84");
+    let projection = dataset.get_projection();
+    assert_eq!(projection.slice(0, 16), "GEOGCS[\"WGS 84\",");
 }
