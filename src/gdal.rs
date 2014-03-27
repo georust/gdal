@@ -132,6 +132,7 @@ impl Dataset {
 
 
 pub fn get_driver(name: &str) -> Option<Driver> {
+    register_drivers();
     let c_driver = name.with_c_str(|c_name| {
         unsafe {
             let _g = LOCK.lock();
