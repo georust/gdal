@@ -21,6 +21,7 @@ extern {
     fn GDALClose(hDS: *());
     fn GDALGetRasterXSize(hDataset: *()) -> c_int;
     fn GDALGetRasterYSize(hDataset: *()) -> c_int;
+    fn GDALGetRasterCount(hDataset: *()) -> c_int;
     fn GDALAllRegister();
 }
 static GA_ReadOnly: c_int = 0;
@@ -79,6 +80,13 @@ impl Dataset {
             return (size_x, size_y);
         }
     }
+
+    pub fn get_raster_count(&self) -> int {
+        unsafe {
+            let _g = LOCK.lock();
+            return GDALGetRasterCount(self.c_dataset) as int;
+        }
+    }
 }
 
 
@@ -123,4 +131,12 @@ fn test_get_raster_size() {
     let (size_x, size_y) = dataset.get_raster_size();
     assert_eq!(size_x, 100);
     assert_eq!(size_y, 50);
+}
+
+
+#[test]
+fn test_get_raster_count() {
+    let dataset = open(&fixture_path("tinymarble.jpeg")).unwrap();
+    let count = dataset.get_raster_count();
+    assert_eq!(count, 3);
 }
