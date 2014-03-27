@@ -39,6 +39,17 @@ static GA_ReadOnly: c_int = 0;
 static GA_Update: c_int = 1;
 
 
+fn register_drivers() {
+    unsafe {
+        let _g = LOCK.lock();
+        if ! registered_drivers {
+            GDALAllRegister();
+            registered_drivers = true;
+        }
+    }
+}
+
+
 pub fn version_info(key: &str) -> ~str {
     let info = key.with_c_str(|c_key| {
         unsafe {
@@ -51,13 +62,7 @@ pub fn version_info(key: &str) -> ~str {
 
 
 pub fn open(path: &Path) -> Option<Dataset> {
-    unsafe {
-        let _g = LOCK.lock();
-        if ! registered_drivers {
-            GDALAllRegister();
-            registered_drivers = true;
-        }
-    }
+    register_drivers();
     let filename = path.as_str().unwrap();
     let c_dataset = filename.with_c_str(|c_filename| {
         unsafe {
