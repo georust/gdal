@@ -16,6 +16,7 @@ struct Dataset {
 extern {
     fn GDALVersionInfo(key: *c_char) -> *c_char;
     fn GDALOpen(pszFilename: *c_char, eAccess: c_int) -> *();
+    fn GDALClose(hDS: *());
     fn GDALAllRegister();
 }
 static GA_ReadOnly: c_int = 0;
@@ -50,6 +51,16 @@ pub fn open(path: &Path) -> Option<Dataset> {
         true  => None,
         false => Some(Dataset{c_dataset: c_dataset}),
     };
+}
+
+
+impl Drop for Dataset {
+    fn drop(&mut self) {
+        unsafe {
+            let _g = LOCK.lock();
+            GDALClose(self.c_dataset);
+        }
+    }
 }
 
 
