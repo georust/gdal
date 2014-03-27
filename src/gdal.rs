@@ -6,6 +6,8 @@ use sync::mutex::{StaticMutex, MUTEX_INIT};
 
 static mut LOCK: StaticMutex = MUTEX_INIT;
 
+static mut registered_drivers: bool = false;
+
 
 struct Dataset {
     c_dataset: *(),
@@ -36,9 +38,11 @@ pub fn version_info(key: &str) -> ~str {
 
 pub fn open(path: &Path) -> Option<Dataset> {
     unsafe {
-        // TODO call once
         let _g = LOCK.lock();
-        GDALAllRegister();
+        if ! registered_drivers {
+            GDALAllRegister();
+            registered_drivers = true;
+        }
     }
     let filename = path.as_str().unwrap();
     let c_dataset = filename.with_c_str(|c_filename| {
