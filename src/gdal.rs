@@ -19,6 +19,8 @@ extern {
     fn GDALVersionInfo(key: *c_char) -> *c_char;
     fn GDALOpen(pszFilename: *c_char, eAccess: c_int) -> *();
     fn GDALClose(hDS: *());
+    fn GDALGetRasterXSize(hDataset: *()) -> c_int;
+    fn GDALGetRasterYSize(hDataset: *()) -> c_int;
     fn GDALAllRegister();
 }
 static GA_ReadOnly: c_int = 0;
@@ -68,6 +70,18 @@ impl Drop for Dataset {
 }
 
 
+impl Dataset {
+    pub fn get_raster_size(&self) -> (int, int) {
+        unsafe {
+            let _g = LOCK.lock();
+            let size_x = GDALGetRasterXSize(self.c_dataset) as int;
+            let size_y = GDALGetRasterYSize(self.c_dataset) as int;
+            return (size_x, size_y);
+        }
+    }
+}
+
+
 #[test]
 fn test_version_info() {
     let release_date = version_info("RELEASE_DATE");
@@ -100,4 +114,13 @@ fn test_open() {
 
     let missing_dataset = open(&fixture_path("no_such_file.jpeg"));
     assert!(missing_dataset.is_none());
+}
+
+
+#[test]
+fn test_get_raster_size() {
+    let dataset = open(&fixture_path("tinymarble.jpeg")).unwrap();
+    let (size_x, size_y) = dataset.get_raster_size();
+    assert_eq!(size_x, 100);
+    assert_eq!(size_y, 50);
 }
