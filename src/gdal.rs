@@ -14,17 +14,25 @@ struct Dataset {
 }
 
 
+struct Driver {
+    c_driver: *(),
+}
+
+
 #[link(name = "gdal")]
 extern {
     fn GDALVersionInfo(key: *c_char) -> *c_char;
     fn GDALOpen(pszFilename: *c_char, eAccess: c_int) -> *();
     fn GDALClose(hDS: *());
+    fn GDALGetDatasetDriver(hDataset: *()) -> *();
     fn GDALGetRasterXSize(hDataset: *()) -> c_int;
     fn GDALGetRasterYSize(hDataset: *()) -> c_int;
     fn GDALGetRasterCount(hDataset: *()) -> c_int;
     fn GDALGetProjectionRef(hDS: *()) -> *c_char;
     fn GDALSetProjection(hDS: *(), pszProjection: *c_char) -> c_int;
     fn GDALAllRegister();
+    fn GDALGetDriverShortName(hDriver: *()) -> *c_char;
+    fn GDALGetDriverLongName(hDriver: *()) -> *c_char;
 }
 static GA_ReadOnly: c_int = 0;
 static GA_Update: c_int = 1;
@@ -83,6 +91,15 @@ impl Dataset {
         }
     }
 
+    pub fn get_driver(&self) -> Driver {
+        let mut c_driver;
+        unsafe {
+            let _g = LOCK.lock();
+            c_driver = GDALGetDatasetDriver(self.c_dataset);
+        };
+        return Driver{c_driver: c_driver};
+    }
+
     pub fn get_raster_count(&self) -> int {
         unsafe {
             let _g = LOCK.lock();
@@ -104,6 +121,23 @@ impl Dataset {
                 GDALSetProjection(self.c_dataset, c_projection);
             }
         });
+    }
+}
+
+
+impl Driver {
+    pub fn get_short_name(&self) -> ~str {
+        unsafe {
+            let _g = LOCK.lock();
+            return raw::from_c_str(GDALGetDriverShortName(self.c_driver));
+        }
+    }
+
+    pub fn get_long_name(&self) -> ~str {
+        unsafe {
+            let _g = LOCK.lock();
+            return raw::from_c_str(GDALGetDriverLongName(self.c_driver));
+        }
     }
 }
 
@@ -166,4 +200,13 @@ fn test_get_projection() {
     //dataset.set_projection("WGS84");
     let projection = dataset.get_projection();
     assert_eq!(projection.slice(0, 16), "GEOGCS[\"WGS 84\",");
+}
+
+
+#[test]
+fn test_get_dataset_driver() {
+    let dataset = open(&fixture_path("tinymarble.jpeg")).unwrap();
+    let driver = dataset.get_driver();
+    assert_eq!(driver.get_short_name(), ~"JPEG");
+    assert_eq!(driver.get_long_name(), ~"JPEG JFIF");
 }
