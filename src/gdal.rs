@@ -2,6 +2,9 @@ use std::str::raw;
 use std::os::getenv;
 use std::path::Path;
 use std::libc::{c_int, c_char};
+use sync::mutex::{StaticMutex, MUTEX_INIT};
+
+static mut LOCK: StaticMutex = MUTEX_INIT;
 
 
 struct Dataset {
@@ -21,17 +24,27 @@ static GA_Update: c_int = 1;
 
 pub fn version_info(key: &str) -> ~str {
     let info = key.with_c_str(|c_key| {
-        return unsafe { raw::from_c_str(GDALVersionInfo(c_key)) };
+        unsafe {
+            let _g = LOCK.lock();
+            return raw::from_c_str(GDALVersionInfo(c_key));
+        };
     });
     return info;
 }
 
 
 pub fn open(path: &Path) -> Option<Dataset> {
-    unsafe { GDALAllRegister(); }  // TODO call once
+    unsafe {
+        // TODO call once
+        let _g = LOCK.lock();
+        GDALAllRegister();
+    }
     let filename = path.as_str().unwrap();
     let c_dataset = filename.with_c_str(|c_filename| {
-        return unsafe { GDALOpen(c_filename, GA_ReadOnly) };
+        unsafe {
+            let _g = LOCK.lock();
+            return GDALOpen(c_filename, GA_ReadOnly);
+        };
     });
     return match c_dataset.is_null() {
         true  => None,

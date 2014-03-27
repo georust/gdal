@@ -1,3 +1,4 @@
+extern crate sync;
 extern crate http;
 
 use std::vec::Vec;
