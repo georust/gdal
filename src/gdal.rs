@@ -53,7 +53,6 @@ fn register_drivers() {
 pub fn version_info(key: &str) -> ~str {
     let info = key.with_c_str(|c_key| {
         unsafe {
-            let _g = LOCK.lock();
             return raw::from_c_str(GDALVersionInfo(c_key));
         };
     });
@@ -66,7 +65,6 @@ pub fn open(path: &Path) -> Option<Dataset> {
     let filename = path.as_str().unwrap();
     let c_dataset = filename.with_c_str(|c_filename| {
         unsafe {
-            let _g = LOCK.lock();
             return GDALOpen(c_filename, GA_ReadOnly);
         };
     });
@@ -80,7 +78,6 @@ pub fn open(path: &Path) -> Option<Dataset> {
 impl Drop for Dataset {
     fn drop(&mut self) {
         unsafe {
-            let _g = LOCK.lock();
             GDALClose(self.c_dataset);
         }
     }
@@ -90,7 +87,6 @@ impl Drop for Dataset {
 impl Dataset {
     pub fn get_raster_size(&self) -> (int, int) {
         unsafe {
-            let _g = LOCK.lock();
             let size_x = GDALGetRasterXSize(self.c_dataset) as int;
             let size_y = GDALGetRasterYSize(self.c_dataset) as int;
             return (size_x, size_y);
@@ -100,7 +96,6 @@ impl Dataset {
     pub fn get_driver(&self) -> Driver {
         let mut c_driver;
         unsafe {
-            let _g = LOCK.lock();
             c_driver = GDALGetDatasetDriver(self.c_dataset);
         };
         return Driver{c_driver: c_driver};
@@ -108,14 +103,12 @@ impl Dataset {
 
     pub fn get_raster_count(&self) -> int {
         unsafe {
-            let _g = LOCK.lock();
             return GDALGetRasterCount(self.c_dataset) as int;
         }
     }
 
     pub fn get_projection(&self) -> ~str {
         unsafe {
-            let _g = LOCK.lock();
             return raw::from_c_str(GDALGetProjectionRef(self.c_dataset));
         }
     }
@@ -123,7 +116,6 @@ impl Dataset {
     pub fn set_projection(&self, projection: &str) {
         projection.with_c_str(|c_projection| {
             unsafe {
-                let _g = LOCK.lock();
                 GDALSetProjection(self.c_dataset, c_projection);
             }
         });
@@ -135,7 +127,6 @@ pub fn get_driver(name: &str) -> Option<Driver> {
     register_drivers();
     let c_driver = name.with_c_str(|c_name| {
         unsafe {
-            let _g = LOCK.lock();
             return GDALGetDriverByName(c_name);
         }
     });
@@ -149,14 +140,12 @@ pub fn get_driver(name: &str) -> Option<Driver> {
 impl Driver {
     pub fn get_short_name(&self) -> ~str {
         unsafe {
-            let _g = LOCK.lock();
             return raw::from_c_str(GDALGetDriverShortName(self.c_driver));
         }
     }
 
     pub fn get_long_name(&self) -> ~str {
         unsafe {
-            let _g = LOCK.lock();
             return raw::from_c_str(GDALGetDriverLongName(self.c_driver));
         }
     }
