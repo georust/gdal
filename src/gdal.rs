@@ -31,6 +31,7 @@ extern {
     fn GDALGetProjectionRef(hDS: *()) -> *c_char;
     fn GDALSetProjection(hDS: *(), pszProjection: *c_char) -> c_int;
     fn GDALAllRegister();
+    fn GDALGetDriverByName(pszName: *c_char) -> *();
     fn GDALGetDriverShortName(hDriver: *()) -> *c_char;
     fn GDALGetDriverLongName(hDriver: *()) -> *c_char;
 }
@@ -125,6 +126,20 @@ impl Dataset {
 }
 
 
+pub fn get_driver(name: &str) -> Option<Driver> {
+    let c_driver = name.with_c_str(|c_name| {
+        unsafe {
+            let _g = LOCK.lock();
+            return GDALGetDriverByName(c_name);
+        }
+    });
+    return match c_driver.is_null() {
+        true  => None,
+        false => Some(Driver{c_driver: c_driver}),
+    };
+}
+
+
 impl Driver {
     pub fn get_short_name(&self) -> ~str {
         unsafe {
@@ -209,4 +224,17 @@ fn test_get_dataset_driver() {
     let driver = dataset.get_driver();
     assert_eq!(driver.get_short_name(), ~"JPEG");
     assert_eq!(driver.get_long_name(), ~"JPEG JFIF");
+}
+
+
+#[test]
+fn test_get_driver_by_name() {
+    let missing_driver = get_driver("wtf");
+    assert!(missing_driver.is_none());
+
+    let ok_driver = get_driver("GTiff");
+    assert!(ok_driver.is_some());
+    let driver = ok_driver.unwrap();
+    assert_eq!(driver.get_short_name(), ~"GTiff");
+    assert_eq!(driver.get_long_name(), ~"GeoTIFF");
 }
