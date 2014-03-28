@@ -4,6 +4,8 @@ RUSTFLAGS ?=
 src_files=\
 	        src/rustiles.rs \
 	        src/gdal/mod.rs \
+	        src/gdal/driver.rs \
+	        src/gdal/dataset.rs \
 	        src/tile.rs
 
 all: tile rustiles
