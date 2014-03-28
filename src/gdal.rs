@@ -18,6 +18,15 @@ extern {
             eBandType: c_int,
             papszOptions: **c_char
         ) -> *();
+    fn GDALCreateCopy(
+            hDriver: *(),
+            pszFilename: *c_char,
+            hSrcDS: *(),
+            bStrict: c_int,
+            papszOptions: **c_char,
+            pfnProgres: *(),
+            pProgressData: *()
+        ) -> *();
     fn GDALOpen(pszFilename: *c_char, eAccess: c_int) -> *();
     fn GDALClose(hDS: *());
     fn GDALGetDatasetDriver(hDataset: *()) -> *();
@@ -131,6 +140,31 @@ impl Dataset {
         projection.with_c_str(|c_projection| {
             unsafe { GDALSetProjection(self.c_dataset, c_projection) };
         });
+    }
+
+    pub fn create_copy(
+        &self,
+        driver: Driver,
+        filename: &str
+    ) -> Option<Dataset> {
+        use std::ptr::null;
+        let c_dataset = filename.with_c_str(|c_filename| {
+            unsafe {
+                return GDALCreateCopy(
+                    driver.c_driver,
+                    c_filename,
+                    self.c_dataset,
+                    0,
+                    null(),
+                    null(),
+                    null()
+                )
+            }
+        });
+        return match c_dataset.is_null() {
+            true  => None,
+            false => Some(Dataset{c_dataset: c_dataset}),
+        };
     }
 
     pub fn read_raster(
@@ -399,4 +433,14 @@ fn test_create() {
     assert_eq!(dataset.get_raster_size(), (10, 20));
     assert_eq!(dataset.get_raster_count(), 3);
     assert_eq!(dataset.get_driver().get_short_name(), ~"MEM");
+}
+
+
+#[test]
+fn test_create_copy() {
+    let driver = get_driver("MEM").unwrap();
+    let dataset = open(&fixture_path("tinymarble.jpeg")).unwrap();
+    let copy = dataset.create_copy(driver, "").unwrap();
+    assert_eq!(copy.get_raster_size(), (100, 50));
+    assert_eq!(copy.get_raster_count(), 3);
 }
