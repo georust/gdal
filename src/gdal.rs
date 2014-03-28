@@ -8,6 +8,15 @@ use sync::mutex::{StaticMutex, MUTEX_INIT};
 #[link(name = "gdal")]
 extern {
     fn GDALVersionInfo(key: *c_char) -> *c_char;
+    fn GDALCreate(
+            hDriver: *(),
+            pszFilename: *c_char,
+            nXSize: c_int,
+            nYSize: c_int,
+            nBands: c_int,
+            eBandType: c_int,
+            papszOptions: **c_char
+        ) -> *();
     fn GDALOpen(pszFilename: *c_char, eAccess: c_int) -> *();
     fn GDALClose(hDS: *());
     fn GDALGetDatasetDriver(hDataset: *()) -> *();
@@ -22,8 +31,21 @@ extern {
     fn GDALGetDriverLongName(hDriver: *()) -> *c_char;
 }
 
-static GA_ReadOnly: c_int = 0;
-static GA_Update: c_int = 1;
+static GA_ReadOnly:  c_int = 0;
+static GA_Update:    c_int = 1;
+
+static GDT_Unknown:  c_int = 0;
+static GDT_Byte:     c_int = 1;
+static GDT_UInt16:   c_int = 2;
+static GDT_Int16:    c_int = 3;
+static GDT_UInt32:   c_int = 4;
+static GDT_Int32:    c_int = 5;
+static GDT_Float32:  c_int = 6;
+static GDT_Float64:  c_int = 7;
+static GDT_CInt16:   c_int = 8;
+static GDT_CInt32:   c_int = 9;
+static GDT_CFloat32: c_int = 10;
+static GDT_CFloat64: c_int = 11;
 
 
 static mut LOCK: StaticMutex = MUTEX_INIT;
@@ -126,6 +148,33 @@ impl Driver {
             return raw::from_c_str(rv);
         }
     }
+
+    pub fn create(
+        &self,
+        filename: &str,
+        size_x: int,
+        size_y: int,
+        bands: int
+    ) -> Option<Dataset> {
+        use std::ptr::null;
+        let c_dataset = filename.with_c_str(|c_filename| {
+            unsafe {
+                return GDALCreate(
+                    self.c_driver,
+                    c_filename,
+                    size_x as c_int,
+                    size_y as c_int,
+                    bands as c_int,
+                    GDT_Byte,
+                    null()
+                );
+            }
+        });
+        return match c_dataset.is_null() {
+            true  => None,
+            false => Some(Dataset{c_dataset: c_dataset}),
+        };
+    }
 }
 
 
@@ -221,4 +270,14 @@ fn test_get_driver_by_name() {
     let driver = ok_driver.unwrap();
     assert_eq!(driver.get_short_name(), ~"GTiff");
     assert_eq!(driver.get_long_name(), ~"GeoTIFF");
+}
+
+
+#[test]
+fn test_create() {
+    let driver = get_driver("MEM").unwrap();
+    let dataset = driver.create("", 10, 20, 3).unwrap();
+    assert_eq!(dataset.get_raster_size(), (10, 20));
+    assert_eq!(dataset.get_raster_count(), 3);
+    assert_eq!(dataset.get_driver().get_short_name(), ~"MEM");
 }
