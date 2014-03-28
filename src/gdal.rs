@@ -167,6 +167,33 @@ impl Dataset {
             data: data,
         };
     }
+
+    pub fn write_raster(
+        &self,
+        band_index: int,
+        window_x: int, window_y: int,
+        window_width: uint, window_height: uint,
+        buffer: ByteBuffer
+    ) {
+        unsafe {
+            let c_band = GDALGetRasterBand(self.c_dataset, band_index as c_int);
+            let rv = GDALRasterIO(
+                c_band,
+                GF_Write,
+                window_x as c_int,
+                window_y as c_int,
+                window_width as c_int,
+                window_height as c_int,
+                buffer.data.as_ptr() as *(),
+                buffer.width as c_int,
+                buffer.height as c_int,
+                GDT_Byte,
+                0,
+                0
+            ) as int;
+            assert!(rv == 0);
+        };
+    }
 }
 
 
@@ -319,6 +346,27 @@ fn test_read_raster() {
     assert_eq!(raster.width, 3);
     assert_eq!(raster.height, 5);
     assert_eq!(raster.data, ~[13, 3, 18, 6, 9, 1, 2, 9, 4, 6, 11, 4, 6, 2, 9]);
+}
+
+
+#[test]
+fn test_write_raster() {
+    let driver = get_driver("MEM").unwrap();
+    let dataset = driver.create("", 20, 10, 1).unwrap();
+
+    // create a 2x1 raster
+    let raster = ByteBuffer{width: 2, height: 1, data: ~[50u8, 20u8]};
+
+    // epand it to fill the image (20x10)
+    dataset.write_raster(1, 0, 0, 20, 10, raster);
+
+    // read a pixel from the left side
+    let left = dataset.read_raster(1, 5, 5, 1, 1, 1, 1);
+    assert_eq!(left.data[0], 50u8);
+
+    // read a pixel from the right side
+    let right = dataset.read_raster(1, 15, 5, 1, 1, 1, 1);
+    assert_eq!(right.data[0], 20u8);
 }
 
 
