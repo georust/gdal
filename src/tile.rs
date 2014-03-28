@@ -9,10 +9,10 @@ mod gdal;
 
 
 fn main() {
-    let memory_driver = gdal::get_driver("MEM").unwrap();
-    let png_driver = gdal::get_driver("PNG").unwrap();
+    let memory_driver = gdal::driver::get_driver("MEM").unwrap();
+    let png_driver = gdal::driver::get_driver("PNG").unwrap();
 
-    let source = gdal::open(&Path::new(args()[1])).unwrap();
+    let source = gdal::dataset::open(&Path::new(args()[1])).unwrap();
     println!(
         "size: {}, bands: {}",
         source.get_raster_size(),

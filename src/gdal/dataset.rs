@@ -3,7 +3,7 @@ use std::libc::{c_int, c_char};
 use std::str::raw;
 use std::os::getenv;
 use std::path::Path;
-use gdal::driver::{Driver, get_driver};
+use gdal::driver::Driver;
 use gdal::register_drivers;
 
 
@@ -271,6 +271,7 @@ fn test_read_raster() {
 
 #[test]
 fn test_write_raster() {
+    use gdal::driver::get_driver;
     let driver = get_driver("MEM").unwrap();
     let dataset = driver.create("", 20, 10, 1).unwrap();
 
@@ -301,6 +302,7 @@ fn test_get_dataset_driver() {
 
 #[test]
 fn test_create() {
+    use gdal::driver::get_driver;
     let driver = get_driver("MEM").unwrap();
     let dataset = driver.create("", 10, 20, 3).unwrap();
     assert_eq!(dataset.get_raster_size(), (10, 20));
@@ -311,6 +313,7 @@ fn test_create() {
 
 #[test]
 fn test_create_copy() {
+    use gdal::driver::get_driver;
     let driver = get_driver("MEM").unwrap();
     let dataset = open(&fixture_path("tinymarble.jpeg")).unwrap();
     let copy = dataset.create_copy(driver, "").unwrap();

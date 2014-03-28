@@ -2,8 +2,8 @@ use std::str::raw;
 use std::libc::c_char;
 use sync::mutex::{StaticMutex, MUTEX_INIT};
 
-mod driver;
-mod dataset;
+pub mod driver;
+pub mod dataset;
 
 
 #[link(name="gdal")]
