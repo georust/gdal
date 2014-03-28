@@ -9,6 +9,7 @@ pub struct Proj {
 #[link(name="proj")]
 extern {
     fn pj_init_plus(definition: *c_char) -> *();
+    fn pj_free(pj: *());
     fn pj_get_def(pj: *()) -> *c_char;
 }
 
@@ -29,6 +30,13 @@ impl Proj {
             let rv = pj_get_def(self.c_proj);
             return raw::from_c_str(rv);
         }
+    }
+}
+
+
+impl Drop for Proj {
+    fn drop(&mut self) {
+        unsafe { pj_free(self.c_proj); }
     }
 }
 
