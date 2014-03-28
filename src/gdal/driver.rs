@@ -1,6 +1,7 @@
 use std::str::raw;
 use std::libc::{c_int, c_char};
-use gdal::{Dataset, register_drivers};
+use gdal::register_drivers;
+use gdal::dataset::Dataset;
 
 
 #[link(name="gdal")]
