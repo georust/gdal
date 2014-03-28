@@ -1,3 +1,4 @@
+use std::slice;
 use std::str::raw;
 use std::os::getenv;
 use std::path::Path;
@@ -25,6 +26,21 @@ extern {
     fn GDALGetRasterCount(hDataset: *()) -> c_int;
     fn GDALGetProjectionRef(hDS: *()) -> *c_char;
     fn GDALSetProjection(hDS: *(), pszProjection: *c_char) -> c_int;
+    fn GDALGetRasterBand(hDS: *(), nBandId: c_int) -> *();
+    fn GDALRasterIO(
+            hBand: *(),
+            eRWFlag: c_int,
+            nXOff: c_int,
+            nYOff: c_int,
+            nXSize: c_int,
+            nYSize: c_int,
+            pData: *(),
+            nBufXSize: c_int,
+            nBufYSize: c_int,
+            GDALDataType: c_int,
+            nPixelSpace: c_int,
+            nLineSpace: c_int
+        ) -> c_int;
     fn GDALAllRegister();
     fn GDALGetDriverByName(pszName: *c_char) -> *();
     fn GDALGetDriverShortName(hDriver: *()) -> *c_char;
@@ -46,6 +62,9 @@ static GDT_CInt16:   c_int = 8;
 static GDT_CInt32:   c_int = 9;
 static GDT_CFloat32: c_int = 10;
 static GDT_CFloat64: c_int = 11;
+
+static GF_Read:      c_int = 0;
+static GF_Write:     c_int = 1;
 
 
 static mut LOCK: StaticMutex = MUTEX_INIT;
@@ -112,6 +131,41 @@ impl Dataset {
         projection.with_c_str(|c_projection| {
             unsafe { GDALSetProjection(self.c_dataset, c_projection) };
         });
+    }
+
+    pub fn read_raster(
+        &self,
+        band_index: int,
+        window_x: int, window_y: int,
+        window_width: uint, window_height: uint,
+        buffer_width: uint, buffer_height: uint
+    ) -> ByteBuffer {
+        let buffer_size = buffer_width * buffer_height;
+        let mut data: ~[u8] = slice::with_capacity(buffer_size);
+        for _ in range(0, buffer_size) { data.push(0u8); } // TODO zero fill
+        unsafe {
+            let c_band = GDALGetRasterBand(self.c_dataset, band_index as c_int);
+            let rv = GDALRasterIO(
+                c_band,
+                GF_Read,
+                window_x as c_int,
+                window_y as c_int,
+                window_width as c_int,
+                window_height as c_int,
+                data.as_mut_ptr() as *(),
+                buffer_width as c_int,
+                buffer_height as c_int,
+                GDT_Byte,
+                0,
+                0
+            ) as int;
+            assert!(rv == 0);
+        };
+        return ByteBuffer{
+            width: buffer_width,
+            height: buffer_height,
+            data: data,
+        };
     }
 }
 
@@ -190,6 +244,13 @@ pub fn get_driver(name: &str) -> Option<Driver> {
 }
 
 
+struct ByteBuffer {
+    width: uint,
+    height: uint,
+    data: ~[u8],
+}
+
+
 #[test]
 fn test_version_info() {
     let release_date = version_info("RELEASE_DATE");
@@ -248,6 +309,16 @@ fn test_get_projection() {
     //dataset.set_projection("WGS84");
     let projection = dataset.get_projection();
     assert_eq!(projection.slice(0, 16), "GEOGCS[\"WGS 84\",");
+}
+
+
+#[test]
+fn test_read_raster() {
+    let dataset = open(&fixture_path("tinymarble.jpeg")).unwrap();
+    let raster = dataset.read_raster(1, 20, 30, 10, 10, 3, 5);
+    assert_eq!(raster.width, 3);
+    assert_eq!(raster.height, 5);
+    assert_eq!(raster.data, ~[13, 3, 18, 6, 9, 1, 2, 9, 4, 6, 11, 4, 6, 2, 9]);
 }
 
 
