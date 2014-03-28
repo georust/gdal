@@ -3,11 +3,12 @@ RUSTFLAGS ?=
 
 src_files=\
 	        src/rustiles.rs \
-	        src/gdal.rs
+	        src/gdal/mod.rs \
+	        src/tile.rs
 
 all: tile rustiles
 
-tile: src/tile.rs src/gdal.rs
+tile: $(src_files)
 	mkdir -p build
 	$(RUSTC) $(RUSTFLAGS) -o build/tile src/tile.rs
 
