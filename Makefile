@@ -6,6 +6,7 @@ src_files=\
 	        src/gdal/mod.rs \
 	        src/gdal/driver.rs \
 	        src/gdal/dataset.rs \
+	        src/gdal/proj.rs \
 	        src/tile.rs
 
 all: tile rustiles
