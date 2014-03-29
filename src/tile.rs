@@ -42,11 +42,6 @@ pub fn tile(source: Dataset, (x, y, z): (int, int, int)) -> ~[u8] {
 
     let (width, height) = source.get_raster_size();
     let source_bounds = Point2D(width as f64, height as f64);
-    assert!(stdio::stderr().write(format!(
-        "size: {}, bands: {}\n",
-        (width, height),
-        source.get_raster_count()
-    ).as_bytes()).is_ok());
 
     fn xy(lng_lat: &Point2D<f64>, source_bounds: &Point2D<f64>) -> Point2D<f64> {
         let x = (lng_lat.x + 180.) / 360. * source_bounds.x;
