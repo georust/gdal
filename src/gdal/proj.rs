@@ -1,5 +1,6 @@
 use std::str::raw;
 use std::libc::{c_int, c_char, c_long, c_double};
+use gdal::geom::Point;
 
 pub struct Proj {
     c_proj: *(),
@@ -52,9 +53,9 @@ impl Proj {
         }
     }
 
-    pub fn project(&self, target: &Proj, x: f64, y: f64) -> (f64, f64) {
-        let mut c_x: c_double = x;
-        let mut c_y: c_double = y;
+    pub fn project(&self, target: &Proj, point: Point<f64>) -> Point<f64> {
+        let mut c_x: c_double = point.x;
+        let mut c_y: c_double = point.y;
         let mut c_z: c_double = 0.;
         unsafe {
             let rv = pj_transform(
@@ -71,7 +72,7 @@ impl Proj {
             //}
             assert!(rv == 0);
         }
-        return (c_x, c_y);
+        return Point(c_x, c_y);
     }
 }
 
@@ -108,11 +109,11 @@ fn test_transform() {
         "+x_0=500000 +y_0=500000 +ellps=krass +units=m +no_defs"
         ).unwrap();
 
-    let (lng, lat) = stereo70.project(&wgs84, 500000., 500000.);
-    assert_almost_eq(lng, 0.436332);
-    assert_almost_eq(lat, 0.802851);
+    let rv = stereo70.project(&wgs84, Point(500000., 500000.));
+    assert_almost_eq(rv.x, 0.436332);
+    assert_almost_eq(rv.y, 0.802851);
 
-    let (x, y) = wgs84.project(&stereo70, 0.436332, 0.802851);
-    assert_almost_eq(x, 500000.);
-    assert_almost_eq(y, 500000.);
+    let rv = wgs84.project(&stereo70, Point(0.436332, 0.802851));
+    assert_almost_eq(rv.x, 500000.);
+    assert_almost_eq(rv.y, 500000.);
 }

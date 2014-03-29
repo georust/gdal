@@ -9,11 +9,6 @@ use gdal::driver::get_driver;
 static webmerc_limit: f64 = 20037508.342789244;
 
 
-fn as_point((x, y): (f64, f64)) -> Point<f64> {
-    return Point(x, y);
-}
-
-
 pub fn tile(source: Dataset, (x, y, z): (int, int, int)) -> ~[u8] {
     let memory_driver = get_driver("MEM").unwrap();
     let png_driver = get_driver("PNG").unwrap();
@@ -29,8 +24,8 @@ pub fn tile(source: Dataset, (x, y, z): (int, int, int)) -> ~[u8] {
         tile_size * (tile.x as f64) - webmerc_limit,
         webmerc_limit - tile_size * (tile.y as f64));
     let tile_max = tile_min + Point(tile_size, -tile_size);
-    let nw = as_point(webmerc.project(&wgs84, tile_min.x, tile_min.y)).scale(1./DEG_TO_RAD);
-    let se = as_point(webmerc.project(&wgs84, tile_max.x, tile_max.y)).scale(1./DEG_TO_RAD);
+    let nw = webmerc.project(&wgs84, tile_min).scale(1./DEG_TO_RAD);
+    let se = webmerc.project(&wgs84, tile_max).scale(1./DEG_TO_RAD);
 
     let (width, height) = source.get_raster_size();
     let source_bounds = Point(width as f64, height as f64);
