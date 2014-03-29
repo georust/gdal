@@ -167,8 +167,8 @@ impl Dataset {
     pub fn write_raster(
         &self,
         band_index: int,
-        window_x: int, window_y: int,
-        window_width: uint, window_height: uint,
+        window: Point<int>,
+        window_size: Point<uint>,
         buffer: ByteBuffer
     ) {
         unsafe {
@@ -176,10 +176,10 @@ impl Dataset {
             let rv = GDALRasterIO(
                 c_band,
                 GF_Write,
-                window_x as c_int,
-                window_y as c_int,
-                window_width as c_int,
-                window_height as c_int,
+                window.x as c_int,
+                window.y as c_int,
+                window_size.x as c_int,
+                window_size.y as c_int,
                 buffer.data.as_ptr() as *(),
                 buffer.width as c_int,
                 buffer.height as c_int,
@@ -280,7 +280,7 @@ fn test_write_raster() {
     let raster = ByteBuffer{width: 2, height: 1, data: ~[50u8, 20u8]};
 
     // epand it to fill the image (20x10)
-    dataset.write_raster(1, 0, 0, 20, 10, raster);
+    dataset.write_raster(1, Point(0, 0), Point(20, 10), raster);
 
     // read a pixel from the left side
     let left = dataset.read_raster(1, Point(5, 5), Point(1, 1), Point(1, 1));

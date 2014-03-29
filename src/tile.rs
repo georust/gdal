@@ -48,7 +48,7 @@ pub fn tile(source: Dataset, (x, y, z): (int, int, int)) -> ~[u8] {
             xy_bounds.cast::<uint>().unwrap(),
             Point(256, 256)
         );
-        tile.write_raster(band, 0, 0, 256, 256, raster);
+        tile.write_raster(band, Point(0, 0), Point(256, 256), raster);
     }
 
     let tmp = TempDir::new("rustile").unwrap();
