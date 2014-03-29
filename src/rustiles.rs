@@ -100,10 +100,7 @@ html, body, #map { margin: 0; height: 100%; }
 <div id='map'></div>
 <script src='//cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.2/leaflet.js'></script>\n\
 <script>
-var map = L.map('map').setView([51.505, -0.09], 13);
-L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
-  attribution: '&copy; <a href=\\'http://osm.org/copyright\\'>' +
-               'OpenStreetMap</a> contributors'
-}).addTo(map);
+var map = L.map('map').setView([40, 10], 3);
+L.tileLayer('/tile/{z}/{x}/{y}').addTo(map);
 </script>
 ";
