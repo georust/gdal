@@ -1,6 +1,5 @@
 extern crate sync;
 extern crate http;
-extern crate geom;
 
 use std::vec::Vec;
 use std::io::net::ip::{SocketAddr, Ipv4Addr};
