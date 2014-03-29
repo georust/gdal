@@ -1,9 +1,7 @@
 extern crate sync;
 extern crate geom;
 
-use std::os::args;
-use std::path::Path;
-use std::io::{File, TempDir, stdio};
+use std::io::{File, TempDir};
 use geom::point::Point2D;
 use gdal::proj::{Proj, DEG_TO_RAD};
 use gdal::dataset::{Dataset, open};
@@ -71,11 +69,4 @@ pub fn tile(source: Dataset, (x, y, z): (int, int, int)) -> ~[u8] {
     let tile_path = tmp.path().join("tile.png");
     tile.create_copy(png_driver, tile_path.as_str().unwrap());
     return File::open(&tile_path).read_to_end().unwrap();
-}
-
-
-fn main() {
-    let source = open(&Path::new(args()[1])).unwrap();
-    let tile_data = tile(source, (8, 5, 4));
-    assert!(stdio::stdout_raw().write(tile_data).is_ok());
 }
