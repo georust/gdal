@@ -1,5 +1,6 @@
 extern crate sync;
 extern crate http;
+extern crate geom;
 
 use std::vec::Vec;
 use std::io::net::ip::{SocketAddr, Ipv4Addr};
@@ -8,8 +9,11 @@ use http::server::{Config, Server, Request, ResponseWriter};
 use http::server::request::AbsolutePath;
 use http::status::NotFound;
 use http::headers;
+use tile::tile;
 
+#[allow(dead_code)]
 mod gdal;
+mod tile;
 
 
 
@@ -45,6 +49,30 @@ impl Server for TileServer {
                 if url == &~"/" {
                     w.write(index_html.as_bytes()).unwrap();
                     return;
+                }
+                let bits: ~[&str] = url.split('/').collect();
+                if bits.len() == 5 && bits[0] == "" && bits[1] == "tile" {
+                    match (
+                        from_str::<int>(bits[2]),
+                        from_str::<int>(bits[3]),
+                        from_str::<int>(bits[4])
+                    ) {
+                        (Some(z), Some(x), Some(y)) => {
+                            use std::os::args;
+                            use std::path::Path;
+                            use gdal::dataset::open;
+                            let content_type = headers::content_type::MediaType {
+                                type_: ~"image",
+                                subtype: ~"png",
+                                parameters: Vec::new(),
+                            };
+                            let source = open(&Path::new(args()[1])).unwrap();
+                            w.headers.content_type = Some(content_type);
+                            let tile_png = tile(source, (x, y, z));
+                            w.write(tile_png).unwrap();
+                        },
+                        _ => {}
+                    }
                 }
             },
             _ => {}

@@ -6,11 +6,8 @@ use std::path::Path;
 use std::io::{File, TempDir, stdio};
 use geom::point::Point2D;
 use gdal::proj::{Proj, DEG_TO_RAD};
-use gdal::dataset::Dataset;
-
-#[allow(dead_code)]
-mod gdal;
-
+use gdal::dataset::{Dataset, open};
+use gdal::driver::get_driver;
 
 static webmerc_limit: f64 = 20037508.342789244;
 
@@ -25,9 +22,9 @@ fn mul<T:Clone + Mul<T,T>>(value: &Point2D<T>, factor: T) -> Point2D<T> {
 }
 
 
-fn tile(source: Dataset, (x, y, z): (int, int, int)) -> ~[u8] {
-    let memory_driver = gdal::driver::get_driver("MEM").unwrap();
-    let png_driver = gdal::driver::get_driver("PNG").unwrap();
+pub fn tile(source: Dataset, (x, y, z): (int, int, int)) -> ~[u8] {
+    let memory_driver = get_driver("MEM").unwrap();
+    let png_driver = get_driver("PNG").unwrap();
 
     let wgs84 = Proj::new("+proj=longlat +datum=WGS84 +no_defs").unwrap();
     let webmerc = Proj::new(
@@ -83,7 +80,7 @@ fn tile(source: Dataset, (x, y, z): (int, int, int)) -> ~[u8] {
 
 
 fn main() {
-    let source = gdal::dataset::open(&Path::new(args()[1])).unwrap();
+    let source = open(&Path::new(args()[1])).unwrap();
     let tile_data = tile(source, (8, 5, 4));
     assert!(stdio::stdout_raw().write(tile_data).is_ok());
 }
