@@ -1,3 +1,6 @@
+use std::num;
+
+
 pub struct Point<T> {
     x: T,
     y: T
@@ -30,6 +33,16 @@ impl<T:Clone + Mul<T,T>> Point<T> {
 }
 
 
+impl<T:NumCast + Clone> Point<T> {
+    pub fn cast<U:NumCast>(&self) -> Option<Point<U>> {
+        return match (num::cast(self.x.clone()), num::cast(self.y.clone())) {
+            (Some(x), Some(y)) => Some(Point(x, y)),
+            _                  => None
+        }
+    }
+}
+
+
 #[test]
 fn test_add() {
     let p1 = Point(2, 3);
@@ -52,4 +65,12 @@ fn test_sub() {
 fn test_scale() {
     let p = Point(2, 3).scale(2);
     assert_eq!((p.x, p.y), (4, 6));
+}
+
+
+#[test]
+fn test_cast() {
+    let pf = Point(1.3, 2.9);
+    let pi = pf.cast::<int>().unwrap();
+    assert_eq!((pi.x, pi.y), (1, 2));
 }
