@@ -158,8 +158,7 @@ impl Dataset {
             assert!(rv == 0);
         };
         return ByteBuffer{
-            width: buffer_size.x,
-            height: buffer_size.y,
+            size: buffer_size,
             data: data,
         };
     }
@@ -181,8 +180,8 @@ impl Dataset {
                 window_size.x as c_int,
                 window_size.y as c_int,
                 buffer.data.as_ptr() as *(),
-                buffer.width as c_int,
-                buffer.height as c_int,
+                buffer.size.x as c_int,
+                buffer.size.y as c_int,
                 GDT_Byte,
                 0,
                 0
@@ -207,8 +206,7 @@ pub fn open(path: &Path) -> Option<Dataset> {
 
 
 struct ByteBuffer {
-    width: uint,
-    height: uint,
+    size: Point<uint>,
     data: ~[u8],
 }
 
@@ -264,8 +262,8 @@ fn test_get_projection() {
 fn test_read_raster() {
     let dataset = open(&fixture_path("tinymarble.jpeg")).unwrap();
     let rv = dataset.read_raster(1, Point(20, 30), Point(10, 10), Point(3, 5));
-    assert_eq!(rv.width, 3);
-    assert_eq!(rv.height, 5);
+    assert_eq!(rv.size.x, 3);
+    assert_eq!(rv.size.y, 5);
     assert_eq!(rv.data, ~[13, 3, 18, 6, 9, 1, 2, 9, 4, 6, 11, 4, 6, 2, 9]);
 }
 
@@ -277,7 +275,7 @@ fn test_write_raster() {
     let dataset = driver.create("", 20, 10, 1).unwrap();
 
     // create a 2x1 raster
-    let raster = ByteBuffer{width: 2, height: 1, data: ~[50u8, 20u8]};
+    let raster = ByteBuffer{size: Point(2, 1), data: ~[50u8, 20u8]};
 
     // epand it to fill the image (20x10)
     dataset.write_raster(1, Point(0, 0), Point(20, 10), raster);
