@@ -44,12 +44,9 @@ pub fn tile(source: Dataset, (x, y, z): (int, int, int)) -> ~[u8] {
 
         let raster = source.read_raster(
             band,
-            xy_min.x as int,
-            xy_min.y as int,
-            xy_bounds.x as uint,
-            xy_bounds.y as uint,
-            256,
-            256
+            xy_min.cast::<int>().unwrap(),
+            xy_bounds.cast::<uint>().unwrap(),
+            Point(256, 256)
         );
         tile.write_raster(band, 0, 0, 256, 256, raster);
     }

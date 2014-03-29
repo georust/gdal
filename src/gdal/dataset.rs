@@ -5,6 +5,7 @@ use std::os::getenv;
 use std::path::Path;
 use gdal::driver::Driver;
 use gdal::register_drivers;
+use gdal::geom::Point;
 
 
 #[link(name="gdal")]
@@ -131,25 +132,25 @@ impl Dataset {
     pub fn read_raster(
         &self,
         band_index: int,
-        window_x: int, window_y: int,
-        window_width: uint, window_height: uint,
-        buffer_width: uint, buffer_height: uint
+        window: Point<int>,
+        window_size: Point<uint>,
+        buffer_size: Point<uint>
     ) -> ByteBuffer {
-        let buffer_size = buffer_width * buffer_height;
-        let mut data: ~[u8] = slice::with_capacity(buffer_size);
-        for _ in range(0, buffer_size) { data.push(0u8); } // TODO zero fill
+        let buffer_size_bytes = buffer_size.x * buffer_size.y;
+        let mut data: ~[u8] = slice::with_capacity(buffer_size_bytes);
+        for _ in range(0, buffer_size_bytes) { data.push(0u8); } // TODO zero fill
         unsafe {
             let c_band = GDALGetRasterBand(self.c_dataset, band_index as c_int);
             let rv = GDALRasterIO(
                 c_band,
                 GF_Read,
-                window_x as c_int,
-                window_y as c_int,
-                window_width as c_int,
-                window_height as c_int,
+                window.x as c_int,
+                window.y as c_int,
+                window_size.x as c_int,
+                window_size.y as c_int,
                 data.as_mut_ptr() as *(),
-                buffer_width as c_int,
-                buffer_height as c_int,
+                buffer_size.x as c_int,
+                buffer_size.y as c_int,
                 GDT_Byte,
                 0,
                 0
@@ -157,8 +158,8 @@ impl Dataset {
             assert!(rv == 0);
         };
         return ByteBuffer{
-            width: buffer_width,
-            height: buffer_height,
+            width: buffer_size.x,
+            height: buffer_size.y,
             data: data,
         };
     }
@@ -262,10 +263,10 @@ fn test_get_projection() {
 #[test]
 fn test_read_raster() {
     let dataset = open(&fixture_path("tinymarble.jpeg")).unwrap();
-    let raster = dataset.read_raster(1, 20, 30, 10, 10, 3, 5);
-    assert_eq!(raster.width, 3);
-    assert_eq!(raster.height, 5);
-    assert_eq!(raster.data, ~[13, 3, 18, 6, 9, 1, 2, 9, 4, 6, 11, 4, 6, 2, 9]);
+    let rv = dataset.read_raster(1, Point(20, 30), Point(10, 10), Point(3, 5));
+    assert_eq!(rv.width, 3);
+    assert_eq!(rv.height, 5);
+    assert_eq!(rv.data, ~[13, 3, 18, 6, 9, 1, 2, 9, 4, 6, 11, 4, 6, 2, 9]);
 }
 
 
@@ -282,11 +283,11 @@ fn test_write_raster() {
     dataset.write_raster(1, 0, 0, 20, 10, raster);
 
     // read a pixel from the left side
-    let left = dataset.read_raster(1, 5, 5, 1, 1, 1, 1);
+    let left = dataset.read_raster(1, Point(5, 5), Point(1, 1), Point(1, 1));
     assert_eq!(left.data[0], 50u8);
 
     // read a pixel from the right side
-    let right = dataset.read_raster(1, 15, 5, 1, 1, 1, 1);
+    let right = dataset.read_raster(1, Point(15, 5), Point(1, 1), Point(1, 1));
     assert_eq!(right.data[0], 20u8);
 }
 
