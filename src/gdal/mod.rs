@@ -5,6 +5,7 @@ use sync::mutex::{StaticMutex, MUTEX_INIT};
 pub mod driver;
 pub mod dataset;
 pub mod proj;
+pub mod geom;
 
 
 #[link(name="gdal")]
