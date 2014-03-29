@@ -13,11 +13,11 @@ fn main() {
     let png_driver = gdal::driver::get_driver("PNG").unwrap();
 
     let source = gdal::dataset::open(&Path::new(args()[1])).unwrap();
-    println!(
+    assert!(stdio::stderr().write(format!(
         "size: {}, bands: {}",
         source.get_raster_size(),
         source.get_raster_count()
-    );
+    ).as_bytes()).is_ok());
 
     let tile = memory_driver.create("", 256, 256, 3).unwrap();
     for band in range(1, 4) {
