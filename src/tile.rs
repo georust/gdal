@@ -5,20 +5,49 @@ use std::os::args;
 use std::path::Path;
 use std::io::{File, TempDir, stdio};
 use geom::point::Point2D;
+use gdal::proj::{Proj, DEG_TO_RAD};
 
 #[allow(dead_code)]
 mod gdal;
+
+
+static webmerc_limit: f64 = 20037508.342789244;
+
+
+fn as_point((x, y): (f64, f64)) -> Point2D<f64> {
+    return Point2D(x, y);
+}
+
+
+fn mul<T:Clone + Mul<T,T>>(value: &Point2D<T>, factor: T) -> Point2D<T> {
+    return Point2D(value.x * factor, value.y * factor);
+}
 
 
 fn main() {
     let memory_driver = gdal::driver::get_driver("MEM").unwrap();
     let png_driver = gdal::driver::get_driver("PNG").unwrap();
 
+    let wgs84 = Proj::new("+proj=longlat +datum=WGS84 +no_defs").unwrap();
+    let webmerc = Proj::new(
+        "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 " +
+        "+y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext  +no_defs").unwrap();
+
+    let zoom = 4;
+    let tile = Point2D(8, 5);
+    let tile_size = (webmerc_limit * 4.) / ((2 << zoom) as f64);
+    let tile_min = Point2D(
+        tile_size * (tile.x as f64) - webmerc_limit,
+        webmerc_limit - tile_size * (tile.y as f64));
+    let tile_max = tile_min + Point2D(tile_size, -tile_size);
+    let nw = mul(&as_point(webmerc.project(&wgs84, tile_min.x, tile_min.y)), 1./DEG_TO_RAD);
+    let se = mul(&as_point(webmerc.project(&wgs84, tile_max.x, tile_max.y)), 1./DEG_TO_RAD);
+
     let source = gdal::dataset::open(&Path::new(args()[1])).unwrap();
     let (width, height) = source.get_raster_size();
     let source_bounds = Point2D(width as f64, height as f64);
     assert!(stdio::stderr().write(format!(
-        "size: {}, bands: {}",
+        "size: {}, bands: {}\n",
         (width, height),
         source.get_raster_count()
     ).as_bytes()).is_ok());
@@ -31,9 +60,6 @@ fn main() {
 
     let tile = memory_driver.create("", 256, 256, 3).unwrap();
     for band in range(1, 4) {
-        let nw: Point2D<f64> = Point2D(-13., 64.);
-        let se: Point2D<f64> = Point2D(37., 30.);
-
         let xy_min = xy(&nw, &source_bounds);
         let xy_max = xy(&se, &source_bounds);
         let xy_bounds = xy_max - xy_min;

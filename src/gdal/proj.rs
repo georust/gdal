@@ -5,7 +5,7 @@ pub struct Proj {
     c_proj: *(),
 }
 
-//static DEG_TO_RAD: f64 = 0.017453292519943295769236907684886;
+pub static DEG_TO_RAD: f64 = 0.017453292519943295769236907684886;
 
 
 #[link(name="proj")]
