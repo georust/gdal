@@ -2,20 +2,20 @@ RUSTC ?= rustc
 RUSTFLAGS ?=
 
 src_files=\
-	        src/rustiles.rs \
-	        src/gdal/mod.rs \
-	        src/gdal/driver.rs \
-	        src/gdal/dataset.rs \
-	        src/gdal/proj.rs \
-	        src/tile.rs
+	src/rustiles.rs \
+	src/gdal/mod.rs \
+	src/gdal/driver.rs \
+	src/gdal/dataset.rs \
+	src/gdal/proj.rs \
+	src/tile.rs
 
-all: tile rustiles
+all: build/tile build/rustiles
 
-tile: $(src_files)
+build/tile: $(src_files)
 	mkdir -p build
 	$(RUSTC) $(RUSTFLAGS) -o build/tile src/tile.rs
 
-rustiles: $(src_files)
+build/rustiles: $(src_files)
 	mkdir -p build
 	$(RUSTC) $(RUSTFLAGS) -o build/rustiles src/rustiles.rs
 
@@ -29,4 +29,4 @@ check: build/testsuite
 clean:
 	rm -rf build
 
-.PHONY: check clean
+.PHONY: all check clean
