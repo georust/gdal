@@ -6,6 +6,7 @@ use std::path::Path;
 use std::io::{File, TempDir, stdio};
 use geom::point::Point2D;
 use gdal::proj::{Proj, DEG_TO_RAD};
+use gdal::dataset::Dataset;
 
 #[allow(dead_code)]
 mod gdal;
@@ -24,7 +25,7 @@ fn mul<T:Clone + Mul<T,T>>(value: &Point2D<T>, factor: T) -> Point2D<T> {
 }
 
 
-fn main() {
+fn tile(source: Dataset, (x, y, z): (int, int, int)) -> ~[u8] {
     let memory_driver = gdal::driver::get_driver("MEM").unwrap();
     let png_driver = gdal::driver::get_driver("PNG").unwrap();
 
@@ -33,9 +34,8 @@ fn main() {
         "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 " +
         "+y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext  +no_defs").unwrap();
 
-    let zoom = 4;
-    let tile = Point2D(8, 5);
-    let tile_size = (webmerc_limit * 4.) / ((2 << zoom) as f64);
+    let tile = Point2D(x, y);
+    let tile_size = (webmerc_limit * 4.) / ((2 << z) as f64);
     let tile_min = Point2D(
         tile_size * (tile.x as f64) - webmerc_limit,
         webmerc_limit - tile_size * (tile.y as f64));
@@ -43,7 +43,6 @@ fn main() {
     let nw = mul(&as_point(webmerc.project(&wgs84, tile_min.x, tile_min.y)), 1./DEG_TO_RAD);
     let se = mul(&as_point(webmerc.project(&wgs84, tile_max.x, tile_max.y)), 1./DEG_TO_RAD);
 
-    let source = gdal::dataset::open(&Path::new(args()[1])).unwrap();
     let (width, height) = source.get_raster_size();
     let source_bounds = Point2D(width as f64, height as f64);
     assert!(stdio::stderr().write(format!(
@@ -79,6 +78,12 @@ fn main() {
     let tmp = TempDir::new("rustile").unwrap();
     let tile_path = tmp.path().join("tile.png");
     tile.create_copy(png_driver, tile_path.as_str().unwrap());
-    let tile_data = File::open(&tile_path).read_to_end().unwrap();
+    return File::open(&tile_path).read_to_end().unwrap();
+}
+
+
+fn main() {
+    let source = gdal::dataset::open(&Path::new(args()[1])).unwrap();
+    let tile_data = tile(source, (8, 5, 4));
     assert!(stdio::stdout_raw().write(tile_data).is_ok());
 }
