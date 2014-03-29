@@ -9,11 +9,7 @@ src_files=\
 	src/gdal/proj.rs \
 	src/tile.rs
 
-all: build/tile build/rustiles
-
-build/tile: $(src_files)
-	mkdir -p build
-	$(RUSTC) $(RUSTFLAGS) -o build/tile src/tile.rs
+all: build/rustiles
 
 build/rustiles: $(src_files)
 	mkdir -p build
