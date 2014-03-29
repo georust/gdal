@@ -16,6 +16,13 @@ impl<T:Clone + Add<T,T>> Add<Point<T>, Point<T>> for Point<T> {
 }
 
 
+impl<T:Clone + Sub<T,T>> Sub<Point<T>, Point<T>> for Point<T> {
+    fn sub(&self, other: &Point<T>) -> Point<T> {
+        return Point(self.x - other.x, self.y - other.y);
+    }
+}
+
+
 impl<T:Clone + Mul<T,T>> Point<T> {
     pub fn scale(&self, factor: T) -> Point<T> {
         return Point(self.x * factor, self.y * factor);
@@ -29,6 +36,15 @@ fn test_add() {
     let p2 = Point(1, 5);
     let p3 = p1 + p2;
     assert_eq!((p3.x, p3.y), (3, 8));
+}
+
+
+#[test]
+fn test_sub() {
+    let p1 = Point(2, 3);
+    let p2 = Point(1, 5);
+    let p3 = p1 - p2;
+    assert_eq!((p3.x, p3.y), (1, -2));
 }
 
 
