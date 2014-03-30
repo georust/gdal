@@ -16,13 +16,12 @@ enum MessageToWorker {
 
 enum MessageToDispatcher {
     Dispatch(WorkUnit),
-    HaltOne,
+    HaltAll,
 }
 
 
 struct WorkQueue {
     dispatcher: Sender<MessageToDispatcher>,
-    worker_count: int,
 }
 
 
@@ -59,18 +58,18 @@ impl WorkQueue {
                     Dispatch(work_item) => {
                         idle_worker.recv().send(Work(work_item));
                     },
-                    HaltOne => {
-                        worker_count -= 1;
-                        idle_worker.recv().send(Halt);
-                        if worker_count == 0 {
-                            return;
+                    HaltAll => {
+                        while worker_count > 0 {
+                            idle_worker.recv().send(Halt);
+                            worker_count -= 1;
                         }
+                        return;
                     },
                 };
             }
         });
 
-        return WorkQueue{dispatcher: dispatcher, worker_count: worker_count};
+        return WorkQueue{dispatcher: dispatcher};
     }
 
 
@@ -84,9 +83,7 @@ impl WorkQueue {
 
 impl Drop for WorkQueue {
     fn drop(&mut self) {
-        for _ in range(0, self.worker_count) {
-            self.dispatcher.send(HaltOne);
-        }
+        self.dispatcher.send(HaltAll);
     }
 }
 
