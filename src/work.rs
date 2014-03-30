@@ -58,11 +58,14 @@ impl WorkQueue {
         return WorkQueue{dispatcher: dispatcher};
     }
 
-    pub fn spawn_worker(&self) {
+    pub fn register_worker(&self) -> Sender<Sender<MessageToWorker>> {
         let (reg_s, reg_r) = channel::<Sender<Sender<MessageToWorker>>>();
         self.dispatcher.send(RegisterWorker(reg_s));
-        let want_work = reg_r.recv();
+        return reg_r.recv();
+    }
 
+    pub fn spawn_worker(&self) {
+        let want_work = self.register_worker();
         native::task::spawn(proc() {
             let want_work = want_work;
             loop {
