@@ -108,6 +108,7 @@ impl<ARG:Send, RV:Send> Clone for WorkQueueProxy<ARG, RV> {
 }
 
 
+#[cfg(test)]
 fn spawn_test_worker(queue: &WorkQueue<int, int>) {
     let want_work = queue.register_worker();
     task::spawn(proc() {
