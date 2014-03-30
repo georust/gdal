@@ -26,6 +26,11 @@ struct WorkQueue<ARG, RV> {
 }
 
 
+struct WorkQueueProxy<ARG, RV> {
+    dispatcher: Sender<MessageToDispatcher<ARG, RV>>,
+}
+
+
 impl<ARG:Send, RV:Send> WorkQueue<ARG, RV> {
     pub fn create() -> WorkQueue<ARG, RV> {
         let (dispatcher, dispatcher_inbox) = channel::<MessageToDispatcher<ARG, RV>>();
@@ -58,6 +63,10 @@ impl<ARG:Send, RV:Send> WorkQueue<ARG, RV> {
         return WorkQueue{dispatcher: dispatcher};
     }
 
+    pub fn proxy(&self) -> WorkQueueProxy<ARG, RV> {
+        return WorkQueueProxy{dispatcher: self.dispatcher.clone()};
+    }
+
     pub fn register_worker(&self) -> Sender<Sender<MessageToWorker<ARG, RV>>> {
         let (reg_s, reg_r) = channel::<Sender<Sender<MessageToWorker<ARG, RV>>>>();
         self.dispatcher.send(RegisterWorker(reg_s));
@@ -79,6 +88,15 @@ impl<ARG:Send, RV:Send> WorkQueue<ARG, RV> {
 impl<ARG:Send, RV:Send> Drop for WorkQueue<ARG, RV> {
     fn drop(&mut self) {
         self.dispatcher.send(HaltAll);
+    }
+}
+
+
+impl<ARG:Send, RV:Send> WorkQueueProxy<ARG, RV> {
+    pub fn execute(&self, arg: ARG) -> Receiver<RV> {
+        let (rv, wait_for_rv) = channel::<RV>();
+        self.dispatcher.send(Dispatch(WorkUnit{arg: arg, rv: rv}));
+        return wait_for_rv;
     }
 }
 
@@ -111,6 +129,29 @@ fn test_queue() {
     for c in range(0, 10) {
         let rv = queue.execute(c);
         promise_list.push(rv);
+    }
+    let return_list = promise_list.map(|promise| promise.recv());
+    assert_eq!(return_list, ~[0, 2, 4, 6, 8, 10, 12, 14, 16, 18]);
+}
+
+
+#[test]
+fn test_enqueue_from_tasks() {
+    let queue = WorkQueue::<int, int>::create();
+    for _ in range(0, 3) {
+        spawn_test_worker(&queue);
+    }
+    let mut promise_list: ~[Receiver<int>] = ~[];
+    for c in range(0, 10) {
+        let queue_proxy = queue.proxy();
+        let (done, promise) = channel::<int>();
+        promise_list.push(promise);
+        task::spawn(proc() {
+            let done = done;
+            let queue = queue_proxy;
+            let rv = queue.execute(c);
+            done.send(rv.recv());
+        });
     }
     let return_list = promise_list.map(|promise| promise.recv());
     assert_eq!(return_list, ~[0, 2, 4, 6, 8, 10, 12, 14, 16, 18]);
