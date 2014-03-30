@@ -1,6 +1,5 @@
 use native::task;
 use std::comm::channel;
-use test::BenchHarness;
 
 
 pub struct WorkUnit<ARG, RV> {
@@ -110,87 +109,93 @@ impl<ARG:Send, RV:Send> Clone for WorkQueueProxy<ARG, RV> {
 
 
 #[cfg(test)]
-fn spawn_test_worker(queue: &WorkQueue<int, int>) {
-    let want_work = queue.register_worker();
-    task::spawn(proc() {
-        let want_work = want_work;
-        loop {
-            let (idle, get_work_unit) = channel::<MessageToWorker<int, int>>();
-            want_work.send(idle);
-            let work_unit = match get_work_unit.recv() {
-                Work(wu) => wu,
-                Halt     => return
-            };
-            let rv = work_unit.arg * 2;
-            work_unit.rv.send(rv);
-        }
-    });
-}
+mod test {
+    use native::task;
+    use test::BenchHarness;
+    use work::{WorkQueue, MessageToWorker, Work};
 
-
-#[test]
-fn test_queue() {
-    let queue = WorkQueue::<int, int>::create();
-    for _ in range(0, 3) {
-        spawn_test_worker(&queue);
-    }
-    let mut promise_list: ~[Receiver<int>] = ~[];
-    for c in range(0, 10) {
-        let rv = queue.push(c);
-        promise_list.push(rv);
-    }
-    let return_list = promise_list.map(|promise| promise.recv());
-    assert_eq!(return_list, ~[0, 2, 4, 6, 8, 10, 12, 14, 16, 18]);
-}
-
-
-#[test]
-fn test_enqueue_from_tasks() {
-    let queue = WorkQueue::<int, int>::create();
-    for _ in range(0, 3) {
-        spawn_test_worker(&queue);
-    }
-    let mut promise_list: ~[Receiver<int>] = ~[];
-    let queue_proxy = queue.proxy();
-    for c in range(0, 10) {
-        let queue_proxy_clone = queue_proxy.clone();
-        let (done, promise) = channel::<int>();
-        promise_list.push(promise);
+    fn spawn_test_worker(queue: &WorkQueue<int, int>) {
+        let want_work = queue.register_worker();
         task::spawn(proc() {
-            let done = done;
-            let queue = queue_proxy_clone;
-            let rv = queue.push(c);
-            done.send(rv.recv());
+            let want_work = want_work;
+            loop {
+                let (idle, get_work_unit) = channel::<MessageToWorker<int, int>>();
+                want_work.send(idle);
+                let work_unit = match get_work_unit.recv() {
+                    Work(wu) => wu,
+                    Halt     => return
+                };
+                let rv = work_unit.arg * 2;
+                work_unit.rv.send(rv);
+            }
         });
     }
-    let return_list = promise_list.map(|promise| promise.recv());
-    assert_eq!(return_list, ~[0, 2, 4, 6, 8, 10, 12, 14, 16, 18]);
-}
 
 
-#[bench]
-fn bench_50_tasks_4_threads(b: &mut BenchHarness) {
-    let queue = WorkQueue::<int, int>::create();
-    for _ in range(0, 4) {
-        spawn_test_worker(&queue);
-    }
-    b.iter(|| {
-        let mut promise_list: ~[Receiver<int>] = ~[];
-        for _ in range(0, 50) {
-            let rv = queue.push(1);
-            promise_list.push(rv);
-        }
-        let _ = promise_list.map(|promise| promise.recv());
-    });
-}
-
-
-#[bench]
-fn bench_spawn_5_workers(b: &mut BenchHarness) {
-    b.iter(|| {
+    #[test]
+    fn test_queue() {
         let queue = WorkQueue::<int, int>::create();
-        for _ in range(0, 5) {
+        for _ in range(0, 3) {
             spawn_test_worker(&queue);
         }
-    });
+        let mut promise_list: ~[Receiver<int>] = ~[];
+        for c in range(0, 10) {
+            let rv = queue.push(c);
+            promise_list.push(rv);
+        }
+        let return_list = promise_list.map(|promise| promise.recv());
+        assert_eq!(return_list, ~[0, 2, 4, 6, 8, 10, 12, 14, 16, 18]);
+    }
+
+
+    #[test]
+    fn test_enqueue_from_tasks() {
+        let queue = WorkQueue::<int, int>::create();
+        for _ in range(0, 3) {
+            spawn_test_worker(&queue);
+        }
+        let mut promise_list: ~[Receiver<int>] = ~[];
+        let queue_proxy = queue.proxy();
+        for c in range(0, 10) {
+            let queue_proxy_clone = queue_proxy.clone();
+            let (done, promise) = channel::<int>();
+            promise_list.push(promise);
+            task::spawn(proc() {
+                let done = done;
+                let queue = queue_proxy_clone;
+                let rv = queue.push(c);
+                done.send(rv.recv());
+            });
+        }
+        let return_list = promise_list.map(|promise| promise.recv());
+        assert_eq!(return_list, ~[0, 2, 4, 6, 8, 10, 12, 14, 16, 18]);
+    }
+
+
+    #[bench]
+    fn bench_50_tasks_4_threads(b: &mut BenchHarness) {
+        let queue = WorkQueue::<int, int>::create();
+        for _ in range(0, 4) {
+            spawn_test_worker(&queue);
+        }
+        b.iter(|| {
+            let mut promise_list: ~[Receiver<int>] = ~[];
+            for _ in range(0, 50) {
+                let rv = queue.push(1);
+                promise_list.push(rv);
+            }
+            let _ = promise_list.map(|promise| promise.recv());
+        });
+    }
+
+
+    #[bench]
+    fn bench_spawn_5_workers(b: &mut BenchHarness) {
+        b.iter(|| {
+            let queue = WorkQueue::<int, int>::create();
+            for _ in range(0, 5) {
+                spawn_test_worker(&queue);
+            }
+        });
+    }
 }
