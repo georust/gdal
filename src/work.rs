@@ -1,3 +1,7 @@
+use native;
+use std::comm::channel;
+
+
 struct WorkUnit {
     arg: int,
     callback: Sender<int>,
@@ -11,18 +15,15 @@ enum MessageToWorker {
 
 
 struct WorkQueue {
-    enqueue_work: Sender<MessageToWorker>,
+    dispatcher: Sender<MessageToWorker>,
     worker_count: int,
 }
 
 
 impl WorkQueue {
     pub fn create(worker_count: int) -> WorkQueue {
-        use native;
-        use std::comm::channel;
-
-        let (want_work, worker_wants_work) = channel::<Sender<MessageToWorker>>();
-        let (enqueue_work, have_new_job) = channel::<MessageToWorker>();
+        let (want_work, idle_worker) = channel::<Sender<MessageToWorker>>();
+        let (dispatcher, dispatcher_inbox) = channel::<MessageToWorker>();
 
         for _ in range(0, worker_count) {
             // worker
@@ -45,11 +46,11 @@ impl WorkQueue {
         // dispatcher
         native::task::spawn(proc() {
             let mut worker_count = worker_count;
-            let have_new_job = have_new_job;
-            let worker_wants_work = worker_wants_work;
+            let inbox = dispatcher_inbox;
+            let idle_worker = idle_worker;
             loop {
-                let message_to_worker = have_new_job.recv();
-                let worker = worker_wants_work.recv();
+                let message_to_worker = inbox.recv();
+                let worker = idle_worker.recv();
                 match message_to_worker {
                     Halt => worker_count -= 1,
                     _    => {}
@@ -61,13 +62,13 @@ impl WorkQueue {
             }
         });
 
-        return WorkQueue{enqueue_work: enqueue_work, worker_count: worker_count};
+        return WorkQueue{dispatcher: dispatcher, worker_count: worker_count};
     }
 
 
     pub fn execute(&self, arg: int) -> Receiver<int> {
         let (reply_with_rv, wait_for_rv) = channel::<int>();
-        self.enqueue_work.send(Work(WorkUnit{arg: arg, callback: reply_with_rv}));
+        self.dispatcher.send(Work(WorkUnit{arg: arg, callback: reply_with_rv}));
         return wait_for_rv;
     }
 }
@@ -76,7 +77,7 @@ impl WorkQueue {
 impl Drop for WorkQueue {
     fn drop(&mut self) {
         for _ in range(0, self.worker_count) {
-            self.enqueue_work.send(Halt);
+            self.dispatcher.send(Halt);
         }
     }
 }
