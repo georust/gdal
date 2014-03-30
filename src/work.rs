@@ -73,7 +73,7 @@ impl<ARG:Send, RV:Send> WorkQueue<ARG, RV> {
         return reg_r.recv();
     }
 
-    pub fn execute(&self, arg: ARG) -> Receiver<RV> {
+    pub fn push(&self, arg: ARG) -> Receiver<RV> {
         let (rv, wait_for_rv) = channel::<RV>();
         self.dispatcher.send(Dispatch(WorkUnit{arg: arg, rv: rv}));
         return wait_for_rv;
@@ -93,7 +93,7 @@ impl<ARG:Send, RV:Send> Drop for WorkQueue<ARG, RV> {
 
 
 impl<ARG:Send, RV:Send> WorkQueueProxy<ARG, RV> {
-    pub fn execute(&self, arg: ARG) -> Receiver<RV> {
+    pub fn push(&self, arg: ARG) -> Receiver<RV> {
         let (rv, wait_for_rv) = channel::<RV>();
         self.dispatcher.send(Dispatch(WorkUnit{arg: arg, rv: rv}));
         return wait_for_rv;
@@ -134,7 +134,7 @@ fn test_queue() {
     }
     let mut promise_list: ~[Receiver<int>] = ~[];
     for c in range(0, 10) {
-        let rv = queue.execute(c);
+        let rv = queue.push(c);
         promise_list.push(rv);
     }
     let return_list = promise_list.map(|promise| promise.recv());
@@ -157,7 +157,7 @@ fn test_enqueue_from_tasks() {
         task::spawn(proc() {
             let done = done;
             let queue = queue_proxy_clone;
-            let rv = queue.execute(c);
+            let rv = queue.push(c);
             done.send(rv.recv());
         });
     }

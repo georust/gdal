@@ -67,7 +67,7 @@ impl Server for TileServer {
                                 parameters: Vec::new(),
                             };
                             w.headers.content_type = Some(content_type);
-                            let tile_png = self.queue.execute((x, y, z)).recv();
+                            let tile_png = self.queue.push((x, y, z)).recv();
                             w.write(tile_png).unwrap();
                         },
                         _ => {}
