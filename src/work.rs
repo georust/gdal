@@ -14,8 +14,14 @@ enum MessageToWorker {
 }
 
 
+enum MessageToDispatcher {
+    Dispatch(WorkUnit),
+    HaltOne,
+}
+
+
 struct WorkQueue {
-    dispatcher: Sender<MessageToWorker>,
+    dispatcher: Sender<MessageToDispatcher>,
     worker_count: int,
 }
 
@@ -23,7 +29,7 @@ struct WorkQueue {
 impl WorkQueue {
     pub fn create(worker_count: int) -> WorkQueue {
         let (want_work, idle_worker) = channel::<Sender<MessageToWorker>>();
-        let (dispatcher, dispatcher_inbox) = channel::<MessageToWorker>();
+        let (dispatcher, dispatcher_inbox) = channel::<MessageToDispatcher>();
 
         for _ in range(0, worker_count) {
             // worker
@@ -50,10 +56,10 @@ impl WorkQueue {
             let idle_worker = idle_worker;
             loop {
                 match inbox.recv() {
-                    Work(work_item) => {
+                    Dispatch(work_item) => {
                         idle_worker.recv().send(Work(work_item));
                     },
-                    Halt => {
+                    HaltOne => {
                         worker_count -= 1;
                         idle_worker.recv().send(Halt);
                         if worker_count == 0 {
@@ -70,7 +76,7 @@ impl WorkQueue {
 
     pub fn execute(&self, arg: int) -> Receiver<int> {
         let (reply_with_rv, wait_for_rv) = channel::<int>();
-        self.dispatcher.send(Work(WorkUnit{arg: arg, callback: reply_with_rv}));
+        self.dispatcher.send(Dispatch(WorkUnit{arg: arg, callback: reply_with_rv}));
         return wait_for_rv;
     }
 }
@@ -79,7 +85,7 @@ impl WorkQueue {
 impl Drop for WorkQueue {
     fn drop(&mut self) {
         for _ in range(0, self.worker_count) {
-            self.dispatcher.send(Halt);
+            self.dispatcher.send(HaltOne);
         }
     }
 }
