@@ -1,4 +1,4 @@
-use native;
+use native::task;
 use std::comm::channel;
 
 
@@ -31,7 +31,7 @@ impl<ARG:Send, RV:Send> WorkQueue<ARG, RV> {
         let (dispatcher, dispatcher_inbox) = channel::<MessageToDispatcher<ARG, RV>>();
 
         // dispatcher
-        native::task::spawn(proc() {
+        task::spawn(proc() {
             let (want_work, idle_worker) = channel::<Sender<MessageToWorker<ARG, RV>>>();
             let mut worker_count = 0;
             let inbox = dispatcher_inbox;
@@ -85,7 +85,7 @@ impl<ARG:Send, RV:Send> Drop for WorkQueue<ARG, RV> {
 
 fn spawn_test_worker(queue: &WorkQueue<int, int>) {
     let want_work = queue.register_worker();
-    native::task::spawn(proc() {
+    task::spawn(proc() {
         let want_work = want_work;
         loop {
             let (idle, get_work_unit) = channel::<MessageToWorker<int, int>>();
