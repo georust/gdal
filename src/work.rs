@@ -101,6 +101,13 @@ impl<ARG:Send, RV:Send> WorkQueueProxy<ARG, RV> {
 }
 
 
+impl<ARG:Send, RV:Send> Clone for WorkQueueProxy<ARG, RV> {
+    fn clone(&self) -> WorkQueueProxy<ARG, RV> {
+        return WorkQueueProxy{dispatcher: self.dispatcher.clone()};
+    }
+}
+
+
 fn spawn_test_worker(queue: &WorkQueue<int, int>) {
     let want_work = queue.register_worker();
     task::spawn(proc() {
@@ -142,13 +149,14 @@ fn test_enqueue_from_tasks() {
         spawn_test_worker(&queue);
     }
     let mut promise_list: ~[Receiver<int>] = ~[];
+    let queue_proxy = queue.proxy();
     for c in range(0, 10) {
-        let queue_proxy = queue.proxy();
+        let queue_proxy_clone = queue_proxy.clone();
         let (done, promise) = channel::<int>();
         promise_list.push(promise);
         task::spawn(proc() {
             let done = done;
-            let queue = queue_proxy;
+            let queue = queue_proxy_clone;
             let rv = queue.execute(c);
             done.send(rv.recv());
         });
