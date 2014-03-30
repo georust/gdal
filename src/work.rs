@@ -27,7 +27,7 @@ struct WorkQueue {
 
 
 impl WorkQueue {
-    pub fn create(worker_count: int) -> WorkQueue {
+    pub fn create() -> WorkQueue {
         let (dispatcher, dispatcher_inbox) = channel::<MessageToDispatcher>();
 
         // dispatcher
@@ -55,29 +55,27 @@ impl WorkQueue {
                 };
             }
         });
-
-        for _ in range(0, worker_count) {
-            // worker
-            let (reg_s, reg_r) = channel::<Sender<Sender<MessageToWorker>>>();
-            dispatcher.send(RegisterWorker(reg_s));
-            let want_work = reg_r.recv();
-
-            native::task::spawn(proc() {
-                let want_work = want_work;
-                loop {
-                    let (reply_with_work, get_work_unit) = channel::<MessageToWorker>();
-                    want_work.send(reply_with_work);
-                    let work_unit = match get_work_unit.recv() {
-                        Work(wu) => wu,
-                        Halt     => return
-                    };
-                    let rv = work_unit.arg * 2;
-                    work_unit.callback.send(rv);
-                }
-            });
-        }
-
         return WorkQueue{dispatcher: dispatcher};
+    }
+
+    pub fn spawn_worker(&self) {
+        let (reg_s, reg_r) = channel::<Sender<Sender<MessageToWorker>>>();
+        self.dispatcher.send(RegisterWorker(reg_s));
+        let want_work = reg_r.recv();
+
+        native::task::spawn(proc() {
+            let want_work = want_work;
+            loop {
+                let (reply_with_work, get_work_unit) = channel::<MessageToWorker>();
+                want_work.send(reply_with_work);
+                let work_unit = match get_work_unit.recv() {
+                    Work(wu) => wu,
+                    Halt     => return
+                };
+                let rv = work_unit.arg * 2;
+                work_unit.callback.send(rv);
+            }
+        });
     }
 
 
@@ -98,7 +96,10 @@ impl Drop for WorkQueue {
 
 #[test]
 fn test_queue() {
-    let queue = WorkQueue::create(3);
+    let queue = WorkQueue::create();
+    for _ in range(0, 3) {
+        queue.spawn_worker();
+    }
     let mut promise_list: ~[Receiver<int>] = ~[];
     for c in range(0, 10) {
         let rv = queue.execute(c);
