@@ -183,3 +183,14 @@ fn bench_1000_tasks_4_threads(b: &mut BenchHarness) {
         let _ = promise_list.map(|promise| promise.recv());
     });
 }
+
+
+#[bench]
+fn bench_100_workers(b: &mut BenchHarness) {
+    b.iter(|| {
+        let queue = WorkQueue::<int, int>::create();
+        for _ in range(0, 100) {
+            spawn_test_worker(&queue);
+        }
+    });
+}
