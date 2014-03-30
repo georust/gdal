@@ -30,24 +30,6 @@ impl WorkQueue {
         let (want_work, idle_worker) = channel::<Sender<MessageToWorker>>();
         let (dispatcher, dispatcher_inbox) = channel::<MessageToDispatcher>();
 
-        for _ in range(0, worker_count) {
-            // worker
-            let want_work_copy = want_work.clone();
-            native::task::spawn(proc() {
-                let want_work = want_work_copy;
-                loop {
-                    let (reply_with_work, get_work_unit) = channel::<MessageToWorker>();
-                    want_work.send(reply_with_work);
-                    let work_unit = match get_work_unit.recv() {
-                        Work(wu) => wu,
-                        Halt     => return
-                    };
-                    let rv = work_unit.arg * 2;
-                    work_unit.callback.send(rv);
-                }
-            });
-        }
-
         // dispatcher
         native::task::spawn(proc() {
             let mut worker_count = worker_count;
@@ -68,6 +50,24 @@ impl WorkQueue {
                 };
             }
         });
+
+        for _ in range(0, worker_count) {
+            // worker
+            let want_work_copy = want_work.clone();
+            native::task::spawn(proc() {
+                let want_work = want_work_copy;
+                loop {
+                    let (reply_with_work, get_work_unit) = channel::<MessageToWorker>();
+                    want_work.send(reply_with_work);
+                    let work_unit = match get_work_unit.recv() {
+                        Work(wu) => wu,
+                        Halt     => return
+                    };
+                    let rv = work_unit.arg * 2;
+                    work_unit.callback.send(rv);
+                }
+            });
+        }
 
         return WorkQueue{dispatcher: dispatcher};
     }
