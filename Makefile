@@ -24,6 +24,9 @@ build/testsuite: $(src_files)
 check: build/testsuite
 	RUSTILES_TEST_FIXTURES=`pwd`/fixtures ./build/testsuite
 
+bench: build/testsuite
+	RUSTILES_TEST_FIXTURES=`pwd`/fixtures ./build/testsuite --bench
+
 clean:
 	rm -rf build
 

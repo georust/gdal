@@ -1,5 +1,6 @@
 extern crate sync;
 extern crate http;
+extern crate test;
 
 use std::vec::Vec;
 use std::io::net::ip::{SocketAddr, Ipv4Addr};

@@ -1,5 +1,6 @@
 use native::task;
 use std::comm::channel;
+use test::BenchHarness;
 
 
 pub struct WorkUnit<ARG, RV> {
@@ -164,4 +165,21 @@ fn test_enqueue_from_tasks() {
     }
     let return_list = promise_list.map(|promise| promise.recv());
     assert_eq!(return_list, ~[0, 2, 4, 6, 8, 10, 12, 14, 16, 18]);
+}
+
+
+#[bench]
+fn bench_1000_tasks_4_threads(b: &mut BenchHarness) {
+    let queue = WorkQueue::<int, int>::create();
+    for _ in range(0, 4) {
+        spawn_test_worker(&queue);
+    }
+    b.iter(|| {
+        let mut promise_list: ~[Receiver<int>] = ~[];
+        for _ in range(0, 1000) {
+            let rv = queue.push(1);
+            promise_list.push(rv);
+        }
+        let _ = promise_list.map(|promise| promise.recv());
+    });
 }
