@@ -4,8 +4,14 @@ struct WorkUnit {
 }
 
 
+enum MessageToWorker {
+    Work(WorkUnit),
+    Halt,
+}
+
+
 struct WorkQueue {
-    enqueue_work: Sender<WorkUnit>,
+    enqueue_work: Sender<MessageToWorker>,
     worker_count: int,
 }
 
@@ -15,8 +21,8 @@ impl WorkQueue {
         use native;
         use std::comm::channel;
 
-        let (want_work, worker_wants_work) = channel::<Sender<WorkUnit>>();
-        let (enqueue_work, have_new_job) = channel::<WorkUnit>();
+        let (want_work, worker_wants_work) = channel::<Sender<MessageToWorker>>();
+        let (enqueue_work, have_new_job) = channel::<MessageToWorker>();
 
         for _ in range(0, worker_count) {
             // worker
@@ -24,12 +30,12 @@ impl WorkQueue {
             native::task::spawn(proc() {
                 let want_work = want_work_copy;
                 loop {
-                    let (reply_with_work, get_work_unit) = channel::<WorkUnit>();
+                    let (reply_with_work, get_work_unit) = channel::<MessageToWorker>();
                     want_work.send(reply_with_work);
-                    let work_unit = get_work_unit.recv();
-                    if work_unit.arg == -1 {
-                        return;
-                    }
+                    let work_unit = match get_work_unit.recv() {
+                        Work(wu) => wu,
+                        Halt     => return
+                    };
                     let rv = work_unit.arg * 2;
                     work_unit.callback.send(rv);
                 }
@@ -42,12 +48,13 @@ impl WorkQueue {
             let have_new_job = have_new_job;
             let worker_wants_work = worker_wants_work;
             loop {
-                let unit = have_new_job.recv();
+                let message_to_worker = have_new_job.recv();
                 let worker = worker_wants_work.recv();
-                if unit.arg == -1 {
-                    worker_count -= 1;
+                match message_to_worker {
+                    Halt => worker_count -= 1,
+                    _    => {}
                 }
-                worker.send(unit);
+                worker.send(message_to_worker);
                 if worker_count == 0 {
                     return;
                 }
@@ -60,7 +67,7 @@ impl WorkQueue {
 
     pub fn execute(&self, arg: int) -> Receiver<int> {
         let (reply_with_rv, wait_for_rv) = channel::<int>();
-        self.enqueue_work.send(WorkUnit{arg: arg, callback: reply_with_rv});
+        self.enqueue_work.send(Work(WorkUnit{arg: arg, callback: reply_with_rv}));
         return wait_for_rv;
     }
 }
@@ -69,8 +76,7 @@ impl WorkQueue {
 impl Drop for WorkQueue {
     fn drop(&mut self) {
         for _ in range(0, self.worker_count) {
-            let (reply_with_rv, _) = channel::<int>();
-            self.enqueue_work.send(WorkUnit{arg: -1, callback: reply_with_rv});
+            self.enqueue_work.send(Halt);
         }
     }
 }
