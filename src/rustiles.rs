@@ -13,6 +13,7 @@ use tile::tile;
 #[allow(dead_code)]
 mod gdal;
 mod tile;
+mod work;
 
 
 

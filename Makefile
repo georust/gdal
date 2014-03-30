@@ -8,7 +8,8 @@ src_files=\
 	src/gdal/dataset.rs \
 	src/gdal/proj.rs \
 	src/gdal/geom.rs \
-	src/tile.rs
+	src/tile.rs \
+	src/work.rs
 
 all: build/rustiles
 
