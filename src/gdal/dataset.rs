@@ -170,6 +170,7 @@ impl Dataset {
         window_size: Point<uint>,
         buffer: ByteBuffer
     ) {
+        assert_eq!(buffer.data.len(), buffer.size.x * buffer.size.y);
         unsafe {
             let c_band = GDALGetRasterBand(self.c_dataset, band_index as c_int);
             let rv = GDALRasterIO(
