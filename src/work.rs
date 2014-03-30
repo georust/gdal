@@ -169,14 +169,14 @@ fn test_enqueue_from_tasks() {
 
 
 #[bench]
-fn bench_1000_tasks_4_threads(b: &mut BenchHarness) {
+fn bench_50_tasks_4_threads(b: &mut BenchHarness) {
     let queue = WorkQueue::<int, int>::create();
     for _ in range(0, 4) {
         spawn_test_worker(&queue);
     }
     b.iter(|| {
         let mut promise_list: ~[Receiver<int>] = ~[];
-        for _ in range(0, 1000) {
+        for _ in range(0, 50) {
             let rv = queue.push(1);
             promise_list.push(rv);
         }
@@ -186,10 +186,10 @@ fn bench_1000_tasks_4_threads(b: &mut BenchHarness) {
 
 
 #[bench]
-fn bench_100_workers(b: &mut BenchHarness) {
+fn bench_spawn_5_workers(b: &mut BenchHarness) {
     b.iter(|| {
         let queue = WorkQueue::<int, int>::create();
-        for _ in range(0, 100) {
+        for _ in range(0, 5) {
             spawn_test_worker(&queue);
         }
     });
