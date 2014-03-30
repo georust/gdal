@@ -2,37 +2,37 @@ use native;
 use std::comm::channel;
 
 
-struct WorkUnit {
-    arg: int,
-    callback: Sender<int>,
+struct WorkUnit<ARG, RV> {
+    arg: ARG,
+    callback: Sender<RV>,
 }
 
 
-enum MessageToWorker {
-    Work(WorkUnit),
+enum MessageToWorker<ARG, RV> {
+    Work(WorkUnit<ARG, RV>),
     Halt,
 }
 
 
-enum MessageToDispatcher {
-    Dispatch(WorkUnit),
+enum MessageToDispatcher<ARG, RV> {
+    Dispatch(WorkUnit<ARG, RV>),
     HaltAll,
-    RegisterWorker(Sender<Sender<Sender<MessageToWorker>>>),
+    RegisterWorker(Sender<Sender<Sender<MessageToWorker<ARG, RV>>>>),
 }
 
 
-struct WorkQueue {
-    dispatcher: Sender<MessageToDispatcher>,
+struct WorkQueue<ARG, RV> {
+    dispatcher: Sender<MessageToDispatcher<ARG, RV>>,
 }
 
 
-impl WorkQueue {
-    pub fn create() -> WorkQueue {
-        let (dispatcher, dispatcher_inbox) = channel::<MessageToDispatcher>();
+impl<ARG:Send, RV:Send> WorkQueue<ARG, RV> {
+    pub fn create() -> WorkQueue<ARG, RV> {
+        let (dispatcher, dispatcher_inbox) = channel::<MessageToDispatcher<ARG, RV>>();
 
         // dispatcher
         native::task::spawn(proc() {
-            let (want_work, idle_worker) = channel::<Sender<MessageToWorker>>();
+            let (want_work, idle_worker) = channel::<Sender<MessageToWorker<ARG, RV>>>();
             let mut worker_count = 0;
             let inbox = dispatcher_inbox;
             let idle_worker = idle_worker;
@@ -58,21 +58,25 @@ impl WorkQueue {
         return WorkQueue{dispatcher: dispatcher};
     }
 
-    pub fn register_worker(&self) -> Sender<Sender<MessageToWorker>> {
-        let (reg_s, reg_r) = channel::<Sender<Sender<MessageToWorker>>>();
+    pub fn register_worker(&self) -> Sender<Sender<MessageToWorker<ARG, RV>>> {
+        let (reg_s, reg_r) = channel::<Sender<Sender<MessageToWorker<ARG, RV>>>>();
         self.dispatcher.send(RegisterWorker(reg_s));
         return reg_r.recv();
     }
 
-    pub fn execute(&self, arg: int) -> Receiver<int> {
-        let (callback, wait_for_rv) = channel::<int>();
+    pub fn execute(&self, arg: ARG) -> Receiver<RV> {
+        let (callback, wait_for_rv) = channel::<RV>();
         self.dispatcher.send(Dispatch(WorkUnit{arg: arg, callback: callback}));
         return wait_for_rv;
     }
 }
 
 
-impl Drop for WorkQueue {
+// rustc complais "cannot implement a destructor on a structure with
+// type parameters", but our destruction is safe, we only send
+// a simple message on a channel.
+#[unsafe_destructor]
+impl<ARG:Send, RV:Send> Drop for WorkQueue<ARG, RV> {
     fn drop(&mut self) {
         self.dispatcher.send(HaltAll);
     }
@@ -81,13 +85,13 @@ impl Drop for WorkQueue {
 
 #[test]
 fn test_queue() {
-    let queue = WorkQueue::create();
+    let queue = WorkQueue::<int, int>::create();
     for _ in range(0, 3) {
         let want_work = queue.register_worker();
         native::task::spawn(proc() {
             let want_work = want_work;
             loop {
-                let (idle, get_work_unit) = channel::<MessageToWorker>();
+                let (idle, get_work_unit) = channel::<MessageToWorker<int, int>>();
                 want_work.send(idle);
                 let work_unit = match get_work_unit.recv() {
                     Work(wu) => wu,
