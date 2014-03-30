@@ -4,7 +4,7 @@ use std::comm::channel;
 
 struct WorkUnit<ARG, RV> {
     arg: ARG,
-    callback: Sender<RV>,
+    rv: Sender<RV>,
 }
 
 
@@ -65,8 +65,8 @@ impl<ARG:Send, RV:Send> WorkQueue<ARG, RV> {
     }
 
     pub fn execute(&self, arg: ARG) -> Receiver<RV> {
-        let (callback, wait_for_rv) = channel::<RV>();
-        self.dispatcher.send(Dispatch(WorkUnit{arg: arg, callback: callback}));
+        let (rv, wait_for_rv) = channel::<RV>();
+        self.dispatcher.send(Dispatch(WorkUnit{arg: arg, rv: rv}));
         return wait_for_rv;
     }
 }
@@ -98,7 +98,7 @@ fn test_queue() {
                     Halt     => return
                 };
                 let rv = work_unit.arg * 2;
-                work_unit.callback.send(rv);
+                work_unit.rv.send(rv);
             }
         });
     }
