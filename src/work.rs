@@ -17,6 +17,7 @@ enum MessageToWorker {
 enum MessageToDispatcher {
     Dispatch(WorkUnit),
     HaltAll,
+    RegisterWorker(Sender<Sender<Sender<MessageToWorker>>>),
 }
 
 
@@ -27,12 +28,12 @@ struct WorkQueue {
 
 impl WorkQueue {
     pub fn create(worker_count: int) -> WorkQueue {
-        let (want_work, idle_worker) = channel::<Sender<MessageToWorker>>();
         let (dispatcher, dispatcher_inbox) = channel::<MessageToDispatcher>();
 
         // dispatcher
         native::task::spawn(proc() {
-            let mut worker_count = worker_count;
+            let (want_work, idle_worker) = channel::<Sender<MessageToWorker>>();
+            let mut worker_count = 0;
             let inbox = dispatcher_inbox;
             let idle_worker = idle_worker;
             loop {
@@ -40,6 +41,10 @@ impl WorkQueue {
                     Dispatch(work_item) => {
                         idle_worker.recv().send(Work(work_item));
                     },
+                    RegisterWorker(want_idle_sender) => {
+                        worker_count += 1;
+                        want_idle_sender.send(want_work.clone());
+                    }
                     HaltAll => {
                         while worker_count > 0 {
                             idle_worker.recv().send(Halt);
@@ -53,9 +58,12 @@ impl WorkQueue {
 
         for _ in range(0, worker_count) {
             // worker
-            let want_work_copy = want_work.clone();
+            let (reg_s, reg_r) = channel::<Sender<Sender<MessageToWorker>>>();
+            dispatcher.send(RegisterWorker(reg_s));
+            let want_work = reg_r.recv();
+
             native::task::spawn(proc() {
-                let want_work = want_work_copy;
+                let want_work = want_work;
                 loop {
                     let (reply_with_work, get_work_unit) = channel::<MessageToWorker>();
                     want_work.send(reply_with_work);
