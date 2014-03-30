@@ -49,16 +49,18 @@ impl WorkQueue {
             let inbox = dispatcher_inbox;
             let idle_worker = idle_worker;
             loop {
-                let message_to_worker = inbox.recv();
-                let worker = idle_worker.recv();
-                match message_to_worker {
-                    Halt => worker_count -= 1,
-                    _    => {}
-                }
-                worker.send(message_to_worker);
-                if worker_count == 0 {
-                    return;
-                }
+                match inbox.recv() {
+                    Work(work_item) => {
+                        idle_worker.recv().send(Work(work_item));
+                    },
+                    Halt => {
+                        worker_count -= 1;
+                        idle_worker.recv().send(Halt);
+                        if worker_count == 0 {
+                            return;
+                        }
+                    },
+                };
             }
         });
 
