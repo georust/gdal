@@ -69,8 +69,8 @@ impl WorkQueue {
         native::task::spawn(proc() {
             let want_work = want_work;
             loop {
-                let (reply_with_work, get_work_unit) = channel::<MessageToWorker>();
-                want_work.send(reply_with_work);
+                let (idle, get_work_unit) = channel::<MessageToWorker>();
+                want_work.send(idle);
                 let work_unit = match get_work_unit.recv() {
                     Work(wu) => wu,
                     Halt     => return
@@ -83,8 +83,8 @@ impl WorkQueue {
 
 
     pub fn execute(&self, arg: int) -> Receiver<int> {
-        let (reply_with_rv, wait_for_rv) = channel::<int>();
-        self.dispatcher.send(Dispatch(WorkUnit{arg: arg, callback: reply_with_rv}));
+        let (callback, wait_for_rv) = channel::<int>();
+        self.dispatcher.send(Dispatch(WorkUnit{arg: arg, callback: callback}));
         return wait_for_rv;
     }
 }
