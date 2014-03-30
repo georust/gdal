@@ -64,24 +64,6 @@ impl WorkQueue {
         return reg_r.recv();
     }
 
-    pub fn spawn_worker(&self) {
-        let want_work = self.register_worker();
-        native::task::spawn(proc() {
-            let want_work = want_work;
-            loop {
-                let (idle, get_work_unit) = channel::<MessageToWorker>();
-                want_work.send(idle);
-                let work_unit = match get_work_unit.recv() {
-                    Work(wu) => wu,
-                    Halt     => return
-                };
-                let rv = work_unit.arg * 2;
-                work_unit.callback.send(rv);
-            }
-        });
-    }
-
-
     pub fn execute(&self, arg: int) -> Receiver<int> {
         let (callback, wait_for_rv) = channel::<int>();
         self.dispatcher.send(Dispatch(WorkUnit{arg: arg, callback: callback}));
@@ -101,7 +83,20 @@ impl Drop for WorkQueue {
 fn test_queue() {
     let queue = WorkQueue::create();
     for _ in range(0, 3) {
-        queue.spawn_worker();
+        let want_work = queue.register_worker();
+        native::task::spawn(proc() {
+            let want_work = want_work;
+            loop {
+                let (idle, get_work_unit) = channel::<MessageToWorker>();
+                want_work.send(idle);
+                let work_unit = match get_work_unit.recv() {
+                    Work(wu) => wu,
+                    Halt     => return
+                };
+                let rv = work_unit.arg * 2;
+                work_unit.callback.send(rv);
+            }
+        });
     }
     let mut promise_list: ~[Receiver<int>] = ~[];
     for c in range(0, 10) {
