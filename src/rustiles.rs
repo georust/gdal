@@ -8,7 +8,8 @@ use http::server::{Config, Server, Request, ResponseWriter};
 use http::server::request::AbsolutePath;
 use http::status::NotFound;
 use http::headers;
-use tile::tile;
+use tile::spawn_tile_worker;
+use work::{WorkQueue, WorkQueueProxy};
 
 #[allow(dead_code)]
 mod gdal;
@@ -24,7 +25,9 @@ fn test_nothing() {
 
 
 #[deriving(Clone)]
-struct TileServer;
+struct TileServer {
+    queue: WorkQueueProxy<(int, int, int), ~[u8]>,
+}
 
 
 impl Server for TileServer {
@@ -58,17 +61,13 @@ impl Server for TileServer {
                         from_str::<int>(bits[4])
                     ) {
                         (Some(z), Some(x), Some(y)) => {
-                            use std::os::args;
-                            use std::path::Path;
-                            use gdal::dataset::open;
                             let content_type = headers::content_type::MediaType {
                                 type_: ~"image",
                                 subtype: ~"png",
                                 parameters: Vec::new(),
                             };
-                            let source = open(&Path::new(args()[1])).unwrap();
                             w.headers.content_type = Some(content_type);
-                            let tile_png = tile(source, (x, y, z));
+                            let tile_png = self.queue.execute((x, y, z)).recv();
                             w.write(tile_png).unwrap();
                         },
                         _ => {}
@@ -86,7 +85,13 @@ impl Server for TileServer {
 
 
 fn main() {
-    TileServer.serve_forever();
+    use std::os::args;
+    let source_path = Path::new(args()[1]);
+    let queue = WorkQueue::<(int, int, int), ~[u8]>::create();
+    for _ in range(0, 4) {
+        spawn_tile_worker(&queue, &source_path);
+    }
+    TileServer{queue: queue.proxy()}.serve_forever();
 }
 
 

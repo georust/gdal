@@ -2,13 +2,13 @@ use native::task;
 use std::comm::channel;
 
 
-struct WorkUnit<ARG, RV> {
+pub struct WorkUnit<ARG, RV> {
     arg: ARG,
     rv: Sender<RV>,
 }
 
 
-enum MessageToWorker<ARG, RV> {
+pub enum MessageToWorker<ARG, RV> {
     Work(WorkUnit<ARG, RV>),
     Halt,
 }
@@ -21,12 +21,12 @@ enum MessageToDispatcher<ARG, RV> {
 }
 
 
-struct WorkQueue<ARG, RV> {
+pub struct WorkQueue<ARG, RV> {
     dispatcher: Sender<MessageToDispatcher<ARG, RV>>,
 }
 
 
-struct WorkQueueProxy<ARG, RV> {
+pub struct WorkQueueProxy<ARG, RV> {
     dispatcher: Sender<MessageToDispatcher<ARG, RV>>,
 }
 
