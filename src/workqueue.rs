@@ -11,7 +11,6 @@
 
 //! write docs here
 
-use std::task::spawn;
 use std::comm::channel;
 
 /// write docs here
@@ -42,6 +41,12 @@ pub struct WorkQueue<ARG, RV> {
 }
 
 /// A proxy to a `WorkQueue`. It can be freely cloned to use from multiple tasks.
+pub struct Dispatcher<ARG, RV> {
+    /// write docs here
+    inbox: Receiver<MessageToDispatcher<ARG, RV>>,
+}
+
+/// A proxy to a `WorkQueue`. It can be freely cloned to use from multiple tasks.
 pub struct WorkQueueProxy<ARG, RV> {
     /// write docs here
     dispatcher: Sender<MessageToDispatcher<ARG, RV>>,
@@ -53,33 +58,12 @@ pub struct Worker<ARG, RV> {
 }
 
 /// Create a new work queue.
-pub fn WorkQueue<ARG:Send, RV:Send>() -> WorkQueue<ARG, RV> {
+pub fn WorkQueue<ARG:Send, RV:Send>() -> (WorkQueue<ARG, RV>, Dispatcher<ARG, RV>) {
     let (dispatcher, dispatcher_inbox) = channel::<MessageToDispatcher<ARG, RV>>();
-    spawn(proc() {
-        let (want_work, idle_worker) = channel::<Sender<MessageToWorker<ARG, RV>>>();
-        let mut worker_count = 0;
-        let inbox = dispatcher_inbox;
-        let idle_worker = idle_worker;
-        loop {
-            match inbox.recv() {
-                Dispatch(work_item) => {
-                    idle_worker.recv().send(Work(work_item));
-                },
-                RegisterWorker(want_idle_sender) => {
-                    worker_count += 1;
-                    want_idle_sender.send(want_work.clone());
-                }
-                HaltAll => {
-                    while worker_count > 0 {
-                        idle_worker.recv().send(Halt);
-                        worker_count -= 1;
-                    }
-                    return;
-                },
-            };
-        }
-    });
-    return WorkQueue{dispatcher: dispatcher};
+    return (
+        WorkQueue{dispatcher: dispatcher},
+        Dispatcher{inbox: dispatcher_inbox},
+    );
 }
 
 impl<ARG:Send, RV:Send> WorkQueue<ARG, RV> {
@@ -119,6 +103,34 @@ impl<ARG:Send, RV:Send> Drop for WorkQueue<ARG, RV> {
     }
 }
 
+impl<ARG:Send, RV:Send> Dispatcher<ARG, RV> {
+    /// Run the dispatcher loop. It will stop when the parent WorkQueue
+    /// object is dropped.
+    pub fn run(&self) {
+        let (want_work, idle_worker) = channel::<Sender<MessageToWorker<ARG, RV>>>();
+        let mut worker_count = 0;
+        let idle_worker = idle_worker;
+        loop {
+            match self.inbox.recv() {
+                Dispatch(work_item) => {
+                    idle_worker.recv().send(Work(work_item));
+                },
+                RegisterWorker(want_idle_sender) => {
+                    worker_count += 1;
+                    want_idle_sender.send(want_work.clone());
+                }
+                HaltAll => {
+                    while worker_count > 0 {
+                        idle_worker.recv().send(Halt);
+                        worker_count -= 1;
+                    }
+                    return;
+                },
+            };
+        }
+    }
+}
+
 impl<ARG:Send, RV:Send> WorkQueueProxy<ARG, RV> {
     /// Push a work item to this queue.
     pub fn push(&self, arg: ARG) -> Receiver<RV> {
@@ -154,7 +166,8 @@ mod test {
 
     #[test]
     fn test_queue() {
-        let queue = WorkQueue::<int, int>();
+        let (queue, dispatcher) = WorkQueue::<int, int>();
+        spawn(proc() { dispatcher.run() });
         for _ in range(0, 3) {
             let worker = queue.worker();
             spawn(proc() { worker.run(|arg| arg * 2); });
@@ -171,7 +184,8 @@ mod test {
 
     #[test]
     fn test_enqueue_from_tasks() {
-        let queue = WorkQueue::<int, int>();
+        let (queue, dispatcher) = WorkQueue::<int, int>();
+        spawn(proc() { dispatcher.run() });
         for _ in range(0, 3) {
             let worker = queue.worker();
             spawn(proc() { worker.run(|arg| arg * 2); });
@@ -208,7 +222,8 @@ mod bench {
 
     #[bench]
     fn bench_50_tasks_4_threads(b: &mut BenchHarness) {
-        let queue = WorkQueue::<int, int>();
+        let (queue, dispatcher) = WorkQueue::<int, int>();
+        spawn(proc() { dispatcher.run() });
         for _ in range(0, 4) {
             let worker = queue.worker();
             spawn(proc() { worker.run(|arg| arg * 2); });
@@ -225,7 +240,8 @@ mod bench {
     #[bench]
     fn bench_spawn_5_workers(b: &mut BenchHarness) {
         b.iter(|| {
-            let queue = WorkQueue::<int, int>();
+            let (queue, dispatcher) = WorkQueue::<int, int>();
+            spawn(proc() { dispatcher.run() });
             for _ in range(0, 5) {
                 let worker = queue.worker();
                 spawn(proc() { worker.run(|arg| arg * 2); });
