@@ -9,7 +9,7 @@ src_files=\
 	src/gdal/proj.rs \
 	src/gdal/geom.rs \
 	src/tile.rs \
-	src/work.rs
+	src/workqueue.rs
 
 all: build/rustiles
 

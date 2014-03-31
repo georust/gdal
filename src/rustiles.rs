@@ -10,12 +10,12 @@ use http::server::request::AbsolutePath;
 use http::status::NotFound;
 use http::headers;
 use tile::spawn_tile_worker;
-use work::{WorkQueue, WorkQueueProxy};
+use workqueue::{WorkQueue, WorkQueueProxy};
 
 #[allow(dead_code)]
 mod gdal;
 mod tile;
-mod work;
+mod workqueue;
 
 
 

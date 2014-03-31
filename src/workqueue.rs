@@ -112,7 +112,7 @@ impl<ARG:Send, RV:Send> Clone for WorkQueueProxy<ARG, RV> {
 mod test {
     use native::task;
     use test::BenchHarness;
-    use work::{WorkQueue, MessageToWorker, Work};
+    use workqueue::{WorkQueue, MessageToWorker, Work};
 
     fn spawn_test_worker(queue: &WorkQueue<int, int>) {
         let want_work = queue.register_worker();

@@ -6,7 +6,7 @@ use gdal::geom::Point;
 use gdal::proj::{Proj, DEG_TO_RAD};
 use gdal::dataset::{Dataset, open};
 use gdal::driver::get_driver;
-use work::{WorkQueue, MessageToWorker, Work, Halt};
+use workqueue::{WorkQueue, MessageToWorker, Work, Halt};
 
 static webmerc_limit: f64 = 20037508.342789244;
 
