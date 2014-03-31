@@ -1,12 +1,12 @@
 extern crate sync;
 
 use std::io::{File, TempDir};
-use native::task;
+use std::task;
 use gdal::geom::Point;
 use gdal::proj::{Proj, DEG_TO_RAD};
 use gdal::dataset::{Dataset, open};
 use gdal::driver::get_driver;
-use workqueue::{WorkQueue, MessageToWorker, Work, Halt};
+use workqueue::WorkQueue;
 
 static webmerc_limit: f64 = 20037508.342789244;
 
@@ -65,19 +65,8 @@ pub fn spawn_tile_worker(
     source_path: &Path
 ) {
     let source = open(source_path).unwrap();
-    let want_work = queue.register_worker();
+    let worker = queue.worker();
     task::spawn(proc() {
-        let want_work = want_work;
-        loop {
-            let (idle, get_work_unit) = channel::<MessageToWorker<(int, int, int), ~[u8]>>();
-            want_work.send(idle);
-            let work_unit = match get_work_unit.recv() {
-                Work(wu) => wu,
-                Halt     => return
-            };
-            let xyz = work_unit.arg;
-            let tile_png = tile(&source, xyz);
-            work_unit.rv.send(tile_png);
-        }
+        worker.run(|xyz| tile(&source, xyz));
     });
 }

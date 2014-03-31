@@ -5,6 +5,7 @@ extern crate test;
 use std::vec::Vec;
 use std::io::net::ip::{SocketAddr, Ipv4Addr};
 use std::io::Writer;
+use std::task;
 use http::server::{Config, Server, Request, ResponseWriter};
 use http::server::request::AbsolutePath;
 use http::status::NotFound;
@@ -88,7 +89,8 @@ impl Server for TileServer {
 fn main() {
     use std::os::args;
     let source_path = Path::new(args()[1]);
-    let queue = WorkQueue::<(int, int, int), ~[u8]>::create();
+    let (queue, dispatcher) = WorkQueue::<(int, int, int), ~[u8]>();
+    task::spawn(proc() { dispatcher.run(); });
     for _ in range(0, 4) {
         spawn_tile_worker(&queue, &source_path);
     }
