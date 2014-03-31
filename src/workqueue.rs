@@ -47,6 +47,11 @@ pub struct WorkQueueProxy<ARG, RV> {
     dispatcher: Sender<MessageToDispatcher<ARG, RV>>,
 }
 
+/// A worker that executes tasks from its parent queue.
+pub struct Worker<ARG, RV> {
+    priv ask_for_work: Sender<Sender<MessageToWorker<ARG, RV>>>,
+}
+
 impl<ARG:Send, RV:Send> WorkQueue<ARG, RV> {
     /// Create a new work queue.
     pub fn create() -> WorkQueue<ARG, RV> {
@@ -90,6 +95,11 @@ impl<ARG:Send, RV:Send> WorkQueue<ARG, RV> {
         return reg_r.recv();
     }
 
+    /// Create a new worker.
+    pub fn worker(&self) -> Worker<ARG, RV> {
+        return Worker{ask_for_work: self.register_worker()};
+    }
+
     /// Push a work item to this queue.
     pub fn push(&self, arg: ARG) -> Receiver<RV> {
         let (rv, wait_for_rv) = channel::<RV>();
@@ -123,20 +133,24 @@ impl<ARG:Send, RV:Send> Clone for WorkQueueProxy<ARG, RV> {
     }
 }
 
-#[cfg(test)]
-fn spawn_test_worker(queue: &WorkQueue<int, int>) {
-    let want_work = queue.register_worker();
-    task::spawn(proc() {
-        let want_work = want_work;
+impl<ARG:Send, RV:Send> Worker<ARG, RV> {
+    pub fn run(&self, fun: |arg: ARG| -> RV) {
         loop {
-            let (idle, get_work_unit) = channel::<MessageToWorker<int, int>>();
-            want_work.send(idle);
-            let (arg, rv) = match get_work_unit.recv() {
-                Work((arg, rv)) => (arg, rv),
+            let (idle, work_unit) = channel::<MessageToWorker<ARG, RV>>();
+            self.ask_for_work.send(idle);
+            match work_unit.recv() {
+                Work((arg, rv)) => rv.send((fun)(arg)),
                 Halt            => return
             };
-            rv.send(arg * 2);
         }
+    }
+}
+
+#[cfg(test)]
+fn spawn_test_worker(queue: &WorkQueue<int, int>) {
+    let worker = queue.worker();
+    task::spawn(proc() {
+        worker.run(|arg| arg * 2);
     });
 }
 
