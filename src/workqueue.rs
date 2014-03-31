@@ -15,12 +15,7 @@ use std::task;
 use std::comm::channel;
 
 /// write docs here
-pub struct WorkUnit<ARG, RV> {
-    /// Argument that will be passed to the worker.
-    arg: ARG,
-    /// Sender end of a channel. Worker will send its return value here.
-    rv: Sender<RV>,
-}
+pub type WorkUnit<ARG, RV> = (ARG, Sender<RV>);
 
 /// write docs here
 pub enum MessageToWorker<ARG, RV> {
@@ -98,7 +93,7 @@ impl<ARG:Send, RV:Send> WorkQueue<ARG, RV> {
     /// Push a work item to this queue.
     pub fn push(&self, arg: ARG) -> Receiver<RV> {
         let (rv, wait_for_rv) = channel::<RV>();
-        self.dispatcher.send(Dispatch(WorkUnit{arg: arg, rv: rv}));
+        self.dispatcher.send(Dispatch((arg, rv)));
         return wait_for_rv;
     }
 }
@@ -117,7 +112,7 @@ impl<ARG:Send, RV:Send> WorkQueueProxy<ARG, RV> {
     /// Push a work item to this queue.
     pub fn push(&self, arg: ARG) -> Receiver<RV> {
         let (rv, wait_for_rv) = channel::<RV>();
-        self.dispatcher.send(Dispatch(WorkUnit{arg: arg, rv: rv}));
+        self.dispatcher.send(Dispatch((arg, rv)));
         return wait_for_rv;
     }
 }
@@ -136,12 +131,11 @@ fn spawn_test_worker(queue: &WorkQueue<int, int>) {
         loop {
             let (idle, get_work_unit) = channel::<MessageToWorker<int, int>>();
             want_work.send(idle);
-            let work_unit = match get_work_unit.recv() {
-                Work(wu) => wu,
-                Halt     => return
+            let (arg, rv) = match get_work_unit.recv() {
+                Work((arg, rv)) => (arg, rv),
+                Halt            => return
             };
-            let rv = work_unit.arg * 2;
-            work_unit.rv.send(rv);
+            rv.send(arg * 2);
         }
     });
 }
