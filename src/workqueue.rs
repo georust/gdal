@@ -1,41 +1,61 @@
+// Copyright 2012-2013 The Rust Project Developers. See the COPYRIGHT
+// file at the top-level directory of this distribution and at
+// http://rust-lang.org/COPYRIGHT.
+//
+// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
+
+
+//! write docs here
+
 use native::task;
 use std::comm::channel;
 
-
+/// write docs here
 pub struct WorkUnit<ARG, RV> {
+    /// Argument that will be passed to the worker.
     arg: ARG,
+    /// Sender end of a channel. Worker will send its return value here.
     rv: Sender<RV>,
 }
 
-
+/// write docs here
 pub enum MessageToWorker<ARG, RV> {
+    /// A work unit.
     Work(WorkUnit<ARG, RV>),
+    /// Shut down the worker task.
     Halt,
 }
 
-
+/// write docs here
 pub enum MessageToDispatcher<ARG, RV> {
+    /// A work unit that needs to be dispatched to a worker task.
     Dispatch(WorkUnit<ARG, RV>),
+    /// Halt all worker tasks.
     HaltAll,
+    /// Register a new worker task.
     RegisterWorker(Sender<Sender<Sender<MessageToWorker<ARG, RV>>>>),
 }
 
-
+/// A queue that distributes work items to worker tasks.
 pub struct WorkQueue<ARG, RV> {
+    /// write docs here
     dispatcher: Sender<MessageToDispatcher<ARG, RV>>,
 }
 
-
+/// A proxy to a `WorkQueue`. It can be freely cloned to use from multiple tasks.
 pub struct WorkQueueProxy<ARG, RV> {
+    /// write docs here
     dispatcher: Sender<MessageToDispatcher<ARG, RV>>,
 }
-
 
 impl<ARG:Send, RV:Send> WorkQueue<ARG, RV> {
+    /// Create a new work queue.
     pub fn create() -> WorkQueue<ARG, RV> {
         let (dispatcher, dispatcher_inbox) = channel::<MessageToDispatcher<ARG, RV>>();
-
-        // dispatcher
         task::spawn(proc() {
             let (want_work, idle_worker) = channel::<Sender<MessageToWorker<ARG, RV>>>();
             let mut worker_count = 0;
@@ -63,23 +83,25 @@ impl<ARG:Send, RV:Send> WorkQueue<ARG, RV> {
         return WorkQueue{dispatcher: dispatcher};
     }
 
+    /// Create a copyable proxy that can be used to push work units.
     pub fn proxy(&self) -> WorkQueueProxy<ARG, RV> {
         return WorkQueueProxy{dispatcher: self.dispatcher.clone()};
     }
 
+    /// Register a new worker. It will receive a sender where it can ask for tasks.
     pub fn register_worker(&self) -> Sender<Sender<MessageToWorker<ARG, RV>>> {
         let (reg_s, reg_r) = channel::<Sender<Sender<MessageToWorker<ARG, RV>>>>();
         self.dispatcher.send(RegisterWorker(reg_s));
         return reg_r.recv();
     }
 
+    /// Push a work item to this queue.
     pub fn push(&self, arg: ARG) -> Receiver<RV> {
         let (rv, wait_for_rv) = channel::<RV>();
         self.dispatcher.send(Dispatch(WorkUnit{arg: arg, rv: rv}));
         return wait_for_rv;
     }
 }
-
 
 // rustc complais "cannot implement a destructor on a structure with
 // type parameters", but our destruction is safe, we only send
@@ -91,15 +113,14 @@ impl<ARG:Send, RV:Send> Drop for WorkQueue<ARG, RV> {
     }
 }
 
-
 impl<ARG:Send, RV:Send> WorkQueueProxy<ARG, RV> {
+    /// Push a work item to this queue.
     pub fn push(&self, arg: ARG) -> Receiver<RV> {
         let (rv, wait_for_rv) = channel::<RV>();
         self.dispatcher.send(Dispatch(WorkUnit{arg: arg, rv: rv}));
         return wait_for_rv;
     }
 }
-
 
 impl<ARG:Send, RV:Send> Clone for WorkQueueProxy<ARG, RV> {
     fn clone(&self) -> WorkQueueProxy<ARG, RV> {
@@ -147,7 +168,6 @@ mod test {
 
         assert_eq!(return_list, ~[0, 2, 4, 6, 8, 10, 12, 14, 16, 18]);
     }
-
 
     #[test]
     fn test_enqueue_from_tasks() {
@@ -200,7 +220,6 @@ mod bench {
                 .collect();
         });
     }
-
 
     #[bench]
     fn bench_spawn_5_workers(b: &mut BenchHarness) {
