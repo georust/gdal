@@ -147,23 +147,16 @@ impl<ARG:Send, RV:Send> Worker<ARG, RV> {
 }
 
 #[cfg(test)]
-fn spawn_test_worker(queue: &WorkQueue<int, int>) {
-    let worker = queue.worker();
-    spawn(proc() {
-        worker.run(|arg| arg * 2);
-    });
-}
-
-#[cfg(test)]
 mod test {
     use std::task::spawn;
-    use super::{WorkQueue, spawn_test_worker};
+    use super::WorkQueue;
 
     #[test]
     fn test_queue() {
         let queue = WorkQueue::<int, int>::create();
         for _ in range(0, 3) {
-            spawn_test_worker(&queue);
+            let worker = queue.worker();
+            spawn(proc() { worker.run(|arg| arg * 2); });
         }
 
         let return_list: ~[int] =
@@ -179,7 +172,8 @@ mod test {
     fn test_enqueue_from_tasks() {
         let queue = WorkQueue::<int, int>::create();
         for _ in range(0, 3) {
-            spawn_test_worker(&queue);
+            let worker = queue.worker();
+            spawn(proc() { worker.run(|arg| arg * 2); });
         }
         let mut promise_list: ~[Receiver<int>] = ~[];
         let queue_proxy = queue.proxy();
@@ -209,13 +203,14 @@ mod bench {
     extern crate test;
 
     use self::test::BenchHarness;
-    use super::{WorkQueue, spawn_test_worker};
+    use super::WorkQueue;
 
     #[bench]
     fn bench_50_tasks_4_threads(b: &mut BenchHarness) {
         let queue = WorkQueue::<int, int>::create();
         for _ in range(0, 4) {
-            spawn_test_worker(&queue);
+            let worker = queue.worker();
+            spawn(proc() { worker.run(|arg| arg * 2); });
         }
         b.iter(|| {
             let _: ~[int] =
@@ -231,7 +226,8 @@ mod bench {
         b.iter(|| {
             let queue = WorkQueue::<int, int>::create();
             for _ in range(0, 5) {
-                spawn_test_worker(&queue);
+                let worker = queue.worker();
+                spawn(proc() { worker.run(|arg| arg * 2); });
             }
         });
     }
