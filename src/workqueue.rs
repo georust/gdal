@@ -9,7 +9,48 @@
 // except according to those terms.
 
 
-//! write docs here
+/*!
+
+A simple worker queue.
+
+# Example
+
+```rust
+use std::task;
+
+// Create the queue
+let (queue, dispatcher) = WorkQueue::<int, int>();
+
+// Spawn a dispatcher thread
+task::spawn(proc() { dispatcher.run(); });
+
+// Spawn 10 workers
+for _ in range(0, 10) {
+    let worker = queue.worker();
+    task::spawn(proc() { worker.run(|arg| arg + 2); });
+}
+
+// Execute jobs on the queue
+let answers: ~[int] =
+    range(0, 1000)
+    .map(|n| queue.push(n))
+    .map(|rv| rv.recv())
+    .collect();
+assert_eq!(answers, range(2, 1002).collect());
+
+// The dispatcher and workers are shut down when `queue` goes out ouf scope
+```
+
+Jobs can be queued from other tasks:
+
+```rust
+let proxy = queue.proxy();
+assert!(task::try(proc() {
+    assert_eq!(proxy.push(5).recv(), 7);
+}).is_ok());
+```
+
+*/
 
 use std::comm::channel;
 
