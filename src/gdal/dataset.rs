@@ -1,5 +1,5 @@
 use std::slice;
-use std::libc::{c_int, c_char};
+use std::libc::{c_int, c_char, c_double};
 use std::str::raw;
 use std::os::getenv;
 use std::path::Path;
@@ -27,6 +27,8 @@ extern {
     fn GDALGetRasterCount(hDataset: *()) -> c_int;
     fn GDALGetProjectionRef(hDS: *()) -> *c_char;
     fn GDALSetProjection(hDS: *(), pszProjection: *c_char) -> c_int;
+    fn GDALSetGeoTransform(hDS: *(), padfTransform: *c_double) -> c_int;
+    fn GDALGetGeoTransform(hDS: *(), padfTransform: *mut c_double) -> c_int;
     fn GDALGetRasterBand(hDS: *(), nBandId: c_int) -> *();
     fn GDALRasterIO(
             hBand: *(),
@@ -102,6 +104,29 @@ impl Dataset {
         projection.with_c_str(|c_projection| {
             unsafe { GDALSetProjection(self.c_dataset, c_projection) };
         });
+    }
+
+    pub fn set_geo_transform(&self, tr: (f64, f64, f64, f64, f64, f64)) {
+        let (tr_0, tr_1, tr_2, tr_3, tr_4, tr_5) = tr;
+        let tr_vec: ~[c_double] = ~[tr_0, tr_1, tr_2, tr_3, tr_4, tr_5];
+
+        let rv = unsafe {
+            GDALSetGeoTransform(self.c_dataset, tr_vec.as_ptr())
+        } as int;
+        assert!(rv == 0);
+    }
+
+    pub fn get_geo_transform(&self) -> (f64, f64, f64, f64, f64, f64) {
+        let mut tr: ~[c_double] = slice::with_capacity(6);
+        for _ in range(0, 6) { tr.push(0.0); }
+        let rv = unsafe {
+            GDALGetGeoTransform(
+                self.c_dataset,
+                tr.as_mut_ptr()
+            )
+        } as int;
+        assert!(rv == 0);
+        return (tr[0], tr[1], tr[2], tr[3], tr[4], tr[5]);
     }
 
     pub fn create_copy(
@@ -319,4 +344,15 @@ fn test_create_copy() {
     let copy = dataset.create_copy(driver, "").unwrap();
     assert_eq!(copy.get_raster_size(), (100, 50));
     assert_eq!(copy.get_raster_count(), 3);
+}
+
+
+#[test]
+fn test_geo_transform() {
+    use gdal::driver::get_driver;
+    let driver = get_driver("MEM").unwrap();
+    let dataset = driver.create("", 20, 10, 1).unwrap();
+    let transform = (0., 1., 0., 0., 0., 1.);
+    dataset.set_geo_transform(transform);
+    assert_eq!(dataset.get_geo_transform(), transform);
 }
