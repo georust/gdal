@@ -61,16 +61,11 @@ impl<ARG:Send, RV:Send> WorkQueue<ARG, RV> {
         return WorkQueueProxy{dispatcher: self.dispatcher.clone()};
     }
 
-    /// Register a new worker. It will receive a sender where it can ask for tasks.
-    fn register_worker(&self) -> Sender<Sender<MessageToWorker<ARG, RV>>> {
-        let (reg_s, reg_r) = channel::<Sender<Sender<MessageToWorker<ARG, RV>>>>();
-        self.dispatcher.send(RegisterWorker(reg_s));
-        return reg_r.recv();
-    }
-
     /// Create a new worker.
     pub fn worker(&self) -> Worker<ARG, RV> {
-        return Worker{ask_for_work: self.register_worker()};
+        let (reg_s, reg_r) = channel::<Sender<Sender<MessageToWorker<ARG, RV>>>>();
+        self.dispatcher.send(RegisterWorker(reg_s));
+        return Worker{ask_for_work: reg_r.recv()};
     }
 
     /// Push a work item to this queue.
