@@ -138,12 +138,13 @@ mod test {
         for _ in range(0, 3) {
             spawn_test_worker(&queue);
         }
-        let mut promise_list: ~[Receiver<int>] = ~[];
-        for c in range(0, 10) {
-            let rv = queue.push(c);
-            promise_list.push(rv);
-        }
-        let return_list = promise_list.map(|promise| promise.recv());
+
+        let return_list: ~[int] =
+            range(0, 10)
+            .map(|c| queue.push(c))
+            .map(|rv| rv.recv())
+            .collect();
+
         assert_eq!(return_list, ~[0, 2, 4, 6, 8, 10, 12, 14, 16, 18]);
     }
 
@@ -167,7 +168,12 @@ mod test {
                 done.send(rv.recv());
             });
         }
-        let return_list = promise_list.map(|promise| promise.recv());
+
+        let return_list: ~[int] =
+            promise_list
+            .iter()
+            .map(|promise| promise.recv())
+            .collect();
         assert_eq!(return_list, ~[0, 2, 4, 6, 8, 10, 12, 14, 16, 18]);
     }
 
@@ -179,12 +185,11 @@ mod test {
             spawn_test_worker(&queue);
         }
         b.iter(|| {
-            let mut promise_list: ~[Receiver<int>] = ~[];
-            for _ in range(0, 50) {
-                let rv = queue.push(1);
-                promise_list.push(rv);
-            }
-            let _ = promise_list.map(|promise| promise.recv());
+            let _: ~[int] =
+                range(0, 50)
+                .map(|_| queue.push(1))
+                .map(|rv| rv.recv())
+                .collect();
         });
     }
 
