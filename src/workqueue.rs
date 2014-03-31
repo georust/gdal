@@ -14,7 +14,7 @@ pub enum MessageToWorker<ARG, RV> {
 }
 
 
-enum MessageToDispatcher<ARG, RV> {
+pub enum MessageToDispatcher<ARG, RV> {
     Dispatch(WorkUnit<ARG, RV>),
     HaltAll,
     RegisterWorker(Sender<Sender<Sender<MessageToWorker<ARG, RV>>>>),
@@ -107,30 +107,30 @@ impl<ARG:Send, RV:Send> Clone for WorkQueueProxy<ARG, RV> {
     }
 }
 
+#[cfg(test)]
+fn spawn_test_worker(queue: &WorkQueue<int, int>) {
+    let want_work = queue.register_worker();
+    task::spawn(proc() {
+        let want_work = want_work;
+        loop {
+            let (idle, get_work_unit) = channel::<MessageToWorker<int, int>>();
+            want_work.send(idle);
+            let work_unit = match get_work_unit.recv() {
+                Work(wu) => wu,
+                Halt     => return
+            };
+            let rv = work_unit.arg * 2;
+            work_unit.rv.send(rv);
+        }
+    });
+}
 
 #[cfg(test)]
 mod test {
+    extern crate native;
+
     use native::task;
-    use test::BenchHarness;
-    use workqueue::{WorkQueue, MessageToWorker, Work};
-
-    fn spawn_test_worker(queue: &WorkQueue<int, int>) {
-        let want_work = queue.register_worker();
-        task::spawn(proc() {
-            let want_work = want_work;
-            loop {
-                let (idle, get_work_unit) = channel::<MessageToWorker<int, int>>();
-                want_work.send(idle);
-                let work_unit = match get_work_unit.recv() {
-                    Work(wu) => wu,
-                    Halt     => return
-                };
-                let rv = work_unit.arg * 2;
-                work_unit.rv.send(rv);
-            }
-        });
-    }
-
+    use super::{WorkQueue, spawn_test_worker};
 
     #[test]
     fn test_queue() {
@@ -176,7 +176,15 @@ mod test {
             .collect();
         assert_eq!(return_list, ~[0, 2, 4, 6, 8, 10, 12, 14, 16, 18]);
     }
+}
 
+#[cfg(test)]
+mod bench {
+    extern crate native;
+    extern crate test;
+
+    use self::test::BenchHarness;
+    use super::{WorkQueue, spawn_test_worker};
 
     #[bench]
     fn bench_50_tasks_4_threads(b: &mut BenchHarness) {
