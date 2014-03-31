@@ -13,43 +13,32 @@
 
 use std::comm::channel;
 
-/// write docs here
-pub type WorkUnit<ARG, RV> = (ARG, Sender<RV>);
+type WorkUnit<ARG, RV> = (ARG, Sender<RV>);
 
-/// write docs here
-pub enum MessageToWorker<ARG, RV> {
-    /// A work unit.
+enum MessageToWorker<ARG, RV> {
     Work(WorkUnit<ARG, RV>),
-    /// Shut down the worker task.
     Halt,
 }
 
-/// write docs here
-pub enum MessageToDispatcher<ARG, RV> {
-    /// A work unit that needs to be dispatched to a worker task.
+enum MessageToDispatcher<ARG, RV> {
     Dispatch(WorkUnit<ARG, RV>),
-    /// Halt all worker tasks.
     HaltAll,
-    /// Register a new worker task.
     RegisterWorker(Sender<Sender<Sender<MessageToWorker<ARG, RV>>>>),
 }
 
 /// A queue that distributes work items to worker tasks.
 pub struct WorkQueue<ARG, RV> {
-    /// write docs here
-    dispatcher: Sender<MessageToDispatcher<ARG, RV>>,
+    priv dispatcher: Sender<MessageToDispatcher<ARG, RV>>,
 }
 
 /// A proxy to a `WorkQueue`. It can be freely cloned to use from multiple tasks.
 pub struct Dispatcher<ARG, RV> {
-    /// write docs here
-    inbox: Receiver<MessageToDispatcher<ARG, RV>>,
+    priv inbox: Receiver<MessageToDispatcher<ARG, RV>>,
 }
 
 /// A proxy to a `WorkQueue`. It can be freely cloned to use from multiple tasks.
 pub struct WorkQueueProxy<ARG, RV> {
-    /// write docs here
-    dispatcher: Sender<MessageToDispatcher<ARG, RV>>,
+    priv dispatcher: Sender<MessageToDispatcher<ARG, RV>>,
 }
 
 /// A worker that executes tasks from its parent queue.
@@ -73,7 +62,7 @@ impl<ARG:Send, RV:Send> WorkQueue<ARG, RV> {
     }
 
     /// Register a new worker. It will receive a sender where it can ask for tasks.
-    pub fn register_worker(&self) -> Sender<Sender<MessageToWorker<ARG, RV>>> {
+    fn register_worker(&self) -> Sender<Sender<MessageToWorker<ARG, RV>>> {
         let (reg_s, reg_r) = channel::<Sender<Sender<MessageToWorker<ARG, RV>>>>();
         self.dispatcher.send(RegisterWorker(reg_s));
         return reg_r.recv();
