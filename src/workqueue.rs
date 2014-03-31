@@ -52,37 +52,37 @@ pub struct Worker<ARG, RV> {
     priv ask_for_work: Sender<Sender<MessageToWorker<ARG, RV>>>,
 }
 
-impl<ARG:Send, RV:Send> WorkQueue<ARG, RV> {
-    /// Create a new work queue.
-    pub fn create() -> WorkQueue<ARG, RV> {
-        let (dispatcher, dispatcher_inbox) = channel::<MessageToDispatcher<ARG, RV>>();
-        spawn(proc() {
-            let (want_work, idle_worker) = channel::<Sender<MessageToWorker<ARG, RV>>>();
-            let mut worker_count = 0;
-            let inbox = dispatcher_inbox;
-            let idle_worker = idle_worker;
-            loop {
-                match inbox.recv() {
-                    Dispatch(work_item) => {
-                        idle_worker.recv().send(Work(work_item));
-                    },
-                    RegisterWorker(want_idle_sender) => {
-                        worker_count += 1;
-                        want_idle_sender.send(want_work.clone());
+/// Create a new work queue.
+pub fn WorkQueue<ARG:Send, RV:Send>() -> WorkQueue<ARG, RV> {
+    let (dispatcher, dispatcher_inbox) = channel::<MessageToDispatcher<ARG, RV>>();
+    spawn(proc() {
+        let (want_work, idle_worker) = channel::<Sender<MessageToWorker<ARG, RV>>>();
+        let mut worker_count = 0;
+        let inbox = dispatcher_inbox;
+        let idle_worker = idle_worker;
+        loop {
+            match inbox.recv() {
+                Dispatch(work_item) => {
+                    idle_worker.recv().send(Work(work_item));
+                },
+                RegisterWorker(want_idle_sender) => {
+                    worker_count += 1;
+                    want_idle_sender.send(want_work.clone());
+                }
+                HaltAll => {
+                    while worker_count > 0 {
+                        idle_worker.recv().send(Halt);
+                        worker_count -= 1;
                     }
-                    HaltAll => {
-                        while worker_count > 0 {
-                            idle_worker.recv().send(Halt);
-                            worker_count -= 1;
-                        }
-                        return;
-                    },
-                };
-            }
-        });
-        return WorkQueue{dispatcher: dispatcher};
-    }
+                    return;
+                },
+            };
+        }
+    });
+    return WorkQueue{dispatcher: dispatcher};
+}
 
+impl<ARG:Send, RV:Send> WorkQueue<ARG, RV> {
     /// Create a copyable proxy that can be used to push work units.
     pub fn proxy(&self) -> WorkQueueProxy<ARG, RV> {
         return WorkQueueProxy{dispatcher: self.dispatcher.clone()};
@@ -107,6 +107,7 @@ impl<ARG:Send, RV:Send> WorkQueue<ARG, RV> {
         return wait_for_rv;
     }
 }
+
 
 // rustc complais "cannot implement a destructor on a structure with
 // type parameters", but our destruction is safe, we only send
@@ -153,7 +154,7 @@ mod test {
 
     #[test]
     fn test_queue() {
-        let queue = WorkQueue::<int, int>::create();
+        let queue = WorkQueue::<int, int>();
         for _ in range(0, 3) {
             let worker = queue.worker();
             spawn(proc() { worker.run(|arg| arg * 2); });
@@ -170,7 +171,7 @@ mod test {
 
     #[test]
     fn test_enqueue_from_tasks() {
-        let queue = WorkQueue::<int, int>::create();
+        let queue = WorkQueue::<int, int>();
         for _ in range(0, 3) {
             let worker = queue.worker();
             spawn(proc() { worker.run(|arg| arg * 2); });
@@ -207,7 +208,7 @@ mod bench {
 
     #[bench]
     fn bench_50_tasks_4_threads(b: &mut BenchHarness) {
-        let queue = WorkQueue::<int, int>::create();
+        let queue = WorkQueue::<int, int>();
         for _ in range(0, 4) {
             let worker = queue.worker();
             spawn(proc() { worker.run(|arg| arg * 2); });
@@ -224,7 +225,7 @@ mod bench {
     #[bench]
     fn bench_spawn_5_workers(b: &mut BenchHarness) {
         b.iter(|| {
-            let queue = WorkQueue::<int, int>::create();
+            let queue = WorkQueue::<int, int>();
             for _ in range(0, 5) {
                 let worker = queue.worker();
                 spawn(proc() { worker.run(|arg| arg * 2); });
