@@ -11,7 +11,7 @@
 
 //! write docs here
 
-use native::task;
+use std::task;
 use std::comm::channel;
 
 /// write docs here
@@ -148,9 +148,7 @@ fn spawn_test_worker(queue: &WorkQueue<int, int>) {
 
 #[cfg(test)]
 mod test {
-    extern crate native;
-
-    use native::task;
+    use std::task;
     use super::{WorkQueue, spawn_test_worker};
 
     #[test]
@@ -200,7 +198,6 @@ mod test {
 
 #[cfg(test)]
 mod bench {
-    extern crate native;
     extern crate test;
 
     use self::test::BenchHarness;
