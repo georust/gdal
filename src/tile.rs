@@ -6,6 +6,7 @@ use gdal::geom::Point;
 use gdal::proj::{Proj, DEG_TO_RAD};
 use gdal::dataset::{Dataset, open};
 use gdal::driver::get_driver;
+use gdal::warp::reproject;
 use workqueue::WorkQueue;
 
 static webmerc_limit: f64 = 20037508.342789244;
@@ -38,7 +39,7 @@ pub fn tile(source: &Dataset, (x, y, z): (int, int, int)) -> ~[u8] {
         return Point(x, y);
     }
 
-    let tile = memory_driver.create("", 256, 256, 3).unwrap();
+    let tile_2x = memory_driver.create("", 512, 512, 3).unwrap();
     for band in range(1, 4) {
         let xy_min = xy(&nw, &source_bounds);
         let xy_max = xy(&se, &source_bounds);
@@ -48,10 +49,15 @@ pub fn tile(source: &Dataset, (x, y, z): (int, int, int)) -> ~[u8] {
             band,
             xy_min.cast::<int>().unwrap(),
             xy_bounds.cast::<uint>().unwrap(),
-            Point(256, 256)
+            Point(512, 512)
         );
-        tile.write_raster(band, Point(0, 0), Point(256, 256), raster);
+        tile_2x.write_raster(band, Point(0, 0), Point(512, 512), raster);
     }
+
+    let tile = memory_driver.create("", 256, 256, 3).unwrap();
+    tile_2x.set_geo_transform((0., 0.5, 0., 0., 0., 0.5));
+    tile.set_geo_transform((0., 1., 0., 0., 0., 1.));
+    reproject(&tile_2x, &tile);
 
     let tmp = TempDir::new("rustile").unwrap();
     let tile_path = tmp.path().join("tile.png");

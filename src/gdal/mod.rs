@@ -6,6 +6,7 @@ pub mod driver;
 pub mod dataset;
 pub mod proj;
 pub mod geom;
+pub mod warp;
 
 
 #[link(name="gdal")]
