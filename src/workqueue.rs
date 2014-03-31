@@ -11,7 +11,7 @@
 
 //! write docs here
 
-use std::task;
+use std::task::spawn;
 use std::comm::channel;
 
 /// write docs here
@@ -56,7 +56,7 @@ impl<ARG:Send, RV:Send> WorkQueue<ARG, RV> {
     /// Create a new work queue.
     pub fn create() -> WorkQueue<ARG, RV> {
         let (dispatcher, dispatcher_inbox) = channel::<MessageToDispatcher<ARG, RV>>();
-        task::spawn(proc() {
+        spawn(proc() {
             let (want_work, idle_worker) = channel::<Sender<MessageToWorker<ARG, RV>>>();
             let mut worker_count = 0;
             let inbox = dispatcher_inbox;
@@ -149,14 +149,14 @@ impl<ARG:Send, RV:Send> Worker<ARG, RV> {
 #[cfg(test)]
 fn spawn_test_worker(queue: &WorkQueue<int, int>) {
     let worker = queue.worker();
-    task::spawn(proc() {
+    spawn(proc() {
         worker.run(|arg| arg * 2);
     });
 }
 
 #[cfg(test)]
 mod test {
-    use std::task;
+    use std::task::spawn;
     use super::{WorkQueue, spawn_test_worker};
 
     #[test]
@@ -187,7 +187,7 @@ mod test {
             let queue_proxy_clone = queue_proxy.clone();
             let (done, promise) = channel::<int>();
             promise_list.push(promise);
-            task::spawn(proc() {
+            spawn(proc() {
                 let done = done;
                 let queue = queue_proxy_clone;
                 let rv = queue.push(c);
