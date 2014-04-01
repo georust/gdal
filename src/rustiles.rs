@@ -104,11 +104,19 @@ static index_html: &'static str = "<!doctype html>\
 <link rel='stylesheet' href='//cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.2/leaflet.css'>\n\
 <style>
 html, body, #map { margin: 0; height: 100%; }
+#slider { position: fixed; top: 0; right: 0; }
 </style>
 <div id='map'></div>
+<div id='slider'><input type='range' min='0' max='100' value='50'></div>
+<script src='//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.0/jquery.min.js'></script>\n\
 <script src='//cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.2/leaflet.js'></script>\n\
 <script>
 var map = L.map('map').setView([40, 10], 3);
-L.tileLayer('/tile/{z}/{x}/{y}').addTo(map);
+L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+  attribution: '&copy; <a href=\\'http://osm.org/copyright\\'>' +
+               'OpenStreetMap</a> contributors'}).addTo(map);
+var nasa = L.tileLayer('/tile/{z}/{x}/{y}').addTo(map);
+function updateOpacity() { nasa.setOpacity(+($('input').val()) / 100); }
+$('input').change(updateOpacity); updateOpacity();
 </script>
 ";
