@@ -1,3 +1,9 @@
+#![crate_id="gdal#0.1"]
+#![crate_type="lib"]
+
+extern crate sync;
+#[cfg(test)] extern crate test;
+
 use std::str::raw;
 use std::libc::c_char;
 use sync::mutex::{StaticMutex, MUTEX_INIT};

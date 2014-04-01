@@ -3,9 +3,9 @@ use std::libc::{c_int, c_char, c_double};
 use std::str::raw;
 use std::os::getenv;
 use std::path::Path;
-use gdal::driver::Driver;
-use gdal::register_drivers;
-use gdal::geom::Point;
+use super::driver::Driver;
+use super::register_drivers;
+use super::geom::Point;
 
 
 #[link(name="gdal")]
@@ -238,7 +238,7 @@ struct ByteBuffer {
 
 
 fn fixture_path(name: &str) -> Path {
-    let envvar = "RUSTILES_TEST_FIXTURES";
+    let envvar = "RUST_GDAL_TEST_FIXTURES";
     let fixtures = match getenv(envvar) {
         Some(p) => Path::new(p),
         None => fail!("Environment variable {} not set", envvar)
@@ -296,7 +296,7 @@ fn test_read_raster() {
 
 #[test]
 fn test_write_raster() {
-    use gdal::driver::get_driver;
+    use super::driver::get_driver;
     let driver = get_driver("MEM").unwrap();
     let dataset = driver.create("", 20, 10, 1).unwrap();
 
@@ -327,7 +327,7 @@ fn test_get_dataset_driver() {
 
 #[test]
 fn test_create() {
-    use gdal::driver::get_driver;
+    use super::driver::get_driver;
     let driver = get_driver("MEM").unwrap();
     let dataset = driver.create("", 10, 20, 3).unwrap();
     assert_eq!(dataset.get_raster_size(), (10, 20));
@@ -338,7 +338,7 @@ fn test_create() {
 
 #[test]
 fn test_create_copy() {
-    use gdal::driver::get_driver;
+    use super::driver::get_driver;
     let driver = get_driver("MEM").unwrap();
     let dataset = open(&fixture_path("tinymarble.jpeg")).unwrap();
     let copy = dataset.create_copy(driver, "").unwrap();
@@ -349,7 +349,7 @@ fn test_create_copy() {
 
 #[test]
 fn test_geo_transform() {
-    use gdal::driver::get_driver;
+    use super::driver::get_driver;
     let driver = get_driver("MEM").unwrap();
     let dataset = driver.create("", 20, 10, 1).unwrap();
     let transform = (0., 1., 0., 0., 0., 1.);

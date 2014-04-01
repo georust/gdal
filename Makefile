@@ -2,30 +2,24 @@ RUSTC ?= rustc
 RUSTFLAGS ?=
 
 src_files=\
-	src/rustiles.rs \
-	src/gdal/mod.rs \
+	src/gdal/lib.rs \
 	src/gdal/driver.rs \
 	src/gdal/dataset.rs \
 	src/gdal/proj.rs \
-	src/gdal/geom.rs \
-	src/tile.rs \
-	src/workqueue.rs
+	src/gdal/geom.rs
 
-all: build/rustiles
+all: libgdal
 
-build/rustiles: $(src_files)
+libgdal: $(src_files)
 	mkdir -p build
-	$(RUSTC) $(RUSTFLAGS) -o build/rustiles src/rustiles.rs
+	$(RUSTC) $(RUSTFLAGS) --out-dir=build src/gdal/lib.rs
 
 build/testsuite: $(src_files)
 	mkdir -p build
-	$(RUSTC) $(RUSTFLAGS) -A dead_code --test -o build/testsuite src/rustiles.rs
+	$(RUSTC) $(RUSTFLAGS) -A dead_code --test -o build/testsuite src/gdal/lib.rs
 
 check: build/testsuite
-	RUSTILES_TEST_FIXTURES=`pwd`/fixtures ./build/testsuite
-
-bench: build/testsuite
-	RUSTILES_TEST_FIXTURES=`pwd`/fixtures ./build/testsuite --bench
+	RUST_GDAL_TEST_FIXTURES=`pwd`/fixtures ./build/testsuite
 
 clean:
 	rm -rf build
