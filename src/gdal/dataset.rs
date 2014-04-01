@@ -78,6 +78,14 @@ impl Drop for Dataset {
 
 
 impl Dataset {
+    pub unsafe fn with_ptr(c_dataset: *()) -> Dataset {
+        return Dataset{c_dataset: c_dataset};
+    }
+
+    pub unsafe fn get_ptr(&self) -> *() {
+        return self.c_dataset;
+    }
+
     pub fn get_raster_size(&self) -> (int, int) {
         let size_x = unsafe { GDALGetRasterXSize(self.c_dataset) } as int;
         let size_y = unsafe { GDALGetRasterYSize(self.c_dataset) } as int;
@@ -85,8 +93,10 @@ impl Dataset {
     }
 
     pub fn get_driver(&self) -> Driver {
-        let c_driver = unsafe { GDALGetDatasetDriver(self.c_dataset) };
-        return Driver{c_driver: c_driver};
+        unsafe {
+            let c_driver = GDALGetDatasetDriver(self.c_dataset);
+            return Driver::with_ptr(c_driver);
+        };
     }
 
     pub fn get_raster_count(&self) -> int {
@@ -138,7 +148,7 @@ impl Dataset {
         let c_dataset = filename.with_c_str(|c_filename| {
             unsafe {
                 return GDALCreateCopy(
-                    driver.c_driver,
+                    driver.get_ptr(),
                     c_filename,
                     self.c_dataset,
                     0,
@@ -231,7 +241,7 @@ pub fn open(path: &Path) -> Option<Dataset> {
 }
 
 
-struct ByteBuffer {
+pub struct ByteBuffer {
     size: Point<uint>,
     data: ~[u8],
 }

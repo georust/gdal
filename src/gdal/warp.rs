@@ -31,9 +31,9 @@ static REPROJECT_MEMORY_LIMIT: c_double = 0.0;
 pub fn reproject(src: &Dataset, dst: &Dataset) {
     let rv = unsafe {
         GDALReprojectImage(
-                src.c_dataset,
+                src.get_ptr(),
                 null(),
-                dst.c_dataset,
+                dst.get_ptr(),
                 null(),
                 GRA_Bilinear,
                 REPROJECT_MEMORY_LIMIT,

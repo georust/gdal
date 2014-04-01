@@ -29,6 +29,14 @@ pub struct Driver {
 
 
 impl Driver {
+    pub unsafe fn with_ptr(c_driver: *()) -> Driver {
+        return Driver{c_driver: c_driver};
+    }
+
+    pub unsafe fn get_ptr(&self) -> *() {
+        return self.c_driver;
+    }
+
     pub fn get_short_name(&self) -> ~str {
         unsafe {
             let rv = GDALGetDriverShortName(self.c_driver);
@@ -66,7 +74,7 @@ impl Driver {
         });
         return match c_dataset.is_null() {
             true  => None,
-            false => Some(Dataset{c_dataset: c_dataset}),
+            false => unsafe { Some(Dataset::with_ptr(c_dataset)) },
         };
     }
 }
