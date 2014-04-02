@@ -2,6 +2,6 @@ before_install:
   - yes | sudo add-apt-repository ppa:hansjorg/rust
   - sudo apt-get update
 install:
-  - sudo apt-get install rust-nightly libgdal1 libproj0
+  - sudo apt-get install rust-nightly libgdal1-dev libproj0-dev
 script:
   - make check
