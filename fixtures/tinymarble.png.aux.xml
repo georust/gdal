@@ -1,0 +1,22 @@
+<PAMDataset>
+  <SRS>WGS84</SRS>
+  <Metadata domain="xml:XMP">
+    <MDI key="&lt;x">xmpmeta xmlns:x=&quot;adobe:ns:meta/&quot; x:xmptk=&quot;XMP Core 5.4.0&quot;&gt;
+  &lt;rdf:RDF xmlns:rdf=&quot;http://www.w3.org/1999/02/22-rdf-syntax-ns#&quot;&gt;
+    &lt;rdf:Description rdf:about=&quot;&quot; xmlns:tiff=&quot;http://ns.adobe.com/tiff/1.0/&quot; xmlns:exif=&quot;http://ns.adobe.com/exif/1.0/&quot;&gt;
+      &lt;tiff:Orientation&gt;1&lt;/tiff:Orientation&gt;
+      &lt;tiff:YResolution&gt;72&lt;/tiff:YResolution&gt;
+      &lt;tiff:ResolutionUnit&gt;2&lt;/tiff:ResolutionUnit&gt;
+      &lt;tiff:XResolution&gt;72&lt;/tiff:XResolution&gt;
+      &lt;exif:PixelXDimension&gt;100&lt;/exif:PixelXDimension&gt;
+      &lt;exif:ColorSpace&gt;1&lt;/exif:ColorSpace&gt;
+      &lt;exif:PixelYDimension&gt;50&lt;/exif:PixelYDimension&gt;
+    &lt;/rdf:Description&gt;
+  &lt;/rdf:RDF&gt;
+&lt;/x:xmpmeta&gt;
+</MDI>
+  </Metadata>
+  <Metadata domain="IMAGE_STRUCTURE">
+    <MDI key="INTERLEAVE">PIXEL</MDI>
+  </Metadata>
+</PAMDataset>

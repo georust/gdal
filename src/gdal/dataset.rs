@@ -260,17 +260,17 @@ fn fixture_path(name: &str) -> Path {
 
 #[test]
 fn test_open() {
-    let dataset = open(&fixture_path("tinymarble.jpeg"));
+    let dataset = open(&fixture_path("tinymarble.png"));
     assert!(dataset.is_some());
 
-    let missing_dataset = open(&fixture_path("no_such_file.jpeg"));
+    let missing_dataset = open(&fixture_path("no_such_file.png"));
     assert!(missing_dataset.is_none());
 }
 
 
 #[test]
 fn test_get_raster_size() {
-    let dataset = open(&fixture_path("tinymarble.jpeg")).unwrap();
+    let dataset = open(&fixture_path("tinymarble.png")).unwrap();
     let (size_x, size_y) = dataset.get_raster_size();
     assert_eq!(size_x, 100);
     assert_eq!(size_y, 50);
@@ -279,7 +279,7 @@ fn test_get_raster_size() {
 
 #[test]
 fn test_get_raster_count() {
-    let dataset = open(&fixture_path("tinymarble.jpeg")).unwrap();
+    let dataset = open(&fixture_path("tinymarble.png")).unwrap();
     let count = dataset.get_raster_count();
     assert_eq!(count, 3);
 }
@@ -287,7 +287,7 @@ fn test_get_raster_count() {
 
 #[test]
 fn test_get_projection() {
-    let dataset = open(&fixture_path("tinymarble.jpeg")).unwrap();
+    let dataset = open(&fixture_path("tinymarble.png")).unwrap();
     //dataset.set_projection("WGS84");
     let projection = dataset.get_projection();
     assert_eq!(projection.slice(0, 16), "GEOGCS[\"WGS 84\",");
@@ -296,11 +296,11 @@ fn test_get_projection() {
 
 #[test]
 fn test_read_raster() {
-    let dataset = open(&fixture_path("tinymarble.jpeg")).unwrap();
-    let rv = dataset.read_raster(1, Point(20, 30), Point(10, 10), Point(3, 5));
-    assert_eq!(rv.size.x, 3);
-    assert_eq!(rv.size.y, 5);
-    assert_eq!(rv.data, ~[13, 3, 18, 6, 9, 1, 2, 9, 4, 6, 11, 4, 6, 2, 9]);
+    let dataset = open(&fixture_path("tinymarble.png")).unwrap();
+    let rv = dataset.read_raster(1, Point(20, 30), Point(2, 3), Point(2, 3));
+    assert_eq!(rv.size.x, 2);
+    assert_eq!(rv.size.y, 3);
+    assert_eq!(rv.data, ~[7, 7, 7, 10, 8, 12]);
 }
 
 
@@ -328,10 +328,10 @@ fn test_write_raster() {
 
 #[test]
 fn test_get_dataset_driver() {
-    let dataset = open(&fixture_path("tinymarble.jpeg")).unwrap();
+    let dataset = open(&fixture_path("tinymarble.png")).unwrap();
     let driver = dataset.get_driver();
-    assert_eq!(driver.get_short_name(), ~"JPEG");
-    assert_eq!(driver.get_long_name(), ~"JPEG JFIF");
+    assert_eq!(driver.get_short_name(), ~"PNG");
+    assert_eq!(driver.get_long_name(), ~"Portable Network Graphics");
 }
 
 
@@ -350,7 +350,7 @@ fn test_create() {
 fn test_create_copy() {
     use super::driver::get_driver;
     let driver = get_driver("MEM").unwrap();
-    let dataset = open(&fixture_path("tinymarble.jpeg")).unwrap();
+    let dataset = open(&fixture_path("tinymarble.png")).unwrap();
     let copy = dataset.create_copy(driver, "").unwrap();
     assert_eq!(copy.get_raster_size(), (100, 50));
     assert_eq!(copy.get_raster_count(), 3);
