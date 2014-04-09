@@ -1,5 +1,5 @@
 use std::str::raw;
-use std::libc::{c_int, c_char, c_long, c_double};
+use libc::{c_int, c_char, c_long, c_double};
 use super::geom::Point;
 
 pub struct Proj {

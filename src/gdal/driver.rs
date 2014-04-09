@@ -1,5 +1,5 @@
 use std::str::raw;
-use std::libc::{c_int, c_char};
+use libc::{c_int, c_char};
 use super::register_drivers;
 use super::dataset::Dataset;
 

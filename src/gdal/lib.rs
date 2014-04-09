@@ -2,10 +2,11 @@
 #![crate_type="lib"]
 
 extern crate sync;
+extern crate libc;
 #[cfg(test)] extern crate test;
 
 use std::str::raw;
-use std::libc::c_char;
+use libc::c_char;
 use sync::mutex::{StaticMutex, MUTEX_INIT};
 
 pub mod driver;

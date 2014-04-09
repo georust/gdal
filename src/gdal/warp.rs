@@ -1,4 +1,4 @@
-use std::libc::{c_int, c_char, c_double};
+use libc::{c_int, c_char, c_double};
 use std::ptr::null;
 use super::dataset::Dataset;
 
