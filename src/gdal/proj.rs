@@ -27,7 +27,7 @@ extern {
 }
 
 
-fn error_message(code: c_int) -> ~str {
+fn error_message(code: c_int) -> String {
     unsafe {
         let rv = pj_strerrno(code);
         return raw::from_c_str(rv);
@@ -36,7 +36,7 @@ fn error_message(code: c_int) -> ~str {
 
 
 impl Proj {
-    pub fn new(definition: &str) -> Option<Proj> {
+    pub fn new(definition: String) -> Option<Proj> {
         let c_proj = definition.with_c_str(|c_definition| {
             unsafe { return pj_init_plus(c_definition) }
         });
@@ -46,7 +46,7 @@ impl Proj {
         };
     }
 
-    pub fn get_def(&self) -> ~str {
+    pub fn get_def(&self) -> String {
         unsafe {
             let rv = pj_get_def(self.c_proj);
             return raw::from_c_str(rv);
@@ -87,10 +87,10 @@ impl Drop for Proj {
 #[test]
 fn test_new_projection() {
     let wgs84 = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs";
-    let proj = Proj::new(wgs84).unwrap();
+    let proj = Proj::new(wgs84.to_string()).unwrap();
     assert_eq!(
-        proj.get_def(),
-        ~" +proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0");
+        proj.get_def().as_slice(),
+        " +proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0");
 }
 
 
@@ -103,11 +103,12 @@ fn assert_almost_eq(a: f64, b: f64) {
 
 #[test]
 fn test_transform() {
-    let wgs84 = Proj::new("+proj=longlat +datum=WGS84 +no_defs").unwrap();
-    let stereo70 = Proj::new(
-        "+proj=sterea +lat_0=46 +lon_0=25 +k=0.99975 " +
+    let wgs84_name = "+proj=longlat +datum=WGS84 +no_defs";
+    let wgs84 = Proj::new(wgs84_name.to_string()).unwrap();
+    let stereo70 = Proj::new(format!("{}{}",
+        "+proj=sterea +lat_0=46 +lon_0=25 +k=0.99975 ",
         "+x_0=500000 +y_0=500000 +ellps=krass +units=m +no_defs"
-        ).unwrap();
+    )).unwrap();
 
     let rv = stereo70.project(&wgs84, Point(500000., 500000.));
     assert_almost_eq(rv.x, 0.436332);

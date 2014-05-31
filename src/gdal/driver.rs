@@ -37,14 +37,14 @@ impl Driver {
         return self.c_driver;
     }
 
-    pub fn get_short_name(&self) -> ~str {
+    pub fn get_short_name(&self) -> String {
         unsafe {
             let rv = GDALGetDriverShortName(self.c_driver);
             return raw::from_c_str(rv);
         }
     }
 
-    pub fn get_long_name(&self) -> ~str {
+    pub fn get_long_name(&self) -> String {
         unsafe {
             let rv = GDALGetDriverLongName(self.c_driver);
             return raw::from_c_str(rv);
@@ -100,6 +100,6 @@ fn test_get_driver_by_name() {
     let ok_driver = get_driver("GTiff");
     assert!(ok_driver.is_some());
     let driver = ok_driver.unwrap();
-    assert_eq!(driver.get_short_name(), ~"GTiff");
-    assert_eq!(driver.get_long_name(), ~"GeoTIFF");
+    assert_eq!(driver.get_short_name().as_slice(), "GTiff");
+    assert_eq!(driver.get_long_name().as_slice(), "GeoTIFF");
 }

@@ -1,4 +1,3 @@
-use std::slice;
 use libc::{c_int, c_char, c_double};
 use std::str::raw;
 use std::os::getenv;
@@ -103,7 +102,7 @@ impl Dataset {
         return unsafe { GDALGetRasterCount(self.c_dataset) } as int;
     }
 
-    pub fn get_projection(&self) -> ~str {
+    pub fn get_projection(&self) -> String {
         unsafe {
             let rv = GDALGetProjectionRef(self.c_dataset);
             return raw::from_c_str(rv);
@@ -127,7 +126,7 @@ impl Dataset {
     }
 
     pub fn get_geo_transform(&self) -> (f64, f64, f64, f64, f64, f64) {
-        let mut tr: ~[c_double] = slice::with_capacity(6);
+        let mut tr: Vec<c_double> = Vec::with_capacity(6);
         for _ in range(0, 6) { tr.push(0.0); }
         let rv = unsafe {
             GDALGetGeoTransform(
@@ -136,7 +135,8 @@ impl Dataset {
             )
         } as int;
         assert!(rv == 0);
-        return (tr[0], tr[1], tr[2], tr[3], tr[4], tr[5]);
+        return (tr.shift().unwrap(), tr.shift().unwrap(), tr.shift().unwrap(),
+                tr.shift().unwrap(), tr.shift().unwrap(), tr.shift().unwrap());
     }
 
     pub fn create_copy(
@@ -172,7 +172,7 @@ impl Dataset {
         buffer_size: Point<uint>
     ) -> ByteBuffer {
         let buffer_size_bytes = buffer_size.x * buffer_size.y;
-        let mut data: ~[u8] = slice::with_capacity(buffer_size_bytes);
+        let mut data: Vec<u8> = Vec::with_capacity(buffer_size_bytes);
         for _ in range(0, buffer_size_bytes) { data.push(0u8); } // TODO zero fill
         unsafe {
             let c_band = GDALGetRasterBand(self.c_dataset, band_index as c_int);
@@ -243,7 +243,7 @@ pub fn open(path: &Path) -> Option<Dataset> {
 
 pub struct ByteBuffer {
     size: Point<uint>,
-    data: ~[u8],
+    data: Vec<u8>,
 }
 
 
@@ -290,7 +290,7 @@ fn test_get_projection() {
     let dataset = open(&fixture_path("tinymarble.png")).unwrap();
     //dataset.set_projection("WGS84");
     let projection = dataset.get_projection();
-    assert_eq!(projection.slice(0, 16), "GEOGCS[\"WGS 84\",");
+    assert_eq!(projection.as_slice().slice(0, 16), "GEOGCS[\"WGS 84\",");
 }
 
 
@@ -300,7 +300,7 @@ fn test_read_raster() {
     let rv = dataset.read_raster(1, Point(20, 30), Point(2, 3), Point(2, 3));
     assert_eq!(rv.size.x, 2);
     assert_eq!(rv.size.y, 3);
-    assert_eq!(rv.data, ~[7, 7, 7, 10, 8, 12]);
+    assert_eq!(rv.data, vec!(7, 7, 7, 10, 8, 12));
 }
 
 
@@ -311,18 +311,18 @@ fn test_write_raster() {
     let dataset = driver.create("", 20, 10, 1).unwrap();
 
     // create a 2x1 raster
-    let raster = ByteBuffer{size: Point(2, 1), data: ~[50u8, 20u8]};
+    let raster = ByteBuffer{size: Point(2, 1), data: vec!(50u8, 20u8)};
 
     // epand it to fill the image (20x10)
     dataset.write_raster(1, Point(0, 0), Point(20, 10), raster);
 
     // read a pixel from the left side
     let left = dataset.read_raster(1, Point(5, 5), Point(1, 1), Point(1, 1));
-    assert_eq!(left.data[0], 50u8);
+    assert_eq!(*left.data.get(0), 50u8);
 
     // read a pixel from the right side
     let right = dataset.read_raster(1, Point(15, 5), Point(1, 1), Point(1, 1));
-    assert_eq!(right.data[0], 20u8);
+    assert_eq!(*right.data.get(0), 20u8);
 }
 
 
@@ -330,8 +330,8 @@ fn test_write_raster() {
 fn test_get_dataset_driver() {
     let dataset = open(&fixture_path("tinymarble.png")).unwrap();
     let driver = dataset.get_driver();
-    assert_eq!(driver.get_short_name(), ~"PNG");
-    assert_eq!(driver.get_long_name(), ~"Portable Network Graphics");
+    assert_eq!(driver.get_short_name().as_slice(), "PNG");
+    assert_eq!(driver.get_long_name().as_slice(), "Portable Network Graphics");
 }
 
 
@@ -342,7 +342,7 @@ fn test_create() {
     let dataset = driver.create("", 10, 20, 3).unwrap();
     assert_eq!(dataset.get_raster_size(), (10, 20));
     assert_eq!(dataset.get_raster_count(), 3);
-    assert_eq!(dataset.get_driver().get_short_name(), ~"MEM");
+    assert_eq!(dataset.get_driver().get_short_name().as_slice(), "MEM");
 }
 
 
