@@ -39,11 +39,11 @@ impl VectorDataset {
         return unsafe { OGR_DS_GetLayerCount(self.c_dataset) } as int;
     }
 
-    pub fn get_layer(&self, idx: int) -> Option<Layer> {
+    pub fn get_layer<'a>(&'a self, idx: int) -> Option<Layer<'a>> {
         let c_layer = unsafe { OGR_DS_GetLayer(self.c_dataset, idx as c_int) };
         return match c_layer.is_null() {
             true  => None,
-            false => Some(Layer{c_layer: c_layer}),
+            false => Some(Layer{vector_dataset: self, c_layer: c_layer}),
         };
     }
 }
@@ -56,12 +56,13 @@ impl Drop for VectorDataset {
 }
 
 
-pub struct Layer {
+pub struct Layer<'a> {
+    vector_dataset: &'a VectorDataset,
     c_layer: *(),
 }
 
 
-impl Layer {
+impl<'a> Layer<'a> {
     pub fn features<'a>(&'a self) -> FeatureIterator<'a> {
         return FeatureIterator{layer: self};
     }
@@ -69,7 +70,7 @@ impl Layer {
 
 
 pub struct FeatureIterator<'a> {
-    layer: &'a Layer,
+    layer: &'a Layer<'a>,
 }
 
 
