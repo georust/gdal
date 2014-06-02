@@ -4,6 +4,7 @@ RUSTFLAGS ?=
 src_files=\
 	src/gdal/lib.rs \
 	src/gdal/raster.rs \
+	src/gdal/vector.rs \
 	src/gdal/proj.rs \
 	src/gdal/geom.rs
 
