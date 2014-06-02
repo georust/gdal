@@ -1,7 +1,7 @@
 use std::str::raw;
 use libc::{c_int, c_char};
 use super::register_drivers;
-use super::dataset::Dataset;
+use super::raster::RasterDataset;
 
 
 #[link(name="gdal")]
@@ -57,7 +57,7 @@ impl Driver {
         size_x: int,
         size_y: int,
         bands: int
-    ) -> Option<Dataset> {
+    ) -> Option<RasterDataset> {
         use std::ptr::null;
         let c_dataset = filename.with_c_str(|c_filename| {
             unsafe {
@@ -74,7 +74,7 @@ impl Driver {
         });
         return match c_dataset.is_null() {
             true  => None,
-            false => unsafe { Some(Dataset::with_ptr(c_dataset)) },
+            false => unsafe { Some(RasterDataset::with_ptr(c_dataset)) },
         };
     }
 }

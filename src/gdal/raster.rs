@@ -64,21 +64,21 @@ static GDT_CFloat64: c_int = 11;
 static GF_Read:      c_int = 0;
 static GF_Write:     c_int = 1;
 
-pub struct Dataset {
+pub struct RasterDataset {
     c_dataset: *(),
 }
 
 
-impl Drop for Dataset {
+impl Drop for RasterDataset {
     fn drop(&mut self) {
         unsafe { GDALClose(self.c_dataset); }
     }
 }
 
 
-impl Dataset {
-    pub unsafe fn with_ptr(c_dataset: *()) -> Dataset {
-        return Dataset{c_dataset: c_dataset};
+impl RasterDataset {
+    pub unsafe fn with_ptr(c_dataset: *()) -> RasterDataset {
+        return RasterDataset{c_dataset: c_dataset};
     }
 
     pub unsafe fn get_ptr(&self) -> *() {
@@ -143,7 +143,7 @@ impl Dataset {
         &self,
         driver: Driver,
         filename: &str
-    ) -> Option<Dataset> {
+    ) -> Option<RasterDataset> {
         use std::ptr::null;
         let c_dataset = filename.with_c_str(|c_filename| {
             unsafe {
@@ -160,7 +160,7 @@ impl Dataset {
         });
         return match c_dataset.is_null() {
             true  => None,
-            false => Some(Dataset{c_dataset: c_dataset}),
+            false => Some(RasterDataset{c_dataset: c_dataset}),
         };
     }
 
@@ -228,7 +228,7 @@ impl Dataset {
 }
 
 
-pub fn open(path: &Path) -> Option<Dataset> {
+pub fn open(path: &Path) -> Option<RasterDataset> {
     register_drivers();
     let filename = path.as_str().unwrap();
     let c_dataset = filename.with_c_str(|c_filename| {
@@ -236,7 +236,7 @@ pub fn open(path: &Path) -> Option<Dataset> {
     });
     return match c_dataset.is_null() {
         true  => None,
-        false => Some(Dataset{c_dataset: c_dataset}),
+        false => Some(RasterDataset{c_dataset: c_dataset}),
     };
 }
 
