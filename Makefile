@@ -3,7 +3,6 @@ RUSTFLAGS ?=
 
 src_files=\
 	src/gdal/lib.rs \
-	src/gdal/driver.rs \
 	src/gdal/raster.rs \
 	src/gdal/proj.rs \
 	src/gdal/geom.rs

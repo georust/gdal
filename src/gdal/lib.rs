@@ -7,9 +7,7 @@ extern crate libc;
 
 use std::str::raw;
 use libc::c_char;
-use sync::mutex::{StaticMutex, MUTEX_INIT};
 
-pub mod driver;
 pub mod raster;
 pub mod proj;
 pub mod geom;
@@ -19,21 +17,6 @@ pub mod warp;
 #[link(name="gdal")]
 extern {
     fn GDALVersionInfo(key: *c_char) -> *c_char;
-    fn GDALAllRegister();
-}
-
-
-static mut LOCK: StaticMutex = MUTEX_INIT;
-static mut registered_drivers: bool = false;
-
-fn register_drivers() {
-    unsafe {
-        let _g = LOCK.lock();
-        if ! registered_drivers {
-            GDALAllRegister();
-            registered_drivers = true;
-        }
-    }
 }
 
 

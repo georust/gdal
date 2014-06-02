@@ -2,13 +2,25 @@ use libc::{c_int, c_char, c_double};
 use std::str::raw;
 use std::os::getenv;
 use std::path::Path;
-use super::driver::Driver;
-use super::register_drivers;
 use super::geom::Point;
+use sync::mutex::{StaticMutex, MUTEX_INIT};
 
 
 #[link(name="gdal")]
 extern {
+    fn GDALAllRegister();
+    fn GDALGetDriverByName(pszName: *c_char) -> *();
+    fn GDALGetDriverShortName(hDriver: *()) -> *c_char;
+    fn GDALGetDriverLongName(hDriver: *()) -> *c_char;
+    fn GDALCreate(
+            hDriver: *(),
+            pszFilename: *c_char,
+            nXSize: c_int,
+            nYSize: c_int,
+            nBands: c_int,
+            eBandType: c_int,
+            papszOptions: **c_char
+        ) -> *();
     fn GDALCreateCopy(
             hDriver: *(),
             pszFilename: *c_char,
@@ -63,6 +75,77 @@ static GDT_CFloat64: c_int = 11;
 
 static GF_Read:      c_int = 0;
 static GF_Write:     c_int = 1;
+
+static mut LOCK: StaticMutex = MUTEX_INIT;
+static mut registered_drivers: bool = false;
+
+fn register_drivers() {
+    unsafe {
+        let _g = LOCK.lock();
+        if ! registered_drivers {
+            GDALAllRegister();
+            registered_drivers = true;
+        }
+    }
+}
+
+
+pub struct Driver {
+    c_driver: *(),
+}
+
+
+impl Driver {
+    pub unsafe fn with_ptr(c_driver: *()) -> Driver {
+        return Driver{c_driver: c_driver};
+    }
+
+    pub unsafe fn get_ptr(&self) -> *() {
+        return self.c_driver;
+    }
+
+    pub fn get_short_name(&self) -> String {
+        unsafe {
+            let rv = GDALGetDriverShortName(self.c_driver);
+            return raw::from_c_str(rv);
+        }
+    }
+
+    pub fn get_long_name(&self) -> String {
+        unsafe {
+            let rv = GDALGetDriverLongName(self.c_driver);
+            return raw::from_c_str(rv);
+        }
+    }
+
+    pub fn create(
+        &self,
+        filename: &str,
+        size_x: int,
+        size_y: int,
+        bands: int
+    ) -> Option<RasterDataset> {
+        use std::ptr::null;
+        let c_dataset = filename.with_c_str(|c_filename| {
+            unsafe {
+                return GDALCreate(
+                    self.c_driver,
+                    c_filename,
+                    size_x as c_int,
+                    size_y as c_int,
+                    bands as c_int,
+                    GDT_Byte,
+                    null()
+                );
+            }
+        });
+        return match c_dataset.is_null() {
+            true  => None,
+            false => unsafe { Some(RasterDataset::with_ptr(c_dataset)) },
+        };
+    }
+}
+
 
 pub struct RasterDataset {
     c_dataset: *(),
@@ -228,6 +311,18 @@ impl RasterDataset {
 }
 
 
+pub fn get_driver(name: &str) -> Option<Driver> {
+    register_drivers();
+    let c_driver = name.with_c_str(|c_name| {
+        return unsafe { GDALGetDriverByName(c_name) };
+    });
+    return match c_driver.is_null() {
+        true  => None,
+        false => Some(Driver{c_driver: c_driver}),
+    };
+}
+
+
 pub fn open(path: &Path) -> Option<RasterDataset> {
     register_drivers();
     let filename = path.as_str().unwrap();
@@ -306,7 +401,6 @@ fn test_read_raster() {
 
 #[test]
 fn test_write_raster() {
-    use super::driver::get_driver;
     let driver = get_driver("MEM").unwrap();
     let dataset = driver.create("", 20, 10, 1).unwrap();
 
@@ -337,7 +431,6 @@ fn test_get_dataset_driver() {
 
 #[test]
 fn test_create() {
-    use super::driver::get_driver;
     let driver = get_driver("MEM").unwrap();
     let dataset = driver.create("", 10, 20, 3).unwrap();
     assert_eq!(dataset.get_raster_size(), (10, 20));
@@ -348,7 +441,6 @@ fn test_create() {
 
 #[test]
 fn test_create_copy() {
-    use super::driver::get_driver;
     let driver = get_driver("MEM").unwrap();
     let dataset = open(&fixture_path("tinymarble.png")).unwrap();
     let copy = dataset.create_copy(driver, "").unwrap();
@@ -359,10 +451,22 @@ fn test_create_copy() {
 
 #[test]
 fn test_geo_transform() {
-    use super::driver::get_driver;
     let driver = get_driver("MEM").unwrap();
     let dataset = driver.create("", 20, 10, 1).unwrap();
     let transform = (0., 1., 0., 0., 0., 1.);
     dataset.set_geo_transform(transform);
     assert_eq!(dataset.get_geo_transform(), transform);
+}
+
+
+#[test]
+fn test_get_driver_by_name() {
+    let missing_driver = get_driver("wtf");
+    assert!(missing_driver.is_none());
+
+    let ok_driver = get_driver("GTiff");
+    assert!(ok_driver.is_some());
+    let driver = ok_driver.unwrap();
+    assert_eq!(driver.get_short_name().as_slice(), "GTiff");
+    assert_eq!(driver.get_long_name().as_slice(), "GeoTIFF");
 }
