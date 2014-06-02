@@ -7,9 +7,9 @@ use sync::mutex::{StaticMutex, MUTEX_INIT};
 extern {
     fn OGRRegisterAll();
     fn OGROpen(pszName: *c_char, bUpdate: c_int, pahDriverList: *()) -> *();
-    fn OGR_DS_GetLayerCount(OGRDataSourceH: *()) -> c_int;
-    fn OGR_DS_Destroy(OGRDataSourceH: *());
-    fn OGR_DS_GetLayer(OGRDataSourceH: *(), iLayer: c_int) -> *();
+    fn OGR_DS_GetLayerCount(hDS: *()) -> c_int;
+    fn OGR_DS_Destroy(hDataSource: *());
+    fn OGR_DS_GetLayer(hDS: *(), iLayer: c_int) -> *();
     fn OGR_L_GetNextFeature(hLayer: *()) -> *();
     fn OGR_F_Destroy(hFeat: *());
 }
