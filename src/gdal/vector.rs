@@ -1,4 +1,5 @@
 use std::ptr::null;
+use std::str::raw;
 use libc::{c_int, c_char};
 use sync::mutex::{StaticMutex, MUTEX_INIT};
 
@@ -11,6 +12,8 @@ extern {
     fn OGR_DS_Destroy(hDataSource: *());
     fn OGR_DS_GetLayer(hDS: *(), iLayer: c_int) -> *();
     fn OGR_L_GetNextFeature(hLayer: *()) -> *();
+    fn OGR_F_GetFieldIndex(hFeat: *(), pszName: *c_char) -> c_int;
+    fn OGR_F_GetFieldAsString(hFeat: *(), iField: c_int) -> *c_char;
     fn OGR_F_Destroy(hFeat: *());
 }
 
@@ -91,6 +94,19 @@ pub struct Feature {
 }
 
 
+impl Feature {
+    pub fn get_field(&self, name: String) -> String {
+        return name.with_c_str(|c_name| {
+            unsafe {
+                let field_id = OGR_F_GetFieldIndex(self.c_feature, c_name);
+                let c_value = OGR_F_GetFieldAsString(self.c_feature, field_id);
+                return raw::from_c_str(c_value);
+            }
+        });
+    }
+}
+
+
 impl Drop for Feature {
     fn drop(&mut self) {
         unsafe { OGR_F_Destroy(self.c_feature); }
@@ -143,5 +159,21 @@ mod test {
         let layer = ds.get_layer(0).unwrap();
         let features: Vec<Feature> = layer.features().collect();
         assert_eq!(features.len(), 21);
+    }
+
+
+    #[test]
+    fn test_get_field() {
+        let ds = open(&fixture_path("roads.geojson")).unwrap();
+        let layer = ds.get_layer(0).unwrap();
+        let feature = layer.features().next().unwrap();
+        assert_eq!(feature.get_field("highway".to_string()),
+                   "footway".to_string());
+        assert_eq!(
+            layer.features()
+                 .count(|f|
+                    f.get_field("highway".to_string()) ==
+                    "residential".to_string()),
+            2);
     }
 }
