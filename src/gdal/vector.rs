@@ -9,6 +9,9 @@ extern {
     fn OGROpen(pszName: *c_char, bUpdate: c_int, pahDriverList: *()) -> *();
     fn OGR_DS_GetLayerCount(OGRDataSourceH: *()) -> c_int;
     fn OGR_DS_Destroy(OGRDataSourceH: *());
+    fn OGR_DS_GetLayer(OGRDataSourceH: *(), iLayer: c_int) -> *();
+    fn OGR_L_GetNextFeature(hLayer: *()) -> *();
+    fn OGR_F_Destroy(hFeat: *());
 }
 
 
@@ -35,12 +38,61 @@ impl VectorDataset {
     pub fn get_layer_count(&self) -> int {
         return unsafe { OGR_DS_GetLayerCount(self.c_dataset) } as int;
     }
+
+    pub fn get_layer(&self, idx: int) -> Option<Layer> {
+        let c_layer = unsafe { OGR_DS_GetLayer(self.c_dataset, idx as c_int) };
+        return match c_layer.is_null() {
+            true  => None,
+            false => Some(Layer{c_layer: c_layer}),
+        };
+    }
 }
 
 
 impl Drop for VectorDataset {
     fn drop(&mut self) {
         unsafe { OGR_DS_Destroy(self.c_dataset); }
+    }
+}
+
+
+pub struct Layer {
+    c_layer: *(),
+}
+
+
+impl Layer {
+    pub fn features<'a>(&'a self) -> FeatureIterator<'a> {
+        return FeatureIterator{layer: self};
+    }
+}
+
+
+pub struct FeatureIterator<'a> {
+    layer: &'a Layer,
+}
+
+
+impl<'a> Iterator<Feature> for FeatureIterator<'a> {
+    #[inline]
+    fn next(&mut self) -> Option<Feature> {
+        let c_feature = unsafe { OGR_L_GetNextFeature(self.layer.c_layer) };
+        return match c_feature.is_null() {
+            true  => None,
+            false => Some(Feature{c_feature: c_feature}),
+        };
+    }
+}
+
+
+pub struct Feature {
+    c_feature: *(),
+}
+
+
+impl Drop for Feature {
+    fn drop(&mut self) {
+        unsafe { OGR_F_Destroy(self.c_feature); }
     }
 }
 
@@ -63,7 +115,7 @@ pub fn open(path: &Path) -> Option<VectorDataset> {
 mod test {
     use std::os::getenv;
     use std::path::Path;
-    use super::open;
+    use super::{Feature, open};
 
 
     fn fixture_path(name: &str) -> Path {
@@ -81,5 +133,14 @@ mod test {
     fn test_layer_count() {
         let ds = open(&fixture_path("roads.geojson")).unwrap();
         assert_eq!(ds.get_layer_count(), 1);
+    }
+
+
+    #[test]
+    fn test_iterate_features() {
+        let ds = open(&fixture_path("roads.geojson")).unwrap();
+        let layer = ds.get_layer(0).unwrap();
+        let features: Vec<Feature> = layer.features().collect();
+        assert_eq!(features.len(), 21);
     }
 }
