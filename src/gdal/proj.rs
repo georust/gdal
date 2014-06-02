@@ -84,37 +84,44 @@ impl Drop for Proj {
 }
 
 
-#[test]
-fn test_new_projection() {
-    let wgs84 = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs";
-    let proj = Proj::new(wgs84.to_string()).unwrap();
-    assert_eq!(
-        proj.get_def().as_slice(),
-        " +proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0");
-}
+#[cfg(test)]
+mod test {
+    use super::super::geom::Point;
+    use super::Proj;
 
 
-fn assert_almost_eq(a: f64, b: f64) {
-    let f: f64 = a / b;
-    assert!(f < 1.00001);
-    assert!(f > 0.99999);
-}
+    #[test]
+    fn test_new_projection() {
+        let wgs84 = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs";
+        let proj = Proj::new(wgs84.to_string()).unwrap();
+        assert_eq!(
+            proj.get_def().as_slice(),
+            " +proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0");
+    }
 
 
-#[test]
-fn test_transform() {
-    let wgs84_name = "+proj=longlat +datum=WGS84 +no_defs";
-    let wgs84 = Proj::new(wgs84_name.to_string()).unwrap();
-    let stereo70 = Proj::new(format!("{}{}",
-        "+proj=sterea +lat_0=46 +lon_0=25 +k=0.99975 ",
-        "+x_0=500000 +y_0=500000 +ellps=krass +units=m +no_defs"
-    )).unwrap();
+    fn assert_almost_eq(a: f64, b: f64) {
+        let f: f64 = a / b;
+        assert!(f < 1.00001);
+        assert!(f > 0.99999);
+    }
 
-    let rv = stereo70.project(&wgs84, Point(500000., 500000.));
-    assert_almost_eq(rv.x, 0.436332);
-    assert_almost_eq(rv.y, 0.802851);
 
-    let rv = wgs84.project(&stereo70, Point(0.436332, 0.802851));
-    assert_almost_eq(rv.x, 500000.);
-    assert_almost_eq(rv.y, 500000.);
+    #[test]
+    fn test_transform() {
+        let wgs84_name = "+proj=longlat +datum=WGS84 +no_defs";
+        let wgs84 = Proj::new(wgs84_name.to_string()).unwrap();
+        let stereo70 = Proj::new(format!("{}{}",
+            "+proj=sterea +lat_0=46 +lon_0=25 +k=0.99975 ",
+            "+x_0=500000 +y_0=500000 +ellps=krass +units=m +no_defs"
+        )).unwrap();
+
+        let rv = stereo70.project(&wgs84, Point(500000., 500000.));
+        assert_almost_eq(rv.x, 0.436332);
+        assert_almost_eq(rv.y, 0.802851);
+
+        let rv = wgs84.project(&stereo70, Point(0.436332, 0.802851));
+        assert_almost_eq(rv.x, 500000.);
+        assert_almost_eq(rv.y, 500000.);
+    }
 }

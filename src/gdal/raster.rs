@@ -1,7 +1,5 @@
 use libc::{c_int, c_char, c_double};
 use std::str::raw;
-use std::os::getenv;
-use std::path::Path;
 use super::geom::Point;
 use sync::mutex::{StaticMutex, MUTEX_INIT};
 
@@ -342,131 +340,140 @@ pub struct ByteBuffer {
 }
 
 
-fn fixture_path(name: &str) -> Path {
-    let envvar = "RUST_GDAL_TEST_FIXTURES";
-    let fixtures = match getenv(envvar) {
-        Some(p) => Path::new(p),
-        None => fail!("Environment variable {} not set", envvar)
-    };
-    let rv = fixtures.join(name);
-    return rv;
-}
+#[cfg(test)]
+mod test {
+    use std::os::getenv;
+    use std::path::Path;
+    use super::super::geom::Point;
+    use super::{ByteBuffer, get_driver, open};
 
 
-#[test]
-fn test_open() {
-    let dataset = open(&fixture_path("tinymarble.png"));
-    assert!(dataset.is_some());
-
-    let missing_dataset = open(&fixture_path("no_such_file.png"));
-    assert!(missing_dataset.is_none());
-}
-
-
-#[test]
-fn test_get_raster_size() {
-    let dataset = open(&fixture_path("tinymarble.png")).unwrap();
-    let (size_x, size_y) = dataset.get_raster_size();
-    assert_eq!(size_x, 100);
-    assert_eq!(size_y, 50);
-}
+    fn fixture_path(name: &str) -> Path {
+        let envvar = "RUST_GDAL_TEST_FIXTURES";
+        let fixtures = match getenv(envvar) {
+            Some(p) => Path::new(p),
+            None => fail!("Environment variable {} not set", envvar)
+        };
+        let rv = fixtures.join(name);
+        return rv;
+    }
 
 
-#[test]
-fn test_get_raster_count() {
-    let dataset = open(&fixture_path("tinymarble.png")).unwrap();
-    let count = dataset.get_raster_count();
-    assert_eq!(count, 3);
-}
+    #[test]
+    fn test_open() {
+        let dataset = open(&fixture_path("tinymarble.png"));
+        assert!(dataset.is_some());
+
+        let missing_dataset = open(&fixture_path("no_such_file.png"));
+        assert!(missing_dataset.is_none());
+    }
 
 
-#[test]
-fn test_get_projection() {
-    let dataset = open(&fixture_path("tinymarble.png")).unwrap();
-    //dataset.set_projection("WGS84");
-    let projection = dataset.get_projection();
-    assert_eq!(projection.as_slice().slice(0, 16), "GEOGCS[\"WGS 84\",");
-}
+    #[test]
+    fn test_get_raster_size() {
+        let dataset = open(&fixture_path("tinymarble.png")).unwrap();
+        let (size_x, size_y) = dataset.get_raster_size();
+        assert_eq!(size_x, 100);
+        assert_eq!(size_y, 50);
+    }
 
 
-#[test]
-fn test_read_raster() {
-    let dataset = open(&fixture_path("tinymarble.png")).unwrap();
-    let rv = dataset.read_raster(1, Point(20, 30), Point(2, 3), Point(2, 3));
-    assert_eq!(rv.size.x, 2);
-    assert_eq!(rv.size.y, 3);
-    assert_eq!(rv.data, vec!(7, 7, 7, 10, 8, 12));
-}
+    #[test]
+    fn test_get_raster_count() {
+        let dataset = open(&fixture_path("tinymarble.png")).unwrap();
+        let count = dataset.get_raster_count();
+        assert_eq!(count, 3);
+    }
 
 
-#[test]
-fn test_write_raster() {
-    let driver = get_driver("MEM").unwrap();
-    let dataset = driver.create("", 20, 10, 1).unwrap();
-
-    // create a 2x1 raster
-    let raster = ByteBuffer{size: Point(2, 1), data: vec!(50u8, 20u8)};
-
-    // epand it to fill the image (20x10)
-    dataset.write_raster(1, Point(0, 0), Point(20, 10), raster);
-
-    // read a pixel from the left side
-    let left = dataset.read_raster(1, Point(5, 5), Point(1, 1), Point(1, 1));
-    assert_eq!(*left.data.get(0), 50u8);
-
-    // read a pixel from the right side
-    let right = dataset.read_raster(1, Point(15, 5), Point(1, 1), Point(1, 1));
-    assert_eq!(*right.data.get(0), 20u8);
-}
+    #[test]
+    fn test_get_projection() {
+        let dataset = open(&fixture_path("tinymarble.png")).unwrap();
+        //dataset.set_projection("WGS84");
+        let projection = dataset.get_projection();
+        assert_eq!(projection.as_slice().slice(0, 16), "GEOGCS[\"WGS 84\",");
+    }
 
 
-#[test]
-fn test_get_dataset_driver() {
-    let dataset = open(&fixture_path("tinymarble.png")).unwrap();
-    let driver = dataset.get_driver();
-    assert_eq!(driver.get_short_name().as_slice(), "PNG");
-    assert_eq!(driver.get_long_name().as_slice(), "Portable Network Graphics");
-}
+    #[test]
+    fn test_read_raster() {
+        let dataset = open(&fixture_path("tinymarble.png")).unwrap();
+        let rv = dataset.read_raster(1, Point(20, 30), Point(2, 3), Point(2, 3));
+        assert_eq!(rv.size.x, 2);
+        assert_eq!(rv.size.y, 3);
+        assert_eq!(rv.data, vec!(7, 7, 7, 10, 8, 12));
+    }
 
 
-#[test]
-fn test_create() {
-    let driver = get_driver("MEM").unwrap();
-    let dataset = driver.create("", 10, 20, 3).unwrap();
-    assert_eq!(dataset.get_raster_size(), (10, 20));
-    assert_eq!(dataset.get_raster_count(), 3);
-    assert_eq!(dataset.get_driver().get_short_name().as_slice(), "MEM");
-}
+    #[test]
+    fn test_write_raster() {
+        let driver = get_driver("MEM").unwrap();
+        let dataset = driver.create("", 20, 10, 1).unwrap();
+
+        // create a 2x1 raster
+        let raster = ByteBuffer{size: Point(2, 1), data: vec!(50u8, 20u8)};
+
+        // epand it to fill the image (20x10)
+        dataset.write_raster(1, Point(0, 0), Point(20, 10), raster);
+
+        // read a pixel from the left side
+        let left = dataset.read_raster(1, Point(5, 5), Point(1, 1), Point(1, 1));
+        assert_eq!(*left.data.get(0), 50u8);
+
+        // read a pixel from the right side
+        let right = dataset.read_raster(1, Point(15, 5), Point(1, 1), Point(1, 1));
+        assert_eq!(*right.data.get(0), 20u8);
+    }
 
 
-#[test]
-fn test_create_copy() {
-    let driver = get_driver("MEM").unwrap();
-    let dataset = open(&fixture_path("tinymarble.png")).unwrap();
-    let copy = dataset.create_copy(driver, "").unwrap();
-    assert_eq!(copy.get_raster_size(), (100, 50));
-    assert_eq!(copy.get_raster_count(), 3);
-}
+    #[test]
+    fn test_get_dataset_driver() {
+        let dataset = open(&fixture_path("tinymarble.png")).unwrap();
+        let driver = dataset.get_driver();
+        assert_eq!(driver.get_short_name().as_slice(), "PNG");
+        assert_eq!(driver.get_long_name().as_slice(), "Portable Network Graphics");
+    }
 
 
-#[test]
-fn test_geo_transform() {
-    let driver = get_driver("MEM").unwrap();
-    let dataset = driver.create("", 20, 10, 1).unwrap();
-    let transform = (0., 1., 0., 0., 0., 1.);
-    dataset.set_geo_transform(transform);
-    assert_eq!(dataset.get_geo_transform(), transform);
-}
+    #[test]
+    fn test_create() {
+        let driver = get_driver("MEM").unwrap();
+        let dataset = driver.create("", 10, 20, 3).unwrap();
+        assert_eq!(dataset.get_raster_size(), (10, 20));
+        assert_eq!(dataset.get_raster_count(), 3);
+        assert_eq!(dataset.get_driver().get_short_name().as_slice(), "MEM");
+    }
 
 
-#[test]
-fn test_get_driver_by_name() {
-    let missing_driver = get_driver("wtf");
-    assert!(missing_driver.is_none());
+    #[test]
+    fn test_create_copy() {
+        let driver = get_driver("MEM").unwrap();
+        let dataset = open(&fixture_path("tinymarble.png")).unwrap();
+        let copy = dataset.create_copy(driver, "").unwrap();
+        assert_eq!(copy.get_raster_size(), (100, 50));
+        assert_eq!(copy.get_raster_count(), 3);
+    }
 
-    let ok_driver = get_driver("GTiff");
-    assert!(ok_driver.is_some());
-    let driver = ok_driver.unwrap();
-    assert_eq!(driver.get_short_name().as_slice(), "GTiff");
-    assert_eq!(driver.get_long_name().as_slice(), "GeoTIFF");
+
+    #[test]
+    fn test_geo_transform() {
+        let driver = get_driver("MEM").unwrap();
+        let dataset = driver.create("", 20, 10, 1).unwrap();
+        let transform = (0., 1., 0., 0., 0., 1.);
+        dataset.set_geo_transform(transform);
+        assert_eq!(dataset.get_geo_transform(), transform);
+    }
+
+
+    #[test]
+    fn test_get_driver_by_name() {
+        let missing_driver = get_driver("wtf");
+        assert!(missing_driver.is_none());
+
+        let ok_driver = get_driver("GTiff");
+        assert!(ok_driver.is_some());
+        let driver = ok_driver.unwrap();
+        assert_eq!(driver.get_short_name().as_slice(), "GTiff");
+        assert_eq!(driver.get_long_name().as_slice(), "GeoTIFF");
+    }
 }

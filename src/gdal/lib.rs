@@ -31,19 +31,25 @@ pub fn version_info(key: &str) -> String {
 }
 
 
-#[test]
-fn test_version_info() {
-    let release_date = version_info("RELEASE_DATE");
-    let release_name = version_info("RELEASE_NAME");
-    let version_text = version_info("--version");
+#[cfg(test)]
+mod test {
+    use super::version_info;
 
-    let expected_text: String = format!(
-        "GDAL {}, released {}/{}/{}",
-        release_name,
-        release_date.as_slice().slice(0, 4),
-        release_date.as_slice().slice(4, 6),
-        release_date.as_slice().slice(6, 8),
-    );
 
-    assert_eq!(version_text.into_owned(), expected_text);
+    #[test]
+    fn test_version_info() {
+        let release_date = version_info("RELEASE_DATE");
+        let release_name = version_info("RELEASE_NAME");
+        let version_text = version_info("--version");
+
+        let expected_text: String = format!(
+            "GDAL {}, released {}/{}/{}",
+            release_name,
+            release_date.as_slice().slice(0, 4),
+            release_date.as_slice().slice(4, 6),
+            release_date.as_slice().slice(6, 8),
+        );
+
+        assert_eq!(version_text.into_owned(), expected_text);
+    }
 }
