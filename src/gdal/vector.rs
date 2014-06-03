@@ -13,17 +13,38 @@ extern {
     fn OGR_DS_GetLayer(hDS: *(), iLayer: c_int) -> *();
     fn OGR_L_GetNextFeature(hLayer: *()) -> *();
     fn OGR_F_GetFieldIndex(hFeat: *(), pszName: *c_char) -> c_int;
+    fn OGR_F_GetFieldDefnRef(hFeat: *(), i: c_int) -> *();
     fn OGR_F_GetFieldAsString(hFeat: *(), iField: c_int) -> *c_char;
     fn OGR_F_GetFieldAsDouble(hFeat: *(), iField: c_int) -> c_double;
     fn OGR_F_GetGeometryRef(hFeat: *()) -> *();
     fn OGR_F_Destroy(hFeat: *());
     fn OGR_G_ExportToWkt(hGeom: *(), ppszSrcText: **c_char) -> c_int;
+    fn OGR_Fld_GetType(hDefn: *()) -> c_int;
     fn OGRFree(ptr: *());
 }
 
+static OFTInteger:        c_int = 0;
+static OFTIntegerList:    c_int = 1;
+static OFTReal:           c_int = 2;
+static OFTRealList:       c_int = 3;
+static OFTString:         c_int = 4;
+static OFTStringList:     c_int = 5;
+static OFTWideString:     c_int = 6;
+static OFTWideStringList: c_int = 7;
+static OFTBinary:         c_int = 8;
+static OFTDate:           c_int = 9;
+static OFTTime:           c_int = 10;
+static OFTDateTime:       c_int = 11;
 
 static mut LOCK: StaticMutex = MUTEX_INIT;
 static mut registered_drivers: bool = false;
+
+
+pub enum FieldValue {
+    StringValue(String),
+    F64Value(f64),
+}
+
 
 fn register_drivers() {
     unsafe {
@@ -100,24 +121,37 @@ pub struct Feature<'a> {
 
 
 impl<'a> Feature<'a> {
-    pub fn get_string_field(&self, name: String) -> String {
-        return name.with_c_str(|c_name| {
-            unsafe {
-                let field_id = OGR_F_GetFieldIndex(self.c_feature, c_name);
-                let c_value = OGR_F_GetFieldAsString(self.c_feature, field_id);
-                return raw::from_c_str(c_value);
+    pub fn get_field(&self, name: String) -> FieldValue {
+        return name.with_c_str(|c_name| unsafe {
+            let field_id = OGR_F_GetFieldIndex(self.c_feature, c_name);
+            let field_defn = OGR_F_GetFieldDefnRef(self.c_feature, field_id);
+            let field_type = OGR_Fld_GetType(field_defn);
+            return match field_type {
+                OFTString => {
+                    let rv = OGR_F_GetFieldAsString(self.c_feature, field_id);
+                    return StringValue(raw::from_c_str(rv));
+                },
+                OFTReal => {
+                    let rv = OGR_F_GetFieldAsDouble(self.c_feature, field_id);
+                    return F64Value(rv as f64);
+                },
+                _ => fail!("Unknown field type {}", field_type)
             }
         });
     }
 
+    pub fn get_string_field(&self, name: String) -> String {
+        return match self.get_field(name) {
+            StringValue(rv) => rv,
+            _ => fail!("not a string")
+        }
+    }
+
     pub fn get_f64_field(&self, name: String) -> f64 {
-        return name.with_c_str(|c_name| {
-            unsafe {
-                let field_id = OGR_F_GetFieldIndex(self.c_feature, c_name);
-                let c_value = OGR_F_GetFieldAsDouble(self.c_feature, field_id);
-                return c_value as f64;
-            }
-        });
+        return match self.get_field(name) {
+            F64Value(rv) => rv,
+            _ => fail!("not an f64")
+        }
     }
 
     pub fn get_wkt(&self) -> String {
