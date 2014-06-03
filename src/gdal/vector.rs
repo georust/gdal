@@ -40,23 +40,6 @@ static mut LOCK: StaticMutex = MUTEX_INIT;
 static mut registered_drivers: bool = false;
 
 
-pub enum FieldValue {
-    StringValue(String),
-    F64Value(f64),
-}
-
-
-impl FieldValue {
-    pub fn as_string(self) -> String {
-        match self { StringValue(rv) => rv, _ => fail!("not a string") }
-    }
-
-    pub fn as_f64(self) -> f64 {
-        match self { F64Value(rv) => rv, _ => fail!("not an f64") }
-    }
-}
-
-
 fn register_drivers() {
     unsafe {
         let _g = LOCK.lock();
@@ -187,6 +170,22 @@ pub fn open(path: &Path) -> Option<VectorDataset> {
     };
 }
 
+
+pub enum FieldValue {
+    StringValue(String),
+    F64Value(f64),
+}
+
+
+impl FieldValue {
+    pub fn as_string(self) -> String {
+        match self { StringValue(rv) => rv, _ => fail!("not a string") }
+    }
+
+    pub fn as_f64(self) -> f64 {
+        match self { F64Value(rv) => rv, _ => fail!("not an f64") }
+    }
+}
 
 
 #[cfg(test)]
