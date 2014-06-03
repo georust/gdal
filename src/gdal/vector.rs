@@ -14,7 +14,10 @@ extern {
     fn OGR_L_GetNextFeature(hLayer: *()) -> *();
     fn OGR_F_GetFieldIndex(hFeat: *(), pszName: *c_char) -> c_int;
     fn OGR_F_GetFieldAsString(hFeat: *(), iField: c_int) -> *c_char;
+    fn OGR_F_GetGeometryRef(hFeat: *()) -> *();
     fn OGR_F_Destroy(hFeat: *());
+    fn OGR_G_ExportToWkt(hGeom: *(), ppszSrcText: **c_char) -> c_int;
+    fn OGRFree(ptr: *());
 }
 
 
@@ -105,6 +108,17 @@ impl<'a> Feature<'a> {
             }
         });
     }
+
+    pub fn get_wkt(&self) -> String {
+        unsafe {
+            let c_geom = OGR_F_GetGeometryRef(self.c_feature);
+            let c_wkt: *c_char = null();
+            OGR_G_ExportToWkt(c_geom, &c_wkt);
+            let wkt = raw::from_c_str(c_wkt);
+            OGRFree(c_wkt as *());
+            return wkt;
+        }
+    }
 }
 
 
@@ -177,5 +191,15 @@ mod test {
                     f.get_field("highway".to_string()) ==
                     "residential".to_string()),
             2);
+    }
+
+
+    #[test]
+    fn test_get_wkt() {
+        let ds = open(&fixture_path("roads.geojson")).unwrap();
+        let layer = ds.get_layer(0).unwrap();
+        let feature = layer.features().next().unwrap();
+        let wkt = feature.get_wkt();
+        assert_eq!(wkt, "LINESTRING (26.1019276 44.4302748,26.1019382 44.4303191,26.1020002 44.4304202)".to_string());
     }
 }
