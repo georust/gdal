@@ -121,19 +121,22 @@ pub struct Feature<'a> {
 
 
 impl<'a> Feature<'a> {
-    pub fn get_field(&self, name: String) -> FieldValue {
+    pub fn get_field(&self, name: String) -> Option<FieldValue> {
         return name.with_c_str(|c_name| unsafe {
             let field_id = OGR_F_GetFieldIndex(self.c_feature, c_name);
+            if field_id == -1 {
+                return None;
+            }
             let field_defn = OGR_F_GetFieldDefnRef(self.c_feature, field_id);
             let field_type = OGR_Fld_GetType(field_defn);
             return match field_type {
                 OFTString => {
                     let rv = OGR_F_GetFieldAsString(self.c_feature, field_id);
-                    return StringValue(raw::from_c_str(rv));
+                    return Some(StringValue(raw::from_c_str(rv)));
                 },
                 OFTReal => {
                     let rv = OGR_F_GetFieldAsDouble(self.c_feature, field_id);
-                    return F64Value(rv as f64);
+                    return Some(F64Value(rv as f64));
                 },
                 _ => fail!("Unknown field type {}", field_type)
             }
@@ -142,14 +145,14 @@ impl<'a> Feature<'a> {
 
     pub fn get_string_field(&self, name: String) -> String {
         return match self.get_field(name) {
-            StringValue(rv) => rv,
+            Some(StringValue(rv)) => rv,
             _ => fail!("not a string")
         }
     }
 
     pub fn get_f64_field(&self, name: String) -> f64 {
         return match self.get_field(name) {
-            F64Value(rv) => rv,
+            Some(F64Value(rv)) => rv,
             _ => fail!("not an f64")
         }
     }
@@ -252,6 +255,15 @@ mod test {
         let layer = ds.get_layer(0).unwrap();
         let feature = layer.features().next().unwrap();
         assert_almost_eq(feature.get_f64_field("sort_key".to_string()), -9.0);
+    }
+
+
+    #[test]
+    fn test_get_missing_field() {
+        let ds = open(&fixture_path("roads.geojson")).unwrap();
+        let layer = ds.get_layer(0).unwrap();
+        let feature = layer.features().next().unwrap();
+        assert!(feature.get_field("no such field".to_string()).is_none());
     }
 
 
