@@ -77,24 +77,25 @@ pub struct FeatureIterator<'a> {
 }
 
 
-impl<'a> Iterator<Feature> for FeatureIterator<'a> {
+impl<'a> Iterator<Feature<'a>> for FeatureIterator<'a> {
     #[inline]
-    fn next(&mut self) -> Option<Feature> {
+    fn next(&mut self) -> Option<Feature<'a>> {
         let c_feature = unsafe { OGR_L_GetNextFeature(self.layer.c_layer) };
         return match c_feature.is_null() {
             true  => None,
-            false => Some(Feature{c_feature: c_feature}),
+            false => Some(Feature{layer: self.layer, c_feature: c_feature}),
         };
     }
 }
 
 
-pub struct Feature {
+pub struct Feature<'a> {
+    layer: &'a Layer<'a>,
     c_feature: *(),
 }
 
 
-impl Feature {
+impl<'a> Feature<'a> {
     pub fn get_field(&self, name: String) -> String {
         return name.with_c_str(|c_name| {
             unsafe {
@@ -107,7 +108,8 @@ impl Feature {
 }
 
 
-impl Drop for Feature {
+#[unsafe_destructor]
+impl<'a> Drop for Feature<'a> {
     fn drop(&mut self) {
         unsafe { OGR_F_Destroy(self.c_feature); }
     }
