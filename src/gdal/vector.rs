@@ -46,6 +46,17 @@ pub enum FieldValue {
 }
 
 
+impl FieldValue {
+    pub fn as_string(self) -> String {
+        match self { StringValue(rv) => rv, _ => fail!("not a string") }
+    }
+
+    pub fn as_f64(self) -> f64 {
+        match self { F64Value(rv) => rv, _ => fail!("not an f64") }
+    }
+}
+
+
 fn register_drivers() {
     unsafe {
         let _g = LOCK.lock();
@@ -143,20 +154,6 @@ impl<'a> Feature<'a> {
         });
     }
 
-    pub fn get_string_field(&self, name: String) -> String {
-        return match self.get_field(name) {
-            Some(StringValue(rv)) => rv,
-            _ => fail!("not a string")
-        }
-    }
-
-    pub fn get_f64_field(&self, name: String) -> f64 {
-        return match self.get_field(name) {
-            Some(F64Value(rv)) => rv,
-            _ => fail!("not an f64")
-        }
-    }
-
     pub fn get_wkt(&self) -> String {
         unsafe {
             let c_geom = OGR_F_GetGeometryRef(self.c_feature);
@@ -238,12 +235,12 @@ mod test {
         let ds = open(&fixture_path("roads.geojson")).unwrap();
         let layer = ds.get_layer(0).unwrap();
         let feature = layer.features().next().unwrap();
-        assert_eq!(feature.get_string_field("highway".to_string()),
+        assert_eq!(feature.get_field("highway".to_string()).unwrap().as_string(),
                    "footway".to_string());
         assert_eq!(
             layer.features()
                  .count(|f|
-                    f.get_string_field("highway".to_string()) ==
+                    f.get_field("highway".to_string()).unwrap().as_string() ==
                     "residential".to_string()),
             2);
     }
@@ -254,7 +251,7 @@ mod test {
         let ds = open(&fixture_path("roads.geojson")).unwrap();
         let layer = ds.get_layer(0).unwrap();
         let feature = layer.features().next().unwrap();
-        assert_almost_eq(feature.get_f64_field("sort_key".to_string()), -9.0);
+        assert_almost_eq(feature.get_field("sort_key".to_string()).unwrap().as_f64(), -9.0);
     }
 
 
