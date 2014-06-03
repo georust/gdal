@@ -19,8 +19,10 @@ extern {
     fn OGR_F_GetGeometryRef(hFeat: *()) -> *();
     fn OGR_F_Destroy(hFeat: *());
     fn OGR_G_ExportToWkt(hGeom: *(), ppszSrcText: **c_char) -> c_int;
+    fn OGR_G_ExportToJson(hGeometry: *()) -> *c_char;
     fn OGR_Fld_GetType(hDefn: *()) -> c_int;
     fn OGRFree(ptr: *());
+    fn VSIFree(ptr: *());
 }
 
 static OFTInteger:        c_int = 0;
@@ -145,6 +147,17 @@ impl<'a> Feature<'a> {
             let wkt = raw::from_c_str(c_wkt);
             OGRFree(c_wkt as *());
             return wkt;
+        }
+    }
+
+
+    pub fn json(&self) -> String {
+        unsafe {
+            let c_geom = OGR_F_GetGeometryRef(self.c_feature);
+            let c_json = OGR_G_ExportToJson(c_geom);
+            let json = raw::from_c_str(c_json);
+            VSIFree(c_json as *());
+            return json;
         }
     }
 }
@@ -290,6 +303,21 @@ mod test {
                 "26.1019382 44.4303191,26.1020002 44.4304202)"
                 ).to_string();
             assert_eq!(wkt, wkt_ok);
+        });
+    }
+
+
+    #[test]
+    fn test_json() {
+        with_first_feature("roads.geojson", |feature| {
+            let json = feature.json();
+            let json_ok = format!("{}{}{}{}",
+                "{ \"type\": \"LineString\", \"coordinates\": [ ",
+                "[ 26.1019276, 44.4302748 ], ",
+                "[ 26.1019382, 44.4303191 ], ",
+                "[ 26.1020002, 44.4304202 ] ] }"
+                ).to_string();
+            assert_eq!(json, json_ok);
         });
     }
 }
