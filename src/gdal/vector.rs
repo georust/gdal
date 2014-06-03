@@ -57,11 +57,11 @@ pub struct VectorDataset {
 
 
 impl VectorDataset {
-    pub fn get_layer_count(&self) -> int {
+    pub fn layer_count(&self) -> int {
         return unsafe { OGR_DS_GetLayerCount(self.c_dataset) } as int;
     }
 
-    pub fn get_layer<'a>(&'a self, idx: int) -> Option<Layer<'a>> {
+    pub fn layer<'a>(&'a self, idx: int) -> Option<Layer<'a>> {
         let c_layer = unsafe { OGR_DS_GetLayer(self.c_dataset, idx as c_int) };
         return match c_layer.is_null() {
             true  => None,
@@ -115,7 +115,7 @@ pub struct Feature<'a> {
 
 
 impl<'a> Feature<'a> {
-    pub fn get_field(&self, name: String) -> Option<FieldValue> {
+    pub fn field(&self, name: String) -> Option<FieldValue> {
         return name.with_c_str(|c_name| unsafe {
             let field_id = OGR_F_GetFieldIndex(self.c_feature, c_name);
             if field_id == -1 {
@@ -137,7 +137,7 @@ impl<'a> Feature<'a> {
         });
     }
 
-    pub fn get_wkt(&self) -> String {
+    pub fn wkt(&self) -> String {
         unsafe {
             let c_geom = OGR_F_GetGeometryRef(self.c_feature);
             let c_wkt: *c_char = null();
@@ -216,59 +216,59 @@ mod test {
     #[test]
     fn test_layer_count() {
         let ds = open(&fixture_path("roads.geojson")).unwrap();
-        assert_eq!(ds.get_layer_count(), 1);
+        assert_eq!(ds.layer_count(), 1);
     }
 
 
     #[test]
     fn test_iterate_features() {
         let ds = open(&fixture_path("roads.geojson")).unwrap();
-        let layer = ds.get_layer(0).unwrap();
+        let layer = ds.layer(0).unwrap();
         let features: Vec<Feature> = layer.features().collect();
         assert_eq!(features.len(), 21);
     }
 
 
     #[test]
-    fn test_get_string_field() {
+    fn test_string_field() {
         let ds = open(&fixture_path("roads.geojson")).unwrap();
-        let layer = ds.get_layer(0).unwrap();
+        let layer = ds.layer(0).unwrap();
         let feature = layer.features().next().unwrap();
-        assert_eq!(feature.get_field("highway".to_string()).unwrap().as_string(),
+        assert_eq!(feature.field("highway".to_string()).unwrap().as_string(),
                    "footway".to_string());
         assert_eq!(
             layer.features()
                  .count(|f|
-                    f.get_field("highway".to_string()).unwrap().as_string() ==
+                    f.field("highway".to_string()).unwrap().as_string() ==
                     "residential".to_string()),
             2);
     }
 
 
     #[test]
-    fn test_get_float_field() {
+    fn test_float_field() {
         let ds = open(&fixture_path("roads.geojson")).unwrap();
-        let layer = ds.get_layer(0).unwrap();
+        let layer = ds.layer(0).unwrap();
         let feature = layer.features().next().unwrap();
-        assert_almost_eq(feature.get_field("sort_key".to_string()).unwrap().as_f64(), -9.0);
+        assert_almost_eq(feature.field("sort_key".to_string()).unwrap().as_f64(), -9.0);
     }
 
 
     #[test]
-    fn test_get_missing_field() {
+    fn test_missing_field() {
         let ds = open(&fixture_path("roads.geojson")).unwrap();
-        let layer = ds.get_layer(0).unwrap();
+        let layer = ds.layer(0).unwrap();
         let feature = layer.features().next().unwrap();
-        assert!(feature.get_field("no such field".to_string()).is_none());
+        assert!(feature.field("no such field".to_string()).is_none());
     }
 
 
     #[test]
-    fn test_get_wkt() {
+    fn test_wkt() {
         let ds = open(&fixture_path("roads.geojson")).unwrap();
-        let layer = ds.get_layer(0).unwrap();
+        let layer = ds.layer(0).unwrap();
         let feature = layer.features().next().unwrap();
-        let wkt = feature.get_wkt();
+        let wkt = feature.wkt();
         assert_eq!(wkt, "LINESTRING (26.1019276 44.4302748,26.1019382 44.4303191,26.1020002 44.4304202)".to_string());
     }
 }
