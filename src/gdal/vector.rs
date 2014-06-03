@@ -192,7 +192,7 @@ impl FieldValue {
 mod test {
     use std::os::getenv;
     use std::path::Path;
-    use super::{Feature, open};
+    use super::{Feature, FeatureIterator, open};
 
 
     fn fixture_path(name: &str) -> Path {
@@ -220,55 +220,76 @@ mod test {
     }
 
 
+    fn with_features(fixture: &str, f: |FeatureIterator|) {
+        let ds = open(&fixture_path(fixture)).unwrap();
+        let layer = ds.layer(0).unwrap();
+        f(layer.features());
+    }
+
+
+    fn with_first_feature(fixture: &str, f: |Feature|) {
+        with_features(fixture, |mut features| f(features.next().unwrap()));
+    }
+
+
     #[test]
     fn test_iterate_features() {
-        let ds = open(&fixture_path("roads.geojson")).unwrap();
-        let layer = ds.layer(0).unwrap();
-        let features: Vec<Feature> = layer.features().collect();
-        assert_eq!(features.len(), 21);
+        with_features("roads.geojson", |mut features| {
+            let feature_vec: Vec<Feature> = features.collect();
+            assert_eq!(feature_vec.len(), 21);
+        });
     }
 
 
     #[test]
     fn test_string_field() {
-        let ds = open(&fixture_path("roads.geojson")).unwrap();
-        let layer = ds.layer(0).unwrap();
-        let feature = layer.features().next().unwrap();
-        assert_eq!(feature.field("highway".to_string()).unwrap().as_string(),
-                   "footway".to_string());
-        assert_eq!(
-            layer.features()
-                 .count(|f|
-                    f.field("highway".to_string()).unwrap().as_string() ==
-                    "residential".to_string()),
-            2);
+        with_features("roads.geojson", |mut features| {
+            let feature = features.next().unwrap();
+            assert_eq!(feature.field("highway".to_string())
+                              .unwrap()
+                              .as_string(),
+                       "footway".to_string());
+            assert_eq!(
+                features.count(|field| {
+                    let highway = field.field("highway".to_string())
+                                       .unwrap()
+                                       .as_string();
+                    highway == "residential".to_string() }),
+                2);
+        });
     }
 
 
     #[test]
     fn test_float_field() {
-        let ds = open(&fixture_path("roads.geojson")).unwrap();
-        let layer = ds.layer(0).unwrap();
-        let feature = layer.features().next().unwrap();
-        assert_almost_eq(feature.field("sort_key".to_string()).unwrap().as_f64(), -9.0);
+        with_first_feature("roads.geojson", |feature| {
+            assert_almost_eq(
+                feature.field("sort_key".to_string())
+                       .unwrap()
+                       .as_f64(),
+                -9.0
+            );
+        });
     }
 
 
     #[test]
     fn test_missing_field() {
-        let ds = open(&fixture_path("roads.geojson")).unwrap();
-        let layer = ds.layer(0).unwrap();
-        let feature = layer.features().next().unwrap();
-        assert!(feature.field("no such field".to_string()).is_none());
+        with_first_feature("roads.geojson", |feature| {
+            assert!(feature.field("no such field".to_string()).is_none());
+        });
     }
 
 
     #[test]
     fn test_wkt() {
-        let ds = open(&fixture_path("roads.geojson")).unwrap();
-        let layer = ds.layer(0).unwrap();
-        let feature = layer.features().next().unwrap();
-        let wkt = feature.wkt();
-        assert_eq!(wkt, "LINESTRING (26.1019276 44.4302748,26.1019382 44.4303191,26.1020002 44.4304202)".to_string());
+        with_first_feature("roads.geojson", |feature| {
+            let wkt = feature.wkt();
+            let wkt_ok = format!("{}{}",
+                "LINESTRING (26.1019276 44.4302748,",
+                "26.1019382 44.4303191,26.1020002 44.4304202)"
+                ).to_string();
+            assert_eq!(wkt, wkt_ok);
+        });
     }
 }
