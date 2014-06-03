@@ -1,6 +1,6 @@
 use std::ptr::null;
 use std::str::raw;
-use libc::{c_int, c_char};
+use libc::{c_int, c_char, c_double};
 use sync::mutex::{StaticMutex, MUTEX_INIT};
 
 
@@ -14,6 +14,7 @@ extern {
     fn OGR_L_GetNextFeature(hLayer: *()) -> *();
     fn OGR_F_GetFieldIndex(hFeat: *(), pszName: *c_char) -> c_int;
     fn OGR_F_GetFieldAsString(hFeat: *(), iField: c_int) -> *c_char;
+    fn OGR_F_GetFieldAsDouble(hFeat: *(), iField: c_int) -> c_double;
     fn OGR_F_GetGeometryRef(hFeat: *()) -> *();
     fn OGR_F_Destroy(hFeat: *());
     fn OGR_G_ExportToWkt(hGeom: *(), ppszSrcText: **c_char) -> c_int;
@@ -99,12 +100,22 @@ pub struct Feature<'a> {
 
 
 impl<'a> Feature<'a> {
-    pub fn get_field(&self, name: String) -> String {
+    pub fn get_string_field(&self, name: String) -> String {
         return name.with_c_str(|c_name| {
             unsafe {
                 let field_id = OGR_F_GetFieldIndex(self.c_feature, c_name);
                 let c_value = OGR_F_GetFieldAsString(self.c_feature, field_id);
                 return raw::from_c_str(c_value);
+            }
+        });
+    }
+
+    pub fn get_f64_field(&self, name: String) -> f64 {
+        return name.with_c_str(|c_name| {
+            unsafe {
+                let field_id = OGR_F_GetFieldIndex(self.c_feature, c_name);
+                let c_value = OGR_F_GetFieldAsDouble(self.c_feature, field_id);
+                return c_value as f64;
             }
         });
     }
@@ -162,6 +173,13 @@ mod test {
     }
 
 
+    fn assert_almost_eq(a: f64, b: f64) {
+        let f: f64 = a / b;
+        assert!(f < 1.00001);
+        assert!(f > 0.99999);
+    }
+
+
     #[test]
     fn test_layer_count() {
         let ds = open(&fixture_path("roads.geojson")).unwrap();
@@ -179,18 +197,27 @@ mod test {
 
 
     #[test]
-    fn test_get_field() {
+    fn test_get_string_field() {
         let ds = open(&fixture_path("roads.geojson")).unwrap();
         let layer = ds.get_layer(0).unwrap();
         let feature = layer.features().next().unwrap();
-        assert_eq!(feature.get_field("highway".to_string()),
+        assert_eq!(feature.get_string_field("highway".to_string()),
                    "footway".to_string());
         assert_eq!(
             layer.features()
                  .count(|f|
-                    f.get_field("highway".to_string()) ==
+                    f.get_string_field("highway".to_string()) ==
                     "residential".to_string()),
             2);
+    }
+
+
+    #[test]
+    fn test_get_float_field() {
+        let ds = open(&fixture_path("roads.geojson")).unwrap();
+        let layer = ds.get_layer(0).unwrap();
+        let feature = layer.features().next().unwrap();
+        assert_almost_eq(feature.get_f64_field("sort_key".to_string()), -9.0);
     }
 
 
