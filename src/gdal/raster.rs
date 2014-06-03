@@ -398,7 +398,12 @@ mod test {
     #[test]
     fn test_read_raster() {
         let dataset = open(&fixture_path("tinymarble.png")).unwrap();
-        let rv = dataset.read_raster(1, Point(20, 30), Point(2, 3), Point(2, 3));
+        let rv = dataset.read_raster(
+            1,
+            Point::new(20, 30),
+            Point::new(2, 3),
+            Point::new(2, 3)
+        );
         assert_eq!(rv.size.x, 2);
         assert_eq!(rv.size.y, 3);
         assert_eq!(rv.data, vec!(7, 7, 7, 10, 8, 12));
@@ -411,17 +416,35 @@ mod test {
         let dataset = driver.create("", 20, 10, 1).unwrap();
 
         // create a 2x1 raster
-        let raster = ByteBuffer{size: Point(2, 1), data: vec!(50u8, 20u8)};
+        let raster = ByteBuffer{
+            size: Point::new(2, 1),
+            data: vec!(50u8, 20u8)
+        };
 
         // epand it to fill the image (20x10)
-        dataset.write_raster(1, Point(0, 0), Point(20, 10), raster);
+        dataset.write_raster(
+            1,
+            Point::new(0, 0),
+            Point::new(20, 10),
+            raster
+        );
 
         // read a pixel from the left side
-        let left = dataset.read_raster(1, Point(5, 5), Point(1, 1), Point(1, 1));
+        let left = dataset.read_raster(
+            1,
+            Point::new(5, 5),
+            Point::new(1, 1),
+            Point::new(1, 1)
+        );
         assert_eq!(*left.data.get(0), 50u8);
 
         // read a pixel from the right side
-        let right = dataset.read_raster(1, Point(15, 5), Point(1, 1), Point(1, 1));
+        let right = dataset.read_raster(
+            1,
+            Point::new(15, 5),
+            Point::new(1, 1),
+            Point::new(1, 1)
+        );
         assert_eq!(*right.data.get(0), 20u8);
     }
 

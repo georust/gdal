@@ -72,7 +72,7 @@ impl Proj {
             //}
             assert!(rv == 0);
         }
-        return Point(c_x, c_y);
+        return Point::new(c_x, c_y);
     }
 }
 
@@ -116,11 +116,11 @@ mod test {
             "+x_0=500000 +y_0=500000 +ellps=krass +units=m +no_defs"
         )).unwrap();
 
-        let rv = stereo70.project(&wgs84, Point(500000., 500000.));
+        let rv = stereo70.project(&wgs84, Point::new(500000., 500000.));
         assert_almost_eq(rv.x, 0.436332);
         assert_almost_eq(rv.y, 0.802851);
 
-        let rv = wgs84.project(&stereo70, Point(0.436332, 0.802851));
+        let rv = wgs84.project(&stereo70, Point::new(0.436332, 0.802851));
         assert_almost_eq(rv.x, 500000.);
         assert_almost_eq(rv.y, 500000.);
     }
