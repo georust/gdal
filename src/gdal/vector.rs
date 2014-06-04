@@ -132,7 +132,7 @@ impl<'a> Feature<'a> {
                 },
                 OFTReal => {
                     let rv = OGR_F_GetFieldAsDouble(self.c_feature, field_id);
-                    return Some(F64Value(rv as f64));
+                    return Some(RealValue(rv as f64));
                 },
                 _ => fail!("Unknown field type {}", field_type)
             }
@@ -186,17 +186,17 @@ pub fn open(path: &Path) -> Option<VectorDataset> {
 
 pub enum FieldValue {
     StringValue(String),
-    F64Value(f64),
+    RealValue(f64),
 }
 
 
 impl FieldValue {
     pub fn as_string(self) -> String {
-        match self { StringValue(rv) => rv, _ => fail!("not a string") }
+        match self { StringValue(rv) => rv, _ => fail!("not a StringValue") }
     }
 
-    pub fn as_f64(self) -> f64 {
-        match self { F64Value(rv) => rv, _ => fail!("not an f64") }
+    pub fn as_real(self) -> f64 {
+        match self { RealValue(rv) => rv, _ => fail!("not a RealValue") }
     }
 }
 
@@ -279,7 +279,7 @@ mod test {
             assert_almost_eq(
                 feature.field("sort_key".to_string())
                        .unwrap()
-                       .as_f64(),
+                       .as_real(),
                 -9.0
             );
         });
