@@ -116,22 +116,34 @@ pub struct FieldIterator<'a> {
 }
 
 
-impl<'a> Iterator<String> for FieldIterator<'a> {
+impl<'a> Iterator<Field<'a>> for FieldIterator<'a> {
     #[inline]
-    fn next(&mut self) -> Option<String> {
+    fn next(&mut self) -> Option<Field<'a>> {
         if self.next_id == self.total {
             return None;
         }
-        let name = unsafe {
-            let c_field_defn = OGR_FD_GetFieldDefn(
+        let field = Field{
+            layer: self.layer,
+            c_field_defn: unsafe { OGR_FD_GetFieldDefn(
                 self.c_feature_defn,
                 self.next_id as c_int
-            );
-            let c_name = OGR_Fld_GetNameRef(c_field_defn);
-            raw::from_c_str(c_name)
+            ) }
         };
         self.next_id += 1;
-        return Some(name);
+        return Some(field);
+    }
+}
+
+
+pub struct Field<'a> {
+    layer: &'a Layer<'a>,
+    c_field_defn: *(),
+}
+
+
+impl<'a> Field<'a> {
+    pub fn name(&'a self) -> String {
+        unsafe { raw::from_c_str(OGR_Fld_GetNameRef(self.c_field_defn)) }
     }
 }
 
@@ -369,7 +381,10 @@ mod test {
     fn test_schema() {
         let ds = open(&fixture_path("roads.geojson")).unwrap();
         let layer = ds.layer(0).unwrap();
-        let name_list: Vec<String> = layer.fields().collect();
+        let name_list: Vec<String> = layer
+            .fields()
+            .map(|f| f.name())
+            .collect();
         let ok_names = vec!("kind", "sort_key", "is_link", "is_tunnel",
                         "is_bridge", "railway", "highway")
                        .iter().map(|s| s.to_string()).collect();
