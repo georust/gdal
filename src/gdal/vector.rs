@@ -11,7 +11,10 @@ extern {
     fn OGR_DS_GetLayerCount(hDS: *()) -> c_int;
     fn OGR_DS_Destroy(hDataSource: *());
     fn OGR_DS_GetLayer(hDS: *(), iLayer: c_int) -> *();
+    fn OGR_L_GetLayerDefn(hLayer: *()) -> *();
     fn OGR_L_GetNextFeature(hLayer: *()) -> *();
+    fn OGR_FD_GetFieldCount(hDefn: *()) -> c_int;
+    fn OGR_FD_GetFieldDefn(hDefn: *(), iField: c_int) -> *();
     fn OGR_F_GetFieldIndex(hFeat: *(), pszName: *c_char) -> c_int;
     fn OGR_F_GetFieldDefnRef(hFeat: *(), i: c_int) -> *();
     fn OGR_F_GetFieldAsString(hFeat: *(), iField: c_int) -> *c_char;
@@ -20,6 +23,7 @@ extern {
     fn OGR_F_Destroy(hFeat: *());
     fn OGR_G_ExportToWkt(hGeom: *(), ppszSrcText: **c_char) -> c_int;
     fn OGR_G_ExportToJson(hGeometry: *()) -> *c_char;
+    fn OGR_Fld_GetNameRef(hDefn: *()) -> *c_char;
     fn OGR_Fld_GetType(hDefn: *()) -> c_int;
     fn OGRFree(ptr: *());
     fn VSIFree(ptr: *());
@@ -87,8 +91,47 @@ pub struct Layer<'a> {
 
 
 impl<'a> Layer<'a> {
+    pub fn fields<'a>(&'a self) -> FieldIterator<'a> {
+        let c_feature_defn = unsafe { OGR_L_GetLayerDefn(self.c_layer) };
+        let total = unsafe { OGR_FD_GetFieldCount(c_feature_defn) } as int;
+        return FieldIterator{
+            layer: self,
+            c_feature_defn: c_feature_defn,
+            next_id: 0,
+            total: total
+        };
+    }
+
     pub fn features<'a>(&'a self) -> FeatureIterator<'a> {
         return FeatureIterator{layer: self};
+    }
+}
+
+
+pub struct FieldIterator<'a> {
+    layer: &'a Layer<'a>,
+    c_feature_defn: *(),
+    next_id: int,
+    total: int,
+}
+
+
+impl<'a> Iterator<String> for FieldIterator<'a> {
+    #[inline]
+    fn next(&mut self) -> Option<String> {
+        if self.next_id == self.total {
+            return None;
+        }
+        let name = unsafe {
+            let c_field_defn = OGR_FD_GetFieldDefn(
+                self.c_feature_defn,
+                self.next_id as c_int
+            );
+            let c_name = OGR_Fld_GetNameRef(c_field_defn);
+            raw::from_c_str(c_name)
+        };
+        self.next_id += 1;
+        return Some(name);
     }
 }
 
@@ -319,5 +362,17 @@ mod test {
                 ).to_string();
             assert_eq!(json, json_ok);
         });
+    }
+
+
+    #[test]
+    fn test_schema() {
+        let ds = open(&fixture_path("roads.geojson")).unwrap();
+        let layer = ds.layer(0).unwrap();
+        let name_list: Vec<String> = layer.fields().collect();
+        let ok_names = vec!("kind", "sort_key", "is_link", "is_tunnel",
+                        "is_bridge", "railway", "highway")
+                       .iter().map(|s| s.to_string()).collect();
+        assert_eq!(name_list, ok_names);
     }
 }
