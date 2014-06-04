@@ -1,3 +1,5 @@
+before_install:
+  - sudo apt-get update
 install:
   - curl -L 'http://rust-lang.org/rustup.sh' | sudo bash
   - sudo apt-get install libgdal1-dev libproj-dev
