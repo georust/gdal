@@ -318,11 +318,12 @@ mod test {
                               .as_string(),
                        "footway".to_string());
             assert_eq!(
-                features.count(|field| {
+                features.filter(|field| {
                     let highway = field.field("highway".to_string())
                                        .unwrap()
                                        .as_string();
-                    highway == "residential".to_string() }),
+                    highway == "residential".to_string() })
+                    .count(),
                 2);
         });
     }
