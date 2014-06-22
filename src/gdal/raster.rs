@@ -198,7 +198,7 @@ impl RasterDataset {
 
     pub fn set_geo_transform(&self, tr: (f64, f64, f64, f64, f64, f64)) {
         let (tr_0, tr_1, tr_2, tr_3, tr_4, tr_5) = tr;
-        let tr_vec: ~[c_double] = ~[tr_0, tr_1, tr_2, tr_3, tr_4, tr_5];
+        let tr_vec: Vec<c_double> = vec!(tr_0, tr_1, tr_2, tr_3, tr_4, tr_5);
 
         let rv = unsafe {
             GDALSetGeoTransform(self.c_dataset, tr_vec.as_ptr())

@@ -1,5 +1,6 @@
 #![crate_id="gdal#0.1"]
 #![crate_type="lib"]
+#![feature(unsafe_destructor)]
 
 extern crate sync;
 extern crate libc;
