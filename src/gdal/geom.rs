@@ -52,8 +52,8 @@ mod test {
 
     #[test]
     fn test_add() {
-        let p1 = Point::new(2, 3);
-        let p2 = Point::new(1, 5);
+        let p1 = Point::<int>::new(2, 3);
+        let p2 = Point::<int>::new(1, 5);
         let p3 = p1 + p2;
         assert_eq!((p3.x, p3.y), (3, 8));
     }
@@ -61,8 +61,8 @@ mod test {
 
     #[test]
     fn test_sub() {
-        let p1 = Point::new(2, 3);
-        let p2 = Point::new(1, 5);
+        let p1 = Point::<int>::new(2, 3);
+        let p2 = Point::<int>::new(1, 5);
         let p3 = p1 - p2;
         assert_eq!((p3.x, p3.y), (1, -2));
     }
@@ -70,14 +70,14 @@ mod test {
 
     #[test]
     fn test_scale() {
-        let p = Point::new(2, 3).scale(2);
+        let p = Point::<int>::new(2, 3).scale(2);
         assert_eq!((p.x, p.y), (4, 6));
     }
 
 
     #[test]
     fn test_cast() {
-        let pf = Point::new(1.3, 2.9);
+        let pf = Point::<f64>::new(1.3, 2.9);
         let pi = pf.cast::<int>().unwrap();
         assert_eq!((pi.x, pi.y), (1, 2));
     }

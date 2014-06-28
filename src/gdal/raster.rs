@@ -208,7 +208,7 @@ impl RasterDataset {
 
     pub fn get_geo_transform(&self) -> (f64, f64, f64, f64, f64, f64) {
         let mut tr: Vec<c_double> = Vec::with_capacity(6);
-        for _ in range(0, 6) { tr.push(0.0); }
+        for _ in range(0i, 6) { tr.push(0.0); }
         let rv = unsafe {
             GDALGetGeoTransform(
                 self.c_dataset,
