@@ -18,7 +18,7 @@ pub mod warp;
 
 #[link(name="gdal")]
 extern {
-    fn GDALVersionInfo(key: *c_char) -> *c_char;
+    fn GDALVersionInfo(key: *const c_char) -> *const c_char;
 }
 
 

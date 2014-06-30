@@ -3,7 +3,7 @@ use libc::{c_int, c_char, c_long, c_double};
 use super::geom::Point;
 
 pub struct Proj {
-    c_proj: *(),
+    c_proj: *const (),
 }
 
 pub static DEG_TO_RAD: f64 = 0.017453292519943295769236907684886;
@@ -11,19 +11,19 @@ pub static DEG_TO_RAD: f64 = 0.017453292519943295769236907684886;
 
 #[link(name="proj")]
 extern {
-    fn pj_init_plus(definition: *c_char) -> *();
-    fn pj_free(pj: *());
-    fn pj_get_def(pj: *()) -> *c_char;
+    fn pj_init_plus(definition: *const c_char) -> *const ();
+    fn pj_free(pj: *const ());
+    fn pj_get_def(pj: *const ()) -> *const c_char;
     fn pj_transform(
-        srcdefn: *(),
-        dstdefn: *(),
+        srcdefn: *const (),
+        dstdefn: *const (),
         point_count: c_long,
         point_offset: c_int,
         x: *mut c_double,
         y: *mut c_double,
         z: *mut c_double
     ) -> c_int;
-    fn pj_strerrno(code: c_int) -> *c_char;
+    fn pj_strerrno(code: c_int) -> *const c_char;
 }
 
 

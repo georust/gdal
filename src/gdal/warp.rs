@@ -5,16 +5,16 @@ use super::raster::RasterDataset;
 #[link(name="gdal")]
 extern {
     fn GDALReprojectImage(
-        hSrcDS: *(),
-        pszSrcWKT: *c_char,
-        hDstDS: *(),
-        pszDstWKT: *c_char,
+        hSrcDS: *const (),
+        pszSrcWKT: *const c_char,
+        hDstDS: *const (),
+        pszDstWKT: *const c_char,
         eResampleAlg: c_int,
         dfWarpMemoryLimit: c_double,
         dfMaxError: c_double,
-        pfnProgress: *(),
-        pProgressArg: *(),
-        psOptions: *()
+        pfnProgress: *const (),
+        pProgressArg: *const (),
+        psOptions: *const ()
     ) -> c_int;
 }
 

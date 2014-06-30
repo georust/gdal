@@ -7,26 +7,26 @@ use sync::mutex::{StaticMutex, MUTEX_INIT};
 #[link(name="gdal")]
 extern {
     fn OGRRegisterAll();
-    fn OGROpen(pszName: *c_char, bUpdate: c_int, pahDriverList: *()) -> *();
-    fn OGR_DS_GetLayerCount(hDS: *()) -> c_int;
-    fn OGR_DS_Destroy(hDataSource: *());
-    fn OGR_DS_GetLayer(hDS: *(), iLayer: c_int) -> *();
-    fn OGR_L_GetLayerDefn(hLayer: *()) -> *();
-    fn OGR_L_GetNextFeature(hLayer: *()) -> *();
-    fn OGR_FD_GetFieldCount(hDefn: *()) -> c_int;
-    fn OGR_FD_GetFieldDefn(hDefn: *(), iField: c_int) -> *();
-    fn OGR_F_GetFieldIndex(hFeat: *(), pszName: *c_char) -> c_int;
-    fn OGR_F_GetFieldDefnRef(hFeat: *(), i: c_int) -> *();
-    fn OGR_F_GetFieldAsString(hFeat: *(), iField: c_int) -> *c_char;
-    fn OGR_F_GetFieldAsDouble(hFeat: *(), iField: c_int) -> c_double;
-    fn OGR_F_GetGeometryRef(hFeat: *()) -> *();
-    fn OGR_F_Destroy(hFeat: *());
-    fn OGR_G_ExportToWkt(hGeom: *(), ppszSrcText: **c_char) -> c_int;
-    fn OGR_G_ExportToJson(hGeometry: *()) -> *c_char;
-    fn OGR_Fld_GetNameRef(hDefn: *()) -> *c_char;
-    fn OGR_Fld_GetType(hDefn: *()) -> c_int;
-    fn OGRFree(ptr: *());
-    fn VSIFree(ptr: *());
+    fn OGROpen(pszName: *const c_char, bUpdate: c_int, pahDriverList: *const ()) -> *const ();
+    fn OGR_DS_GetLayerCount(hDS: *const ()) -> c_int;
+    fn OGR_DS_Destroy(hDataSource: *const ());
+    fn OGR_DS_GetLayer(hDS: *const (), iLayer: c_int) -> *const ();
+    fn OGR_L_GetLayerDefn(hLayer: *const ()) -> *const ();
+    fn OGR_L_GetNextFeature(hLayer: *const ()) -> *const ();
+    fn OGR_FD_GetFieldCount(hDefn: *const ()) -> c_int;
+    fn OGR_FD_GetFieldDefn(hDefn: *const (), iField: c_int) -> *const ();
+    fn OGR_F_GetFieldIndex(hFeat: *const (), pszName: *const c_char) -> c_int;
+    fn OGR_F_GetFieldDefnRef(hFeat: *const (), i: c_int) -> *const ();
+    fn OGR_F_GetFieldAsString(hFeat: *const (), iField: c_int) -> *const c_char;
+    fn OGR_F_GetFieldAsDouble(hFeat: *const (), iField: c_int) -> c_double;
+    fn OGR_F_GetGeometryRef(hFeat: *const ()) -> *const ();
+    fn OGR_F_Destroy(hFeat: *const ());
+    fn OGR_G_ExportToWkt(hGeom: *const (), ppszSrcText: *const *const c_char) -> c_int;
+    fn OGR_G_ExportToJson(hGeometry: *const ()) -> *const c_char;
+    fn OGR_Fld_GetNameRef(hDefn: *const ()) -> *const c_char;
+    fn OGR_Fld_GetType(hDefn: *const ()) -> c_int;
+    fn OGRFree(ptr: *const ());
+    fn VSIFree(ptr: *const ());
 }
 
 static OFTInteger:        c_int = 0;
@@ -58,7 +58,7 @@ fn register_drivers() {
 
 
 pub struct VectorDataset {
-    c_dataset: *(),
+    c_dataset: *const (),
 }
 
 
@@ -86,7 +86,7 @@ impl Drop for VectorDataset {
 
 pub struct Layer<'a> {
     vector_dataset: &'a VectorDataset,
-    c_layer: *(),
+    c_layer: *const (),
 }
 
 
@@ -110,7 +110,7 @@ impl<'a> Layer<'a> {
 
 pub struct FieldIterator<'a> {
     layer: &'a Layer<'a>,
-    c_feature_defn: *(),
+    c_feature_defn: *const (),
     next_id: int,
     total: int,
 }
@@ -137,7 +137,7 @@ impl<'a> Iterator<Field<'a>> for FieldIterator<'a> {
 
 pub struct Field<'a> {
     layer: &'a Layer<'a>,
-    c_field_defn: *(),
+    c_field_defn: *const (),
 }
 
 
@@ -167,7 +167,7 @@ impl<'a> Iterator<Feature<'a>> for FeatureIterator<'a> {
 
 pub struct Feature<'a> {
     layer: &'a Layer<'a>,
-    c_feature: *(),
+    c_feature: *const (),
 }
 
 
@@ -197,10 +197,10 @@ impl<'a> Feature<'a> {
     pub fn wkt(&self) -> String {
         unsafe {
             let c_geom = OGR_F_GetGeometryRef(self.c_feature);
-            let c_wkt: *c_char = null();
+            let c_wkt: *const c_char = null();
             OGR_G_ExportToWkt(c_geom, &c_wkt);
             let wkt = raw::from_c_str(c_wkt);
-            OGRFree(c_wkt as *());
+            OGRFree(c_wkt as *const ());
             return wkt;
         }
     }
@@ -211,7 +211,7 @@ impl<'a> Feature<'a> {
             let c_geom = OGR_F_GetGeometryRef(self.c_feature);
             let c_json = OGR_G_ExportToJson(c_geom);
             let json = raw::from_c_str(c_json);
-            VSIFree(c_json as *());
+            VSIFree(c_json as *const ());
             return json;
         }
     }

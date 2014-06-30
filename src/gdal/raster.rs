@@ -7,46 +7,46 @@ use sync::mutex::{StaticMutex, MUTEX_INIT};
 #[link(name="gdal")]
 extern {
     fn GDALAllRegister();
-    fn GDALGetDriverByName(pszName: *c_char) -> *();
-    fn GDALGetDriverShortName(hDriver: *()) -> *c_char;
-    fn GDALGetDriverLongName(hDriver: *()) -> *c_char;
+    fn GDALGetDriverByName(pszName: *const c_char) -> *const ();
+    fn GDALGetDriverShortName(hDriver: *const ()) -> *const c_char;
+    fn GDALGetDriverLongName(hDriver: *const ()) -> *const c_char;
     fn GDALCreate(
-            hDriver: *(),
-            pszFilename: *c_char,
+            hDriver: *const (),
+            pszFilename: *const c_char,
             nXSize: c_int,
             nYSize: c_int,
             nBands: c_int,
             eBandType: c_int,
-            papszOptions: **c_char
-        ) -> *();
+            papszOptions: *const *const c_char
+        ) -> *const ();
     fn GDALCreateCopy(
-            hDriver: *(),
-            pszFilename: *c_char,
-            hSrcDS: *(),
+            hDriver: *const (),
+            pszFilename: *const c_char,
+            hSrcDS: *const (),
             bStrict: c_int,
-            papszOptions: **c_char,
-            pfnProgres: *(),
-            pProgressData: *()
-        ) -> *();
-    fn GDALOpen(pszFilename: *c_char, eAccess: c_int) -> *();
-    fn GDALClose(hDS: *());
-    fn GDALGetDatasetDriver(hDataset: *()) -> *();
-    fn GDALGetRasterXSize(hDataset: *()) -> c_int;
-    fn GDALGetRasterYSize(hDataset: *()) -> c_int;
-    fn GDALGetRasterCount(hDataset: *()) -> c_int;
-    fn GDALGetProjectionRef(hDS: *()) -> *c_char;
-    fn GDALSetProjection(hDS: *(), pszProjection: *c_char) -> c_int;
-    fn GDALSetGeoTransform(hDS: *(), padfTransform: *c_double) -> c_int;
-    fn GDALGetGeoTransform(hDS: *(), padfTransform: *mut c_double) -> c_int;
-    fn GDALGetRasterBand(hDS: *(), nBandId: c_int) -> *();
+            papszOptions: *const *const c_char,
+            pfnProgres: *const (),
+            pProgressData: *const ()
+        ) -> *const ();
+    fn GDALOpen(pszFilename: *const c_char, eAccess: c_int) -> *const ();
+    fn GDALClose(hDS: *const ());
+    fn GDALGetDatasetDriver(hDataset: *const ()) -> *const ();
+    fn GDALGetRasterXSize(hDataset: *const ()) -> c_int;
+    fn GDALGetRasterYSize(hDataset: *const ()) -> c_int;
+    fn GDALGetRasterCount(hDataset: *const ()) -> c_int;
+    fn GDALGetProjectionRef(hDS: *const ()) -> *const c_char;
+    fn GDALSetProjection(hDS: *const (), pszProjection: *const c_char) -> c_int;
+    fn GDALSetGeoTransform(hDS: *const (), padfTransform: *const c_double) -> c_int;
+    fn GDALGetGeoTransform(hDS: *const (), padfTransform: *mut c_double) -> c_int;
+    fn GDALGetRasterBand(hDS: *const (), nBandId: c_int) -> *const ();
     fn GDALRasterIO(
-            hBand: *(),
+            hBand: *const (),
             eRWFlag: c_int,
             nXOff: c_int,
             nYOff: c_int,
             nXSize: c_int,
             nYSize: c_int,
-            pData: *(),
+            pData: *const (),
             nBufXSize: c_int,
             nBufYSize: c_int,
             GDALDataType: c_int,
@@ -89,16 +89,16 @@ fn register_drivers() {
 
 
 pub struct Driver {
-    c_driver: *(),
+    c_driver: *const (),
 }
 
 
 impl Driver {
-    pub unsafe fn with_ptr(c_driver: *()) -> Driver {
+    pub unsafe fn with_ptr(c_driver: *const ()) -> Driver {
         return Driver{c_driver: c_driver};
     }
 
-    pub unsafe fn get_ptr(&self) -> *() {
+    pub unsafe fn get_ptr(&self) -> *const () {
         return self.c_driver;
     }
 
@@ -146,7 +146,7 @@ impl Driver {
 
 
 pub struct RasterDataset {
-    c_dataset: *(),
+    c_dataset: *const (),
 }
 
 
@@ -158,11 +158,11 @@ impl Drop for RasterDataset {
 
 
 impl RasterDataset {
-    pub unsafe fn with_ptr(c_dataset: *()) -> RasterDataset {
+    pub unsafe fn with_ptr(c_dataset: *const ()) -> RasterDataset {
         return RasterDataset{c_dataset: c_dataset};
     }
 
-    pub unsafe fn get_ptr(&self) -> *() {
+    pub unsafe fn get_ptr(&self) -> *const () {
         return self.c_dataset;
     }
 
@@ -264,7 +264,7 @@ impl RasterDataset {
                 window.y as c_int,
                 window_size.x as c_int,
                 window_size.y as c_int,
-                data.as_mut_ptr() as *(),
+                data.as_mut_ptr() as *const (),
                 buffer_size.x as c_int,
                 buffer_size.y as c_int,
                 GDT_Byte,
@@ -296,7 +296,7 @@ impl RasterDataset {
                 window.y as c_int,
                 window_size.x as c_int,
                 window_size.y as c_int,
-                buffer.data.as_ptr() as *(),
+                buffer.data.as_ptr() as *const (),
                 buffer.size.x as c_int,
                 buffer.size.y as c_int,
                 GDT_Byte,
