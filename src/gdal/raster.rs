@@ -210,8 +210,9 @@ impl RasterDataset {
             )
         } as int;
         assert!(rv == 0);
-        return (tr.shift().unwrap(), tr.shift().unwrap(), tr.shift().unwrap(),
-                tr.shift().unwrap(), tr.shift().unwrap(), tr.shift().unwrap());
+        return (tr.remove(0).unwrap(), tr.remove(0).unwrap(),
+                tr.remove(0).unwrap(), tr.remove(0).unwrap(),
+                tr.remove(0).unwrap(), tr.remove(0).unwrap());
     }
 
     pub fn create_copy(
