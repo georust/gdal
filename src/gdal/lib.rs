@@ -34,7 +34,7 @@ pub fn version_info(key: &str) -> String {
 
 
 #[cfg(test)]
-mod test {
+mod tests {
     use super::version_info;
 
 
