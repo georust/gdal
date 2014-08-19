@@ -1,7 +1,7 @@
 use std::ptr::null;
-use std::str::raw;
 use libc::{c_int, c_char, c_double};
 use sync::mutex::{StaticMutex, MUTEX_INIT};
+use utils::_string;
 
 
 #[link(name="gdal")]
@@ -143,7 +143,8 @@ pub struct Field<'a> {
 
 impl<'a> Field<'a> {
     pub fn name(&'a self) -> String {
-        unsafe { raw::from_c_str(OGR_Fld_GetNameRef(self.c_field_defn)) }
+        let rv = unsafe { OGR_Fld_GetNameRef(self.c_field_defn) };
+        return _string(rv);
     }
 }
 
@@ -183,7 +184,7 @@ impl<'a> Feature<'a> {
             return match field_type {
                 OFTString => {
                     let rv = OGR_F_GetFieldAsString(self.c_feature, field_id);
-                    return Some(StringValue(raw::from_c_str(rv)));
+                    return Some(StringValue(_string(rv)));
                 },
                 OFTReal => {
                     let rv = OGR_F_GetFieldAsDouble(self.c_feature, field_id);
@@ -199,7 +200,7 @@ impl<'a> Feature<'a> {
             let c_geom = OGR_F_GetGeometryRef(self.c_feature);
             let c_wkt: *const c_char = null();
             OGR_G_ExportToWkt(c_geom, &c_wkt);
-            let wkt = raw::from_c_str(c_wkt);
+            let wkt = _string(c_wkt);
             OGRFree(c_wkt as *const ());
             return wkt;
         }
@@ -210,7 +211,7 @@ impl<'a> Feature<'a> {
         unsafe {
             let c_geom = OGR_F_GetGeometryRef(self.c_feature);
             let c_json = OGR_G_ExportToJson(c_geom);
-            let json = raw::from_c_str(c_json);
+            let json = _string(c_json);
             VSIFree(c_json as *const ());
             return json;
         }

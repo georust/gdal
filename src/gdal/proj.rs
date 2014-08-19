@@ -1,6 +1,6 @@
-use std::str::raw;
 use libc::{c_int, c_char, c_long, c_double};
 use super::geom::Point;
+use utils::_string;
 
 pub struct Proj {
     c_proj: *const (),
@@ -28,10 +28,8 @@ extern {
 
 
 fn error_message(code: c_int) -> String {
-    unsafe {
-        let rv = pj_strerrno(code);
-        return raw::from_c_str(rv);
-    }
+    let rv = unsafe { pj_strerrno(code) };
+    return _string(rv);
 }
 
 
@@ -47,10 +45,8 @@ impl Proj {
     }
 
     pub fn get_def(&self) -> String {
-        unsafe {
-            let rv = pj_get_def(self.c_proj);
-            return raw::from_c_str(rv);
-        }
+        let rv = unsafe { pj_get_def(self.c_proj) };
+        return _string(rv);
     }
 
     pub fn project(&self, target: &Proj, point: Point<f64>) -> Point<f64> {

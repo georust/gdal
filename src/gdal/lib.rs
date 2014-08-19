@@ -6,9 +6,9 @@ extern crate sync;
 extern crate libc;
 #[cfg(test)] extern crate test;
 
-use std::str::raw;
 use libc::c_char;
 
+mod utils;
 pub mod raster;
 pub mod vector;
 pub mod proj;
@@ -24,10 +24,8 @@ extern {
 
 pub fn version_info(key: &str) -> String {
     let info = key.with_c_str(|c_key| {
-        unsafe {
-            let rv = GDALVersionInfo(c_key);
-            return raw::from_c_str(rv);
-        };
+        let rv = unsafe { GDALVersionInfo(c_key) };
+        return utils::_string(rv);
     });
     return info;
 }

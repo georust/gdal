@@ -1,7 +1,7 @@
 use libc::{c_int, c_char, c_double};
-use std::str::raw;
 use super::geom::Point;
 use sync::mutex::{StaticMutex, MUTEX_INIT};
+use utils::_string;
 
 
 #[link(name="gdal")]
@@ -103,17 +103,13 @@ impl Driver {
     }
 
     pub fn get_short_name(&self) -> String {
-        unsafe {
-            let rv = GDALGetDriverShortName(self.c_driver);
-            return raw::from_c_str(rv);
-        }
+        let rv = unsafe { GDALGetDriverShortName(self.c_driver) };
+        return _string(rv);
     }
 
     pub fn get_long_name(&self) -> String {
-        unsafe {
-            let rv = GDALGetDriverLongName(self.c_driver);
-            return raw::from_c_str(rv);
-        }
+        let rv = unsafe { GDALGetDriverLongName(self.c_driver) };
+        return _string(rv);
     }
 
     pub fn create(
@@ -184,10 +180,8 @@ impl RasterDataset {
     }
 
     pub fn get_projection(&self) -> String {
-        unsafe {
-            let rv = GDALGetProjectionRef(self.c_dataset);
-            return raw::from_c_str(rv);
-        }
+        let rv = unsafe { GDALGetProjectionRef(self.c_dataset) };
+        return _string(rv);
     }
 
     pub fn set_projection(&self, projection: &str) {
