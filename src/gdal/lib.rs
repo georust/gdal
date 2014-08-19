@@ -1,4 +1,4 @@
-#![crate_id="gdal#0.1"]
+#![crate_name="gdal"]
 #![crate_type="lib"]
 #![feature(unsafe_destructor)]
 
