@@ -29,18 +29,18 @@ extern {
     fn VSIFree(ptr: *const ());
 }
 
-static OFTInteger:        c_int = 0;
-static OFTIntegerList:    c_int = 1;
-static OFTReal:           c_int = 2;
-static OFTRealList:       c_int = 3;
-static OFTString:         c_int = 4;
-static OFTStringList:     c_int = 5;
-static OFTWideString:     c_int = 6;
-static OFTWideStringList: c_int = 7;
-static OFTBinary:         c_int = 8;
-static OFTDate:           c_int = 9;
-static OFTTime:           c_int = 10;
-static OFTDateTime:       c_int = 11;
+static OFT_INTEGER:          c_int = 0;
+static OFT_INTEGER_LIST:     c_int = 1;
+static OFT_REAL:             c_int = 2;
+static OFT_REAL_LIST:        c_int = 3;
+static OFT_STRING:           c_int = 4;
+static OFT_STRING_LIST:      c_int = 5;
+static OFT_WIDE_STRING:      c_int = 6;
+static OFT_WIDE_STRING_LIST: c_int = 7;
+static OFT_BINARY:           c_int = 8;
+static OFT_DATE:             c_int = 9;
+static OFT_TIME:             c_int = 10;
+static OFT_DATE_TIME:        c_int = 11;
 
 static mut LOCK: StaticMutex = MUTEX_INIT;
 static mut registered_drivers: bool = false;
@@ -182,11 +182,11 @@ impl<'a> Feature<'a> {
             let field_defn = OGR_F_GetFieldDefnRef(self.c_feature, field_id);
             let field_type = OGR_Fld_GetType(field_defn);
             return match field_type {
-                OFTString => {
+                OFT_STRING => {
                     let rv = OGR_F_GetFieldAsString(self.c_feature, field_id);
                     return Some(StringValue(_string(rv)));
                 },
-                OFTReal => {
+                OFT_REAL => {
                     let rv = OGR_F_GetFieldAsDouble(self.c_feature, field_id);
                     return Some(RealValue(rv as f64));
                 },
