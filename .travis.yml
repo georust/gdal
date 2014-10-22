@@ -1,7 +1,7 @@
+language: rust
 before_install:
-  - yes | sudo add-apt-repository ppa:hansjorg/rust
   - sudo apt-get update
 install:
-  - sudo apt-get install rust-nightly libgdal-dev libgdal1-dev libproj-dev libgdal1h
+  - sudo apt-get install libgdal-dev libgdal1-dev libproj-dev libgdal1h
 script:
   - cargo test
