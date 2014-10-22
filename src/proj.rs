@@ -44,7 +44,7 @@ impl Proj {
         };
     }
 
-    pub fn get_def(&self) -> String {
+    pub fn def(&self) -> String {
         let rv = unsafe { pj_get_def(self.c_proj) };
         return _string(rv);
     }
@@ -91,7 +91,7 @@ mod test {
         let wgs84 = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs";
         let proj = Proj::new(wgs84).unwrap();
         assert_eq!(
-            proj.get_def().as_slice(),
+            proj.def().as_slice(),
             " +proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0");
     }
 

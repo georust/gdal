@@ -63,7 +63,7 @@ pub struct VectorDataset {
 
 
 impl VectorDataset {
-    pub fn layer_count(&self) -> int {
+    pub fn count(&self) -> int {
         return unsafe { OGR_DS_GetLayerCount(self.c_dataset) } as int;
     }
 
@@ -278,7 +278,7 @@ mod test {
     #[test]
     fn test_layer_count() {
         let ds = open(&fixtures().join("roads.geojson")).unwrap();
-        assert_eq!(ds.layer_count(), 1);
+        assert_eq!(ds.count(), 1);
     }
 
 

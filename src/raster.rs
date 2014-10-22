@@ -102,12 +102,12 @@ impl Driver {
         return self.c_driver;
     }
 
-    pub fn get_short_name(&self) -> String {
+    pub fn short_name(&self) -> String {
         let rv = unsafe { GDALGetDriverShortName(self.c_driver) };
         return _string(rv);
     }
 
-    pub fn get_long_name(&self) -> String {
+    pub fn long_name(&self) -> String {
         let rv = unsafe { GDALGetDriverLongName(self.c_driver) };
         return _string(rv);
     }
@@ -162,24 +162,24 @@ impl RasterDataset {
         return self.c_dataset;
     }
 
-    pub fn get_raster_size(&self) -> (int, int) {
+    pub fn size(&self) -> (int, int) {
         let size_x = unsafe { GDALGetRasterXSize(self.c_dataset) } as int;
         let size_y = unsafe { GDALGetRasterYSize(self.c_dataset) } as int;
         return (size_x, size_y);
     }
 
-    pub fn get_driver(&self) -> Driver {
+    pub fn driver(&self) -> Driver {
         unsafe {
             let c_driver = GDALGetDatasetDriver(self.c_dataset);
             return Driver::with_ptr(c_driver);
         };
     }
 
-    pub fn get_raster_count(&self) -> int {
+    pub fn count(&self) -> int {
         return unsafe { GDALGetRasterCount(self.c_dataset) } as int;
     }
 
-    pub fn get_projection(&self) -> String {
+    pub fn projection(&self) -> String {
         let rv = unsafe { GDALGetProjectionRef(self.c_dataset) };
         return _string(rv);
     }
@@ -198,7 +198,7 @@ impl RasterDataset {
         assert!(rv == 0);
     }
 
-    pub fn get_geo_transform(&self) -> Vec<f64> {
+    pub fn geo_transform(&self) -> Vec<f64> {
         let mut tr: Vec<c_double> = Vec::with_capacity(6);
         for _ in range(0i, 6) { tr.push(0.0); }
         let rv = unsafe {
@@ -299,7 +299,7 @@ impl RasterDataset {
 }
 
 
-pub fn get_driver(name: &str) -> Option<Driver> {
+pub fn driver(name: &str) -> Option<Driver> {
     register_drivers();
     let c_driver = name.with_c_str(|c_name| {
         return unsafe { GDALGetDriverByName(c_name) };
@@ -334,7 +334,7 @@ pub struct ByteBuffer {
 mod test {
     use std::path::Path;
     use super::super::geom::Point;
-    use super::{ByteBuffer, get_driver, open};
+    use super::{ByteBuffer, driver, open};
 
 
     fn fixtures() -> Path {
@@ -355,7 +355,7 @@ mod test {
     #[test]
     fn test_get_raster_size() {
         let dataset = open(&fixtures().join("tinymarble.png")).unwrap();
-        let (size_x, size_y) = dataset.get_raster_size();
+        let (size_x, size_y) = dataset.size();
         assert_eq!(size_x, 100);
         assert_eq!(size_y, 50);
     }
@@ -364,7 +364,7 @@ mod test {
     #[test]
     fn test_get_raster_count() {
         let dataset = open(&fixtures().join("tinymarble.png")).unwrap();
-        let count = dataset.get_raster_count();
+        let count = dataset.count();
         assert_eq!(count, 3);
     }
 
@@ -373,7 +373,7 @@ mod test {
     fn test_get_projection() {
         let dataset = open(&fixtures().join("tinymarble.png")).unwrap();
         //dataset.set_projection("WGS84");
-        let projection = dataset.get_projection();
+        let projection = dataset.projection();
         assert_eq!(projection.as_slice().slice(0, 16), "GEOGCS[\"WGS 84\",");
     }
 
@@ -395,7 +395,7 @@ mod test {
 
     #[test]
     fn test_write_raster() {
-        let driver = get_driver("MEM").unwrap();
+        let driver = driver("MEM").unwrap();
         let dataset = driver.create("", 20, 10, 1).unwrap();
 
         // create a 2x1 raster
@@ -435,51 +435,51 @@ mod test {
     #[test]
     fn test_get_dataset_driver() {
         let dataset = open(&fixtures().join("tinymarble.png")).unwrap();
-        let driver = dataset.get_driver();
-        assert_eq!(driver.get_short_name().as_slice(), "PNG");
-        assert_eq!(driver.get_long_name().as_slice(), "Portable Network Graphics");
+        let driver = dataset.driver();
+        assert_eq!(driver.short_name().as_slice(), "PNG");
+        assert_eq!(driver.long_name().as_slice(), "Portable Network Graphics");
     }
 
 
     #[test]
     fn test_create() {
-        let driver = get_driver("MEM").unwrap();
+        let driver = driver("MEM").unwrap();
         let dataset = driver.create("", 10, 20, 3).unwrap();
-        assert_eq!(dataset.get_raster_size(), (10, 20));
-        assert_eq!(dataset.get_raster_count(), 3);
-        assert_eq!(dataset.get_driver().get_short_name().as_slice(), "MEM");
+        assert_eq!(dataset.size(), (10, 20));
+        assert_eq!(dataset.count(), 3);
+        assert_eq!(dataset.driver().short_name().as_slice(), "MEM");
     }
 
 
     #[test]
     fn test_create_copy() {
-        let driver = get_driver("MEM").unwrap();
+        let driver = driver("MEM").unwrap();
         let dataset = open(&fixtures().join("tinymarble.png")).unwrap();
         let copy = dataset.create_copy(driver, "").unwrap();
-        assert_eq!(copy.get_raster_size(), (100, 50));
-        assert_eq!(copy.get_raster_count(), 3);
+        assert_eq!(copy.size(), (100, 50));
+        assert_eq!(copy.count(), 3);
     }
 
 
     #[test]
     fn test_geo_transform() {
-        let driver = get_driver("MEM").unwrap();
+        let driver = driver("MEM").unwrap();
         let dataset = driver.create("", 20, 10, 1).unwrap();
         let transform = vec!(0., 1., 0., 0., 0., 1.);
         dataset.set_geo_transform(transform.as_slice());
-        assert_eq!(dataset.get_geo_transform(), transform);
+        assert_eq!(dataset.geo_transform(), transform);
     }
 
 
     #[test]
     fn test_get_driver_by_name() {
-        let missing_driver = get_driver("wtf");
+        let missing_driver = driver("wtf");
         assert!(missing_driver.is_none());
 
-        let ok_driver = get_driver("GTiff");
+        let ok_driver = driver("GTiff");
         assert!(ok_driver.is_some());
         let driver = ok_driver.unwrap();
-        assert_eq!(driver.get_short_name().as_slice(), "GTiff");
-        assert_eq!(driver.get_long_name().as_slice(), "GeoTIFF");
+        assert_eq!(driver.short_name().as_slice(), "GTiff");
+        assert_eq!(driver.long_name().as_slice(), "GeoTIFF");
     }
 }
