@@ -2,7 +2,3 @@
 name = "gdal"
 version = "0.0.1"
 authors = ["Alex Morega <alex@grep.ro>"]
-
-[lib]
-name = "gdal"
-path = "src/gdal/lib.rs"

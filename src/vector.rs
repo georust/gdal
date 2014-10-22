@@ -264,9 +264,7 @@ mod test {
 
 
     fn fixtures() -> Path {
-        return Path::new(file!())
-            .dir_path().dir_path().dir_path()
-            .join("fixtures");
+        return Path::new(file!()).dir_path().dir_path().join("fixtures");
     }
 
 
