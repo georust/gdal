@@ -431,7 +431,7 @@ mod test {
             Point::new(1, 1),
             Point::new(1, 1)
         );
-        assert_eq!(*left.data.get(0), 50u8);
+        assert_eq!(left.data[0], 50u8);
 
         // read a pixel from the right side
         let right = dataset.read_raster(
@@ -440,7 +440,7 @@ mod test {
             Point::new(1, 1),
             Point::new(1, 1)
         );
-        assert_eq!(*right.data.get(0), 20u8);
+        assert_eq!(right.data[0], 20u8);
     }
 
 
