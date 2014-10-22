@@ -240,15 +240,15 @@ impl RasterDataset {
         };
     }
 
-    pub fn read_raster(
-        &self,
+    pub fn read_raster(&self,
         band_index: int,
         window: Point<int>,
         window_size: Point<uint>,
-        buffer_size: Point<uint>
-    ) -> ByteBuffer {
-        let buffer_size_bytes = buffer_size.x * buffer_size.y;
-        let mut data: Vec<u8> = range(0, buffer_size_bytes).map(|_| 0u8).collect();
+        size: Point<uint>
+        ) -> ByteBuffer
+    {
+        let nbytes = size.x * size.y;
+        let mut data: Vec<u8> = range(0, nbytes).map(|_| 0u8).collect();
         unsafe {
             let c_band = GDALGetRasterBand(self.c_dataset, band_index as c_int);
             let rv = GDALRasterIO(
@@ -259,8 +259,8 @@ impl RasterDataset {
                 window_size.x as c_int,
                 window_size.y as c_int,
                 data.as_mut_ptr() as *const (),
-                buffer_size.x as c_int,
-                buffer_size.y as c_int,
+                size.x as c_int,
+                size.y as c_int,
                 GDT_BYTE,
                 0,
                 0
@@ -268,7 +268,7 @@ impl RasterDataset {
             assert!(rv == 0);
         };
         return ByteBuffer{
-            size: buffer_size,
+            size: size,
             data: data,
         };
     }
