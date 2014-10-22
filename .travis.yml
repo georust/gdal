@@ -5,3 +5,9 @@ install:
   - sudo apt-get install libgdal-dev libgdal1-dev libproj-dev libgdal1h
 script:
   - cargo test
+  - cargo doc
+after_success: |
+  [ $TRAVIS_BRANCH = master ] &&
+  [ $TRAVIS_PULL_REQUEST = false ] &&
+  cd target/doc &&
+  (curl http://www.rust-ci.org/artifacts/put?t=$RUSTCI_TOKEN | sh)
