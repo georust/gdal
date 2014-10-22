@@ -190,17 +190,15 @@ impl RasterDataset {
         });
     }
 
-    pub fn set_geo_transform(&self, tr: (f64, f64, f64, f64, f64, f64)) {
-        let (tr_0, tr_1, tr_2, tr_3, tr_4, tr_5) = tr;
-        let tr_vec: Vec<c_double> = vec!(tr_0, tr_1, tr_2, tr_3, tr_4, tr_5);
-
+    pub fn set_geo_transform(&self, tr: &[f64]) {
+        assert_eq!(tr.len(), 6);
         let rv = unsafe {
-            GDALSetGeoTransform(self.c_dataset, tr_vec.as_ptr())
+            GDALSetGeoTransform(self.c_dataset, tr.as_ptr())
         } as int;
         assert!(rv == 0);
     }
 
-    pub fn get_geo_transform(&self) -> (f64, f64, f64, f64, f64, f64) {
+    pub fn get_geo_transform(&self) -> Vec<f64> {
         let mut tr: Vec<c_double> = Vec::with_capacity(6);
         for _ in range(0i, 6) { tr.push(0.0); }
         let rv = unsafe {
@@ -210,7 +208,7 @@ impl RasterDataset {
             )
         } as int;
         assert!(rv == 0);
-        return (tr[0], tr[1], tr[2], tr[3], tr[4], tr[5]);
+        return tr;
     }
 
     pub fn create_copy(
@@ -474,8 +472,8 @@ mod test {
     fn test_geo_transform() {
         let driver = get_driver("MEM").unwrap();
         let dataset = driver.create("", 20, 10, 1).unwrap();
-        let transform = (0., 1., 0., 0., 0., 1.);
-        dataset.set_geo_transform(transform);
+        let transform = vec!(0., 1., 0., 0., 0., 1.);
+        dataset.set_geo_transform(transform.as_slice());
         assert_eq!(dataset.get_geo_transform(), transform);
     }
 
