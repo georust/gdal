@@ -55,24 +55,24 @@ extern {
         ) -> c_int;
 }
 
-static GA_ReadOnly:  c_int = 0;
-static GA_Update:    c_int = 1;
+static GA_READONLY:  c_int = 0;
+static GA_UPDATE:    c_int = 1;
 
-static GDT_Unknown:  c_int = 0;
-static GDT_Byte:     c_int = 1;
-static GDT_UInt16:   c_int = 2;
-static GDT_Int16:    c_int = 3;
-static GDT_UInt32:   c_int = 4;
-static GDT_Int32:    c_int = 5;
-static GDT_Float32:  c_int = 6;
-static GDT_Float64:  c_int = 7;
-static GDT_CInt16:   c_int = 8;
-static GDT_CInt32:   c_int = 9;
-static GDT_CFloat32: c_int = 10;
-static GDT_CFloat64: c_int = 11;
+static GDT_UNKNOWN:  c_int = 0;
+static GDT_BYTE:     c_int = 1;
+static GDT_UINT16:   c_int = 2;
+static GDT_INT16:    c_int = 3;
+static GDT_UINT32:   c_int = 4;
+static GDT_INT32:    c_int = 5;
+static GDT_FLOAT32:  c_int = 6;
+static GDT_FLOAT64:  c_int = 7;
+static GDT_CINT16:   c_int = 8;
+static GDT_CINT32:   c_int = 9;
+static GDT_CFLOAT32: c_int = 10;
+static GDT_CFLOAT64: c_int = 11;
 
-static GF_Read:      c_int = 0;
-static GF_Write:     c_int = 1;
+static GF_READ:      c_int = 0;
+static GF_WRITE:     c_int = 1;
 
 static mut LOCK: StaticMutex = MUTEX_INIT;
 static mut registered_drivers: bool = false;
@@ -128,7 +128,7 @@ impl Driver {
                     size_x as c_int,
                     size_y as c_int,
                     bands as c_int,
-                    GDT_Byte,
+                    GDT_BYTE,
                     null()
                 );
             }
@@ -254,7 +254,7 @@ impl RasterDataset {
             let c_band = GDALGetRasterBand(self.c_dataset, band_index as c_int);
             let rv = GDALRasterIO(
                 c_band,
-                GF_Read,
+                GF_READ,
                 window.x as c_int,
                 window.y as c_int,
                 window_size.x as c_int,
@@ -262,7 +262,7 @@ impl RasterDataset {
                 data.as_mut_ptr() as *const (),
                 buffer_size.x as c_int,
                 buffer_size.y as c_int,
-                GDT_Byte,
+                GDT_BYTE,
                 0,
                 0
             ) as int;
@@ -286,7 +286,7 @@ impl RasterDataset {
             let c_band = GDALGetRasterBand(self.c_dataset, band_index as c_int);
             let rv = GDALRasterIO(
                 c_band,
-                GF_Write,
+                GF_WRITE,
                 window.x as c_int,
                 window.y as c_int,
                 window_size.x as c_int,
@@ -294,7 +294,7 @@ impl RasterDataset {
                 buffer.data.as_ptr() as *const (),
                 buffer.size.x as c_int,
                 buffer.size.y as c_int,
-                GDT_Byte,
+                GDT_BYTE,
                 0,
                 0
             ) as int;
@@ -320,7 +320,7 @@ pub fn open(path: &Path) -> Option<RasterDataset> {
     register_drivers();
     let filename = path.as_str().unwrap();
     let c_dataset = filename.with_c_str(|c_filename| {
-        return unsafe { GDALOpen(c_filename, GA_ReadOnly) };
+        return unsafe { GDALOpen(c_filename, GA_READONLY) };
     });
     return match c_dataset.is_null() {
         true  => None,
