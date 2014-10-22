@@ -4,4 +4,4 @@ before_install:
 install:
   - sudo apt-get install rust-nightly libgdal-dev libgdal1-dev libproj-dev libgdal1h
 script:
-  - make check
+  - cargo test
