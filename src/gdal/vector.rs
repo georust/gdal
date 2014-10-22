@@ -173,7 +173,7 @@ pub struct Feature<'a> {
 
 
 impl<'a> Feature<'a> {
-    pub fn field(&self, name: String) -> Option<FieldValue> {
+    pub fn field(&self, name: &str) -> Option<FieldValue> {
         return name.with_c_str(|c_name| unsafe {
             let field_id = OGR_F_GetFieldIndex(self.c_feature, c_name);
             if field_id == -1 {
@@ -314,13 +314,13 @@ mod test {
     fn test_string_field() {
         with_features("roads.geojson", |mut features| {
             let feature = features.next().unwrap();
-            assert_eq!(feature.field("highway".to_string())
+            assert_eq!(feature.field("highway")
                               .unwrap()
                               .as_string(),
                        "footway".to_string());
             assert_eq!(
                 features.filter(|field| {
-                    let highway = field.field("highway".to_string())
+                    let highway = field.field("highway")
                                        .unwrap()
                                        .as_string();
                     highway == "residential".to_string() })
@@ -334,7 +334,7 @@ mod test {
     fn test_float_field() {
         with_first_feature("roads.geojson", |feature| {
             assert_almost_eq(
-                feature.field("sort_key".to_string())
+                feature.field("sort_key")
                        .unwrap()
                        .as_real(),
                 -9.0
@@ -346,7 +346,7 @@ mod test {
     #[test]
     fn test_missing_field() {
         with_first_feature("roads.geojson", |feature| {
-            assert!(feature.field("no such field".to_string()).is_none());
+            assert!(feature.field("no such field").is_none());
         });
     }
 
