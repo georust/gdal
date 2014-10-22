@@ -332,36 +332,31 @@ pub struct ByteBuffer {
 
 #[cfg(test)]
 mod test {
-    use std::os::getenv;
     use std::path::Path;
     use super::super::geom::Point;
     use super::{ByteBuffer, get_driver, open};
 
 
-    fn fixture_path(name: &str) -> Path {
-        let envvar = "RUST_GDAL_TEST_FIXTURES";
-        let fixtures = match getenv(envvar) {
-            Some(p) => Path::new(p),
-            None => fail!("Environment variable {} not set", envvar)
-        };
-        let rv = fixtures.join(name);
-        return rv;
+    fn fixtures() -> Path {
+        return Path::new(file!())
+            .dir_path().dir_path().dir_path()
+            .join("fixtures");
     }
 
 
     #[test]
     fn test_open() {
-        let dataset = open(&fixture_path("tinymarble.png"));
+        let dataset = open(&fixtures().join("tinymarble.png"));
         assert!(dataset.is_some());
 
-        let missing_dataset = open(&fixture_path("no_such_file.png"));
+        let missing_dataset = open(&fixtures().join("no_such_file.png"));
         assert!(missing_dataset.is_none());
     }
 
 
     #[test]
     fn test_get_raster_size() {
-        let dataset = open(&fixture_path("tinymarble.png")).unwrap();
+        let dataset = open(&fixtures().join("tinymarble.png")).unwrap();
         let (size_x, size_y) = dataset.get_raster_size();
         assert_eq!(size_x, 100);
         assert_eq!(size_y, 50);
@@ -370,7 +365,7 @@ mod test {
 
     #[test]
     fn test_get_raster_count() {
-        let dataset = open(&fixture_path("tinymarble.png")).unwrap();
+        let dataset = open(&fixtures().join("tinymarble.png")).unwrap();
         let count = dataset.get_raster_count();
         assert_eq!(count, 3);
     }
@@ -378,7 +373,7 @@ mod test {
 
     #[test]
     fn test_get_projection() {
-        let dataset = open(&fixture_path("tinymarble.png")).unwrap();
+        let dataset = open(&fixtures().join("tinymarble.png")).unwrap();
         //dataset.set_projection("WGS84");
         let projection = dataset.get_projection();
         assert_eq!(projection.as_slice().slice(0, 16), "GEOGCS[\"WGS 84\",");
@@ -387,7 +382,7 @@ mod test {
 
     #[test]
     fn test_read_raster() {
-        let dataset = open(&fixture_path("tinymarble.png")).unwrap();
+        let dataset = open(&fixtures().join("tinymarble.png")).unwrap();
         let rv = dataset.read_raster(
             1,
             Point::new(20, 30),
@@ -441,7 +436,7 @@ mod test {
 
     #[test]
     fn test_get_dataset_driver() {
-        let dataset = open(&fixture_path("tinymarble.png")).unwrap();
+        let dataset = open(&fixtures().join("tinymarble.png")).unwrap();
         let driver = dataset.get_driver();
         assert_eq!(driver.get_short_name().as_slice(), "PNG");
         assert_eq!(driver.get_long_name().as_slice(), "Portable Network Graphics");
@@ -461,7 +456,7 @@ mod test {
     #[test]
     fn test_create_copy() {
         let driver = get_driver("MEM").unwrap();
-        let dataset = open(&fixture_path("tinymarble.png")).unwrap();
+        let dataset = open(&fixtures().join("tinymarble.png")).unwrap();
         let copy = dataset.create_copy(driver, "").unwrap();
         assert_eq!(copy.get_raster_size(), (100, 50));
         assert_eq!(copy.get_raster_count(), 3);

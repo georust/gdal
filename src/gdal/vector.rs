@@ -259,19 +259,14 @@ impl FieldValue {
 
 #[cfg(test)]
 mod test {
-    use std::os::getenv;
     use std::path::Path;
     use super::{Feature, FeatureIterator, open};
 
 
-    fn fixture_path(name: &str) -> Path {
-        let envvar = "RUST_GDAL_TEST_FIXTURES";
-        let fixtures = match getenv(envvar) {
-            Some(p) => Path::new(p),
-            None => fail!("Environment variable {} not set", envvar)
-        };
-        let rv = fixtures.join(name);
-        return rv;
+    fn fixtures() -> Path {
+        return Path::new(file!())
+            .dir_path().dir_path().dir_path()
+            .join("fixtures");
     }
 
 
@@ -284,13 +279,13 @@ mod test {
 
     #[test]
     fn test_layer_count() {
-        let ds = open(&fixture_path("roads.geojson")).unwrap();
+        let ds = open(&fixtures().join("roads.geojson")).unwrap();
         assert_eq!(ds.layer_count(), 1);
     }
 
 
     fn with_features(fixture: &str, f: |FeatureIterator|) {
-        let ds = open(&fixture_path(fixture)).unwrap();
+        let ds = open(&fixtures().join(fixture)).unwrap();
         let layer = ds.layer(0).unwrap();
         f(layer.features());
     }
@@ -381,7 +376,7 @@ mod test {
 
     #[test]
     fn test_schema() {
-        let ds = open(&fixture_path("roads.geojson")).unwrap();
+        let ds = open(&fixtures().join("roads.geojson")).unwrap();
         let layer = ds.layer(0).unwrap();
         let name_list: Vec<String> = layer
             .fields()

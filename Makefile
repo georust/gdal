@@ -20,7 +20,7 @@ build/testsuite: $(src_files)
 	$(RUSTC) $(RUSTFLAGS) -A dead_code --test -o build/testsuite src/gdal/lib.rs
 
 check: build/testsuite
-	RUST_GDAL_TEST_FIXTURES=`pwd`/fixtures ./build/testsuite $(TESTFLAGS)
+	./build/testsuite $(TESTFLAGS)
 
 clean:
 	rm -rf build
