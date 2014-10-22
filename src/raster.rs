@@ -55,24 +55,24 @@ extern {
         ) -> c_int;
 }
 
-static GA_READONLY:  c_int = 0;
-static GA_UPDATE:    c_int = 1;
+const GA_READONLY:  c_int = 0;
+const GA_UPDATE:    c_int = 1;
 
-static GDT_UNKNOWN:  c_int = 0;
-static GDT_BYTE:     c_int = 1;
-static GDT_UINT16:   c_int = 2;
-static GDT_INT16:    c_int = 3;
-static GDT_UINT32:   c_int = 4;
-static GDT_INT32:    c_int = 5;
-static GDT_FLOAT32:  c_int = 6;
-static GDT_FLOAT64:  c_int = 7;
-static GDT_CINT16:   c_int = 8;
-static GDT_CINT32:   c_int = 9;
-static GDT_CFLOAT32: c_int = 10;
-static GDT_CFLOAT64: c_int = 11;
+const GDT_UNKNOWN:  c_int = 0;
+const GDT_BYTE:     c_int = 1;
+const GDT_UINT16:   c_int = 2;
+const GDT_INT16:    c_int = 3;
+const GDT_UINT32:   c_int = 4;
+const GDT_INT32:    c_int = 5;
+const GDT_FLOAT32:  c_int = 6;
+const GDT_FLOAT64:  c_int = 7;
+const GDT_CINT16:   c_int = 8;
+const GDT_CINT32:   c_int = 9;
+const GDT_CFLOAT32: c_int = 10;
+const GDT_CFLOAT64: c_int = 11;
 
-static GF_READ:      c_int = 0;
-static GF_WRITE:     c_int = 1;
+const GF_READ:      c_int = 0;
+const GF_WRITE:     c_int = 1;
 
 static mut LOCK: StaticMutex = MUTEX_INIT;
 static mut registered_drivers: bool = false;
