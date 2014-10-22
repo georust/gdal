@@ -94,11 +94,11 @@ pub struct Driver {
 
 
 impl Driver {
-    pub unsafe fn with_ptr(c_driver: *const ()) -> Driver {
+    unsafe fn _with_c_ptr(c_driver: *const ()) -> Driver {
         return Driver{c_driver: c_driver};
     }
 
-    pub unsafe fn get_ptr(&self) -> *const () {
+    pub unsafe fn _c_ptr(&self) -> *const () {
         return self.c_driver;
     }
 
@@ -135,7 +135,7 @@ impl Driver {
         });
         return match c_dataset.is_null() {
             true  => None,
-            false => unsafe { Some(RasterDataset::with_ptr(c_dataset)) },
+            false => unsafe { Some(RasterDataset::_with_c_ptr(c_dataset)) },
         };
     }
 }
@@ -154,11 +154,11 @@ impl Drop for RasterDataset {
 
 
 impl RasterDataset {
-    pub unsafe fn with_ptr(c_dataset: *const ()) -> RasterDataset {
+    unsafe fn _with_c_ptr(c_dataset: *const ()) -> RasterDataset {
         return RasterDataset{c_dataset: c_dataset};
     }
 
-    pub unsafe fn get_ptr(&self) -> *const () {
+    pub unsafe fn _c_ptr(&self) -> *const () {
         return self.c_dataset;
     }
 
@@ -171,7 +171,7 @@ impl RasterDataset {
     pub fn driver(&self) -> Driver {
         unsafe {
             let c_driver = GDALGetDatasetDriver(self.c_dataset);
-            return Driver::with_ptr(c_driver);
+            return Driver::_with_c_ptr(c_driver);
         };
     }
 
@@ -220,7 +220,7 @@ impl RasterDataset {
         let c_dataset = filename.with_c_str(|c_filename| {
             unsafe {
                 return GDALCreateCopy(
-                    driver.get_ptr(),
+                    driver._c_ptr(),
                     c_filename,
                     self.c_dataset,
                     0,
