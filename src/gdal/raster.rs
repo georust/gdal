@@ -248,8 +248,7 @@ impl RasterDataset {
         buffer_size: Point<uint>
     ) -> ByteBuffer {
         let buffer_size_bytes = buffer_size.x * buffer_size.y;
-        let mut data: Vec<u8> = Vec::with_capacity(buffer_size_bytes);
-        for _ in range(0, buffer_size_bytes) { data.push(0u8); } // TODO zero fill
+        let mut data: Vec<u8> = range(0, buffer_size_bytes).map(|_| 0u8).collect();
         unsafe {
             let c_band = GDALGetRasterBand(self.c_dataset, band_index as c_int);
             let rv = GDALRasterIO(
