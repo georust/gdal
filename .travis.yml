@@ -1,11 +1,19 @@
 language: rust
+
+env:
+  global:
+    - secure: QGKzicRV29akigCKUJ8yoy8qB0jqYcPSbpxPgxLJZ7b2K2W3AP/XnvWaaMIfQs/YQ9sf0Nk5tB97N8VSgVO1bUVoZ4RUdWI4CEd4gGxeHG2ACSty9K9QHwDnOdMFy4sKwwbBwgKhvCsyz9ux6CNBw5fn4WPoIWPdsFcuihPDWg8=
+
 before_install:
   - sudo apt-get update
+
 install:
   - sudo apt-get install libgdal-dev libgdal1-dev libproj-dev libgdal1h
+
 script:
   - cargo test
   - cargo doc
+
 after_success: |
   [ $TRAVIS_BRANCH = master ] &&
   [ $TRAVIS_PULL_REQUEST = false ] &&
