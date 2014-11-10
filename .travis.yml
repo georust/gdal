@@ -2,7 +2,7 @@ language: rust
 
 env:
   global:
-    - secure: QGKzicRV29akigCKUJ8yoy8qB0jqYcPSbpxPgxLJZ7b2K2W3AP/XnvWaaMIfQs/YQ9sf0Nk5tB97N8VSgVO1bUVoZ4RUdWI4CEd4gGxeHG2ACSty9K9QHwDnOdMFy4sKwwbBwgKhvCsyz9ux6CNBw5fn4WPoIWPdsFcuihPDWg8=
+    - secure: IV/0GyGaGQKlKgf7zLB5URYHjLJadKYACbjZ0Z+/uPWAmJ/d9MYq990yUziQrkVIE5+0/eeaJ8eR6r65CNuFmS09w1/Y4jKpVkZ9zqWH2YXKn/FlccSIzXZqnIROqST/3DQ3Sm/A/777kp9OcagVTAq9m3qXX3tr1sXvR4r+4uM=
 
 before_install:
   - sudo apt-get update
@@ -14,8 +14,5 @@ script:
   - cargo test
   - cargo doc
 
-after_success: |
-  [ $TRAVIS_BRANCH = master ] &&
-  [ $TRAVIS_PULL_REQUEST = false ] &&
-  cd target/doc &&
-  (curl http://www.rust-ci.org/artifacts/put?t=$RUSTCI_TOKEN | sh)
+after_script:
+  - curl http://www.rust-ci.org/artifacts/put?t=$RUSTCI_TOKEN | sh
