@@ -63,12 +63,4 @@ mod test {
         let p = Point::<int>::new(2, 3).scale(2);
         assert_eq!((p.x, p.y), (4, 6));
     }
-
-
-    #[test]
-    fn test_cast() {
-        let pf = Point::<f64>::new(1.3, 2.9);
-        let pi = pf.cast::<int>().unwrap();
-        assert_eq!((pi.x, pi.y), (1, 2));
-    }
 }
