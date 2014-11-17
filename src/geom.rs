@@ -35,16 +35,6 @@ impl<T:Clone + Mul<T,T>> Point<T> {
 }
 
 
-impl<T:NumCast + Clone> Point<T> {
-    pub fn cast<U:NumCast>(&self) -> Option<Point<U>> {
-        return match (num::cast(self.x.clone()), num::cast(self.y.clone())) {
-            (Some(x), Some(y)) => Some(Point::new(x, y)),
-            _                  => None
-        }
-    }
-}
-
-
 #[cfg(test)]
 mod test {
     use super::Point;
