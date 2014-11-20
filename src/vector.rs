@@ -184,11 +184,11 @@ impl<'a> Feature<'a> {
             return match field_type {
                 OFT_STRING => {
                     let rv = OGR_F_GetFieldAsString(self.c_feature, field_id);
-                    return Some(StringValue(_string(rv)));
+                    return Some(FieldValue::StringValue(_string(rv)));
                 },
                 OFT_REAL => {
                     let rv = OGR_F_GetFieldAsDouble(self.c_feature, field_id);
-                    return Some(RealValue(rv as f64));
+                    return Some(FieldValue::RealValue(rv as f64));
                 },
                 _ => panic!("Unknown field type {}", field_type)
             }
@@ -248,11 +248,17 @@ pub enum FieldValue {
 
 impl FieldValue {
     pub fn as_string(self) -> String {
-        match self { StringValue(rv) => rv, _ => panic!("not a StringValue") }
+        match self {
+            FieldValue::StringValue(rv) => rv,
+            _ => panic!("not a StringValue")
+        }
     }
 
     pub fn as_real(self) -> f64 {
-        match self { RealValue(rv) => rv, _ => panic!("not a RealValue") }
+        match self {
+            FieldValue::RealValue(rv) => rv,
+            _ => panic!("not a RealValue")
+        }
     }
 }
 
