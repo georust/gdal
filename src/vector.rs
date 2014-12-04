@@ -1,6 +1,6 @@
 use std::ptr::null;
 use libc::{c_int, c_char, c_double};
-use sync::mutex::{StaticMutex, MUTEX_INIT};
+use rustrt::mutex::{StaticNativeMutex, NATIVE_MUTEX_INIT};
 use utils::_string;
 
 
@@ -42,7 +42,7 @@ const OFT_DATE:             c_int = 9;
 const OFT_TIME:             c_int = 10;
 const OFT_DATE_TIME:        c_int = 11;
 
-static mut LOCK: StaticMutex = MUTEX_INIT;
+static mut LOCK: StaticNativeMutex = NATIVE_MUTEX_INIT;
 static mut registered_drivers: bool = false;
 
 

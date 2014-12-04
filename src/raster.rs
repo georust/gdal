@@ -1,6 +1,6 @@
 use libc::{c_int, c_char, c_double};
 use super::geom::Point;
-use sync::mutex::{StaticMutex, MUTEX_INIT};
+use rustrt::mutex::{StaticNativeMutex, NATIVE_MUTEX_INIT};
 use utils::_string;
 
 
@@ -74,7 +74,7 @@ const GDT_CFLOAT64: c_int = 11;
 const GF_READ:      c_int = 0;
 const GF_WRITE:     c_int = 1;
 
-static mut LOCK: StaticMutex = MUTEX_INIT;
+static mut LOCK: StaticNativeMutex = NATIVE_MUTEX_INIT;
 static mut registered_drivers: bool = false;
 
 fn register_drivers() {
