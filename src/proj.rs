@@ -63,9 +63,9 @@ impl Proj {
                 &mut c_y,
                 &mut c_z
             );
-            //if rv != 0 {
-            //    println!("{}", error_message(rv));
-            //}
+            if rv != 0 {
+                println!("{}", error_message(rv));
+            }
             assert!(rv == 0);
         }
         return Point::new(c_x, c_y);
