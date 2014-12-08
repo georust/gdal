@@ -56,21 +56,7 @@ extern {
 }
 
 const GA_READONLY:  c_int = 0;
-const GA_UPDATE:    c_int = 1;
-
-const GDT_UNKNOWN:  c_int = 0;
 const GDT_BYTE:     c_int = 1;
-const GDT_UINT16:   c_int = 2;
-const GDT_INT16:    c_int = 3;
-const GDT_UINT32:   c_int = 4;
-const GDT_INT32:    c_int = 5;
-const GDT_FLOAT32:  c_int = 6;
-const GDT_FLOAT64:  c_int = 7;
-const GDT_CINT16:   c_int = 8;
-const GDT_CINT32:   c_int = 9;
-const GDT_CFLOAT32: c_int = 10;
-const GDT_CFLOAT64: c_int = 11;
-
 const GF_READ:      c_int = 0;
 const GF_WRITE:     c_int = 1;
 

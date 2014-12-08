@@ -18,14 +18,7 @@ extern {
     ) -> c_int;
 }
 
-static GRA_NEARESTNEIGHBOUR:  c_int = 0;
-static GRA_BILINEAR:          c_int = 1;
-static GRA_CUBIC:             c_int = 2;
-static GRA_CUBICSPLINE:       c_int = 3;
-static GRA_LANCZOS:           c_int = 4;
-static GRA_AVERAGE:           c_int = 5;
-static GRA_MODE:              c_int = 6;
-
+static GRA_BILINEAR:           c_int = 1;
 static REPROJECT_MEMORY_LIMIT: c_double = 0.0;
 
 pub fn reproject(src: &RasterDataset, dst: &RasterDataset) {

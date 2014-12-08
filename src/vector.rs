@@ -29,18 +29,8 @@ extern {
     fn VSIFree(ptr: *const ());
 }
 
-const OFT_INTEGER:          c_int = 0;
-const OFT_INTEGER_LIST:     c_int = 1;
 const OFT_REAL:             c_int = 2;
-const OFT_REAL_LIST:        c_int = 3;
 const OFT_STRING:           c_int = 4;
-const OFT_STRING_LIST:      c_int = 5;
-const OFT_WIDE_STRING:      c_int = 6;
-const OFT_WIDE_STRING_LIST: c_int = 7;
-const OFT_BINARY:           c_int = 8;
-const OFT_DATE:             c_int = 9;
-const OFT_TIME:             c_int = 10;
-const OFT_DATE_TIME:        c_int = 11;
 
 static mut LOCK: StaticNativeMutex = NATIVE_MUTEX_INIT;
 static mut registered_drivers: bool = false;
