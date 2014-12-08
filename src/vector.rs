@@ -376,9 +376,10 @@ mod test {
             .fields()
             .map(|f| f.name())
             .collect();
-        let ok_names = vec!("kind", "sort_key", "is_link", "is_tunnel",
-                        "is_bridge", "railway", "highway")
-                       .iter().map(|s| s.to_string()).collect();
+        let ok_names: Vec<String> = vec!(
+            "kind", "sort_key", "is_link", "is_tunnel",
+            "is_bridge", "railway", "highway")
+            .iter().map(|s| s.to_string()).collect();
         assert_eq!(name_list, ok_names);
     }
 }
