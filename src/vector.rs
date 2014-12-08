@@ -292,7 +292,7 @@ mod test {
 
     #[test]
     fn test_iterate_features() {
-        with_features("roads.geojson", |mut features| {
+        with_features("roads.geojson", |features| {
             let feature_vec: Vec<Feature> = features.collect();
             assert_eq!(feature_vec.len(), 21);
         });
