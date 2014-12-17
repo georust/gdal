@@ -81,7 +81,7 @@ pub struct Layer<'a> {
 
 
 impl<'a> Layer<'a> {
-    pub fn fields<'a>(&'a self) -> FieldIterator<'a> {
+    pub fn fields(&'a self) -> FieldIterator<'a> {
         let c_feature_defn = unsafe { OGR_L_GetLayerDefn(self.c_layer) };
         let total = unsafe { OGR_FD_GetFieldCount(c_feature_defn) } as int;
         return FieldIterator{
@@ -92,7 +92,7 @@ impl<'a> Layer<'a> {
         };
     }
 
-    pub fn features<'a>(&'a self) -> FeatureIterator<'a> {
+    pub fn features(&'a self) -> FeatureIterator<'a> {
         return FeatureIterator{layer: self};
     }
 }
