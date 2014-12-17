@@ -12,14 +12,14 @@ impl<T> Point<T> {
 
 
 impl<T:Clone + Add<T,T>> Add<Point<T>, Point<T>> for Point<T> {
-    fn add(&self, other: &Point<T>) -> Point<T> {
+    fn add(self, other: Point<T>) -> Point<T> {
         return Point::new(self.x + other.x, self.y + other.y);
     }
 }
 
 
 impl<T:Clone + Sub<T,T>> Sub<Point<T>, Point<T>> for Point<T> {
-    fn sub(&self, other: &Point<T>) -> Point<T> {
+    fn sub(self, other: Point<T>) -> Point<T> {
         return Point::new(self.x - other.x, self.y - other.y);
     }
 }
@@ -27,7 +27,9 @@ impl<T:Clone + Sub<T,T>> Sub<Point<T>, Point<T>> for Point<T> {
 
 impl<T:Clone + Mul<T,T>> Point<T> {
     pub fn scale(&self, factor: T) -> Point<T> {
-        return Point::new(self.x * factor, self.y * factor);
+        let x = self.x.clone() * factor.clone();
+        let y = self.y.clone() * factor;
+        return Point::new(x, y);
     }
 }
 
