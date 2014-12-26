@@ -74,6 +74,7 @@ fn register_drivers() {
 }
 
 
+#[allow(missing_copy_implementations)]
 pub struct Driver {
     c_driver: *const (),
 }
