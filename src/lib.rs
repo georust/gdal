@@ -2,7 +2,6 @@
 #![crate_type="lib"]
 #![feature(unsafe_destructor)]
 
-extern crate rustrt;
 extern crate libc;
 #[cfg(test)] extern crate test;
 

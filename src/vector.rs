@@ -1,6 +1,6 @@
 use std::ptr::null;
 use libc::{c_int, c_char, c_double};
-use rustrt::mutex::{StaticNativeMutex, NATIVE_MUTEX_INIT};
+use std::sync::{StaticMutex, MUTEX_INIT};
 use utils::_string;
 
 
@@ -32,7 +32,7 @@ extern {
 const OFT_REAL:             c_int = 2;
 const OFT_STRING:           c_int = 4;
 
-static mut LOCK: StaticNativeMutex = NATIVE_MUTEX_INIT;
+static mut LOCK: StaticMutex = MUTEX_INIT;
 static mut registered_drivers: bool = false;
 
 
