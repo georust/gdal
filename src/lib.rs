@@ -49,6 +49,6 @@ mod tests {
             release_date.as_slice().slice(6, 8),
         );
 
-        assert_eq!(version_text.into_string(), expected_text);
+        assert_eq!(version_text, expected_text);
     }
 }
