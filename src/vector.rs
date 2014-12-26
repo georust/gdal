@@ -61,7 +61,7 @@ impl VectorDataset {
         let c_layer = unsafe { OGR_DS_GetLayer(self.c_dataset, idx as c_int) };
         return match c_layer.is_null() {
             true  => None,
-            false => Some(Layer{vector_dataset: self, c_layer: c_layer}),
+            false => Some(Layer{_vector_dataset: self, c_layer: c_layer}),
         };
     }
 }
@@ -75,7 +75,7 @@ impl Drop for VectorDataset {
 
 
 pub struct Layer<'a> {
-    vector_dataset: &'a VectorDataset,
+    _vector_dataset: &'a VectorDataset,
     c_layer: *const (),
 }
 
@@ -113,7 +113,7 @@ impl<'a> Iterator<Field<'a>> for FieldIterator<'a> {
             return None;
         }
         let field = Field{
-            layer: self.layer,
+            _layer: self.layer,
             c_field_defn: unsafe { OGR_FD_GetFieldDefn(
                 self.c_feature_defn,
                 self.next_id as c_int
@@ -126,7 +126,7 @@ impl<'a> Iterator<Field<'a>> for FieldIterator<'a> {
 
 
 pub struct Field<'a> {
-    layer: &'a Layer<'a>,
+    _layer: &'a Layer<'a>,
     c_field_defn: *const (),
 }
 
@@ -150,14 +150,14 @@ impl<'a> Iterator<Feature<'a>> for FeatureIterator<'a> {
         let c_feature = unsafe { OGR_L_GetNextFeature(self.layer.c_layer) };
         return match c_feature.is_null() {
             true  => None,
-            false => Some(Feature{layer: self.layer, c_feature: c_feature}),
+            false => Some(Feature{_layer: self.layer, c_feature: c_feature}),
         };
     }
 }
 
 
 pub struct Feature<'a> {
-    layer: &'a Layer<'a>,
+    _layer: &'a Layer<'a>,
     c_feature: *const (),
 }
 
