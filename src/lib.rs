@@ -6,6 +6,7 @@ extern crate libc;
 #[cfg(test)] extern crate test;
 
 use libc::c_char;
+use std::c_str::ToCStr;
 
 mod utils;
 pub mod raster;

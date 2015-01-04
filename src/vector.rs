@@ -1,5 +1,6 @@
 use std::ptr::null;
 use libc::{c_int, c_char, c_double};
+use std::c_str::ToCStr;
 use std::sync::{StaticMutex, MUTEX_INIT};
 use utils::_string;
 

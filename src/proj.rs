@@ -1,4 +1,5 @@
 use libc::{c_int, c_char, c_long, c_double};
+use std::c_str::ToCStr;
 use super::geom::Point;
 use utils::_string;
 
