@@ -1,6 +1,7 @@
 #![crate_name="gdal"]
 #![crate_type="lib"]
 #![feature(unsafe_destructor)]
+#![feature(associated_types)]
 
 extern crate libc;
 #[cfg(test)] extern crate test;

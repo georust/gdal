@@ -107,7 +107,9 @@ pub struct FieldIterator<'a> {
 }
 
 
-impl<'a> Iterator<Field<'a>> for FieldIterator<'a> {
+impl<'a> Iterator for FieldIterator<'a> {
+    type Item = Field<'a>;
+
     #[inline]
     fn next(&mut self) -> Option<Field<'a>> {
         if self.next_id == self.total {
@@ -145,7 +147,9 @@ pub struct FeatureIterator<'a> {
 }
 
 
-impl<'a> Iterator<Feature<'a>> for FeatureIterator<'a> {
+impl<'a> Iterator for FeatureIterator<'a> {
+    type Item = Feature<'a>;
+
     #[inline]
     fn next(&mut self) -> Option<Feature<'a>> {
         let c_feature = unsafe { OGR_L_GetNextFeature(self.layer.c_layer) };
