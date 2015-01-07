@@ -283,14 +283,14 @@ mod test {
     }
 
 
-    fn with_features(fixture: &str, f: |FeatureIterator|) {
+    fn with_features(fixture: &str, f: F) where F: Fn(FeatureIterator) {
         let ds = open(&fixtures().join(fixture)).unwrap();
         let layer = ds.layer(0).unwrap();
         f(layer.features());
     }
 
 
-    fn with_first_feature(fixture: &str, f: |Feature|) {
+    fn with_first_feature(fixture: &str, f: F) where F: Fn(Feature) {
         with_features(fixture, |mut features| f(features.next().unwrap()));
     }
 
