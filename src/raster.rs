@@ -103,9 +103,9 @@ impl Driver {
     pub fn create(
         &self,
         filename: &str,
-        size_x: int,
-        size_y: int,
-        bands: int
+        size_x: isize,
+        size_y: isize,
+        bands: isize
     ) -> Option<RasterDataset> {
         use std::ptr::null;
         let c_dataset = filename.with_c_str(|c_filename| {
@@ -150,9 +150,9 @@ impl RasterDataset {
         return self.c_dataset;
     }
 
-    pub fn size(&self) -> (int, int) {
-        let size_x = unsafe { GDALGetRasterXSize(self.c_dataset) } as int;
-        let size_y = unsafe { GDALGetRasterYSize(self.c_dataset) } as int;
+    pub fn size(&self) -> (isize, isize) {
+        let size_x = unsafe { GDALGetRasterXSize(self.c_dataset) } as isize;
+        let size_y = unsafe { GDALGetRasterYSize(self.c_dataset) } as isize;
         return (size_x, size_y);
     }
 
@@ -163,8 +163,8 @@ impl RasterDataset {
         };
     }
 
-    pub fn count(&self) -> int {
-        return unsafe { GDALGetRasterCount(self.c_dataset) } as int;
+    pub fn count(&self) -> isize {
+        return unsafe { GDALGetRasterCount(self.c_dataset) } as isize;
     }
 
     pub fn projection(&self) -> String {
@@ -182,19 +182,19 @@ impl RasterDataset {
         assert_eq!(tr.len(), 6);
         let rv = unsafe {
             GDALSetGeoTransform(self.c_dataset, tr.as_ptr())
-        } as int;
+        } as isize;
         assert!(rv == 0);
     }
 
     pub fn geo_transform(&self) -> Vec<f64> {
         let mut tr: Vec<c_double> = Vec::with_capacity(6);
-        for _ in range(0i, 6) { tr.push(0.0); }
+        for _ in range(0is, 6) { tr.push(0.0); }
         let rv = unsafe {
             GDALGetGeoTransform(
                 self.c_dataset,
                 tr.as_mut_ptr()
             )
-        } as int;
+        } as isize;
         assert!(rv == 0);
         return tr;
     }
@@ -225,10 +225,10 @@ impl RasterDataset {
     }
 
     pub fn read_raster(&self,
-        band_index: int,
-        window: Point<int>,
-        window_size: Point<uint>,
-        size: Point<uint>
+        band_index: isize,
+        window: Point<isize>,
+        window_size: Point<usize>,
+        size: Point<usize>
         ) -> ByteBuffer
     {
         let nbytes = size.x * size.y;
@@ -248,7 +248,7 @@ impl RasterDataset {
                 GDT_BYTE,
                 0,
                 0
-            ) as int;
+            ) as isize;
             assert!(rv == 0);
         };
         return ByteBuffer{
@@ -259,9 +259,9 @@ impl RasterDataset {
 
     pub fn write_raster(
         &self,
-        band_index: int,
-        window: Point<int>,
-        window_size: Point<uint>,
+        band_index: isize,
+        window: Point<isize>,
+        window_size: Point<usize>,
         buffer: ByteBuffer
     ) {
         assert_eq!(buffer.data.len(), buffer.size.x * buffer.size.y);
@@ -280,7 +280,7 @@ impl RasterDataset {
                 GDT_BYTE,
                 0,
                 0
-            ) as int;
+            ) as isize;
             assert!(rv == 0);
         };
     }
@@ -313,7 +313,7 @@ pub fn open(path: &Path) -> Option<RasterDataset> {
 
 
 pub struct ByteBuffer {
-    size: Point<uint>,
+    size: Point<usize>,
     data: Vec<u8>,
 }
 

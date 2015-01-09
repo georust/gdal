@@ -54,11 +54,11 @@ pub struct VectorDataset {
 
 
 impl VectorDataset {
-    pub fn count(&self) -> int {
-        return unsafe { OGR_DS_GetLayerCount(self.c_dataset) } as int;
+    pub fn count(&self) -> isize {
+        return unsafe { OGR_DS_GetLayerCount(self.c_dataset) } as isize;
     }
 
-    pub fn layer<'a>(&'a self, idx: int) -> Option<Layer<'a>> {
+    pub fn layer<'a>(&'a self, idx: isize) -> Option<Layer<'a>> {
         let c_layer = unsafe { OGR_DS_GetLayer(self.c_dataset, idx as c_int) };
         return match c_layer.is_null() {
             true  => None,
@@ -84,7 +84,7 @@ pub struct Layer<'a> {
 impl<'a> Layer<'a> {
     pub fn fields(&'a self) -> FieldIterator<'a> {
         let c_feature_defn = unsafe { OGR_L_GetLayerDefn(self.c_layer) };
-        let total = unsafe { OGR_FD_GetFieldCount(c_feature_defn) } as int;
+        let total = unsafe { OGR_FD_GetFieldCount(c_feature_defn) } as isize;
         return FieldIterator{
             layer: self,
             c_feature_defn: c_feature_defn,
@@ -102,8 +102,8 @@ impl<'a> Layer<'a> {
 pub struct FieldIterator<'a> {
     layer: &'a Layer<'a>,
     c_feature_defn: *const (),
-    next_id: int,
-    total: int,
+    next_id: isize,
+    total: isize,
 }
 
 

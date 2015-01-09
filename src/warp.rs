@@ -35,6 +35,6 @@ pub fn reproject(src: &RasterDataset, dst: &RasterDataset) {
                 null(),
                 null()
             )
-    } as int;
+    } as isize;
     assert!(rv == 0);
 }
