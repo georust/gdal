@@ -1,5 +1,5 @@
 use libc::{c_int, c_char, c_long, c_double};
-use std::c_str::ToCStr;
+use std::ffi::CString;
 use super::geom::Point;
 use utils::_string;
 
@@ -36,9 +36,8 @@ fn error_message(code: c_int) -> String {
 
 impl Proj {
     pub fn new(definition: &str) -> Option<Proj> {
-        let c_proj = definition.with_c_str(|c_definition| {
-            unsafe { return pj_init_plus(c_definition) }
-        });
+        let c_definition = CString::from_slice(definition.as_bytes());
+        let c_proj = unsafe { pj_init_plus(c_definition.as_ptr()) };
         return match c_proj.is_null() {
             true  => None,
             false => Some(Proj{c_proj: c_proj}),

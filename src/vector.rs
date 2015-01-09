@@ -1,6 +1,6 @@
 use std::ptr::null;
 use libc::{c_int, c_char, c_double};
-use std::c_str::ToCStr;
+use std::ffi::CString;
 use std::sync::{StaticMutex, MUTEX_INIT};
 use utils::_string;
 
@@ -169,25 +169,24 @@ pub struct Feature<'a> {
 
 impl<'a> Feature<'a> {
     pub fn field(&self, name: &str) -> Option<FieldValue> {
-        return name.with_c_str(|c_name| unsafe {
-            let field_id = OGR_F_GetFieldIndex(self.c_feature, c_name);
-            if field_id == -1 {
-                return None;
-            }
-            let field_defn = OGR_F_GetFieldDefnRef(self.c_feature, field_id);
-            let field_type = OGR_Fld_GetType(field_defn);
-            return match field_type {
-                OFT_STRING => {
-                    let rv = OGR_F_GetFieldAsString(self.c_feature, field_id);
-                    return Some(FieldValue::StringValue(_string(rv)));
-                },
-                OFT_REAL => {
-                    let rv = OGR_F_GetFieldAsDouble(self.c_feature, field_id);
-                    return Some(FieldValue::RealValue(rv as f64));
-                },
-                _ => panic!("Unknown field type {}", field_type)
-            }
-        });
+        let c_name = CString::from_slice(name.as_bytes());
+        let field_id = unsafe { OGR_F_GetFieldIndex(self.c_feature, c_name.as_ptr()) };
+        if field_id == -1 {
+            return None;
+        }
+        let field_defn = unsafe { OGR_F_GetFieldDefnRef(self.c_feature, field_id) };
+        let field_type = unsafe { OGR_Fld_GetType(field_defn) };
+        return match field_type {
+            OFT_STRING => {
+                let rv = unsafe { OGR_F_GetFieldAsString(self.c_feature, field_id) };
+                return Some(FieldValue::StringValue(_string(rv)));
+            },
+            OFT_REAL => {
+                let rv = unsafe { OGR_F_GetFieldAsDouble(self.c_feature, field_id) };
+                return Some(FieldValue::RealValue(rv as f64));
+            },
+            _ => panic!("Unknown field type {}", field_type)
+        }
     }
 
     pub fn wkt(&self) -> String {
@@ -225,9 +224,8 @@ impl<'a> Drop for Feature<'a> {
 pub fn open(path: &Path) -> Option<VectorDataset> {
     register_drivers();
     let filename = path.as_str().unwrap();
-    let c_dataset = filename.with_c_str(|c_filename| {
-        return unsafe { OGROpen(c_filename, 0, null()) };
-    });
+    let c_filename = CString::from_slice(filename.as_bytes());
+    let c_dataset = unsafe { OGROpen(c_filename.as_ptr(), 0, null()) };
     return match c_dataset.is_null() {
         true  => None,
         false => Some(VectorDataset{c_dataset: c_dataset}),

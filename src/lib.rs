@@ -6,7 +6,7 @@ extern crate libc;
 #[cfg(test)] extern crate test;
 
 use libc::c_char;
-use std::c_str::ToCStr;
+use std::ffi::CString;
 
 mod utils;
 pub mod raster;
@@ -23,11 +23,8 @@ extern {
 
 
 pub fn version_info(key: &str) -> String {
-    let info = key.with_c_str(|c_key| {
-        let rv = unsafe { GDALVersionInfo(c_key) };
-        return utils::_string(rv);
-    });
-    return info;
+    let c_key = CString::from_slice(key.as_bytes());
+    return utils::_string(unsafe { GDALVersionInfo(c_key.as_ptr()) });
 }
 
 

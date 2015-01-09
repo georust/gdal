@@ -1,8 +1,9 @@
 use libc::c_char;
-use std::c_str::CString;
+use std::ffi::c_str_to_bytes;
+use std::str;
 
 
 pub fn _string(raw_ptr: *const c_char) -> String {
-    let c_string = unsafe { CString::new(raw_ptr, false) };
-    return c_string.as_str().unwrap().to_string();
+    let bytes = unsafe { c_str_to_bytes(&raw_ptr) };
+    return str::from_utf8(bytes).unwrap().to_string();
 }

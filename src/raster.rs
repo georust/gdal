@@ -1,5 +1,5 @@
 use libc::{c_int, c_char, c_double};
-use std::c_str::ToCStr;
+use std::ffi::CString;
 use super::geom::Point;
 use std::sync::{StaticMutex, MUTEX_INIT};
 use utils::_string;
@@ -108,19 +108,16 @@ impl Driver {
         bands: isize
     ) -> Option<RasterDataset> {
         use std::ptr::null;
-        let c_dataset = filename.with_c_str(|c_filename| {
-            unsafe {
-                return GDALCreate(
-                    self.c_driver,
-                    c_filename,
-                    size_x as c_int,
-                    size_y as c_int,
-                    bands as c_int,
-                    GDT_BYTE,
-                    null()
-                );
-            }
-        });
+        let c_filename = CString::from_slice(filename.as_bytes());
+        let c_dataset = unsafe { GDALCreate(
+                self.c_driver,
+                c_filename.as_ptr(),
+                size_x as c_int,
+                size_y as c_int,
+                bands as c_int,
+                GDT_BYTE,
+                null()
+            ) };
         return match c_dataset.is_null() {
             true  => None,
             false => unsafe { Some(RasterDataset::_with_c_ptr(c_dataset)) },
@@ -173,9 +170,8 @@ impl RasterDataset {
     }
 
     pub fn set_projection(&self, projection: &str) {
-        projection.with_c_str(|c_projection| {
-            unsafe { GDALSetProjection(self.c_dataset, c_projection) };
-        });
+        let c_projection = CString::from_slice(projection.as_bytes());
+        unsafe { GDALSetProjection(self.c_dataset, c_projection.as_ptr()) };
     }
 
     pub fn set_geo_transform(&self, tr: &[f64]) {
@@ -205,19 +201,16 @@ impl RasterDataset {
         filename: &str
     ) -> Option<RasterDataset> {
         use std::ptr::null;
-        let c_dataset = filename.with_c_str(|c_filename| {
-            unsafe {
-                return GDALCreateCopy(
-                    driver._c_ptr(),
-                    c_filename,
-                    self.c_dataset,
-                    0,
-                    null(),
-                    null(),
-                    null()
-                )
-            }
-        });
+        let c_filename = CString::from_slice(filename.as_bytes());
+        let c_dataset = unsafe { GDALCreateCopy(
+                driver._c_ptr(),
+                c_filename.as_ptr(),
+                self.c_dataset,
+                0,
+                null(),
+                null(),
+                null()
+            ) };
         return match c_dataset.is_null() {
             true  => None,
             false => Some(RasterDataset{c_dataset: c_dataset}),
@@ -289,9 +282,8 @@ impl RasterDataset {
 
 pub fn driver(name: &str) -> Option<Driver> {
     register_drivers();
-    let c_driver = name.with_c_str(|c_name| {
-        return unsafe { GDALGetDriverByName(c_name) };
-    });
+    let c_name = CString::from_slice(name.as_bytes());
+    let c_driver = unsafe { GDALGetDriverByName(c_name.as_ptr()) };
     return match c_driver.is_null() {
         true  => None,
         false => Some(Driver{c_driver: c_driver}),
@@ -302,9 +294,8 @@ pub fn driver(name: &str) -> Option<Driver> {
 pub fn open(path: &Path) -> Option<RasterDataset> {
     register_drivers();
     let filename = path.as_str().unwrap();
-    let c_dataset = filename.with_c_str(|c_filename| {
-        return unsafe { GDALOpen(c_filename, GA_READONLY) };
-    });
+    let c_filename = CString::from_slice(filename.as_bytes());
+    let c_dataset = unsafe { GDALOpen(c_filename.as_ptr(), GA_READONLY) };
     return match c_dataset.is_null() {
         true  => None,
         false => Some(RasterDataset{c_dataset: c_dataset}),
