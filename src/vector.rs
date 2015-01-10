@@ -190,25 +190,21 @@ impl<'a> Feature<'a> {
     }
 
     pub fn wkt(&self) -> String {
-        unsafe {
-            let c_geom = OGR_F_GetGeometryRef(self.c_feature);
-            let mut c_wkt: *const c_char = null();
-            OGR_G_ExportToWkt(c_geom, &mut c_wkt);
-            let wkt = _string(c_wkt);
-            OGRFree(c_wkt as *mut ());
-            return wkt;
-        }
+        let c_geom = unsafe { OGR_F_GetGeometryRef(self.c_feature) };
+        let mut c_wkt: *const c_char = null();
+        unsafe { OGR_G_ExportToWkt(c_geom, &mut c_wkt) };
+        let wkt = _string(c_wkt);
+        unsafe { OGRFree(c_wkt as *mut ()) };
+        return wkt;
     }
 
 
     pub fn json(&self) -> String {
-        unsafe {
-            let c_geom = OGR_F_GetGeometryRef(self.c_feature);
-            let c_json = OGR_G_ExportToJson(c_geom);
-            let json = _string(c_json);
-            VSIFree(c_json as *mut ());
-            return json;
-        }
+        let c_geom = unsafe { OGR_F_GetGeometryRef(self.c_feature) };
+        let c_json = unsafe { OGR_G_ExportToJson(c_geom) };
+        let json = _string(c_json);
+        unsafe { VSIFree(c_json as *mut ()) };
+        return json;
     }
 }
 
