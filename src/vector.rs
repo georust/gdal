@@ -26,8 +26,8 @@ extern {
     fn OGR_G_ExportToJson(hGeometry: *const ()) -> *const c_char;
     fn OGR_Fld_GetNameRef(hDefn: *const ()) -> *const c_char;
     fn OGR_Fld_GetType(hDefn: *const ()) -> c_int;
-    fn OGRFree(ptr: *const ());
-    fn VSIFree(ptr: *const ());
+    fn OGRFree(ptr: *mut ());
+    fn VSIFree(ptr: *mut ());
 }
 
 const OFT_REAL:             c_int = 2;
@@ -195,7 +195,7 @@ impl<'a> Feature<'a> {
             let mut c_wkt: *const c_char = null();
             OGR_G_ExportToWkt(c_geom, &mut c_wkt);
             let wkt = _string(c_wkt);
-            OGRFree(c_wkt as *const ());
+            OGRFree(c_wkt as *mut ());
             return wkt;
         }
     }
@@ -206,7 +206,7 @@ impl<'a> Feature<'a> {
             let c_geom = OGR_F_GetGeometryRef(self.c_feature);
             let c_json = OGR_G_ExportToJson(c_geom);
             let json = _string(c_json);
-            VSIFree(c_json as *const ());
+            VSIFree(c_json as *mut ());
             return json;
         }
     }
