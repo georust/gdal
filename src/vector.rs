@@ -14,6 +14,7 @@ extern {
     fn OGR_DS_GetLayer(hDS: *const (), iLayer: c_int) -> *const ();
     fn OGR_L_GetLayerDefn(hLayer: *const ()) -> *const ();
     fn OGR_L_GetNextFeature(hLayer: *const ()) -> *const ();
+    fn OGR_L_SetSpatialFilter(hLayer: *const (), hGeom: *const ());
     fn OGR_FD_GetFieldCount(hDefn: *const ()) -> c_int;
     fn OGR_FD_GetFieldDefn(hDefn: *const (), iField: c_int) -> *const ();
     fn OGR_F_GetFieldIndex(hFeat: *const (), pszName: *const c_char) -> c_int;
@@ -99,6 +100,10 @@ impl<'a> Layer<'a> {
 
     pub fn features(&'a self) -> FeatureIterator<'a> {
         return FeatureIterator{layer: self};
+    }
+
+    pub fn set_spatial_filter(&'a self, geometry: &Geometry) {
+        unsafe { OGR_L_SetSpatialFilter(self.c_layer, geometry.c_geometry) };
     }
 }
 
@@ -430,5 +435,20 @@ mod test {
     fn test_create_bbox() {
         let bbox = Geometry::bbox(-27., 33., 52., 85.);
         assert_eq!(bbox.json(), "{ \"type\": \"Polygon\", \"coordinates\": [ [ [ -27.0, 85.0 ], [ 52.0, 85.0 ], [ 52.0, 33.0 ], [ -27.0, 33.0 ], [ -27.0, 85.0 ] ] ] }");
+    }
+
+    #[test]
+    fn test_spatial_filter() {
+        let ds = open(&fixtures().join("roads.geojson")).unwrap();
+        let layer = ds.layer(0).unwrap();
+
+        let all_features: Vec<Feature> = layer.features().collect();
+        assert_eq!(all_features.len(), 21);
+
+        let bbox = Geometry::bbox(26.1017, 44.4297, 26.1025, 44.4303);
+        layer.set_spatial_filter(&bbox);
+
+        let some_features: Vec<Feature> = layer.features().collect();
+        assert_eq!(some_features.len(), 7);
     }
 }
