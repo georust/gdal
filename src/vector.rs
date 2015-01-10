@@ -22,8 +22,10 @@ extern {
     fn OGR_F_GetFieldAsDouble(hFeat: *const (), iField: c_int) -> c_double;
     fn OGR_F_GetGeometryRef(hFeat: *const ()) -> *const ();
     fn OGR_F_Destroy(hFeat: *const ());
+    fn OGR_G_CreateFromWkt(ppszData: &mut *const c_char, hSRS: *const (), phGeometry: &mut *const ()) -> c_int;
     fn OGR_G_ExportToWkt(hGeom: *const (), ppszSrcText: &mut *const c_char) -> c_int;
     fn OGR_G_ExportToJson(hGeometry: *const ()) -> *const c_char;
+    fn OGR_G_DestroyGeometry(hGeom: *mut ());
     fn OGR_Fld_GetNameRef(hDefn: *const ()) -> *const c_char;
     fn OGR_Fld_GetType(hDefn: *const ()) -> c_int;
     fn OGRFree(ptr: *mut ());
@@ -220,6 +222,45 @@ impl<'a> Drop for Feature<'a> {
 }
 
 
+pub struct Geometry {
+    c_geometry: *const (),
+}
+
+
+impl Geometry {
+    pub fn bbox(w: f64, s: f64, e: f64, n: f64) -> Geometry {
+        let wkt = format!(
+            "POLYGON (({} {}, {} {}, {} {}, {} {}, {} {}))",
+            w, n,
+            e, n,
+            e, s,
+            w, s,
+            w, n,
+        );
+        let c_wkt = CString::from_slice(wkt.as_bytes());
+        let mut c_wkt_ptr: *const c_char = c_wkt.as_ptr();
+        let mut c_geom: *const () = null();
+        let rv = unsafe { OGR_G_CreateFromWkt(&mut c_wkt_ptr, null(), &mut c_geom) };
+        assert_eq!(rv, OGRERR_NONE);
+        return Geometry{c_geometry: c_geom};
+    }
+
+    pub fn json(&self) -> String {
+        let c_json = unsafe { OGR_G_ExportToJson(self.c_geometry) };
+        let rv = _string(c_json);
+        unsafe { VSIFree(c_json as *mut ()) };
+        return rv;
+    }
+}
+
+
+impl Drop for Geometry {
+    fn drop(&mut self) {
+        unsafe { OGR_G_DestroyGeometry(self.c_geometry as *mut ()) };
+    }
+}
+
+
 pub fn open(path: &Path) -> Option<VectorDataset> {
     register_drivers();
     let filename = path.as_str().unwrap();
@@ -258,7 +299,7 @@ impl FieldValue {
 #[cfg(test)]
 mod test {
     use std::path::Path;
-    use super::{Feature, FeatureIterator, open};
+    use super::{Feature, FeatureIterator, open, Geometry};
 
 
     fn fixtures() -> Path {
@@ -383,5 +424,11 @@ mod test {
             "is_bridge", "railway", "highway")
             .iter().map(|s| s.to_string()).collect();
         assert_eq!(name_list, ok_names);
+    }
+
+    #[test]
+    fn test_create_bbox() {
+        let bbox = Geometry::bbox(-27., 33., 52., 85.);
+        assert_eq!(bbox.json(), "{ \"type\": \"Polygon\", \"coordinates\": [ [ [ -27.0, 85.0 ], [ 52.0, 85.0 ], [ 52.0, 33.0 ], [ -27.0, 33.0 ], [ -27.0, 85.0 ] ] ] }");
     }
 }
