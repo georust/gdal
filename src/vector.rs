@@ -22,7 +22,7 @@ extern {
     fn OGR_F_GetFieldAsDouble(hFeat: *const (), iField: c_int) -> c_double;
     fn OGR_F_GetGeometryRef(hFeat: *const ()) -> *const ();
     fn OGR_F_Destroy(hFeat: *const ());
-    fn OGR_G_ExportToWkt(hGeom: *const (), ppszSrcText: *const *const c_char) -> c_int;
+    fn OGR_G_ExportToWkt(hGeom: *const (), ppszSrcText: &mut *const c_char) -> c_int;
     fn OGR_G_ExportToJson(hGeometry: *const ()) -> *const c_char;
     fn OGR_Fld_GetNameRef(hDefn: *const ()) -> *const c_char;
     fn OGR_Fld_GetType(hDefn: *const ()) -> c_int;
@@ -192,8 +192,8 @@ impl<'a> Feature<'a> {
     pub fn wkt(&self) -> String {
         unsafe {
             let c_geom = OGR_F_GetGeometryRef(self.c_feature);
-            let c_wkt: *const c_char = null();
-            OGR_G_ExportToWkt(c_geom, &c_wkt);
+            let mut c_wkt: *const c_char = null();
+            OGR_G_ExportToWkt(c_geom, &mut c_wkt);
             let wkt = _string(c_wkt);
             OGRFree(c_wkt as *const ());
             return wkt;
