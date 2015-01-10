@@ -105,6 +105,10 @@ impl<'a> Layer<'a> {
     pub fn set_spatial_filter(&'a self, geometry: &Geometry) {
         unsafe { OGR_L_SetSpatialFilter(self.c_layer, geometry.c_geometry) };
     }
+
+    pub fn clear_spatial_filter(&'a self) {
+        unsafe { OGR_L_SetSpatialFilter(self.c_layer, null()) };
+    }
 }
 
 
@@ -450,5 +454,10 @@ mod test {
 
         let some_features: Vec<Feature> = layer.features().collect();
         assert_eq!(some_features.len(), 7);
+
+        layer.clear_spatial_filter();
+
+        let again_all_features: Vec<Feature> = layer.features().collect();
+        assert_eq!(again_all_features.len(), 21);
     }
 }
