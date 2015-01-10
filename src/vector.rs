@@ -30,6 +30,8 @@ extern {
     fn VSIFree(ptr: *mut ());
 }
 
+const OGRERR_NONE:          c_int = 0;
+
 const OFT_REAL:             c_int = 2;
 const OFT_STRING:           c_int = 4;
 
@@ -192,7 +194,8 @@ impl<'a> Feature<'a> {
     pub fn wkt(&self) -> String {
         let c_geom = unsafe { OGR_F_GetGeometryRef(self.c_feature) };
         let mut c_wkt: *const c_char = null();
-        unsafe { OGR_G_ExportToWkt(c_geom, &mut c_wkt) };
+        let _err = unsafe { OGR_G_ExportToWkt(c_geom, &mut c_wkt) };
+        assert_eq!(_err, OGRERR_NONE);
         let wkt = _string(c_wkt);
         unsafe { OGRFree(c_wkt as *mut ()) };
         return wkt;
