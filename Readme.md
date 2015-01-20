@@ -12,7 +12,7 @@ So far, you can:
 * get/set projection and geo-transform
 * read and write raster data
 * warp between datasets
+* read vector data
 * convert between [PROJ.4](http://trac.osgeo.org/proj/) projections
 
-There is no support for vector data and many raster functions are not
-available. Patches welcome :)
+Many raster and vector functions are not available. Patches welcome :)
