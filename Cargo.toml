@@ -1,4 +1,6 @@
 [package]
 name = "gdal"
+description = "Rust bindings for GDAL"
+license = "MIT"
 version = "0.0.1"
 authors = ["Alex Morega <alex@grep.ro>"]
