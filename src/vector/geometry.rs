@@ -71,14 +71,32 @@ impl Drop for Geometry {
 }
 
 
+pub trait ToGdal {
+    fn to_gdal(&self) -> Geometry;
+}
+
+
+impl ToGdal for geom::Point {
+    fn to_gdal(&self) -> Geometry {
+        Geometry::from_wkt(format!("POINT ({} {})", self.x, self.y).as_slice())
+    }
+}
+
+
 #[cfg(test)]
 mod tests {
-    use vector::Geometry;
+    use vector::{Geometry, ToGdal};
     use vector::geom::{Geom, Point};
 
     #[test]
     fn test_ogr_to_point() {
         let g = Geometry::from_wkt("POINT (10 20)".as_slice());
         assert_eq!(g.to_geom(), Ok(Geom::Point(Point{x: 10., y: 20.})));
+    }
+
+    #[test]
+    fn test_point_to_ogr() {
+        let g = Point{x: 10., y: 20.}.to_gdal();
+        assert_eq!(g.json(), "{ \"type\": \"Point\", \"coordinates\": [ 10.0, 20.0 ] }");
     }
 }
