@@ -1,5 +1,5 @@
 use std::path::Path;
-use super::{Feature, FeatureIterator, open, Geometry};
+use super::{Dataset, Feature, FeatureIterator, Geometry};
 
 
 fn fixtures() -> Path {
@@ -16,13 +16,13 @@ fn assert_almost_eq(a: f64, b: f64) {
 
 #[test]
 fn test_layer_count() {
-    let ds = open(&fixtures().join("roads.geojson")).unwrap();
+    let ds = Dataset::open(&fixtures().join("roads.geojson")).unwrap();
     assert_eq!(ds.count(), 1);
 }
 
 
 fn with_features<F>(fixture: &str, f: F) where F: Fn(FeatureIterator) {
-    let ds = open(&fixtures().join(fixture)).unwrap();
+    let ds = Dataset::open(&fixtures().join(fixture)).unwrap();
     let layer = ds.layer(0).unwrap();
     f(layer.features());
 }
@@ -113,7 +113,7 @@ fn test_json() {
 
 #[test]
 fn test_schema() {
-    let ds = open(&fixtures().join("roads.geojson")).unwrap();
+    let ds = Dataset::open(&fixtures().join("roads.geojson")).unwrap();
     let layer = ds.layer(0).unwrap();
     let name_list: Vec<String> = layer
         .fields()
@@ -134,7 +134,7 @@ fn test_create_bbox() {
 
 #[test]
 fn test_spatial_filter() {
-    let ds = open(&fixtures().join("roads.geojson")).unwrap();
+    let ds = Dataset::open(&fixtures().join("roads.geojson")).unwrap();
     let layer = ds.layer(0).unwrap();
 
     let all_features: Vec<Feature> = layer.features().collect();
