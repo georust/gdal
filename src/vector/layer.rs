@@ -1,17 +1,17 @@
 use std::ptr::null;
 use libc::c_int;
 use utils::_string;
-use vector::{ogr, VectorDataset, Feature, Geometry};
+use vector::{ogr, Dataset, Feature, Geometry};
 
 pub struct Layer<'a> {
-    _vector_dataset: &'a VectorDataset,
+    _dataset: &'a Dataset,
     c_layer: *const (),
 }
 
 
 impl<'a> Layer<'a> {
-    pub unsafe fn _with_dataset(dataset: &'a VectorDataset, c_layer: *const ()) -> Layer<'a> {
-        return Layer{_vector_dataset: dataset, c_layer: c_layer};
+    pub unsafe fn _with_dataset(dataset: &'a Dataset, c_layer: *const ()) -> Layer<'a> {
+        return Layer{_dataset: dataset, c_layer: c_layer};
     }
 
     pub fn fields(&'a self) -> FieldIterator<'a> {

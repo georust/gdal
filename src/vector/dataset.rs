@@ -20,12 +20,12 @@ fn register_drivers() {
 }
 
 
-pub struct VectorDataset {
+pub struct Dataset {
     c_dataset: *const (),
 }
 
 
-impl VectorDataset {
+impl Dataset {
     pub fn count(&self) -> isize {
         return unsafe { ogr::OGR_DS_GetLayerCount(self.c_dataset) } as isize;
     }
@@ -40,20 +40,20 @@ impl VectorDataset {
 }
 
 
-impl Drop for VectorDataset {
+impl Drop for Dataset {
     fn drop(&mut self) {
         unsafe { ogr::OGR_DS_Destroy(self.c_dataset); }
     }
 }
 
 
-pub fn open(path: &Path) -> Option<VectorDataset> {
+pub fn open(path: &Path) -> Option<Dataset> {
     register_drivers();
     let filename = path.as_str().unwrap();
     let c_filename = CString::from_slice(filename.as_bytes());
     let c_dataset = unsafe { ogr::OGROpen(c_filename.as_ptr(), 0, null()) };
     return match c_dataset.is_null() {
         true  => None,
-        false => Some(VectorDataset{c_dataset: c_dataset}),
+        false => Some(Dataset{c_dataset: c_dataset}),
     };
 }

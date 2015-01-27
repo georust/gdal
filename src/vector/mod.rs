@@ -1,4 +1,4 @@
-pub use vector::dataset::{VectorDataset, open};
+pub use vector::dataset::{Dataset, open};
 pub use vector::layer::{Layer, FeatureIterator};
 pub use vector::feature::Feature;
 pub use vector::geometry::Geometry;
