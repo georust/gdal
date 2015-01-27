@@ -45,6 +45,15 @@ impl Geometry {
         return rv;
     }
 
+    pub fn wkt(&self) -> String {
+        let mut c_wkt: *const c_char = null();
+        let _err = unsafe { ogr::OGR_G_ExportToWkt(self.c_geometry, &mut c_wkt) };
+        assert_eq!(_err, ogr::OGRERR_NONE);
+        let wkt = _string(c_wkt);
+        unsafe { ogr::OGRFree(c_wkt as *mut ()) };
+        return wkt;
+    }
+
     pub unsafe fn c_geometry(&self) -> *const () {
         return self.c_geometry;
     }
@@ -115,6 +124,6 @@ mod tests {
     #[test]
     fn test_point_to_ogr() {
         let g = Point{x: 10., y: 20.}.to_gdal();
-        assert_eq!(g.json(), "{ \"type\": \"Point\", \"coordinates\": [ 10.0, 20.0 ] }");
+        assert_eq!(g.wkt(), "POINT (10 20)");
     }
 }
