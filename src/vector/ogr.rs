@@ -1,0 +1,34 @@
+use libc::{c_int, c_char, c_double};
+
+#[link(name="gdal")]
+extern {
+    pub fn OGRRegisterAll();
+    pub fn OGROpen(pszName: *const c_char, bUpdate: c_int, pahDriverList: *const ()) -> *const ();
+    pub fn OGR_DS_GetLayerCount(hDS: *const ()) -> c_int;
+    pub fn OGR_DS_Destroy(hDataSource: *const ());
+    pub fn OGR_DS_GetLayer(hDS: *const (), iLayer: c_int) -> *const ();
+    pub fn OGR_L_GetLayerDefn(hLayer: *const ()) -> *const ();
+    pub fn OGR_L_GetNextFeature(hLayer: *const ()) -> *const ();
+    pub fn OGR_L_SetSpatialFilter(hLayer: *const (), hGeom: *const ());
+    pub fn OGR_FD_GetFieldCount(hDefn: *const ()) -> c_int;
+    pub fn OGR_FD_GetFieldDefn(hDefn: *const (), iField: c_int) -> *const ();
+    pub fn OGR_F_GetFieldIndex(hFeat: *const (), pszName: *const c_char) -> c_int;
+    pub fn OGR_F_GetFieldDefnRef(hFeat: *const (), i: c_int) -> *const ();
+    pub fn OGR_F_GetFieldAsString(hFeat: *const (), iField: c_int) -> *const c_char;
+    pub fn OGR_F_GetFieldAsDouble(hFeat: *const (), iField: c_int) -> c_double;
+    pub fn OGR_F_GetGeometryRef(hFeat: *const ()) -> *const ();
+    pub fn OGR_F_Destroy(hFeat: *const ());
+    pub fn OGR_G_CreateFromWkt(ppszData: &mut *const c_char, hSRS: *const (), phGeometry: &mut *const ()) -> c_int;
+    pub fn OGR_G_ExportToWkt(hGeom: *const (), ppszSrcText: &mut *const c_char) -> c_int;
+    pub fn OGR_G_ExportToJson(hGeometry: *const ()) -> *const c_char;
+    pub fn OGR_G_DestroyGeometry(hGeom: *mut ());
+    pub fn OGR_Fld_GetNameRef(hDefn: *const ()) -> *const c_char;
+    pub fn OGR_Fld_GetType(hDefn: *const ()) -> c_int;
+    pub fn OGRFree(ptr: *mut ());
+    pub fn VSIFree(ptr: *mut ());
+}
+
+pub const OGRERR_NONE:          c_int = 0;
+
+pub const OFT_REAL:             c_int = 2;
+pub const OFT_STRING:           c_int = 4;
