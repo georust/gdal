@@ -28,6 +28,12 @@ pub fn version_info(key: &str) -> String {
 }
 
 
+#[derive(Clone, Copy, PartialEq, Show)]
+pub struct GdalError {
+    pub desc: &'static str,
+}
+
+
 #[cfg(test)]
 mod tests {
     use super::version_info;
