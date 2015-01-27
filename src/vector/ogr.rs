@@ -18,9 +18,11 @@ extern {
     pub fn OGR_F_GetFieldAsDouble(hFeat: *const (), iField: c_int) -> c_double;
     pub fn OGR_F_GetGeometryRef(hFeat: *const ()) -> *const ();
     pub fn OGR_F_Destroy(hFeat: *const ());
+    pub fn OGR_G_CreateGeometry(eGeometryType: c_int) -> *const ();
     pub fn OGR_G_CreateFromWkt(ppszData: &mut *const c_char, hSRS: *const (), phGeometry: &mut *const ()) -> c_int;
     pub fn OGR_G_GetGeometryType(hGeom: *const ()) -> c_int;
     pub fn OGR_G_GetPoint(hGeom: *const (), i: c_int, pdfX: &mut c_double, pdfY: &mut c_double, pdfZ: &mut c_double);
+    pub fn OGR_G_SetPoint_2D(hGeom: *const (), i: c_int, dfX: c_double, dfY: c_double);
     pub fn OGR_G_ExportToWkt(hGeom: *const (), ppszSrcText: &mut *const c_char) -> c_int;
     pub fn OGR_G_ExportToJson(hGeometry: *const ()) -> *const c_char;
     pub fn OGR_G_DestroyGeometry(hGeom: *mut ());

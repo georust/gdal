@@ -1,5 +1,5 @@
 use std::ptr::null;
-use libc::{c_char, c_double};
+use libc::{c_char, c_int, c_double};
 use std::ffi::CString;
 use utils::_string;
 use vector::{ogr, geom};
@@ -12,6 +12,12 @@ pub struct Geometry {
 
 
 impl Geometry {
+    pub fn empty(wkb_type: c_int) -> Geometry {
+        let c_geom = unsafe { ogr::OGR_G_CreateGeometry(wkb_type) };
+        assert!(c_geom != null());
+        return Geometry{c_geometry: c_geom};
+    }
+
     pub fn from_wkt(wkt: &str) -> Geometry {
         let c_wkt = CString::from_slice(wkt.as_bytes());
         let mut c_wkt_ptr: *const c_char = c_wkt.as_ptr();
@@ -41,6 +47,16 @@ impl Geometry {
 
     pub unsafe fn c_geometry(&self) -> *const () {
         return self.c_geometry;
+    }
+
+    pub fn set_point_2d(&mut self, i: isize, p: (f64, f64)) {
+        let (x, y) = p;
+        unsafe { ogr::OGR_G_SetPoint_2D(
+            self.c_geometry,
+            i as c_int,
+            x as c_double,
+            y as c_double,
+        ) };
     }
 
     pub fn get_point(&self, i: isize) -> (f64, f64, f64) {
@@ -78,7 +94,9 @@ pub trait ToGdal {
 
 impl ToGdal for geom::Point {
     fn to_gdal(&self) -> Geometry {
-        Geometry::from_wkt(format!("POINT ({} {})", self.x, self.y).as_slice())
+        let mut geom = Geometry::empty(ogr::wkbPoint);
+        geom.set_point_2d(0, (self.x, self.y));
+        return geom;
     }
 }
 
