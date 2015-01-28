@@ -1,5 +1,5 @@
 use std::path::Path;
-use super::{Dataset, Feature, FeatureIterator, Geometry};
+use super::{Dataset, Feature, FeatureIterator, Geometry, OwnedGeometry};
 
 
 fn fixtures() -> Path {
@@ -128,7 +128,7 @@ fn test_schema() {
 
 #[test]
 fn test_create_bbox() {
-    let bbox = Geometry::bbox(-27., 33., 52., 85.);
+    let bbox = OwnedGeometry::bbox(-27., 33., 52., 85.);
     assert_eq!(bbox.json(), "{ \"type\": \"Polygon\", \"coordinates\": [ [ [ -27.0, 85.0 ], [ 52.0, 85.0 ], [ 52.0, 33.0 ], [ -27.0, 33.0 ], [ -27.0, 85.0 ] ] ] }");
 }
 
@@ -140,7 +140,7 @@ fn test_spatial_filter() {
     let all_features: Vec<Feature> = layer.features().collect();
     assert_eq!(all_features.len(), 21);
 
-    let bbox = Geometry::bbox(26.1017, 44.4297, 26.1025, 44.4303);
+    let bbox = OwnedGeometry::bbox(26.1017, 44.4297, 26.1025, 44.4303);
     layer.set_spatial_filter(&bbox);
 
     let some_features: Vec<Feature> = layer.features().collect();

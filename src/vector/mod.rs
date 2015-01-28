@@ -1,7 +1,7 @@
 pub use vector::dataset::Dataset;
 pub use vector::layer::{Layer, FeatureIterator};
 pub use vector::feature::Feature;
-pub use vector::geometry::{Geometry, ToGdal};
+pub use vector::geometry::{Geometry, OwnedGeometry, ToGdal};
 
 mod ogr;
 pub mod dataset;
