@@ -1,6 +1,3 @@
-use vector::Geometry;
-
-
 #[derive(Clone, Copy, PartialEq, Show)]
 pub enum Geom {
     Point(Point),
