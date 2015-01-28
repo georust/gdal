@@ -3,7 +3,7 @@ use std::ptr::null;
 use std::ffi::CString;
 use vector::Layer;
 use utils::_string;
-use vector::ogr;
+use vector::{ogr, Geometry, FeatureGeometry};
 
 
 pub struct Feature<'a> {
@@ -36,6 +36,11 @@ impl<'a> Feature<'a> {
             },
             _ => panic!("Unknown field type {}", field_type)
         }
+    }
+
+    pub fn geometry(&'a self) -> FeatureGeometry<'a> {
+        let c_geometry = unsafe { ogr::OGR_F_GetGeometryRef(self.c_feature) };
+        return unsafe { FeatureGeometry::with_ref(c_geometry, self) };
     }
 
     pub fn wkt(&self) -> String {

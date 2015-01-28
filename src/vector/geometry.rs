@@ -2,7 +2,7 @@ use std::ptr::null;
 use libc::{c_char, c_int, c_double};
 use std::ffi::CString;
 use utils::_string;
-use vector::{ogr, geom};
+use vector::{ogr, geom, Feature};
 use GdalError;
 
 
@@ -101,6 +101,26 @@ impl Geometry for OwnedGeometry {
 impl Drop for OwnedGeometry {
     fn drop(&mut self) {
         unsafe { ogr::OGR_G_DestroyGeometry(self.c_geometry as *mut ()) };
+    }
+}
+
+
+pub struct FeatureGeometry<'a> {
+    _feature: &'a Feature<'a>,
+    c_geometry: *const (),
+}
+
+
+impl<'a> FeatureGeometry<'a> {
+    pub unsafe fn with_ref(c_geometry: *const (), feature: &'a Feature) -> FeatureGeometry<'a> {
+        FeatureGeometry{c_geometry: c_geometry, _feature: feature}
+    }
+}
+
+
+impl<'a> Geometry for FeatureGeometry<'a> {
+    unsafe fn c_geometry(&self) -> *const () {
+        self.c_geometry
     }
 }
 

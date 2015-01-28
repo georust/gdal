@@ -86,7 +86,7 @@ fn test_missing_field() {
 #[test]
 fn test_wkt() {
     with_first_feature("roads.geojson", |feature| {
-        let wkt = feature.wkt();
+        let wkt = feature.geometry().wkt();
         let wkt_ok = format!("{}{}",
             "LINESTRING (26.1019276 44.4302748,",
             "26.1019382 44.4303191,26.1020002 44.4304202)"
@@ -99,7 +99,7 @@ fn test_wkt() {
 #[test]
 fn test_json() {
     with_first_feature("roads.geojson", |feature| {
-        let json = feature.json();
+        let json = feature.geometry().json();
         let json_ok = format!("{}{}{}{}",
             "{ \"type\": \"LineString\", \"coordinates\": [ ",
             "[ 26.1019276, 44.4302748 ], ",
