@@ -49,9 +49,23 @@ extern {
             nPixelSpace: c_int,
             nLineSpace: c_int
         ) -> c_int;
+    pub fn GDALReprojectImage(
+        hSrcDS: *const (),
+        pszSrcWKT: *const c_char,
+        hDstDS: *const (),
+        pszDstWKT: *const c_char,
+        eResampleAlg: c_int,
+        dfWarpMemoryLimit: c_double,
+        dfMaxError: c_double,
+        pfnProgress: *const (),
+        pProgressArg: *const (),
+        psOptions: *const ()
+    ) -> c_int;
 }
 
 pub const GA_READONLY:  c_int = 0;
 pub const GDT_BYTE:     c_int = 1;
 pub const GF_READ:      c_int = 0;
 pub const GF_WRITE:     c_int = 1;
+pub static GRA_BILINEAR:           c_int = 1;
+pub static REPROJECT_MEMORY_LIMIT: c_double = 0.0;

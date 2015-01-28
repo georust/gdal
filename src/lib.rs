@@ -13,7 +13,6 @@ pub mod raster;
 pub mod vector;
 pub mod proj;
 pub mod geom;
-pub mod warp;
 
 
 #[link(name="gdal")]
