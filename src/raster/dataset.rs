@@ -19,6 +19,17 @@ impl Drop for Dataset {
 
 
 impl Dataset {
+    pub fn open(path: &Path) -> Option<Dataset> {
+        _register_drivers();
+        let filename = path.as_str().unwrap();
+        let c_filename = CString::from_slice(filename.as_bytes());
+        let c_dataset = unsafe { gdal::GDALOpen(c_filename.as_ptr(), gdal::GA_READONLY) };
+        return match c_dataset.is_null() {
+            true  => None,
+            false => Some(Dataset{c_dataset: c_dataset}),
+        };
+    }
+
     pub unsafe fn _with_c_ptr(c_dataset: *const ()) -> Dataset {
         return Dataset{c_dataset: c_dataset};
     }
@@ -157,18 +168,6 @@ impl Dataset {
             assert!(rv == 0);
         };
     }
-}
-
-
-pub fn open(path: &Path) -> Option<Dataset> {
-    _register_drivers();
-    let filename = path.as_str().unwrap();
-    let c_filename = CString::from_slice(filename.as_bytes());
-    let c_dataset = unsafe { gdal::GDALOpen(c_filename.as_ptr(), gdal::GA_READONLY) };
-    return match c_dataset.is_null() {
-        true  => None,
-        false => Some(Dataset{c_dataset: c_dataset}),
-    };
 }
 
 
