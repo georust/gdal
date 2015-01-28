@@ -1,4 +1,4 @@
-pub use raster::dataset::{RasterDataset, ByteBuffer, open};
+pub use raster::dataset::{Dataset, ByteBuffer, open};
 pub use raster::driver::Driver;
 
 mod gdal;

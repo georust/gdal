@@ -1,6 +1,6 @@
 use libc::{c_int, c_char, c_double};
 use std::ptr::null;
-use super::raster::RasterDataset;
+use super::raster::Dataset;
 
 #[link(name="gdal")]
 extern {
@@ -21,7 +21,7 @@ extern {
 static GRA_BILINEAR:           c_int = 1;
 static REPROJECT_MEMORY_LIMIT: c_double = 0.0;
 
-pub fn reproject(src: &RasterDataset, dst: &RasterDataset) {
+pub fn reproject(src: &Dataset, dst: &Dataset) {
     let rv = unsafe {
         GDALReprojectImage(
                 src._c_ptr(),

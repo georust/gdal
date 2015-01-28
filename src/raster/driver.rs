@@ -3,7 +3,7 @@ use std::ffi::CString;
 use std::sync::{StaticMutex, MUTEX_INIT};
 use super::super::geom::Point;
 use utils::_string;
-use raster::{gdal, RasterDataset};
+use raster::{gdal, Dataset};
 
 
 static mut LOCK: StaticMutex = MUTEX_INIT;
@@ -61,7 +61,7 @@ impl Driver {
         size_x: isize,
         size_y: isize,
         bands: isize
-    ) -> Option<RasterDataset> {
+    ) -> Option<Dataset> {
         use std::ptr::null;
         let c_filename = CString::from_slice(filename.as_bytes());
         let c_dataset = unsafe { gdal::GDALCreate(
@@ -75,7 +75,7 @@ impl Driver {
             ) };
         return match c_dataset.is_null() {
             true  => None,
-            false => unsafe { Some(RasterDataset::_with_c_ptr(c_dataset)) },
+            false => unsafe { Some(Dataset::_with_c_ptr(c_dataset)) },
         };
     }
 }

@@ -6,21 +6,21 @@ use raster::{gdal, Driver};
 use raster::driver::_register_drivers;
 
 
-pub struct RasterDataset {
+pub struct Dataset {
     c_dataset: *const (),
 }
 
 
-impl Drop for RasterDataset {
+impl Drop for Dataset {
     fn drop(&mut self) {
         unsafe { gdal::GDALClose(self.c_dataset); }
     }
 }
 
 
-impl RasterDataset {
-    pub unsafe fn _with_c_ptr(c_dataset: *const ()) -> RasterDataset {
-        return RasterDataset{c_dataset: c_dataset};
+impl Dataset {
+    pub unsafe fn _with_c_ptr(c_dataset: *const ()) -> Dataset {
+        return Dataset{c_dataset: c_dataset};
     }
 
     pub unsafe fn _c_ptr(&self) -> *const () {
@@ -79,7 +79,7 @@ impl RasterDataset {
         &self,
         driver: Driver,
         filename: &str
-    ) -> Option<RasterDataset> {
+    ) -> Option<Dataset> {
         use std::ptr::null;
         let c_filename = CString::from_slice(filename.as_bytes());
         let c_dataset = unsafe { gdal::GDALCreateCopy(
@@ -93,7 +93,7 @@ impl RasterDataset {
             ) };
         return match c_dataset.is_null() {
             true  => None,
-            false => Some(RasterDataset{c_dataset: c_dataset}),
+            false => Some(Dataset{c_dataset: c_dataset}),
         };
     }
 
@@ -160,14 +160,14 @@ impl RasterDataset {
 }
 
 
-pub fn open(path: &Path) -> Option<RasterDataset> {
+pub fn open(path: &Path) -> Option<Dataset> {
     _register_drivers();
     let filename = path.as_str().unwrap();
     let c_filename = CString::from_slice(filename.as_bytes());
     let c_dataset = unsafe { gdal::GDALOpen(c_filename.as_ptr(), gdal::GA_READONLY) };
     return match c_dataset.is_null() {
         true  => None,
-        false => Some(RasterDataset{c_dataset: c_dataset}),
+        false => Some(Dataset{c_dataset: c_dataset}),
     };
 }
 
