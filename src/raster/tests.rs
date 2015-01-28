@@ -1,6 +1,6 @@
 use std::path::Path;
 use super::super::geom::Point;
-use super::{ByteBuffer, driver, open};
+use super::{ByteBuffer, Driver, open};
 
 
 fn fixtures() -> Path {
@@ -61,7 +61,7 @@ fn test_read_raster() {
 
 #[test]
 fn test_write_raster() {
-    let driver = driver("MEM").unwrap();
+    let driver = Driver::get("MEM").unwrap();
     let dataset = driver.create("", 20, 10, 1).unwrap();
 
     // create a 2x1 raster
@@ -109,7 +109,7 @@ fn test_get_dataset_driver() {
 
 #[test]
 fn test_create() {
-    let driver = driver("MEM").unwrap();
+    let driver = Driver::get("MEM").unwrap();
     let dataset = driver.create("", 10, 20, 3).unwrap();
     assert_eq!(dataset.size(), (10, 20));
     assert_eq!(dataset.count(), 3);
@@ -119,7 +119,7 @@ fn test_create() {
 
 #[test]
 fn test_create_copy() {
-    let driver = driver("MEM").unwrap();
+    let driver = Driver::get("MEM").unwrap();
     let dataset = open(&fixtures().join("tinymarble.png")).unwrap();
     let copy = dataset.create_copy(driver, "").unwrap();
     assert_eq!(copy.size(), (100, 50));
@@ -129,7 +129,7 @@ fn test_create_copy() {
 
 #[test]
 fn test_geo_transform() {
-    let driver = driver("MEM").unwrap();
+    let driver = Driver::get("MEM").unwrap();
     let dataset = driver.create("", 20, 10, 1).unwrap();
     let transform = vec!(0., 1., 0., 0., 0., 1.);
     dataset.set_geo_transform(transform.as_slice());
@@ -139,10 +139,10 @@ fn test_geo_transform() {
 
 #[test]
 fn test_get_driver_by_name() {
-    let missing_driver = driver("wtf");
+    let missing_driver = Driver::get("wtf");
     assert!(missing_driver.is_none());
 
-    let ok_driver = driver("GTiff");
+    let ok_driver = Driver::get("GTiff");
     assert!(ok_driver.is_some());
     let driver = ok_driver.unwrap();
     assert_eq!(driver.short_name().as_slice(), "GTiff");

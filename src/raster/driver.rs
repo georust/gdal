@@ -27,6 +27,16 @@ pub struct Driver {
 
 
 impl Driver {
+    pub fn get(name: &str) -> Option<Driver> {
+        _register_drivers();
+        let c_name = CString::from_slice(name.as_bytes());
+        let c_driver = unsafe { gdal::GDALGetDriverByName(c_name.as_ptr()) };
+        return match c_driver.is_null() {
+            true  => None,
+            false => Some(Driver{c_driver: c_driver}),
+        };
+    }
+
     pub unsafe fn _with_c_ptr(c_driver: *const ()) -> Driver {
         return Driver{c_driver: c_driver};
     }
@@ -68,15 +78,4 @@ impl Driver {
             false => unsafe { Some(RasterDataset::_with_c_ptr(c_dataset)) },
         };
     }
-}
-
-
-pub fn driver(name: &str) -> Option<Driver> {
-    _register_drivers();
-    let c_name = CString::from_slice(name.as_bytes());
-    let c_driver = unsafe { gdal::GDALGetDriverByName(c_name.as_ptr()) };
-    return match c_driver.is_null() {
-        true  => None,
-        false => Some(Driver{c_driver: c_driver}),
-    };
 }
