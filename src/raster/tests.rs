@@ -3,24 +3,31 @@ use super::super::geom::Point;
 use super::{ByteBuffer, Driver, Dataset};
 
 
-fn fixtures() -> Path {
-    return Path::new(file!()).dir_path().dir_path().dir_path().join("fixtures");
+macro_rules! fixture {
+    ($name:expr) => (
+        Path::new(file!())
+            .parent().unwrap()
+            .parent().unwrap()
+            .parent().unwrap()
+            .join("fixtures").as_path()
+            .join($name).as_path()
+    )
 }
 
 
 #[test]
 fn test_open() {
-    let dataset = Dataset::open(&fixtures().join("tinymarble.png"));
+    let dataset = Dataset::open(fixture!("tinymarble.png"));
     assert!(dataset.is_some());
 
-    let missing_dataset = Dataset::open(&fixtures().join("no_such_file.png"));
+    let missing_dataset = Dataset::open(fixture!("no_such_file.png"));
     assert!(missing_dataset.is_none());
 }
 
 
 #[test]
 fn test_get_raster_size() {
-    let dataset = Dataset::open(&fixtures().join("tinymarble.png")).unwrap();
+    let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
     let (size_x, size_y) = dataset.size();
     assert_eq!(size_x, 100);
     assert_eq!(size_y, 50);
@@ -29,7 +36,7 @@ fn test_get_raster_size() {
 
 #[test]
 fn test_get_raster_count() {
-    let dataset = Dataset::open(&fixtures().join("tinymarble.png")).unwrap();
+    let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
     let count = dataset.count();
     assert_eq!(count, 3);
 }
@@ -37,16 +44,16 @@ fn test_get_raster_count() {
 
 #[test]
 fn test_get_projection() {
-    let dataset = Dataset::open(&fixtures().join("tinymarble.png")).unwrap();
+    let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
     //dataset.set_projection("WGS84");
     let projection = dataset.projection();
-    assert_eq!(projection.as_slice().slice(0, 16), "GEOGCS[\"WGS 84\",");
+    assert_eq!(projection.as_str().slice_chars(0, 16), "GEOGCS[\"WGS 84\",");
 }
 
 
 #[test]
 fn test_read_raster() {
-    let dataset = Dataset::open(&fixtures().join("tinymarble.png")).unwrap();
+    let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
     let rv = dataset.read_raster(
         1,
         Point::new(20, 30),
@@ -100,7 +107,7 @@ fn test_write_raster() {
 
 #[test]
 fn test_get_dataset_driver() {
-    let dataset = Dataset::open(&fixtures().join("tinymarble.png")).unwrap();
+    let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
     let driver = dataset.driver();
     assert_eq!(driver.short_name().as_slice(), "PNG");
     assert_eq!(driver.long_name().as_slice(), "Portable Network Graphics");
@@ -113,14 +120,14 @@ fn test_create() {
     let dataset = driver.create("", 10, 20, 3).unwrap();
     assert_eq!(dataset.size(), (10, 20));
     assert_eq!(dataset.count(), 3);
-    assert_eq!(dataset.driver().short_name().as_slice(), "MEM");
+    assert_eq!(dataset.driver().short_name().as_str(), "MEM");
 }
 
 
 #[test]
 fn test_create_copy() {
     let driver = Driver::get("MEM").unwrap();
-    let dataset = Dataset::open(&fixtures().join("tinymarble.png")).unwrap();
+    let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
     let copy = dataset.create_copy(driver, "").unwrap();
     assert_eq!(copy.size(), (100, 50));
     assert_eq!(copy.count(), 3);

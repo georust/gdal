@@ -2,8 +2,15 @@ use std::path::Path;
 use super::{Dataset, Feature, FeatureIterator, Geometry};
 
 
-fn fixtures() -> Path {
-    return Path::new(file!()).dir_path().dir_path().dir_path().join("fixtures");
+macro_rules! fixture {
+    ($name:expr) => (
+        Path::new(file!())
+            .parent().unwrap()
+            .parent().unwrap()
+            .parent().unwrap()
+            .join("fixtures").as_path()
+            .join($name).as_path()
+    )
 }
 
 
@@ -16,20 +23,20 @@ fn assert_almost_eq(a: f64, b: f64) {
 
 #[test]
 fn test_layer_count() {
-    let ds = Dataset::open(&fixtures().join("roads.geojson")).unwrap();
+    let ds = Dataset::open(fixture!("roads.geojson")).unwrap();
     assert_eq!(ds.count(), 1);
 }
 
 
-fn with_features<F>(fixture: &str, f: F) where F: Fn(FeatureIterator) {
-    let ds = Dataset::open(&fixtures().join(fixture)).unwrap();
+fn with_features<F>(name: &str, f: F) where F: Fn(FeatureIterator) {
+    let ds = Dataset::open(fixture!(name)).unwrap();
     let layer = ds.layer(0).unwrap();
     f(layer.features());
 }
 
 
-fn with_first_feature<F>(fixture: &str, f: F) where F: Fn(Feature) {
-    with_features(fixture, |mut features| f(features.next().unwrap()));
+fn with_first_feature<F>(name: &str, f: F) where F: Fn(Feature) {
+    with_features(name, |mut features| f(features.next().unwrap()));
 }
 
 
@@ -113,7 +120,7 @@ fn test_json() {
 
 #[test]
 fn test_schema() {
-    let ds = Dataset::open(&fixtures().join("roads.geojson")).unwrap();
+    let ds = Dataset::open(fixture!("roads.geojson")).unwrap();
     let layer = ds.layer(0).unwrap();
     let name_list: Vec<String> = layer
         .fields()
@@ -134,7 +141,7 @@ fn test_create_bbox() {
 
 #[test]
 fn test_spatial_filter() {
-    let ds = Dataset::open(&fixtures().join("roads.geojson")).unwrap();
+    let ds = Dataset::open(fixture!("roads.geojson")).unwrap();
     let layer = ds.layer(0).unwrap();
 
     let all_features: Vec<Feature> = layer.features().collect();
