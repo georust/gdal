@@ -76,7 +76,7 @@ impl Dataset {
 
     pub fn geo_transform(&self) -> Vec<f64> {
         let mut tr: Vec<c_double> = Vec::with_capacity(6);
-        for _ in range(0is, 6) { tr.push(0.0); }
+        for _ in (0isize..6) { tr.push(0.0); }
         let rv = unsafe {
             gdal::GDALGetGeoTransform(
                 self.c_dataset,
@@ -117,7 +117,7 @@ impl Dataset {
         ) -> ByteBuffer
     {
         let nbytes = size.x * size.y;
-        let mut data: Vec<u8> = range(0, nbytes).map(|_| 0u8).collect();
+        let mut data: Vec<u8> = (0..nbytes).map(|_| 0u8).collect();
         unsafe {
             let c_band = gdal::GDALGetRasterBand(self.c_dataset, band_index as c_int);
             let rv = gdal::GDALRasterIO(
