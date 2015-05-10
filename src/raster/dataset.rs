@@ -1,4 +1,4 @@
-use libc::{c_int, c_char, c_double};
+use libc::{c_int, c_double};
 use std::ffi::CString;
 use std::path::Path;
 use super::super::geom::Point;

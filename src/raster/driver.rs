@@ -1,7 +1,6 @@
 use libc::c_int;
 use std::ffi::CString;
 use std::sync::{StaticMutex, MUTEX_INIT};
-use super::super::geom::Point;
 use utils::_string;
 use raster::{gdal, Dataset};
 

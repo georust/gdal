@@ -2,12 +2,14 @@
 #![crate_type="lib"]
 #![feature(convert)]
 #![feature(std_misc)]
-#![feature(test)]
-#![feature(collections)]
 #![feature(libc)]
+#![cfg_attr(test, feature(test))]
+#![cfg_attr(test, feature(collections))]
 
 extern crate libc;
-#[cfg(test)] extern crate test;
+
+#[cfg(test)]
+extern crate test;
 
 pub use version::version_info;
 
@@ -18,7 +20,7 @@ pub mod vector;
 pub mod proj;
 pub mod geom;
 
-#[derive(Clone, Copy, PartialEq, Show)]
+#[derive(Clone, Copy, PartialEq, Debug)]
 pub struct GdalError {
     pub desc: &'static str,
 }

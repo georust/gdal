@@ -103,7 +103,7 @@ pub trait ToGdal {
 
 impl ToGdal for geom::Point {
     fn to_gdal(&self) -> Geometry {
-        let mut geom = Geometry::empty(ogr::wkbPoint);
+        let mut geom = Geometry::empty(ogr::WKB_POINT);
         geom.set_point_2d(0, (self.x, self.y));
         return geom;
     }

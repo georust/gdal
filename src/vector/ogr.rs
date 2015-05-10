@@ -37,4 +37,4 @@ pub const OGRERR_NONE:          c_int = 0;
 pub const OFT_REAL:             c_int = 2;
 pub const OFT_STRING:           c_int = 4;
 
-pub const wkbPoint:             c_int = 1;
+pub const WKB_POINT:            c_int = 1;
