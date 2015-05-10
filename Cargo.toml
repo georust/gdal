@@ -5,3 +5,6 @@ license = "MIT"
 version = "0.0.1"
 authors = ["Alex Morega <alex@grep.ro>"]
 repository = "https://github.com/georust/rust-gdal"
+
+[dependencies]
+libc = "0.1.7"
