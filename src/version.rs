@@ -8,7 +8,7 @@ extern {
 }
 
 pub fn version_info(key: &str) -> String {
-    let c_key = CString::from_slice(key.as_bytes());
+    let c_key = CString::new(key.as_bytes()).unwrap();
     return _string(unsafe { GDALVersionInfo(c_key.as_ptr()) });
 }
 
@@ -25,9 +25,9 @@ mod tests {
         let expected_text: String = format!(
             "GDAL {}, released {}/{}/{}",
             release_name,
-            release_date.as_slice().slice(0, 4),
-            release_date.as_slice().slice(4, 6),
-            release_date.as_slice().slice(6, 8),
+            release_date.as_str().slice_chars(0, 4),
+            release_date.as_str().slice_chars(4, 6),
+            release_date.as_str().slice_chars(6, 8),
         );
 
         assert_eq!(version_text, expected_text);

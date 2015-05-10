@@ -1,5 +1,6 @@
 use std::sync::{StaticMutex, MUTEX_INIT};
 use std::ffi::CString;
+use std::path::Path;
 use std::ptr::null;
 use libc::c_int;
 use vector::{ogr, Layer};
@@ -28,8 +29,8 @@ pub struct Dataset {
 impl Dataset {
     pub fn open(path: &Path) -> Option<Dataset> {
         register_drivers();
-        let filename = path.as_str().unwrap();
-        let c_filename = CString::from_slice(filename.as_bytes());
+        let filename = path.to_str().unwrap();
+        let c_filename = CString::new(filename.as_bytes()).unwrap();
         let c_dataset = unsafe { ogr::OGROpen(c_filename.as_ptr(), 0, null()) };
         return match c_dataset.is_null() {
             true  => None,

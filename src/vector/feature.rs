@@ -18,7 +18,7 @@ impl<'a> Feature<'a> {
     }
 
     pub fn field(&self, name: &str) -> Option<FieldValue> {
-        let c_name = CString::from_slice(name.as_bytes());
+        let c_name = CString::new(name.as_bytes()).unwrap();
         let field_id = unsafe { ogr::OGR_F_GetFieldIndex(self.c_feature, c_name.as_ptr()) };
         if field_id == -1 {
             return None;

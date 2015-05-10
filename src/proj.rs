@@ -36,7 +36,7 @@ fn error_message(code: c_int) -> String {
 
 impl Proj {
     pub fn new(definition: &str) -> Option<Proj> {
-        let c_definition = CString::from_slice(definition.as_bytes());
+        let c_definition = CString::new(definition.as_bytes()).unwrap();
         let c_proj = unsafe { pj_init_plus(c_definition.as_ptr()) };
         return match c_proj.is_null() {
             true  => None,
@@ -91,7 +91,7 @@ mod test {
         let wgs84 = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs";
         let proj = Proj::new(wgs84).unwrap();
         assert_eq!(
-            proj.def().as_slice(),
+            proj.def().as_str(),
             " +proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0");
     }
 

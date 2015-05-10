@@ -1,5 +1,10 @@
 #![crate_name="gdal"]
 #![crate_type="lib"]
+#![feature(convert)]
+#![feature(std_misc)]
+#![feature(test)]
+#![feature(collections)]
+#![feature(libc)]
 
 extern crate libc;
 #[cfg(test)] extern crate test;

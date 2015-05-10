@@ -29,7 +29,7 @@ pub struct Driver {
 impl Driver {
     pub fn get(name: &str) -> Option<Driver> {
         _register_drivers();
-        let c_name = CString::from_slice(name.as_bytes());
+        let c_name = CString::new(name.as_bytes()).unwrap();
         let c_driver = unsafe { gdal::GDALGetDriverByName(c_name.as_ptr()) };
         return match c_driver.is_null() {
             true  => None,
@@ -63,7 +63,7 @@ impl Driver {
         bands: isize
     ) -> Option<Dataset> {
         use std::ptr::null;
-        let c_filename = CString::from_slice(filename.as_bytes());
+        let c_filename = CString::new(filename.as_bytes()).unwrap();
         let c_dataset = unsafe { gdal::GDALCreate(
                 self.c_driver,
                 c_filename.as_ptr(),

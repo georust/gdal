@@ -19,7 +19,7 @@ impl Geometry {
     }
 
     pub fn from_wkt(wkt: &str) -> Geometry {
-        let c_wkt = CString::from_slice(wkt.as_bytes());
+        let c_wkt = CString::new(wkt.as_bytes()).unwrap();
         let mut c_wkt_ptr: *const c_char = c_wkt.as_ptr();
         let mut c_geom: *const () = null();
         let rv = unsafe { ogr::OGR_G_CreateFromWkt(&mut c_wkt_ptr, null(), &mut c_geom) };
@@ -35,7 +35,7 @@ impl Geometry {
             e, s,
             w, s,
             w, n,
-        ).as_slice())
+        ).as_str())
     }
 
     pub fn json(&self) -> String {
@@ -117,7 +117,7 @@ mod tests {
 
     #[test]
     fn test_ogr_to_point() {
-        let g = Geometry::from_wkt("POINT (10 20)".as_slice());
+        let g = Geometry::from_wkt("POINT (10 20)");
         assert_eq!(g.to_geom(), Ok(Geom::Point(Point{x: 10., y: 20.})));
     }
 

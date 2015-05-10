@@ -1,5 +1,6 @@
 use libc::{c_int, c_char, c_double};
 use std::ffi::CString;
+use std::path::Path;
 use super::super::geom::Point;
 use utils::_string;
 use raster::{gdal, Driver};
@@ -21,8 +22,8 @@ impl Drop for Dataset {
 impl Dataset {
     pub fn open(path: &Path) -> Option<Dataset> {
         _register_drivers();
-        let filename = path.as_str().unwrap();
-        let c_filename = CString::from_slice(filename.as_bytes());
+        let filename = path.to_str().unwrap();
+        let c_filename = CString::new(filename.as_bytes()).unwrap();
         let c_dataset = unsafe { gdal::GDALOpen(c_filename.as_ptr(), gdal::GA_READONLY) };
         return match c_dataset.is_null() {
             true  => None,
@@ -61,7 +62,7 @@ impl Dataset {
     }
 
     pub fn set_projection(&self, projection: &str) {
-        let c_projection = CString::from_slice(projection.as_bytes());
+        let c_projection = CString::new(projection.as_bytes()).unwrap();
         unsafe { gdal::GDALSetProjection(self.c_dataset, c_projection.as_ptr()) };
     }
 
@@ -92,7 +93,7 @@ impl Dataset {
         filename: &str
     ) -> Option<Dataset> {
         use std::ptr::null;
-        let c_filename = CString::from_slice(filename.as_bytes());
+        let c_filename = CString::new(filename.as_bytes()).unwrap();
         let c_dataset = unsafe { gdal::GDALCreateCopy(
                 driver._c_ptr(),
                 c_filename.as_ptr(),

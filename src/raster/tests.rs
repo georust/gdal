@@ -109,8 +109,8 @@ fn test_write_raster() {
 fn test_get_dataset_driver() {
     let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
     let driver = dataset.driver();
-    assert_eq!(driver.short_name().as_slice(), "PNG");
-    assert_eq!(driver.long_name().as_slice(), "Portable Network Graphics");
+    assert_eq!(driver.short_name().as_str(), "PNG");
+    assert_eq!(driver.long_name().as_str(), "Portable Network Graphics");
 }
 
 
@@ -152,6 +152,6 @@ fn test_get_driver_by_name() {
     let ok_driver = Driver::get("GTiff");
     assert!(ok_driver.is_some());
     let driver = ok_driver.unwrap();
-    assert_eq!(driver.short_name().as_slice(), "GTiff");
-    assert_eq!(driver.long_name().as_slice(), "GeoTIFF");
+    assert_eq!(driver.short_name().as_str(), "GTiff");
+    assert_eq!(driver.long_name().as_str(), "GeoTIFF");
 }
