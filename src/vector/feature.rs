@@ -59,7 +59,6 @@ impl<'a> Feature<'a> {
 }
 
 
-#[unsafe_destructor]
 impl<'a> Drop for Feature<'a> {
     fn drop(&mut self) {
         unsafe { ogr::OGR_F_Destroy(self.c_feature); }
