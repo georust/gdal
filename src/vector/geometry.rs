@@ -58,7 +58,7 @@ impl Geometry {
         return self.c_geometry;
     }
 
-    pub fn set_point_2d(&mut self, i: isize, p: (f64, f64)) {
+    pub fn set_point_2d(&mut self, i: i32, p: (f64, f64)) {
         let (x, y) = p;
         unsafe { ogr::OGR_G_SetPoint_2D(
             self.c_geometry,
@@ -68,11 +68,11 @@ impl Geometry {
         ) };
     }
 
-    pub fn get_point(&self, i: isize) -> (f64, f64, f64) {
+    pub fn get_point(&self, i: i32) -> (f64, f64, f64) {
         let mut x: c_double = 0.;
         let mut y: c_double = 0.;
         let mut z: c_double = 0.;
-        unsafe { ogr::OGR_G_GetPoint(self.c_geometry, 0, &mut x, &mut y, &mut z) };
+        unsafe { ogr::OGR_G_GetPoint(self.c_geometry, i, &mut x, &mut y, &mut z) };
         return (x as f64, y as f64, z as f64);
     }
 
