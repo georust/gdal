@@ -1,14 +1,7 @@
 #![crate_name="gdal"]
 #![crate_type="lib"]
-#![feature(convert)]
-#![feature(std_misc)]
-#![cfg_attr(test, feature(test))]
-#![cfg_attr(test, feature(collections))]
 
 extern crate libc;
-
-#[cfg(test)]
-extern crate test;
 
 pub use version::version_info;
 

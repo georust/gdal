@@ -91,7 +91,7 @@ mod test {
         let wgs84 = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs";
         let proj = Proj::new(wgs84).unwrap();
         assert_eq!(
-            proj.def().as_str(),
+            proj.def(),
             " +proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0");
     }
 

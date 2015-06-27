@@ -22,12 +22,14 @@ mod tests {
         let release_name = version_info("RELEASE_NAME");
         let version_text = version_info("--version");
 
+        let mut date_iter = release_date.chars();
+
         let expected_text: String = format!(
             "GDAL {}, released {}/{}/{}",
             release_name,
-            release_date.as_str().slice_chars(0, 4),
-            release_date.as_str().slice_chars(4, 6),
-            release_date.as_str().slice_chars(6, 8),
+            date_iter.by_ref().take(4).collect::<String>(),
+            date_iter.by_ref().take(2).collect::<String>(),
+            date_iter.by_ref().take(2).collect::<String>(),
         );
 
         assert_eq!(version_text, expected_text);
