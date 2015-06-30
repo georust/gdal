@@ -1,20 +1,19 @@
 use libc::c_int;
 use std::ffi::CString;
-use std::sync::{StaticMutex, MUTEX_INIT};
+use std::sync::{Once, ONCE_INIT};
 use utils::_string;
 use raster::{gdal, Dataset};
 
 
-static mut LOCK: StaticMutex = MUTEX_INIT;
+static START: Once = ONCE_INIT;
 static mut registered_drivers: bool = false;
 
 pub fn _register_drivers() {
     unsafe {
-        let _g = LOCK.lock();
-        if ! registered_drivers {
+        START.call_once(|| {
             gdal::GDALAllRegister();
             registered_drivers = true;
-        }
+        });
     }
 }
 

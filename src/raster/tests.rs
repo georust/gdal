@@ -47,7 +47,7 @@ fn test_get_projection() {
     let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
     //dataset.set_projection("WGS84");
     let projection = dataset.projection();
-    assert_eq!(projection.as_str().slice_chars(0, 16), "GEOGCS[\"WGS 84\",");
+    assert_eq!(projection.chars().take(16).collect::<String>(), "GEOGCS[\"WGS 84\",");
 }
 
 
@@ -109,8 +109,8 @@ fn test_write_raster() {
 fn test_get_dataset_driver() {
     let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
     let driver = dataset.driver();
-    assert_eq!(driver.short_name().as_str(), "PNG");
-    assert_eq!(driver.long_name().as_str(), "Portable Network Graphics");
+    assert_eq!(driver.short_name(), "PNG");
+    assert_eq!(driver.long_name(), "Portable Network Graphics");
 }
 
 
@@ -120,7 +120,7 @@ fn test_create() {
     let dataset = driver.create("", 10, 20, 3).unwrap();
     assert_eq!(dataset.size(), (10, 20));
     assert_eq!(dataset.count(), 3);
-    assert_eq!(dataset.driver().short_name().as_str(), "MEM");
+    assert_eq!(dataset.driver().short_name(), "MEM");
 }
 
 
@@ -139,7 +139,7 @@ fn test_geo_transform() {
     let driver = Driver::get("MEM").unwrap();
     let dataset = driver.create("", 20, 10, 1).unwrap();
     let transform = vec!(0., 1., 0., 0., 0., 1.);
-    dataset.set_geo_transform(transform.as_slice());
+    dataset.set_geo_transform(&transform);
     assert_eq!(dataset.geo_transform(), transform);
 }
 
@@ -152,6 +152,6 @@ fn test_get_driver_by_name() {
     let ok_driver = Driver::get("GTiff");
     assert!(ok_driver.is_some());
     let driver = ok_driver.unwrap();
-    assert_eq!(driver.short_name().as_str(), "GTiff");
-    assert_eq!(driver.long_name().as_str(), "GeoTIFF");
+    assert_eq!(driver.short_name(), "GTiff");
+    assert_eq!(driver.long_name(), "GeoTIFF");
 }

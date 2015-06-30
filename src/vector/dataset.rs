@@ -1,22 +1,20 @@
-use std::sync::{StaticMutex, MUTEX_INIT};
+use std::sync::{Once, ONCE_INIT};
 use std::ffi::CString;
 use std::path::Path;
 use std::ptr::null;
 use libc::c_int;
 use vector::{ogr, Layer};
 
-
-static mut LOCK: StaticMutex = MUTEX_INIT;
+static START: Once = ONCE_INIT;
 static mut registered_drivers: bool = false;
 
 
 fn register_drivers() {
     unsafe {
-        let _g = LOCK.lock();
-        if ! registered_drivers {
+        START.call_once(|| {
             ogr::OGRRegisterAll();
             registered_drivers = true;
-        }
+        });
     }
 }
 

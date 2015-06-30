@@ -28,14 +28,14 @@ impl Geometry {
     }
 
     pub fn bbox(w: f64, s: f64, e: f64, n: f64) -> Geometry {
-        Geometry::from_wkt(format!(
+        Geometry::from_wkt(&format!(
             "POLYGON (({} {}, {} {}, {} {}, {} {}, {} {}))",
             w, n,
             e, n,
             e, s,
             w, s,
             w, n,
-        ).as_str())
+        ))
     }
 
     pub fn json(&self) -> String {
