@@ -1,5 +1,10 @@
 language: rust
 
+rust:
+  - stable
+  - beta
+  - nightly
+
 env:
   global:
     - secure: IV/0GyGaGQKlKgf7zLB5URYHjLJadKYACbjZ0Z+/uPWAmJ/d9MYq990yUziQrkVIE5+0/eeaJ8eR6r65CNuFmS09w1/Y4jKpVkZ9zqWH2YXKn/FlccSIzXZqnIROqST/3DQ3Sm/A/777kp9OcagVTAq9m3qXX3tr1sXvR4r+4uM=
