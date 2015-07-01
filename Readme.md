@@ -3,7 +3,6 @@
 [![Build Status](https://travis-ci.org/georust/rust-gdal.png?branch=master)](https://travis-ci.org/georust/rust-gdal)
 
 [GDAL](http://gdal.org/) bindings for [Rust](http://www.rust-lang.org/).
-The library tracks rust master which is rapidly evolving.
 
 So far, you can:
 
