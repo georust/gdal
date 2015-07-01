@@ -13,6 +13,5 @@ So far, you can:
 * read and write raster data
 * warp between datasets
 * read vector data
-* convert between [PROJ.4](http://trac.osgeo.org/proj/) projections
 
 Many raster and vector functions are not available. Patches welcome :)
