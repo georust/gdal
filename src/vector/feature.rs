@@ -8,12 +8,17 @@ use vector::geometry::Geometry;
 pub struct Feature<'a> {
     _layer: &'a Layer<'a>,
     c_feature: *const (),
+    geometry: Geometry,
 }
 
 
 impl<'a> Feature<'a> {
     pub unsafe fn _with_layer(layer: &'a Layer<'a>, c_feature: *const ()) -> Feature<'a> {
-        return Feature{_layer: layer, c_feature: c_feature};
+        return Feature{
+            _layer: layer,
+            c_feature: c_feature,
+            geometry: Geometry::lazy_feature_geometry(),
+        };
     }
 
     pub fn field(&self, name: &str) -> Option<FieldValue> {
@@ -37,17 +42,21 @@ impl<'a> Feature<'a> {
         }
     }
 
+    pub fn geometry(&self) -> &Geometry {
+        if ! self.geometry.has_gdal_ptr() {
+            let c_geom = unsafe { ogr::OGR_F_GetGeometryRef(self.c_feature) };
+            unsafe { self.geometry.set_c_geometry(c_geom) };
+        }
+        return &self.geometry;
+    }
+
     pub fn wkt(&self) -> String {
-        let c_geom = unsafe { ogr::OGR_F_GetGeometryRef(self.c_feature) };
-        let geometry = unsafe { Geometry::from_gdal_ptr(c_geom) };
-        return geometry.wkt();
+        return self.geometry().wkt();
     }
 
 
     pub fn json(&self) -> String {
-        let c_geom = unsafe { ogr::OGR_F_GetGeometryRef(self.c_feature) };
-        let geometry = unsafe { Geometry::from_gdal_ptr(c_geom) };
-        return geometry.json();
+        return self.geometry().json();
     }
 }
 

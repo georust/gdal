@@ -14,10 +14,29 @@ pub struct Geometry {
 
 
 impl Geometry {
-    pub unsafe fn from_gdal_ptr(c_geometry: *const ()) -> Geometry {
-        // c_geometry is owned by a Feature. The Feature must own this
-        // Geometry and destroy it when the Feature is destroyed.
-        return Geometry{c_geometry_ref: RefCell::new(Some(c_geometry)), owned: false};
+    pub unsafe fn lazy_feature_geometry() -> Geometry {
+        // Geometry objects created with this method map to a Feature's
+        // geometry whose memory is managed by the GDAL feature.
+        // This object has a tricky lifecycle:
+        //
+        // * Initially it's created with a null c_geometry
+        // * The first time `Feature::geometry` is called, it gets
+        //   c_geometry from GDAL and calls `set_c_geometry` with it.
+        // * When the Feature is destroyed, this object is also destroyed,
+        //   which is good, because that's when c_geometry (which is managed
+        //   by the GDAL feature) becomes invalid. Because `self.owned` is
+        //   `true`, we don't call `OGR_G_DestroyGeometry`.
+        return Geometry{c_geometry_ref: RefCell::new(None), owned: false};
+    }
+
+    pub fn has_gdal_ptr(&self) -> bool {
+        return self.c_geometry_ref.borrow().is_some();
+    }
+
+    pub unsafe fn set_c_geometry(&self, c_geometry: *const ()) {
+        assert!(! self.has_gdal_ptr());
+        assert_eq!(self.owned, false);
+        *(self.c_geometry_ref.borrow_mut()) = Some(c_geometry);
     }
 
     pub fn empty(wkb_type: c_int) -> Geometry {
