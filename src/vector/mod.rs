@@ -1,3 +1,19 @@
+//! # GDAL Vector Data
+//!
+//! ## Reading
+//!
+//! ```
+//! use std::path::Path;
+//! use gdal::vector::Dataset;
+//!
+//! let ds = Dataset::open(Path::new("fixtures/roads.geojson")).unwrap();
+//! let layer = ds.layer(0).unwrap();
+//! for f in layer.features() {
+//!     println!("{} {}", f.field("highway").unwrap().as_string(), f.wkt());
+//! }
+//! ```
+
+
 pub use vector::dataset::Dataset;
 pub use vector::layer::{Layer, FeatureIterator};
 pub use vector::feature::Feature;
