@@ -25,6 +25,7 @@ extern {
     pub fn OGR_G_SetPoint_2D(hGeom: *const (), i: c_int, dfX: c_double, dfY: c_double);
     pub fn OGR_G_ExportToWkt(hGeom: *const (), ppszSrcText: &mut *const c_char) -> c_int;
     pub fn OGR_G_ExportToJson(hGeometry: *const ()) -> *const c_char;
+    pub fn OGR_G_ConvexHull(hTarget: *const()) -> *const ();
     pub fn OGR_G_DestroyGeometry(hGeom: *mut ());
     pub fn OGR_Fld_GetNameRef(hDefn: *const ()) -> *const c_char;
     pub fn OGR_Fld_GetType(hDefn: *const ()) -> c_int;

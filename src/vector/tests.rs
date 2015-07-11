@@ -158,3 +158,10 @@ fn test_spatial_filter() {
     let again_all_features: Vec<Feature> = layer.features().collect();
     assert_eq!(again_all_features.len(), 21);
 }
+
+#[test]
+fn test_convex_hull() {
+    let star = "POLYGON ((0 1,3 1,1 3,1.5 0.0,2 3,0 1))";
+    let hull = "POLYGON ((1.5 0.0,0 1,1 3,2 3,3 1,1.5 0.0))";
+    assert_eq!(Geometry::from_wkt(star).convex_hull().wkt(), hull);
+}

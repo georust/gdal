@@ -120,6 +120,11 @@ impl Geometry {
             _ => Err(GdalError{desc: "Unknown geometry type"})
         }
     }
+
+    pub fn convex_hull(&self) -> Geometry {
+        let c_geom = unsafe { ogr::OGR_G_ConvexHull(self.c_geometry()) };
+        return unsafe { Geometry::with_c_geometry(c_geom) };
+    }
 }
 
 
