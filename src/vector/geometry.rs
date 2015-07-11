@@ -39,10 +39,17 @@ impl Geometry {
         *(self.c_geometry_ref.borrow_mut()) = Some(c_geometry);
     }
 
+    unsafe fn with_c_geometry(c_geom: *const()) -> Geometry {
+        return Geometry{
+            c_geometry_ref: RefCell::new(Some(c_geom)),
+            owned: true,
+        };
+    }
+
     pub fn empty(wkb_type: c_int) -> Geometry {
         let c_geom = unsafe { ogr::OGR_G_CreateGeometry(wkb_type) };
         assert!(c_geom != null());
-        return Geometry{c_geometry_ref: RefCell::new(Some(c_geom)), owned: true};
+        return unsafe { Geometry::with_c_geometry(c_geom) };
     }
 
     pub fn from_wkt(wkt: &str) -> Geometry {
@@ -51,7 +58,7 @@ impl Geometry {
         let mut c_geom: *const () = null();
         let rv = unsafe { ogr::OGR_G_CreateFromWkt(&mut c_wkt_ptr, null(), &mut c_geom) };
         assert_eq!(rv, ogr::OGRERR_NONE);
-        return Geometry{c_geometry_ref: RefCell::new(Some(c_geom)), owned: true};
+        return unsafe { Geometry::with_c_geometry(c_geom) };
     }
 
     pub fn bbox(w: f64, s: f64, e: f64, n: f64) -> Geometry {
