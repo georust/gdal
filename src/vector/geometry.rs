@@ -46,7 +46,7 @@ impl Geometry {
     }
 
     pub fn json(&self) -> String {
-        let c_json = unsafe { ogr::OGR_G_ExportToJson(self.c_geometry) };
+        let c_json = unsafe { ogr::OGR_G_ExportToJson(self.c_geometry()) };
         let rv = _string(c_json);
         unsafe { ogr::VSIFree(c_json as *mut ()) };
         return rv;
@@ -54,7 +54,7 @@ impl Geometry {
 
     pub fn wkt(&self) -> String {
         let mut c_wkt: *const c_char = null();
-        let _err = unsafe { ogr::OGR_G_ExportToWkt(self.c_geometry, &mut c_wkt) };
+        let _err = unsafe { ogr::OGR_G_ExportToWkt(self.c_geometry(), &mut c_wkt) };
         assert_eq!(_err, ogr::OGRERR_NONE);
         let wkt = _string(c_wkt);
         unsafe { ogr::OGRFree(c_wkt as *mut ()) };
@@ -68,7 +68,7 @@ impl Geometry {
     pub fn set_point_2d(&mut self, i: i32, p: (f64, f64)) {
         let (x, y) = p;
         unsafe { ogr::OGR_G_SetPoint_2D(
-            self.c_geometry,
+            self.c_geometry(),
             i as c_int,
             x as c_double,
             y as c_double,
@@ -79,12 +79,12 @@ impl Geometry {
         let mut x: c_double = 0.;
         let mut y: c_double = 0.;
         let mut z: c_double = 0.;
-        unsafe { ogr::OGR_G_GetPoint(self.c_geometry, i, &mut x, &mut y, &mut z) };
+        unsafe { ogr::OGR_G_GetPoint(self.c_geometry(), i, &mut x, &mut y, &mut z) };
         return (x as f64, y as f64, z as f64);
     }
 
     pub fn to_geom(&self) -> Result<geom::Geom, GdalError> {
-        let geometry_type = unsafe { ogr::OGR_G_GetGeometryType(self.c_geometry) };
+        let geometry_type = unsafe { ogr::OGR_G_GetGeometryType(self.c_geometry()) };
         match geometry_type {
             1 => {
                 let (x, y, _) = self.get_point(0);
