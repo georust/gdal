@@ -8,14 +8,21 @@ use GdalError;
 
 pub struct Geometry {
     c_geometry: *const (),
+    owned: bool,
 }
 
 
 impl Geometry {
+    pub unsafe fn from_gdal_ptr(c_geometry: *const ()) -> Geometry {
+        // c_geometry is owned by a Feature. The Feature must own this
+        // Geometry and destroy it when the Feature is destroyed.
+        return Geometry{c_geometry: c_geometry, owned: false};
+    }
+
     pub fn empty(wkb_type: c_int) -> Geometry {
         let c_geom = unsafe { ogr::OGR_G_CreateGeometry(wkb_type) };
         assert!(c_geom != null());
-        return Geometry{c_geometry: c_geom};
+        return Geometry{c_geometry: c_geom, owned: true};
     }
 
     pub fn from_wkt(wkt: &str) -> Geometry {
@@ -24,7 +31,7 @@ impl Geometry {
         let mut c_geom: *const () = null();
         let rv = unsafe { ogr::OGR_G_CreateFromWkt(&mut c_wkt_ptr, null(), &mut c_geom) };
         assert_eq!(rv, ogr::OGRERR_NONE);
-        return Geometry{c_geometry: c_geom};
+        return Geometry{c_geometry: c_geom, owned: true};
     }
 
     pub fn bbox(w: f64, s: f64, e: f64, n: f64) -> Geometry {
@@ -91,7 +98,9 @@ impl Geometry {
 
 impl Drop for Geometry {
     fn drop(&mut self) {
-        unsafe { ogr::OGR_G_DestroyGeometry(self.c_geometry as *mut ()) };
+        if self.owned {
+            unsafe { ogr::OGR_G_DestroyGeometry(self.c_geometry as *mut ()) };
+        }
     }
 }
 
