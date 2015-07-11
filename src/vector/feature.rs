@@ -1,9 +1,8 @@
-use libc::c_char;
-use std::ptr::null;
 use std::ffi::CString;
 use vector::Layer;
 use utils::_string;
 use vector::ogr;
+use vector::geometry::Geometry;
 
 
 pub struct Feature<'a> {
@@ -40,21 +39,15 @@ impl<'a> Feature<'a> {
 
     pub fn wkt(&self) -> String {
         let c_geom = unsafe { ogr::OGR_F_GetGeometryRef(self.c_feature) };
-        let mut c_wkt: *const c_char = null();
-        let _err = unsafe { ogr::OGR_G_ExportToWkt(c_geom, &mut c_wkt) };
-        assert_eq!(_err, ogr::OGRERR_NONE);
-        let wkt = _string(c_wkt);
-        unsafe { ogr::OGRFree(c_wkt as *mut ()) };
-        return wkt;
+        let geometry = unsafe { Geometry::from_gdal_ptr(c_geom) };
+        return geometry.wkt();
     }
 
 
     pub fn json(&self) -> String {
         let c_geom = unsafe { ogr::OGR_F_GetGeometryRef(self.c_feature) };
-        let c_json = unsafe { ogr::OGR_G_ExportToJson(c_geom) };
-        let json = _string(c_json);
-        unsafe { ogr::VSIFree(c_json as *mut ()) };
-        return json;
+        let geometry = unsafe { Geometry::from_gdal_ptr(c_geom) };
+        return geometry.json();
     }
 }
 
