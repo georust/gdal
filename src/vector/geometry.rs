@@ -1,13 +1,14 @@
 use std::ptr::null;
 use libc::{c_char, c_int, c_double};
 use std::ffi::CString;
+use std::cell::RefCell;
 use utils::_string;
 use vector::{ogr, geom};
 use GdalError;
 
 
 pub struct Geometry {
-    c_geometry: *const (),
+    c_geometry_ref: RefCell<Option<*const ()>>,
     owned: bool,
 }
 
@@ -16,13 +17,13 @@ impl Geometry {
     pub unsafe fn from_gdal_ptr(c_geometry: *const ()) -> Geometry {
         // c_geometry is owned by a Feature. The Feature must own this
         // Geometry and destroy it when the Feature is destroyed.
-        return Geometry{c_geometry: c_geometry, owned: false};
+        return Geometry{c_geometry_ref: RefCell::new(Some(c_geometry)), owned: false};
     }
 
     pub fn empty(wkb_type: c_int) -> Geometry {
         let c_geom = unsafe { ogr::OGR_G_CreateGeometry(wkb_type) };
         assert!(c_geom != null());
-        return Geometry{c_geometry: c_geom, owned: true};
+        return Geometry{c_geometry_ref: RefCell::new(Some(c_geom)), owned: true};
     }
 
     pub fn from_wkt(wkt: &str) -> Geometry {
@@ -31,7 +32,7 @@ impl Geometry {
         let mut c_geom: *const () = null();
         let rv = unsafe { ogr::OGR_G_CreateFromWkt(&mut c_wkt_ptr, null(), &mut c_geom) };
         assert_eq!(rv, ogr::OGRERR_NONE);
-        return Geometry{c_geometry: c_geom, owned: true};
+        return Geometry{c_geometry_ref: RefCell::new(Some(c_geom)), owned: true};
     }
 
     pub fn bbox(w: f64, s: f64, e: f64, n: f64) -> Geometry {
@@ -62,7 +63,7 @@ impl Geometry {
     }
 
     pub unsafe fn c_geometry(&self) -> *const () {
-        return self.c_geometry;
+        return self.c_geometry_ref.borrow().unwrap();
     }
 
     pub fn set_point_2d(&mut self, i: i32, p: (f64, f64)) {
@@ -99,7 +100,8 @@ impl Geometry {
 impl Drop for Geometry {
     fn drop(&mut self) {
         if self.owned {
-            unsafe { ogr::OGR_G_DestroyGeometry(self.c_geometry as *mut ()) };
+            let c_geometry = self.c_geometry_ref.borrow();
+            unsafe { ogr::OGR_G_DestroyGeometry(c_geometry.unwrap() as *mut ()) };
         }
     }
 }
