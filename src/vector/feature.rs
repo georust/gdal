@@ -1,20 +1,24 @@
-use libc::c_char;
-use std::ptr::null;
 use std::ffi::CString;
 use vector::Layer;
 use utils::_string;
 use vector::ogr;
+use vector::geometry::Geometry;
 
 
 pub struct Feature<'a> {
     _layer: &'a Layer<'a>,
     c_feature: *const (),
+    geometry: Geometry,
 }
 
 
 impl<'a> Feature<'a> {
     pub unsafe fn _with_layer(layer: &'a Layer<'a>, c_feature: *const ()) -> Feature<'a> {
-        return Feature{_layer: layer, c_feature: c_feature};
+        return Feature{
+            _layer: layer,
+            c_feature: c_feature,
+            geometry: Geometry::lazy_feature_geometry(),
+        };
     }
 
     pub fn field(&self, name: &str) -> Option<FieldValue> {
@@ -38,23 +42,21 @@ impl<'a> Feature<'a> {
         }
     }
 
+    pub fn geometry(&self) -> &Geometry {
+        if ! self.geometry.has_gdal_ptr() {
+            let c_geom = unsafe { ogr::OGR_F_GetGeometryRef(self.c_feature) };
+            unsafe { self.geometry.set_c_geometry(c_geom) };
+        }
+        return &self.geometry;
+    }
+
     pub fn wkt(&self) -> String {
-        let c_geom = unsafe { ogr::OGR_F_GetGeometryRef(self.c_feature) };
-        let mut c_wkt: *const c_char = null();
-        let _err = unsafe { ogr::OGR_G_ExportToWkt(c_geom, &mut c_wkt) };
-        assert_eq!(_err, ogr::OGRERR_NONE);
-        let wkt = _string(c_wkt);
-        unsafe { ogr::OGRFree(c_wkt as *mut ()) };
-        return wkt;
+        return self.geometry().wkt();
     }
 
 
     pub fn json(&self) -> String {
-        let c_geom = unsafe { ogr::OGR_F_GetGeometryRef(self.c_feature) };
-        let c_json = unsafe { ogr::OGR_G_ExportToJson(c_geom) };
-        let json = _string(c_json);
-        unsafe { ogr::VSIFree(c_json as *mut ()) };
-        return json;
+        return self.geometry().json();
     }
 }
 

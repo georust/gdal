@@ -1,21 +1,48 @@
 use std::ptr::null;
 use libc::{c_char, c_int, c_double};
 use std::ffi::CString;
+use std::cell::RefCell;
 use utils::_string;
 use vector::{ogr, geom};
 use GdalError;
 
 
 pub struct Geometry {
-    c_geometry: *const (),
+    c_geometry_ref: RefCell<Option<*const ()>>,
+    owned: bool,
 }
 
 
 impl Geometry {
+    pub unsafe fn lazy_feature_geometry() -> Geometry {
+        // Geometry objects created with this method map to a Feature's
+        // geometry whose memory is managed by the GDAL feature.
+        // This object has a tricky lifecycle:
+        //
+        // * Initially it's created with a null c_geometry
+        // * The first time `Feature::geometry` is called, it gets
+        //   c_geometry from GDAL and calls `set_c_geometry` with it.
+        // * When the Feature is destroyed, this object is also destroyed,
+        //   which is good, because that's when c_geometry (which is managed
+        //   by the GDAL feature) becomes invalid. Because `self.owned` is
+        //   `true`, we don't call `OGR_G_DestroyGeometry`.
+        return Geometry{c_geometry_ref: RefCell::new(None), owned: false};
+    }
+
+    pub fn has_gdal_ptr(&self) -> bool {
+        return self.c_geometry_ref.borrow().is_some();
+    }
+
+    pub unsafe fn set_c_geometry(&self, c_geometry: *const ()) {
+        assert!(! self.has_gdal_ptr());
+        assert_eq!(self.owned, false);
+        *(self.c_geometry_ref.borrow_mut()) = Some(c_geometry);
+    }
+
     pub fn empty(wkb_type: c_int) -> Geometry {
         let c_geom = unsafe { ogr::OGR_G_CreateGeometry(wkb_type) };
         assert!(c_geom != null());
-        return Geometry{c_geometry: c_geom};
+        return Geometry{c_geometry_ref: RefCell::new(Some(c_geom)), owned: true};
     }
 
     pub fn from_wkt(wkt: &str) -> Geometry {
@@ -24,7 +51,7 @@ impl Geometry {
         let mut c_geom: *const () = null();
         let rv = unsafe { ogr::OGR_G_CreateFromWkt(&mut c_wkt_ptr, null(), &mut c_geom) };
         assert_eq!(rv, ogr::OGRERR_NONE);
-        return Geometry{c_geometry: c_geom};
+        return Geometry{c_geometry_ref: RefCell::new(Some(c_geom)), owned: true};
     }
 
     pub fn bbox(w: f64, s: f64, e: f64, n: f64) -> Geometry {
@@ -39,7 +66,7 @@ impl Geometry {
     }
 
     pub fn json(&self) -> String {
-        let c_json = unsafe { ogr::OGR_G_ExportToJson(self.c_geometry) };
+        let c_json = unsafe { ogr::OGR_G_ExportToJson(self.c_geometry()) };
         let rv = _string(c_json);
         unsafe { ogr::VSIFree(c_json as *mut ()) };
         return rv;
@@ -47,7 +74,7 @@ impl Geometry {
 
     pub fn wkt(&self) -> String {
         let mut c_wkt: *const c_char = null();
-        let _err = unsafe { ogr::OGR_G_ExportToWkt(self.c_geometry, &mut c_wkt) };
+        let _err = unsafe { ogr::OGR_G_ExportToWkt(self.c_geometry(), &mut c_wkt) };
         assert_eq!(_err, ogr::OGRERR_NONE);
         let wkt = _string(c_wkt);
         unsafe { ogr::OGRFree(c_wkt as *mut ()) };
@@ -55,13 +82,13 @@ impl Geometry {
     }
 
     pub unsafe fn c_geometry(&self) -> *const () {
-        return self.c_geometry;
+        return self.c_geometry_ref.borrow().unwrap();
     }
 
     pub fn set_point_2d(&mut self, i: i32, p: (f64, f64)) {
         let (x, y) = p;
         unsafe { ogr::OGR_G_SetPoint_2D(
-            self.c_geometry,
+            self.c_geometry(),
             i as c_int,
             x as c_double,
             y as c_double,
@@ -72,12 +99,12 @@ impl Geometry {
         let mut x: c_double = 0.;
         let mut y: c_double = 0.;
         let mut z: c_double = 0.;
-        unsafe { ogr::OGR_G_GetPoint(self.c_geometry, i, &mut x, &mut y, &mut z) };
+        unsafe { ogr::OGR_G_GetPoint(self.c_geometry(), i, &mut x, &mut y, &mut z) };
         return (x as f64, y as f64, z as f64);
     }
 
     pub fn to_geom(&self) -> Result<geom::Geom, GdalError> {
-        let geometry_type = unsafe { ogr::OGR_G_GetGeometryType(self.c_geometry) };
+        let geometry_type = unsafe { ogr::OGR_G_GetGeometryType(self.c_geometry()) };
         match geometry_type {
             1 => {
                 let (x, y, _) = self.get_point(0);
@@ -91,7 +118,10 @@ impl Geometry {
 
 impl Drop for Geometry {
     fn drop(&mut self) {
-        unsafe { ogr::OGR_G_DestroyGeometry(self.c_geometry as *mut ()) };
+        if self.owned {
+            let c_geometry = self.c_geometry_ref.borrow();
+            unsafe { ogr::OGR_G_DestroyGeometry(c_geometry.unwrap() as *mut ()) };
+        }
     }
 }
 
