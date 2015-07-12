@@ -5,6 +5,7 @@ use vector::ogr;
 use vector::geometry::Geometry;
 
 
+/// OGR Feature
 pub struct Feature<'a> {
     _layer: &'a Layer<'a>,
     c_feature: *const (),
@@ -21,6 +22,9 @@ impl<'a> Feature<'a> {
         };
     }
 
+    /// Get the value of a named field. If the field exists, it returns a
+    /// `FieldValue` wrapper, that you need to unpack to a base type
+    /// (string, float, etc). If the field is missing, returns `None`.
     pub fn field(&self, name: &str) -> Option<FieldValue> {
         let c_name = CString::new(name.as_bytes()).unwrap();
         let field_id = unsafe { ogr::OGR_F_GetFieldIndex(self.c_feature, c_name.as_ptr()) };
@@ -42,6 +46,7 @@ impl<'a> Feature<'a> {
         }
     }
 
+    /// Get the field's geometry.
     pub fn geometry(&self) -> &Geometry {
         if ! self.geometry.has_gdal_ptr() {
             let c_geom = unsafe { ogr::OGR_F_GetGeometryRef(self.c_feature) };
@@ -75,6 +80,7 @@ pub enum FieldValue {
 
 
 impl FieldValue {
+    /// Interpret the value as `String`. Panics if the value is something else.
     pub fn as_string(self) -> String {
         match self {
             FieldValue::StringValue(rv) => rv,
@@ -82,6 +88,7 @@ impl FieldValue {
         }
     }
 
+    /// Interpret the value as `f64`. Panics if the value is something else.
     pub fn as_real(self) -> f64 {
         match self {
             FieldValue::RealValue(rv) => rv,
