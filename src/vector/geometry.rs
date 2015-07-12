@@ -209,6 +209,13 @@ impl geo::ToGeo for Geometry {
                     .collect();
                 geo::Geometry::MultiPolygon(geo::MultiPolygon(strings))
             },
+            ogr::WKB_GEOMETRYCOLLECTION => {
+                let item_count = unsafe { ogr::OGR_G_GetGeometryCount(self.c_geometry()) } as usize;
+                let geometry_list = (0..item_count)
+                    .map(|n| unsafe { self._get_geometry(n) }.to_geo())
+                    .collect();
+                geo::Geometry::GeometryCollection(geo::GeometryCollection(geometry_list))
+            }
             _ => panic!("Unknown geometry type")
         }
     }
@@ -294,6 +301,16 @@ impl ToGdal for geo::MultiPolygon {
         for polygon in polygon_list.iter() {
             geom.add_geometry(polygon.to_gdal());
         }
+        return geom;
+    }
+}
+
+impl ToGdal for geo::GeometryCollection {
+    fn to_gdal(&self) -> Geometry {
+        let mut geom = Geometry::empty(ogr::WKB_GEOMETRYCOLLECTION);
+        let &geo::GeometryCollection(ref item_list) = self;
+        for item in item_list.iter() {
+            geom.add_geometry(item.to_gdal());
         }
         return geom;
     }
@@ -308,7 +325,7 @@ impl ToGdal for geo::Geometry {
             geo::Geometry::MultiLineString(ref c) => c.to_gdal(),
             geo::Geometry::Polygon(ref c) => c.to_gdal(),
             geo::Geometry::MultiPolygon(ref c) => c.to_gdal(),
-            _ => panic!("Unknown geometry type")
+            geo::Geometry::GeometryCollection(ref c) => c.to_gdal(),
         }
     }
 }
@@ -423,6 +440,24 @@ mod tests {
             ),
         ));
         let geo = geo::Geometry::MultiPolygon(multipolygon);
+
+        assert_eq!(Geometry::from_wkt(wkt).to_geo(), geo);
+        assert_eq!(geo.to_gdal().wkt(), wkt);
+    }
+
+    #[test]
+    fn test_import_export_geometrycollection() {
+        let wkt = "GEOMETRYCOLLECTION (POINT (1 2),LINESTRING (0 0,0 1,1 2))";
+        let coord = geo::Coordinate{x: 1., y: 2.};
+        let point = geo::Geometry::Point(geo::Point(coord));
+        let coords = vec!(
+            geo::Point(geo::Coordinate{x: 0., y: 0.}),
+            geo::Point(geo::Coordinate{x: 0., y: 1.}),
+            geo::Point(geo::Coordinate{x: 1., y: 2.}),
+        );
+        let linestring = geo::Geometry::LineString(geo::LineString(coords));
+        let collection = geo::GeometryCollection(vec!(point, linestring));
+        let geo = geo::Geometry::GeometryCollection(collection);
 
         assert_eq!(Geometry::from_wkt(wkt).to_geo(), geo);
         assert_eq!(geo.to_gdal().wkt(), wkt);
