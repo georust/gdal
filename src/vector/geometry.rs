@@ -214,6 +214,17 @@ impl ToGdal for geo::Point {
     }
 }
 
+impl ToGdal for geo::MultiPoint {
+    fn to_gdal(&self) -> Geometry {
+        let mut geom = Geometry::empty(ogr::WKB_MULTIPOINT);
+        let &geo::MultiPoint(ref point_list) = self;
+        for point in point_list.iter() {
+            geom.add_geometry(point.to_gdal());
+        }
+        return geom;
+    }
+}
+
 fn geometry_with_points(wkb_type: c_int, points: &geo::LineString) -> Geometry {
     let mut geom = Geometry::empty(wkb_type);
     let &geo::LineString(ref linestring) = points;
@@ -245,6 +256,7 @@ impl ToGdal for geo::Geometry {
     fn to_gdal(&self) -> Geometry {
         return match *self {
             geo::Geometry::Point(ref c) => c.to_gdal(),
+            geo::Geometry::MultiPoint(ref c) => c.to_gdal(),
             geo::Geometry::LineString(ref c) => c.to_gdal(),
             geo::Geometry::Polygon(ref c) => c.to_gdal(),
             _ => panic!("Unknown geometry type")
@@ -271,7 +283,7 @@ mod tests {
 
     #[test]
     fn test_import_export_multipoint() {
-        let wkt = "MULTIPOINT ((0 0),(0 1),(1 2))";
+        let wkt = "MULTIPOINT (0 0,0 1,1 2)";
         let coord = vec!(
             geo::Point(geo::Coordinate{x: 0., y: 0.}),
             geo::Point(geo::Coordinate{x: 0., y: 1.}),
@@ -280,6 +292,7 @@ mod tests {
         let geo = geo::Geometry::MultiPoint(geo::MultiPoint(coord));
 
         assert_eq!(Geometry::from_wkt(wkt).to_geo(), geo);
+        assert_eq!(geo.to_gdal().wkt(), wkt);
     }
 
     #[test]
