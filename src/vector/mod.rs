@@ -17,15 +17,15 @@
 
 
 pub use vector::dataset::Dataset;
-pub use vector::layer::{Layer, FeatureIterator};
-pub use vector::feature::Feature;
+pub use vector::layer::{Layer, FieldIterator, Field, FeatureIterator};
+pub use vector::feature::{Feature, FieldValue};
 pub use vector::geometry::{Geometry, ToGdal};
 
 mod ogr;
-pub mod dataset;
-pub mod layer;
-pub mod feature;
-pub mod geometry;
+mod dataset;
+mod layer;
+mod feature;
+mod geometry;
 
 #[cfg(test)]
 mod tests;
