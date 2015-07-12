@@ -132,6 +132,16 @@ impl Geometry {
         let c_geom = ogr::OGR_G_GetGeometryRef(self.c_geometry(), n as c_int);
         return Geometry::with_c_geometry(c_geom, false);
     }
+
+    pub fn add_geometry(&mut self, mut sub: Geometry) {
+        assert!(sub.owned);
+        sub.owned = false;
+        let rv = unsafe { ogr::OGR_G_AddGeometryDirectly(
+            self.c_geometry(),
+            sub.c_geometry(),
+        ) };
+        assert_eq!(rv, ogr::OGRERR_NONE);
+    }
 }
 
 impl geo::ToGeo for Geometry {
@@ -207,12 +217,24 @@ impl ToGdal for geo::LineString {
     }
 }
 
+impl ToGdal for geo::Polygon {
+    fn to_gdal(&self) -> Geometry {
+        let mut geom = Geometry::empty(ogr::WKB_POLYGON);
+        let &geo::Polygon(ref outer, ref holes) = self;
+        geom.add_geometry(geometry_with_points(ogr::WKB_LINEARRING, outer));
+        for ring in holes.iter() {
+            geom.add_geometry(geometry_with_points(ogr::WKB_LINEARRING, ring));
+        }
+        return geom;
+    }
+}
 
 impl ToGdal for geo::Geometry {
     fn to_gdal(&self) -> Geometry {
         return match *self {
             geo::Geometry::Point(ref c) => c.to_gdal(),
             geo::Geometry::LineString(ref c) => c.to_gdal(),
+            geo::Geometry::Polygon(ref c) => c.to_gdal(),
             _ => panic!("Unknown geometry type")
         }
     }
@@ -261,13 +283,14 @@ mod tests {
 
     #[test]
     fn test_import_export_polygon() {
-        let wkt = "POLYGON ((0 0,0 5,5 5,5 0,0 0), \
-                            (1 1,1 2,2 2,2 1,1 1), \
+        let wkt = "POLYGON ((0 0,0 5,5 5,5 0,0 0),\
+                            (1 1,1 2,2 2,2 1,1 1),\
                             (3 3,3 4,4 4,4 3,3 3))";
         let outer = square(0, 0, 5, 5);
         let holes = vec!(square(1, 1, 2, 2), square(3, 3, 4, 4));
         let geo = geo::Geometry::Polygon(geo::Polygon(outer, holes));
 
         assert_eq!(Geometry::from_wkt(wkt).to_geo(), geo);
+        assert_eq!(geo.to_gdal().wkt(), wkt);
     }
 }
