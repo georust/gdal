@@ -197,6 +197,18 @@ impl geo::ToGeo for Geometry {
                 let holes = (1..ring_count).map(|n| ring(n)).collect();
                 geo::Geometry::Polygon(geo::Polygon(outer, holes))
             },
+            ogr::WKB_MULTIPOLYGON => {
+                let string_count = unsafe { ogr::OGR_G_GetGeometryCount(self.c_geometry()) } as usize;
+                let strings = (0..string_count)
+                    .map(|n| {
+                        match unsafe { self._get_geometry(n) }.to_geo() {
+                            geo::Geometry::Polygon(s) => s,
+                            _ => panic!("Expected to get a Polygon")
+                        }
+                    })
+                    .collect();
+                geo::Geometry::MultiPolygon(geo::MultiPolygon(strings))
+            },
             _ => panic!("Unknown geometry type")
         }
     }
@@ -275,6 +287,18 @@ impl ToGdal for geo::Polygon {
     }
 }
 
+impl ToGdal for geo::MultiPolygon {
+    fn to_gdal(&self) -> Geometry {
+        let mut geom = Geometry::empty(ogr::WKB_MULTIPOLYGON);
+        let &geo::MultiPolygon(ref polygon_list) = self;
+        for polygon in polygon_list.iter() {
+            geom.add_geometry(polygon.to_gdal());
+        }
+        }
+        return geom;
+    }
+}
+
 impl ToGdal for geo::Geometry {
     fn to_gdal(&self) -> Geometry {
         return match *self {
@@ -283,6 +307,7 @@ impl ToGdal for geo::Geometry {
             geo::Geometry::LineString(ref c) => c.to_gdal(),
             geo::Geometry::MultiLineString(ref c) => c.to_gdal(),
             geo::Geometry::Polygon(ref c) => c.to_gdal(),
+            geo::Geometry::MultiPolygon(ref c) => c.to_gdal(),
             _ => panic!("Unknown geometry type")
         }
     }
@@ -372,6 +397,32 @@ mod tests {
         let outer = square(0, 0, 5, 5);
         let holes = vec!(square(1, 1, 2, 2), square(3, 3, 4, 4));
         let geo = geo::Geometry::Polygon(geo::Polygon(outer, holes));
+
+        assert_eq!(Geometry::from_wkt(wkt).to_geo(), geo);
+        assert_eq!(geo.to_gdal().wkt(), wkt);
+    }
+
+    #[test]
+    fn test_import_export_multipolygon() {
+        let wkt = "MULTIPOLYGON (\
+            ((0 0,0 5,5 5,5 0,0 0),\
+             (1 1,1 2,2 2,2 1,1 1),\
+             (3 3,3 4,4 4,4 3,3 3)),\
+            ((4 4,4 9,9 9,9 4,4 4),\
+             (5 5,5 6,6 6,6 5,5 5),\
+             (7 7,7 8,8 8,8 7,7 7))\
+            )";
+        let multipolygon = geo::MultiPolygon(vec!(
+            geo::Polygon(
+                square(0, 0, 5, 5),
+                vec!(square(1, 1, 2, 2), square(3, 3, 4, 4)),
+            ),
+            geo::Polygon(
+                square(4, 4, 9, 9),
+                vec!(square(5, 5, 6, 6), square(7, 7, 8, 8)),
+            ),
+        ));
+        let geo = geo::Geometry::MultiPolygon(multipolygon);
 
         assert_eq!(Geometry::from_wkt(wkt).to_geo(), geo);
         assert_eq!(geo.to_gdal().wkt(), wkt);
