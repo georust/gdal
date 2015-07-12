@@ -192,15 +192,18 @@ impl ToGdal for geo::Point {
     }
 }
 
+fn geometry_with_points(wkb_type: c_int, points: &geo::LineString) -> Geometry {
+    let mut geom = Geometry::empty(wkb_type);
+    let &geo::LineString(ref linestring) = points;
+    for (i, &geo::Point(coordinate)) in linestring.iter().enumerate() {
+        geom.set_point_2d(i, (coordinate.x, coordinate.y));
+    }
+    return geom;
+}
 
 impl ToGdal for geo::LineString {
     fn to_gdal(&self) -> Geometry {
-        let mut geom = Geometry::empty(ogr::WKB_LINESTRING);
-        let &geo::LineString(ref linestring) = self;
-        for (i, &geo::Point(coordinate)) in linestring.iter().enumerate() {
-            geom.set_point_2d(i, (coordinate.x, coordinate.y));
-        }
-        return geom;
+        geometry_with_points(ogr::WKB_LINESTRING, self)
     }
 }
 
