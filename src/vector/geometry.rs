@@ -97,7 +97,7 @@ impl Geometry {
         return self.c_geometry_ref.borrow().unwrap();
     }
 
-    pub fn set_point_2d(&mut self, i: i32, p: (f64, f64)) {
+    pub fn set_point_2d(&mut self, i: usize, p: (f64, f64)) {
         let (x, y) = p;
         unsafe { ogr::OGR_G_SetPoint_2D(
             self.c_geometry(),
@@ -115,6 +115,11 @@ impl Geometry {
         return (x as f64, y as f64, z as f64);
     }
 
+    pub fn get_point_vec(&self) -> Vec<(f64, f64, f64)> {
+        let length = unsafe{ ogr::OGR_G_GetPointCount(self.c_geometry()) };
+        return (0..length).map(|i| self.get_point(i)).collect();
+    }
+
     /// Compute the convex hull of this geometry.
     pub fn convex_hull(&self) -> Geometry {
         let c_geom = unsafe { ogr::OGR_G_ConvexHull(self.c_geometry()) };
@@ -126,9 +131,15 @@ impl geo::ToGeo for Geometry {
     fn to_geo(&self) -> geo::Geometry {
         let geometry_type = unsafe { ogr::OGR_G_GetGeometryType(self.c_geometry()) };
         match geometry_type {
-            1 => {
+            ogr::WKB_POINT => {
                 let (x, y, _) = self.get_point(0);
                 geo::Geometry::Point(geo::Point(geo::Coordinate{x: x, y: y}))
+            },
+            ogr::WKB_LINESTRING => {
+                let coords = self.get_point_vec().iter()
+                    .map(|&(x, y, _)| geo::Point(geo::Coordinate{x: x, y: y}))
+                    .collect();
+                geo::Geometry::LineString(geo::LineString(coords))
             },
             _ => panic!("Unknown geometry type")
         }
@@ -160,6 +171,18 @@ impl ToGdal for geo::Point {
 }
 
 
+impl ToGdal for geo::LineString {
+    fn to_gdal(&self) -> Geometry {
+        let mut geom = Geometry::empty(ogr::WKB_LINESTRING);
+        let &geo::LineString(ref linestring) = self;
+        for (i, &geo::Point(coordinate)) in linestring.iter().enumerate() {
+            geom.set_point_2d(i, (coordinate.x, coordinate.y));
+        }
+        return geom;
+    }
+}
+
+
 impl ToGdal for geo::Geometry {
     fn to_gdal(&self) -> Geometry {
         return match *self {
@@ -182,6 +205,20 @@ mod tests {
         let wkt = "POINT (1 2)";
         let coord = geo::Coordinate{x: 1., y: 2.};
         let geo = geo::Geometry::Point(geo::Point(coord));
+
+        assert_eq!(Geometry::from_wkt(wkt).to_geo(), geo);
+        assert_eq!(geo.to_gdal().wkt(), wkt);
+    }
+
+    #[test]
+    fn test_import_export_linestring() {
+        let wkt = "LINESTRING (0 0,0 1,1 2)";
+        let coord = vec!(
+            geo::Point(geo::Coordinate{x: 0., y: 0.}),
+            geo::Point(geo::Coordinate{x: 0., y: 1.}),
+            geo::Point(geo::Coordinate{x: 1., y: 2.}),
+        );
+        let geo = geo::Geometry::LineString(geo::LineString(coord));
 
         assert_eq!(Geometry::from_wkt(wkt).to_geo(), geo);
         assert_eq!(geo.to_gdal().wkt(), wkt);
