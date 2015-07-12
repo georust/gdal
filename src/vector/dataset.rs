@@ -18,13 +18,22 @@ fn register_drivers() {
     }
 }
 
-
+/// Vector dataset
+///
+/// ```
+/// use std::path::Path;
+/// use gdal::vector::Dataset;
+///
+/// let dataset = Dataset::open(Path::new("fixtures/roads.geojson")).unwrap();
+/// println!("Dataset has {} layers", dataset.count());
+/// ```
 pub struct Dataset {
     c_dataset: *const (),
 }
 
 
 impl Dataset {
+    /// Open the dataset at `path`.
     pub fn open(path: &Path) -> Option<Dataset> {
         register_drivers();
         let filename = path.to_str().unwrap();
@@ -36,10 +45,12 @@ impl Dataset {
         };
     }
 
+    /// Get number of layers.
     pub fn count(&self) -> isize {
         return unsafe { ogr::OGR_DS_GetLayerCount(self.c_dataset) } as isize;
     }
 
+    /// Get layer number `idx`.
     pub fn layer<'a>(&'a self, idx: isize) -> Option<Layer<'a>> {
         let c_layer = unsafe { ogr::OGR_DS_GetLayer(self.c_dataset, idx as c_int) };
         return match c_layer.is_null() {
