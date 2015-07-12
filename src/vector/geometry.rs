@@ -161,6 +161,18 @@ impl geo::ToGeo for Geometry {
                 let (x, y, _) = self.get_point(0);
                 geo::Geometry::Point(geo::Point(geo::Coordinate{x: x, y: y}))
             },
+            ogr::WKB_MULTIPOINT => {
+                let point_count = unsafe { ogr::OGR_G_GetGeometryCount(self.c_geometry()) } as usize;
+                let coords = (0..point_count)
+                    .map(|n| {
+                        match unsafe { self._get_geometry(n) }.to_geo() {
+                            geo::Geometry::Point(p) => p,
+                            _ => panic!("Expected to get a Point")
+                        }
+                    })
+                    .collect();
+                geo::Geometry::MultiPoint(geo::MultiPoint(coords))
+            },
             ogr::WKB_LINESTRING => {
                 let coords = self.get_point_vec().iter()
                     .map(|&(x, y, _)| geo::Point(geo::Coordinate{x: x, y: y}))
@@ -255,6 +267,19 @@ mod tests {
 
         assert_eq!(Geometry::from_wkt(wkt).to_geo(), geo);
         assert_eq!(geo.to_gdal().wkt(), wkt);
+    }
+
+    #[test]
+    fn test_import_export_multipoint() {
+        let wkt = "MULTIPOINT ((0 0),(0 1),(1 2))";
+        let coord = vec!(
+            geo::Point(geo::Coordinate{x: 0., y: 0.}),
+            geo::Point(geo::Coordinate{x: 0., y: 1.}),
+            geo::Point(geo::Coordinate{x: 1., y: 2.}),
+        );
+        let geo = geo::Geometry::MultiPoint(geo::MultiPoint(coord));
+
+        assert_eq!(Geometry::from_wkt(wkt).to_geo(), geo);
     }
 
     #[test]
