@@ -5,10 +5,6 @@ rust:
   - beta
   - nightly
 
-env:
-  global:
-    - secure: IV/0GyGaGQKlKgf7zLB5URYHjLJadKYACbjZ0Z+/uPWAmJ/d9MYq990yUziQrkVIE5+0/eeaJ8eR6r65CNuFmS09w1/Y4jKpVkZ9zqWH2YXKn/FlccSIzXZqnIROqST/3DQ3Sm/A/777kp9OcagVTAq9m3qXX3tr1sXvR4r+4uM=
-
 before_install:
   - sudo apt-get update
 
@@ -19,5 +15,15 @@ script:
   - cargo test
   - cargo doc
 
-after_script:
-  - curl http://www.rust-ci.org/artifacts/put?t=$RUSTCI_TOKEN | sh
+after_success: |
+  [ $TRAVIS_BRANCH = master ] &&
+  [ $TRAVIS_PULL_REQUEST = false ] &&
+  [ $TRAVIS_RUST_VERSION = nightly ] &&
+  echo '<meta http-equiv=refresh content=0;url=gdal/index.html>' > target/doc/index.html &&
+  pip install ghp-import --user $USER &&
+  $HOME/.local/bin/ghp-import -n target/doc &&
+  git push -qf https://${GHP_TOKEN}@github.com/${TRAVIS_REPO_SLUG}.git gh-pages
+
+env:
+  global:
+    secure: Bz7V/m3goAlwH3k4QUAxjbf7X1+JKDKttBC68bheVEjy3PanyWV5rfoUyYug65UOoc796/lJ2io4FbGOnOCePpzuQFAhXqrrjp+3V2Xz+XsPi/T5T5orUhhMZWtaEuUsEUgab5COj9hfc9KOVLDgR3F47/ZALjIVm8W+PzxMcKg=
