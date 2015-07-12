@@ -1,15 +1,17 @@
 language: rust
+sudo: false
+
+addons:
+  apt:
+    packages:
+    - libgdal-dev
+    - libgdal1-dev
+    - libgdal1h
 
 rust:
   - stable
   - beta
   - nightly
-
-before_install:
-  - sudo apt-get update
-
-install:
-  - sudo apt-get install libgdal-dev libgdal1-dev libproj-dev libgdal1h
 
 script:
   - cargo test
