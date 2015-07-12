@@ -1,4 +1,4 @@
-//! # GDAL Vector Data
+//! GDAL Vector Data
 //!
 //! ## Reading
 //!

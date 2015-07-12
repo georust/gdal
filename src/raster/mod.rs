@@ -1,3 +1,5 @@
+//! GDAL Raster Data
+
 pub use raster::dataset::{Dataset, ByteBuffer};
 pub use raster::driver::Driver;
 pub use raster::warp::reproject;
