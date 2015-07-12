@@ -54,15 +54,6 @@ impl<'a> Feature<'a> {
         }
         return &self.geometry;
     }
-
-    pub fn wkt(&self) -> String {
-        return self.geometry().wkt();
-    }
-
-
-    pub fn json(&self) -> String {
-        return self.geometry().json();
-    }
 }
 
 
