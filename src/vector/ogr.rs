@@ -46,4 +46,5 @@ pub const WKB_POINT:              c_int = 1;
 pub const WKB_LINESTRING:         c_int = 2;
 pub const WKB_POLYGON:            c_int = 3;
 pub const WKB_MULTIPOINT:         c_int = 4;
+pub const WKB_MULTILINESTRING:    c_int = 5;
 pub const WKB_LINEARRING:         c_int = 101;

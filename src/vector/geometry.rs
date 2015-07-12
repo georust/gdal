@@ -179,6 +179,18 @@ impl geo::ToGeo for Geometry {
                     .collect();
                 geo::Geometry::LineString(geo::LineString(coords))
             },
+            ogr::WKB_MULTILINESTRING => {
+                let string_count = unsafe { ogr::OGR_G_GetGeometryCount(self.c_geometry()) } as usize;
+                let strings = (0..string_count)
+                    .map(|n| {
+                        match unsafe { self._get_geometry(n) }.to_geo() {
+                            geo::Geometry::LineString(s) => s,
+                            _ => panic!("Expected to get a LineString")
+                        }
+                    })
+                    .collect();
+                geo::Geometry::MultiLineString(geo::MultiLineString(strings))
+            },
             ogr::WKB_POLYGON => {
                 let ring_count = unsafe { ogr::OGR_G_GetGeometryCount(self.c_geometry()) } as usize;
                 let outer = ring(0);
@@ -240,6 +252,17 @@ impl ToGdal for geo::LineString {
     }
 }
 
+impl ToGdal for geo::MultiLineString {
+    fn to_gdal(&self) -> Geometry {
+        let mut geom = Geometry::empty(ogr::WKB_MULTILINESTRING);
+        let &geo::MultiLineString(ref point_list) = self;
+        for point in point_list.iter() {
+            geom.add_geometry(point.to_gdal());
+        }
+        return geom;
+    }
+}
+
 impl ToGdal for geo::Polygon {
     fn to_gdal(&self) -> Geometry {
         let mut geom = Geometry::empty(ogr::WKB_POLYGON);
@@ -258,6 +281,7 @@ impl ToGdal for geo::Geometry {
             geo::Geometry::Point(ref c) => c.to_gdal(),
             geo::Geometry::MultiPoint(ref c) => c.to_gdal(),
             geo::Geometry::LineString(ref c) => c.to_gdal(),
+            geo::Geometry::MultiLineString(ref c) => c.to_gdal(),
             geo::Geometry::Polygon(ref c) => c.to_gdal(),
             _ => panic!("Unknown geometry type")
         }
@@ -304,6 +328,27 @@ mod tests {
             geo::Point(geo::Coordinate{x: 1., y: 2.}),
         );
         let geo = geo::Geometry::LineString(geo::LineString(coord));
+
+        assert_eq!(Geometry::from_wkt(wkt).to_geo(), geo);
+        assert_eq!(geo.to_gdal().wkt(), wkt);
+    }
+
+    #[test]
+    fn test_import_export_multilinestring() {
+        let wkt = "MULTILINESTRING ((0 0,0 1,1 2),(3 3,3 4,4 5))";
+        let strings = vec!(
+            geo::LineString(vec!(
+                geo::Point(geo::Coordinate{x: 0., y: 0.}),
+                geo::Point(geo::Coordinate{x: 0., y: 1.}),
+                geo::Point(geo::Coordinate{x: 1., y: 2.}),
+            )),
+            geo::LineString(vec!(
+                geo::Point(geo::Coordinate{x: 3., y: 3.}),
+                geo::Point(geo::Coordinate{x: 3., y: 4.}),
+                geo::Point(geo::Coordinate{x: 4., y: 5.}),
+            )),
+        );
+        let geo = geo::Geometry::MultiLineString(geo::MultiLineString(strings));
 
         assert_eq!(Geometry::from_wkt(wkt).to_geo(), geo);
         assert_eq!(geo.to_gdal().wkt(), wkt);
