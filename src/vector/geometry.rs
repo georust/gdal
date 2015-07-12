@@ -39,17 +39,17 @@ impl Geometry {
         *(self.c_geometry_ref.borrow_mut()) = Some(c_geometry);
     }
 
-    unsafe fn with_c_geometry(c_geom: *const()) -> Geometry {
+    unsafe fn with_c_geometry(c_geom: *const(), owned: bool) -> Geometry {
         return Geometry{
             c_geometry_ref: RefCell::new(Some(c_geom)),
-            owned: true,
+            owned: owned,
         };
     }
 
     pub fn empty(wkb_type: c_int) -> Geometry {
         let c_geom = unsafe { ogr::OGR_G_CreateGeometry(wkb_type) };
         assert!(c_geom != null());
-        return unsafe { Geometry::with_c_geometry(c_geom) };
+        return unsafe { Geometry::with_c_geometry(c_geom, true) };
     }
 
     /// Create a geometry by parsing a
@@ -60,7 +60,7 @@ impl Geometry {
         let mut c_geom: *const () = null();
         let rv = unsafe { ogr::OGR_G_CreateFromWkt(&mut c_wkt_ptr, null(), &mut c_geom) };
         assert_eq!(rv, ogr::OGRERR_NONE);
-        return unsafe { Geometry::with_c_geometry(c_geom) };
+        return unsafe { Geometry::with_c_geometry(c_geom, true) };
     }
 
     /// Create a rectangular geometry from West, South, East and North values.
@@ -123,7 +123,14 @@ impl Geometry {
     /// Compute the convex hull of this geometry.
     pub fn convex_hull(&self) -> Geometry {
         let c_geom = unsafe { ogr::OGR_G_ConvexHull(self.c_geometry()) };
-        return unsafe { Geometry::with_c_geometry(c_geom) };
+        return unsafe { Geometry::with_c_geometry(c_geom, true) };
+    }
+
+    unsafe fn _get_geometry(&self, n: usize) -> Geometry {
+        // get the n-th sub-geometry as a non-owned Geometry; don't keep this
+        // object for long.
+        let c_geom = ogr::OGR_G_GetGeometryRef(self.c_geometry(), n as c_int);
+        return Geometry::with_c_geometry(c_geom, false);
     }
 }
 
