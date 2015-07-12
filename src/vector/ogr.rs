@@ -27,6 +27,8 @@ extern {
     pub fn OGR_G_ExportToWkt(hGeom: *const (), ppszSrcText: &mut *const c_char) -> c_int;
     pub fn OGR_G_ExportToJson(hGeometry: *const ()) -> *const c_char;
     pub fn OGR_G_ConvexHull(hTarget: *const()) -> *const ();
+    pub fn OGR_G_GetGeometryCount(hGeom: *const ()) -> c_int;
+    pub fn OGR_G_GetGeometryRef(hGeom: *const (), iSubGeom: c_int) -> *const ();
     pub fn OGR_G_DestroyGeometry(hGeom: *mut ());
     pub fn OGR_Fld_GetNameRef(hDefn: *const ()) -> *const c_char;
     pub fn OGR_Fld_GetType(hDefn: *const ()) -> c_int;
@@ -41,3 +43,4 @@ pub const OFT_STRING:             c_int = 4;
 
 pub const WKB_POINT:              c_int = 1;
 pub const WKB_LINESTRING:         c_int = 2;
+pub const WKB_POLYGON:            c_int = 3;

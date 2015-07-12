@@ -137,6 +137,15 @@ impl Geometry {
 impl geo::ToGeo for Geometry {
     fn to_geo(&self) -> geo::Geometry {
         let geometry_type = unsafe { ogr::OGR_G_GetGeometryType(self.c_geometry()) };
+
+        let ring = |n: usize| {
+            let ring = unsafe { self._get_geometry(n) };
+            return match ring.to_geo() {
+                geo::Geometry::LineString(r) => r,
+                _ => panic!("Expected to get a LineString")
+            };
+        };
+
         match geometry_type {
             ogr::WKB_POINT => {
                 let (x, y, _) = self.get_point(0);
@@ -147,6 +156,12 @@ impl geo::ToGeo for Geometry {
                     .map(|&(x, y, _)| geo::Point(geo::Coordinate{x: x, y: y}))
                     .collect();
                 geo::Geometry::LineString(geo::LineString(coords))
+            },
+            ogr::WKB_POLYGON => {
+                let ring_count = unsafe { ogr::OGR_G_GetGeometryCount(self.c_geometry()) } as usize;
+                let outer = ring(0);
+                let holes = (1..ring_count).map(|n| ring(n)).collect();
+                geo::Geometry::Polygon(geo::Polygon(outer, holes))
             },
             _ => panic!("Unknown geometry type")
         }
@@ -229,5 +244,27 @@ mod tests {
 
         assert_eq!(Geometry::from_wkt(wkt).to_geo(), geo);
         assert_eq!(geo.to_gdal().wkt(), wkt);
+    }
+
+    fn square(x0: isize, y0: isize, x1: isize, y1: isize) -> geo::LineString {
+        geo::LineString(vec!(
+            geo::Point(geo::Coordinate{x: x0 as f64, y: y0 as f64}),
+            geo::Point(geo::Coordinate{x: x0 as f64, y: y1 as f64}),
+            geo::Point(geo::Coordinate{x: x1 as f64, y: y1 as f64}),
+            geo::Point(geo::Coordinate{x: x1 as f64, y: y0 as f64}),
+            geo::Point(geo::Coordinate{x: x0 as f64, y: y0 as f64}),
+        ))
+    }
+
+    #[test]
+    fn test_import_export_polygon() {
+        let wkt = "POLYGON ((0 0,0 5,5 5,5 0,0 0), \
+                            (1 1,1 2,2 2,2 1,1 1), \
+                            (3 3,3 4,4 4,4 3,3 3))";
+        let outer = square(0, 0, 5, 5);
+        let holes = vec!(square(1, 1, 2, 2), square(3, 3, 4, 4));
+        let geo = geo::Geometry::Polygon(geo::Polygon(outer, holes));
+
+        assert_eq!(Geometry::from_wkt(wkt).to_geo(), geo);
     }
 }
