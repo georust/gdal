@@ -160,6 +160,17 @@ impl ToGdal for geo::Point {
 }
 
 
+impl ToGdal for geo::Geometry {
+    fn to_gdal(&self) -> Geometry {
+        return match *self {
+            geo::Geometry::Point(ref c) => c.to_gdal(),
+            geo::Geometry::LineString(ref c) => c.to_gdal(),
+            _ => panic!("Unknown geometry type")
+        }
+    }
+}
+
+
 #[cfg(test)]
 mod tests {
     use vector::{Geometry, ToGdal};
@@ -170,10 +181,9 @@ mod tests {
     fn test_import_export_point() {
         let wkt = "POINT (1 2)";
         let coord = geo::Coordinate{x: 1., y: 2.};
-        let geo_point = geo::Point(coord);
-        let geo = geo::Geometry::Point(geo_point);
+        let geo = geo::Geometry::Point(geo::Point(coord));
 
         assert_eq!(Geometry::from_wkt(wkt).to_geo(), geo);
-        assert_eq!(geo_point.to_gdal().wkt(), wkt);
+        assert_eq!(geo.to_gdal().wkt(), wkt);
     }
 }
