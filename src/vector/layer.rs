@@ -3,6 +3,18 @@ use libc::c_int;
 use utils::_string;
 use vector::{ogr, Dataset, Feature, Geometry};
 
+/// Layer in a vector dataset
+///
+/// ```
+/// use std::path::Path;
+/// use gdal::vector::Dataset;
+///
+/// let dataset = Dataset::open(Path::new("fixtures/roads.geojson")).unwrap();
+/// let layer = dataset.layer(0).unwrap();
+/// for feature in layer.features() {
+///     // do something with each feature
+/// }
+/// ```
 pub struct Layer<'a> {
     _dataset: &'a Dataset,
     c_layer: *const (),
@@ -14,6 +26,7 @@ impl<'a> Layer<'a> {
         return Layer{_dataset: dataset, c_layer: c_layer};
     }
 
+    /// Iterate over the field schema of this layer.
     pub fn fields(&'a self) -> FieldIterator<'a> {
         let c_feature_defn = unsafe { ogr::OGR_L_GetLayerDefn(self.c_layer) };
         let total = unsafe { ogr::OGR_FD_GetFieldCount(c_feature_defn) } as isize;
@@ -25,6 +38,7 @@ impl<'a> Layer<'a> {
         };
     }
 
+    /// Iterate over all features in this layer.
     pub fn features(&'a self) -> FeatureIterator<'a> {
         return FeatureIterator::_with_layer(self);
     }
@@ -75,6 +89,7 @@ pub struct Field<'a> {
 
 
 impl<'a> Field<'a> {
+    /// Get the name of this field.
     pub fn name(&'a self) -> String {
         let rv = unsafe { ogr::OGR_Fld_GetNameRef(self.c_field_defn) };
         return _string(rv);
