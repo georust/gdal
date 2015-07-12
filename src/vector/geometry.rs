@@ -3,8 +3,8 @@ use libc::{c_char, c_int, c_double};
 use std::ffi::CString;
 use std::cell::RefCell;
 use utils::_string;
-use vector::{ogr, geom};
-use GdalError;
+use vector::ogr;
+use geo;
 
 /// OGR Geometry
 pub struct Geometry {
@@ -115,18 +115,6 @@ impl Geometry {
         return (x as f64, y as f64, z as f64);
     }
 
-    /// Convert the OGR geometry to a native `Geom` object.
-    pub fn to_geom(&self) -> Result<geom::Geom, GdalError> {
-        let geometry_type = unsafe { ogr::OGR_G_GetGeometryType(self.c_geometry()) };
-        match geometry_type {
-            1 => {
-                let (x, y, _) = self.get_point(0);
-                Ok(geom::Geom::Point(geom::Point{x: x, y: y}))
-            },
-            _ => Err(GdalError{desc: "Unknown geometry type"})
-        }
-    }
-
     /// Compute the convex hull of this geometry.
     pub fn convex_hull(&self) -> Geometry {
         let c_geom = unsafe { ogr::OGR_G_ConvexHull(self.c_geometry()) };
@@ -134,6 +122,18 @@ impl Geometry {
     }
 }
 
+impl geo::ToGeo for Geometry {
+    fn to_geo(&self) -> geo::Geometry {
+        let geometry_type = unsafe { ogr::OGR_G_GetGeometryType(self.c_geometry()) };
+        match geometry_type {
+            1 => {
+                let (x, y, _) = self.get_point(0);
+                geo::Geometry::Point(geo::Point(geo::Coordinate{x: x, y: y}))
+            },
+            _ => panic!("Unknown geometry type")
+        }
+    }
+}
 
 impl Drop for Geometry {
     fn drop(&mut self) {
@@ -150,10 +150,11 @@ pub trait ToGdal {
 }
 
 
-impl ToGdal for geom::Point {
+impl ToGdal for geo::Point {
     fn to_gdal(&self) -> Geometry {
         let mut geom = Geometry::empty(ogr::WKB_POINT);
-        geom.set_point_2d(0, (self.x, self.y));
+        let &geo::Point(coordinate) = self;
+        geom.set_point_2d(0, (coordinate.x, coordinate.y));
         return geom;
     }
 }
@@ -162,17 +163,19 @@ impl ToGdal for geom::Point {
 #[cfg(test)]
 mod tests {
     use vector::{Geometry, ToGdal};
-    use vector::geom::{Geom, Point};
+    use geo;
+    use geo::ToGeo;
 
     #[test]
     fn test_ogr_to_point() {
         let g = Geometry::from_wkt("POINT (10 20)");
-        assert_eq!(g.to_geom(), Ok(Geom::Point(Point{x: 10., y: 20.})));
+        let point = geo::Geometry::Point(geo::Point(geo::Coordinate{x: 10., y: 20.}));
+        assert_eq!(g.to_geo(), point);
     }
 
     #[test]
     fn test_point_to_ogr() {
-        let g = Point{x: 10., y: 20.}.to_gdal();
+        let g = geo::Point(geo::Coordinate{x: 10., y: 20.}).to_gdal();
         assert_eq!(g.wkt(), "POINT (10 20)");
     }
 }

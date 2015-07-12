@@ -9,3 +9,7 @@ documentation = "http://georust.github.io/rust-gdal/"
 
 [dependencies]
 libc = "0.1.7"
+
+[dependencies.geo]
+git = "https://github.com/georust/rust-geo.git"
+rev = "b3f2f81"

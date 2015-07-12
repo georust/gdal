@@ -26,7 +26,6 @@ pub mod dataset;
 pub mod layer;
 pub mod feature;
 pub mod geometry;
-pub mod geom;
 
 #[cfg(test)]
 mod tests;

@@ -21,6 +21,7 @@
 #![crate_type="lib"]
 
 extern crate libc;
+extern crate geo;
 
 pub use version::version_info;
 
