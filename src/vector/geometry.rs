@@ -167,15 +167,13 @@ mod tests {
     use geo::ToGeo;
 
     #[test]
-    fn test_ogr_to_point() {
-        let g = Geometry::from_wkt("POINT (10 20)");
-        let point = geo::Geometry::Point(geo::Point(geo::Coordinate{x: 10., y: 20.}));
-        assert_eq!(g.to_geo(), point);
-    }
+    fn test_import_export_point() {
+        let wkt = "POINT (1 2)";
+        let coord = geo::Coordinate{x: 1., y: 2.};
+        let geo_point = geo::Point(coord);
+        let geo = geo::Geometry::Point(geo_point);
 
-    #[test]
-    fn test_point_to_ogr() {
-        let g = geo::Point(geo::Coordinate{x: 10., y: 20.}).to_gdal();
-        assert_eq!(g.wkt(), "POINT (10 20)");
+        assert_eq!(Geometry::from_wkt(wkt).to_geo(), geo);
+        assert_eq!(geo_point.to_gdal().wkt(), wkt);
     }
 }
