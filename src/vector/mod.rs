@@ -6,10 +6,12 @@
 //! use std::path::Path;
 //! use gdal::vector::Dataset;
 //!
-//! let ds = Dataset::open(Path::new("fixtures/roads.geojson")).unwrap();
-//! let layer = ds.layer(0).unwrap();
-//! for f in layer.features() {
-//!     println!("{} {}", f.field("highway").unwrap().as_string(), f.wkt());
+//! let dataset = Dataset::open(Path::new("fixtures/roads.geojson")).unwrap();
+//! let layer = dataset.layer(0).unwrap();
+//! for feature in layer.features() {
+//!     let highway_field = feature.field("highway").unwrap();
+//!     let geometry = feature.geometry();
+//!     println!("{} {}", highway_field.as_string(), geometry.wkt());
 //! }
 //! ```
 
