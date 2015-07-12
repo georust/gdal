@@ -6,7 +6,7 @@ use utils::_string;
 use vector::{ogr, geom};
 use GdalError;
 
-
+/// OGR Geometry
 pub struct Geometry {
     c_geometry_ref: RefCell<Option<*const ()>>,
     owned: bool,
@@ -52,6 +52,8 @@ impl Geometry {
         return unsafe { Geometry::with_c_geometry(c_geom) };
     }
 
+    /// Create a geometry by parsing a
+    /// [WKT](https://en.wikipedia.org/wiki/Well-known_text) string.
     pub fn from_wkt(wkt: &str) -> Geometry {
         let c_wkt = CString::new(wkt.as_bytes()).unwrap();
         let mut c_wkt_ptr: *const c_char = c_wkt.as_ptr();
@@ -61,6 +63,7 @@ impl Geometry {
         return unsafe { Geometry::with_c_geometry(c_geom) };
     }
 
+    /// Create a rectangular geometry from West, South, East and North values.
     pub fn bbox(w: f64, s: f64, e: f64, n: f64) -> Geometry {
         Geometry::from_wkt(&format!(
             "POLYGON (({} {}, {} {}, {} {}, {} {}, {} {}))",
@@ -72,6 +75,7 @@ impl Geometry {
         ))
     }
 
+    /// Serialize the geometry as JSON.
     pub fn json(&self) -> String {
         let c_json = unsafe { ogr::OGR_G_ExportToJson(self.c_geometry()) };
         let rv = _string(c_json);
@@ -79,6 +83,7 @@ impl Geometry {
         return rv;
     }
 
+    /// Serialize the geometry as WKT.
     pub fn wkt(&self) -> String {
         let mut c_wkt: *const c_char = null();
         let _err = unsafe { ogr::OGR_G_ExportToWkt(self.c_geometry(), &mut c_wkt) };
@@ -110,6 +115,7 @@ impl Geometry {
         return (x as f64, y as f64, z as f64);
     }
 
+    /// Convert the OGR geometry to a native `Geom` object.
     pub fn to_geom(&self) -> Result<geom::Geom, GdalError> {
         let geometry_type = unsafe { ogr::OGR_G_GetGeometryType(self.c_geometry()) };
         match geometry_type {
@@ -121,6 +127,7 @@ impl Geometry {
         }
     }
 
+    /// Compute the convex hull of this geometry.
     pub fn convex_hull(&self) -> Geometry {
         let c_geom = unsafe { ogr::OGR_G_ConvexHull(self.c_geometry()) };
         return unsafe { Geometry::with_c_geometry(c_geom) };
