@@ -3,6 +3,8 @@ use libc::{c_int, c_char, c_double};
 #[link(name="gdal")]
 extern {
     pub fn OGRRegisterAll();
+    pub fn OGRGetDriverByName(pszName: *const c_char) -> *const ();
+    pub fn OGR_Dr_CreateDataSource(hDriver: *const (), pszName: *const c_char, papszOptions: *const ()) -> *const ();
     pub fn OGROpen(pszName: *const c_char, bUpdate: c_int, pahDriverList: *const ()) -> *const ();
     pub fn OGR_DS_GetLayerCount(hDS: *const ()) -> c_int;
     pub fn OGR_DS_Destroy(hDataSource: *const ());

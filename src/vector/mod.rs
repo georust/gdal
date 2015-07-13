@@ -16,6 +16,7 @@
 //! ```
 
 
+pub use vector::driver::Driver;
 pub use vector::dataset::Dataset;
 pub use vector::layer::{Layer, FieldIterator, Field, FeatureIterator};
 pub use vector::feature::{Feature, FieldValue};

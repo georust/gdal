@@ -1,5 +1,5 @@
 use std::path::Path;
-use super::{Dataset, Feature, FeatureIterator, Geometry};
+use super::{Driver, Dataset, Feature, FeatureIterator, Geometry};
 
 mod convert_geo;
 
@@ -166,4 +166,10 @@ fn test_convex_hull() {
     let star = "POLYGON ((0 1,3 1,1 3,1.5 0.0,2 3,0 1))";
     let hull = "POLYGON ((1.5 0.0,0 1,1 3,2 3,3 1,1.5 0.0))";
     assert_eq!(Geometry::from_wkt(star).convex_hull().wkt(), hull);
+}
+
+#[test]
+fn test_write_features() {
+    let driver = Driver::get("GeoJSON").unwrap();
+    let mut ds = driver.create(fixture!("output.geojson")).unwrap();
 }

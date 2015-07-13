@@ -20,6 +20,10 @@ pub struct Dataset {
 
 
 impl Dataset {
+    pub unsafe fn _with_c_dataset(c_dataset: *const ()) -> Dataset {
+        Dataset{c_dataset: c_dataset}
+    }
+
     /// Open the dataset at `path`.
     pub fn open(path: &Path) -> Option<Dataset> {
         _register_drivers();
