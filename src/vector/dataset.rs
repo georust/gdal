@@ -1,22 +1,9 @@
-use std::sync::{Once, ONCE_INIT};
 use std::ffi::CString;
 use std::path::Path;
 use std::ptr::null;
 use libc::c_int;
 use vector::{ogr, Layer};
-
-static START: Once = ONCE_INIT;
-static mut registered_drivers: bool = false;
-
-
-fn register_drivers() {
-    unsafe {
-        START.call_once(|| {
-            ogr::OGRRegisterAll();
-            registered_drivers = true;
-        });
-    }
-}
+use vector::driver::_register_drivers;
 
 /// Vector dataset
 ///
@@ -35,7 +22,7 @@ pub struct Dataset {
 impl Dataset {
     /// Open the dataset at `path`.
     pub fn open(path: &Path) -> Option<Dataset> {
-        register_drivers();
+        _register_drivers();
         let filename = path.to_str().unwrap();
         let c_filename = CString::new(filename.as_bytes()).unwrap();
         let c_dataset = unsafe { ogr::OGROpen(c_filename.as_ptr(), 0, null()) };

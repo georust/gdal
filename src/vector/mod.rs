@@ -27,6 +27,7 @@ pub trait ToGdal {
 }
 
 mod ogr;
+mod driver;
 mod dataset;
 mod layer;
 mod feature;
