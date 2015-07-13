@@ -18,7 +18,8 @@
 
 pub use vector::driver::Driver;
 pub use vector::dataset::Dataset;
-pub use vector::layer::{Layer, FieldIterator, Field, FeatureIterator};
+pub use vector::layer::{Layer, FeatureIterator};
+pub use vector::defn::{Defn, FieldIterator, Field};
 pub use vector::feature::{Feature, FieldValue};
 pub use vector::geometry::Geometry;
 
@@ -31,6 +32,7 @@ mod ogr;
 mod driver;
 mod dataset;
 mod layer;
+mod defn;
 mod feature;
 mod geometry;
 mod gdal_to_geo;

@@ -125,7 +125,7 @@ fn test_schema() {
     let ds = Dataset::open(fixture!("roads.geojson")).unwrap();
     let layer = ds.layer(0).unwrap();
     let name_list: Vec<String> = layer
-        .fields()
+        .defn().fields()
         .map(|f| f.name())
         .collect();
     let ok_names: Vec<String> = vec!(
