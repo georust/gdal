@@ -172,4 +172,5 @@ fn test_convex_hull() {
 fn test_write_features() {
     let driver = Driver::get("GeoJSON").unwrap();
     let mut ds = driver.create(fixture!("output.geojson")).unwrap();
+    let layer = ds.create_layer();
 }

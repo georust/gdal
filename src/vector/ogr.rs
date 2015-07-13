@@ -9,6 +9,7 @@ extern {
     pub fn OGR_DS_GetLayerCount(hDS: *const ()) -> c_int;
     pub fn OGR_DS_Destroy(hDataSource: *const ());
     pub fn OGR_DS_GetLayer(hDS: *const (), iLayer: c_int) -> *const ();
+    pub fn OGR_DS_CreateLayer(hDS: *const (), pszName: *const c_char, hSpatialRef: *const c_char, eType: c_int, papszOptions: *const ()) -> *const ();
     pub fn OGR_L_GetLayerDefn(hLayer: *const ()) -> *const ();
     pub fn OGR_L_GetNextFeature(hLayer: *const ()) -> *const ();
     pub fn OGR_L_SetSpatialFilter(hLayer: *const (), hGeom: *const ());
@@ -44,6 +45,7 @@ pub const OGRERR_NONE:            c_int = 0;
 pub const OFT_REAL:               c_int = 2;
 pub const OFT_STRING:             c_int = 4;
 
+pub const WKB_UNKNOWN:            c_int = 0;
 pub const WKB_POINT:              c_int = 1;
 pub const WKB_LINESTRING:         c_int = 2;
 pub const WKB_POLYGON:            c_int = 3;

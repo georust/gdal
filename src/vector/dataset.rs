@@ -49,6 +49,22 @@ impl Dataset {
             false => Some(unsafe { Layer::_with_dataset(self, c_layer) }),
         };
     }
+
+    /// Create a new layer with a blank definition.
+    pub fn create_layer<'a>(&'a mut self) -> Layer<'a> {
+        let c_name = CString::new("".as_bytes()).unwrap();
+        let c_layer = unsafe { ogr::OGR_DS_CreateLayer(
+            self.c_dataset,
+            c_name.as_ptr(),
+            null(),
+            ogr::WKB_UNKNOWN,
+            null(),
+        ) };
+        return match c_layer.is_null() {
+            true  => panic!("Layer creation failed"),
+            false => unsafe { Layer::_with_dataset(self, c_layer) },
+        };
+    }
 }
 
 
