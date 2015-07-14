@@ -170,6 +170,8 @@ fn test_convex_hull() {
 
 #[test]
 fn test_write_features() {
+    use std::fs;
+
     {
         let driver = Driver::get("GeoJSON").unwrap();
         let mut ds = driver.create(fixture!("output.geojson")).unwrap();
@@ -179,6 +181,7 @@ fn test_write_features() {
     }
 
     let mut ds = Dataset::open(fixture!("output.geojson")).unwrap();
+    fs::remove_file(fixture!("output.geojson")).unwrap();
     let layer = ds.layer(0).unwrap();
     let wkt_list = layer.features()
         .map(|f| f.geometry().wkt())
