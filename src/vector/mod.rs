@@ -19,13 +19,20 @@
 pub use vector::dataset::Dataset;
 pub use vector::layer::{Layer, FieldIterator, Field, FeatureIterator};
 pub use vector::feature::{Feature, FieldValue};
-pub use vector::geometry::{Geometry, ToGdal};
+pub use vector::geometry::Geometry;
+
+/// Convert object to a GDAL geometry.
+pub trait ToGdal {
+    fn to_gdal(&self) -> Geometry;
+}
 
 mod ogr;
 mod dataset;
 mod layer;
 mod feature;
 mod geometry;
+mod gdal_to_geo;
+mod geo_to_gdal;
 
 #[cfg(test)]
 mod tests;

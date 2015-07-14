@@ -1,10 +1,12 @@
 use std::path::Path;
 use super::{Dataset, Feature, FeatureIterator, Geometry};
 
+mod convert_geo;
 
 macro_rules! fixture {
     ($name:expr) => (
         Path::new(file!())
+            .parent().unwrap()
             .parent().unwrap()
             .parent().unwrap()
             .parent().unwrap()

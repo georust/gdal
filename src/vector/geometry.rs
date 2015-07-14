@@ -4,7 +4,6 @@ use std::ffi::CString;
 use std::cell::RefCell;
 use utils::_string;
 use vector::ogr;
-use geo;
 
 /// OGR Geometry
 pub struct Geometry {
@@ -39,17 +38,17 @@ impl Geometry {
         *(self.c_geometry_ref.borrow_mut()) = Some(c_geometry);
     }
 
-    unsafe fn with_c_geometry(c_geom: *const()) -> Geometry {
+    unsafe fn with_c_geometry(c_geom: *const(), owned: bool) -> Geometry {
         return Geometry{
             c_geometry_ref: RefCell::new(Some(c_geom)),
-            owned: true,
+            owned: owned,
         };
     }
 
     pub fn empty(wkb_type: c_int) -> Geometry {
         let c_geom = unsafe { ogr::OGR_G_CreateGeometry(wkb_type) };
         assert!(c_geom != null());
-        return unsafe { Geometry::with_c_geometry(c_geom) };
+        return unsafe { Geometry::with_c_geometry(c_geom, true) };
     }
 
     /// Create a geometry by parsing a
@@ -60,7 +59,7 @@ impl Geometry {
         let mut c_geom: *const () = null();
         let rv = unsafe { ogr::OGR_G_CreateFromWkt(&mut c_wkt_ptr, null(), &mut c_geom) };
         assert_eq!(rv, ogr::OGRERR_NONE);
-        return unsafe { Geometry::with_c_geometry(c_geom) };
+        return unsafe { Geometry::with_c_geometry(c_geom, true) };
     }
 
     /// Create a rectangular geometry from West, South, East and North values.
@@ -97,7 +96,7 @@ impl Geometry {
         return self.c_geometry_ref.borrow().unwrap();
     }
 
-    pub fn set_point_2d(&mut self, i: i32, p: (f64, f64)) {
+    pub fn set_point_2d(&mut self, i: usize, p: (f64, f64)) {
         let (x, y) = p;
         unsafe { ogr::OGR_G_SetPoint_2D(
             self.c_geometry(),
@@ -115,23 +114,32 @@ impl Geometry {
         return (x as f64, y as f64, z as f64);
     }
 
+    pub fn get_point_vec(&self) -> Vec<(f64, f64, f64)> {
+        let length = unsafe{ ogr::OGR_G_GetPointCount(self.c_geometry()) };
+        return (0..length).map(|i| self.get_point(i)).collect();
+    }
+
     /// Compute the convex hull of this geometry.
     pub fn convex_hull(&self) -> Geometry {
         let c_geom = unsafe { ogr::OGR_G_ConvexHull(self.c_geometry()) };
-        return unsafe { Geometry::with_c_geometry(c_geom) };
+        return unsafe { Geometry::with_c_geometry(c_geom, true) };
     }
-}
 
-impl geo::ToGeo for Geometry {
-    fn to_geo(&self) -> geo::Geometry {
-        let geometry_type = unsafe { ogr::OGR_G_GetGeometryType(self.c_geometry()) };
-        match geometry_type {
-            1 => {
-                let (x, y, _) = self.get_point(0);
-                geo::Geometry::Point(geo::Point(geo::Coordinate{x: x, y: y}))
-            },
-            _ => panic!("Unknown geometry type")
-        }
+    pub unsafe fn _get_geometry(&self, n: usize) -> Geometry {
+        // get the n-th sub-geometry as a non-owned Geometry; don't keep this
+        // object for long.
+        let c_geom = ogr::OGR_G_GetGeometryRef(self.c_geometry(), n as c_int);
+        return Geometry::with_c_geometry(c_geom, false);
+    }
+
+    pub fn add_geometry(&mut self, mut sub: Geometry) {
+        assert!(sub.owned);
+        sub.owned = false;
+        let rv = unsafe { ogr::OGR_G_AddGeometryDirectly(
+            self.c_geometry(),
+            sub.c_geometry(),
+        ) };
+        assert_eq!(rv, ogr::OGRERR_NONE);
     }
 }
 
@@ -141,39 +149,5 @@ impl Drop for Geometry {
             let c_geometry = self.c_geometry_ref.borrow();
             unsafe { ogr::OGR_G_DestroyGeometry(c_geometry.unwrap() as *mut ()) };
         }
-    }
-}
-
-
-pub trait ToGdal {
-    fn to_gdal(&self) -> Geometry;
-}
-
-
-impl ToGdal for geo::Point {
-    fn to_gdal(&self) -> Geometry {
-        let mut geom = Geometry::empty(ogr::WKB_POINT);
-        let &geo::Point(coordinate) = self;
-        geom.set_point_2d(0, (coordinate.x, coordinate.y));
-        return geom;
-    }
-}
-
-
-#[cfg(test)]
-mod tests {
-    use vector::{Geometry, ToGdal};
-    use geo;
-    use geo::ToGeo;
-
-    #[test]
-    fn test_import_export_point() {
-        let wkt = "POINT (1 2)";
-        let coord = geo::Coordinate{x: 1., y: 2.};
-        let geo_point = geo::Point(coord);
-        let geo = geo::Geometry::Point(geo_point);
-
-        assert_eq!(Geometry::from_wkt(wkt).to_geo(), geo);
-        assert_eq!(geo_point.to_gdal().wkt(), wkt);
     }
 }
