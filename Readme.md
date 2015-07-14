@@ -2,6 +2,8 @@
 
 [![Build Status](https://travis-ci.org/georust/rust-gdal.png?branch=master)](https://travis-ci.org/georust/rust-gdal)
 
+[Documentation](https://georust.github.io/rust-gdal)
+
 [GDAL](http://gdal.org/) bindings for [Rust](http://www.rust-lang.org/).
 
 So far, you can:
