@@ -1,5 +1,5 @@
 use std::ffi::CString;
-use vector::Layer;
+use vector::Defn;
 use utils::_string;
 use vector::ogr;
 use vector::geometry::Geometry;
@@ -7,16 +7,16 @@ use vector::geometry::Geometry;
 
 /// OGR Feature
 pub struct Feature<'a> {
-    _layer: &'a Layer,
+    _defn: &'a Defn,
     c_feature: *const (),
     geometry: Geometry,
 }
 
 
 impl<'a> Feature<'a> {
-    pub unsafe fn _with_layer(layer: &'a Layer, c_feature: *const ()) -> Feature {
+    pub unsafe fn _with_c_feature(defn: &'a Defn, c_feature: *const ()) -> Feature {
         return Feature{
-            _layer: layer,
+            _defn: defn,
             c_feature: c_feature,
             geometry: Geometry::lazy_feature_geometry(),
         };

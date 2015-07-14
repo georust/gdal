@@ -57,7 +57,7 @@ impl<'a> Iterator for FeatureIterator<'a> {
         let c_feature = unsafe { ogr::OGR_L_GetNextFeature(self.layer.c_layer) };
         return match c_feature.is_null() {
             true  => None,
-            false => Some(unsafe { Feature::_with_layer(self.layer, c_feature) }),
+            false => Some(unsafe { Feature::_with_c_feature(self.layer.defn(), c_feature) }),
         };
     }
 }
