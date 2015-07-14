@@ -96,6 +96,12 @@ impl Geometry {
         return self.c_geometry_ref.borrow().unwrap();
     }
 
+    pub unsafe fn into_c_geometry(mut self) -> *const () {
+        assert!(self.owned);
+        self.owned = false;
+        return self.c_geometry();
+    }
+
     pub fn set_point_2d(&mut self, i: usize, p: (f64, f64)) {
         let (x, y) = p;
         unsafe { ogr::OGR_G_SetPoint_2D(

@@ -58,7 +58,7 @@ impl Dataset {
     }
 
     /// Create a new layer with a blank definition.
-    pub fn create_layer(&mut self) -> &Layer {
+    pub fn create_layer(&mut self) -> &mut Layer {
         let c_name = CString::new("".as_bytes()).unwrap();
         let c_layer = unsafe { ogr::OGR_DS_CreateLayer(
             self.c_dataset,
@@ -67,9 +67,12 @@ impl Dataset {
             ogr::WKB_UNKNOWN,
             null(),
         ) };
-        return match c_layer.is_null() {
+        match c_layer.is_null() {
             true  => panic!("Layer creation failed"),
-            false => self._child_layer(c_layer),
+            false => {
+                self._child_layer(c_layer);
+                return self.layers.last_mut().unwrap();
+            }
         };
     }
 }

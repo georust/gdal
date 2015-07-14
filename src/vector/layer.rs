@@ -43,6 +43,15 @@ impl Layer {
     pub fn defn(&self) -> &Defn {
         &self.defn
     }
+
+    pub fn create_feature(&mut self, geometry: Geometry) {
+        let c_feature = unsafe { ogr::OGR_F_Create(self.defn.c_defn()) };
+        let c_geometry = unsafe { geometry.into_c_geometry() };
+        let rv = unsafe { ogr::OGR_F_SetGeometryDirectly(c_feature, c_geometry) };
+        assert_eq!(rv, ogr::OGRERR_NONE);
+        let rv = unsafe { ogr::OGR_L_CreateFeature(self.c_layer, c_feature) };
+        assert_eq!(rv, ogr::OGRERR_NONE);
+    }
 }
 
 pub struct FeatureIterator<'a> {

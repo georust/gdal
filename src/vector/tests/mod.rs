@@ -170,7 +170,18 @@ fn test_convex_hull() {
 
 #[test]
 fn test_write_features() {
-    let driver = Driver::get("GeoJSON").unwrap();
-    let mut ds = driver.create(fixture!("output.geojson")).unwrap();
-    let layer = ds.create_layer();
+    {
+        let driver = Driver::get("GeoJSON").unwrap();
+        let mut ds = driver.create(fixture!("output.geojson")).unwrap();
+        let mut layer = ds.create_layer();
+        layer.create_feature(Geometry::from_wkt("POINT (1 2)"));
+        // dataset is closed here
+    }
+
+    let mut ds = Dataset::open(fixture!("output.geojson")).unwrap();
+    let layer = ds.layer(0).unwrap();
+    let wkt_list = layer.features()
+        .map(|f| f.geometry().wkt())
+        .collect::<Vec<String>>();
+    assert_eq!(wkt_list, vec!("POINT (1 2)"));
 }

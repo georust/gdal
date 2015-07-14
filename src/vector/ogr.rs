@@ -13,13 +13,16 @@ extern {
     pub fn OGR_L_GetLayerDefn(hLayer: *const ()) -> *const ();
     pub fn OGR_L_GetNextFeature(hLayer: *const ()) -> *const ();
     pub fn OGR_L_SetSpatialFilter(hLayer: *const (), hGeom: *const ());
+    pub fn OGR_L_CreateFeature(hLayer: *const(), hFeat: *const()) -> c_int;
     pub fn OGR_FD_GetFieldCount(hDefn: *const ()) -> c_int;
     pub fn OGR_FD_GetFieldDefn(hDefn: *const (), iField: c_int) -> *const ();
+    pub fn OGR_F_Create(hDefn: *const ()) -> *const ();
     pub fn OGR_F_GetFieldIndex(hFeat: *const (), pszName: *const c_char) -> c_int;
     pub fn OGR_F_GetFieldDefnRef(hFeat: *const (), i: c_int) -> *const ();
     pub fn OGR_F_GetFieldAsString(hFeat: *const (), iField: c_int) -> *const c_char;
     pub fn OGR_F_GetFieldAsDouble(hFeat: *const (), iField: c_int) -> c_double;
     pub fn OGR_F_GetGeometryRef(hFeat: *const ()) -> *const ();
+    pub fn OGR_F_SetGeometryDirectly(hFeat: *const (), hGeom: *const ()) -> c_int;
     pub fn OGR_F_Destroy(hFeat: *const ());
     pub fn OGR_G_CreateGeometry(eGeometryType: c_int) -> *const ();
     pub fn OGR_G_CreateFromWkt(ppszData: &mut *const c_char, hSRS: *const (), phGeometry: &mut *const ()) -> c_int;

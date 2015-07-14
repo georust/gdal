@@ -14,6 +14,8 @@ impl Defn {
         Defn{c_defn: c_defn}
     }
 
+    pub unsafe fn c_defn(&self) -> *const () { self.c_defn }
+
     /// Iterate over the field schema of this layer.
     pub fn fields(&self) -> FieldIterator {
         let total = unsafe { ogr::OGR_FD_GetFieldCount(self.c_defn) } as isize;
