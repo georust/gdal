@@ -31,7 +31,7 @@ fn test_layer_count() {
 
 
 fn with_features<F>(name: &str, f: F) where F: Fn(FeatureIterator) {
-    let ds = Dataset::open(fixture!(name)).unwrap();
+    let mut ds = Dataset::open(fixture!(name)).unwrap();
     let layer = ds.layer(0).unwrap();
     f(layer.features());
 }
@@ -122,7 +122,7 @@ fn test_json() {
 
 #[test]
 fn test_schema() {
-    let ds = Dataset::open(fixture!("roads.geojson")).unwrap();
+    let mut ds = Dataset::open(fixture!("roads.geojson")).unwrap();
     let layer = ds.layer(0).unwrap();
     let name_list: Vec<String> = layer
         .defn().fields()
@@ -143,7 +143,7 @@ fn test_create_bbox() {
 
 #[test]
 fn test_spatial_filter() {
-    let ds = Dataset::open(fixture!("roads.geojson")).unwrap();
+    let mut ds = Dataset::open(fixture!("roads.geojson")).unwrap();
     let layer = ds.layer(0).unwrap();
 
     let all_features: Vec<Feature> = layer.features().collect();

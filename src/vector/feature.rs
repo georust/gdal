@@ -7,14 +7,14 @@ use vector::geometry::Geometry;
 
 /// OGR Feature
 pub struct Feature<'a> {
-    _layer: &'a Layer<'a>,
+    _layer: &'a Layer,
     c_feature: *const (),
     geometry: Geometry,
 }
 
 
 impl<'a> Feature<'a> {
-    pub unsafe fn _with_layer(layer: &'a Layer<'a>, c_feature: *const ()) -> Feature<'a> {
+    pub unsafe fn _with_layer(layer: &'a Layer, c_feature: *const ()) -> Feature {
         return Feature{
             _layer: layer,
             c_feature: c_feature,
