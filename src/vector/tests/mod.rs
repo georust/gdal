@@ -1,5 +1,5 @@
 use std::path::Path;
-use super::{Dataset, Feature, FeatureIterator, Geometry};
+use super::{Driver, Dataset, Feature, FeatureIterator, Geometry};
 
 mod convert_geo;
 
@@ -31,7 +31,7 @@ fn test_layer_count() {
 
 
 fn with_features<F>(name: &str, f: F) where F: Fn(FeatureIterator) {
-    let ds = Dataset::open(fixture!(name)).unwrap();
+    let mut ds = Dataset::open(fixture!(name)).unwrap();
     let layer = ds.layer(0).unwrap();
     f(layer.features());
 }
@@ -122,10 +122,10 @@ fn test_json() {
 
 #[test]
 fn test_schema() {
-    let ds = Dataset::open(fixture!("roads.geojson")).unwrap();
+    let mut ds = Dataset::open(fixture!("roads.geojson")).unwrap();
     let layer = ds.layer(0).unwrap();
     let name_list: Vec<String> = layer
-        .fields()
+        .defn().fields()
         .map(|f| f.name())
         .collect();
     let ok_names: Vec<String> = vec!(
@@ -143,7 +143,7 @@ fn test_create_bbox() {
 
 #[test]
 fn test_spatial_filter() {
-    let ds = Dataset::open(fixture!("roads.geojson")).unwrap();
+    let mut ds = Dataset::open(fixture!("roads.geojson")).unwrap();
     let layer = ds.layer(0).unwrap();
 
     let all_features: Vec<Feature> = layer.features().collect();
@@ -166,4 +166,25 @@ fn test_convex_hull() {
     let star = "POLYGON ((0 1,3 1,1 3,1.5 0.0,2 3,0 1))";
     let hull = "POLYGON ((1.5 0.0,0 1,1 3,2 3,3 1,1.5 0.0))";
     assert_eq!(Geometry::from_wkt(star).convex_hull().wkt(), hull);
+}
+
+#[test]
+fn test_write_features() {
+    use std::fs;
+
+    {
+        let driver = Driver::get("GeoJSON").unwrap();
+        let mut ds = driver.create(fixture!("output.geojson")).unwrap();
+        let mut layer = ds.create_layer();
+        layer.create_feature(Geometry::from_wkt("POINT (1 2)"));
+        // dataset is closed here
+    }
+
+    let mut ds = Dataset::open(fixture!("output.geojson")).unwrap();
+    fs::remove_file(fixture!("output.geojson")).unwrap();
+    let layer = ds.layer(0).unwrap();
+    let wkt_list = layer.features()
+        .map(|f| f.geometry().wkt())
+        .collect::<Vec<String>>();
+    assert_eq!(wkt_list, vec!("POINT (1 2)"));
 }

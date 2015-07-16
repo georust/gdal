@@ -6,7 +6,7 @@
 //! use std::path::Path;
 //! use gdal::vector::Dataset;
 //!
-//! let dataset = Dataset::open(Path::new("fixtures/roads.geojson")).unwrap();
+//! let mut dataset = Dataset::open(Path::new("fixtures/roads.geojson")).unwrap();
 //! let layer = dataset.layer(0).unwrap();
 //! for feature in layer.features() {
 //!     let highway_field = feature.field("highway").unwrap();
@@ -16,8 +16,10 @@
 //! ```
 
 
+pub use vector::driver::Driver;
 pub use vector::dataset::Dataset;
-pub use vector::layer::{Layer, FieldIterator, Field, FeatureIterator};
+pub use vector::layer::{Layer, FeatureIterator};
+pub use vector::defn::{Defn, FieldIterator, Field};
 pub use vector::feature::{Feature, FieldValue};
 pub use vector::geometry::Geometry;
 
@@ -27,8 +29,10 @@ pub trait ToGdal {
 }
 
 mod ogr;
+mod driver;
 mod dataset;
 mod layer;
+mod defn;
 mod feature;
 mod geometry;
 mod gdal_to_geo;
