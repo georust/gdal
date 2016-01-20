@@ -117,7 +117,7 @@ impl Dataset {
         ) -> ByteBuffer
     {
         let nbytes = size.x * size.y;
-        let mut data: Vec<u8> = (0..nbytes).map(|_| 0u8).collect();
+        let mut data: Vec<u8> = Vec::with_capacity(nbytes);
         unsafe {
             let c_band = gdal::GDALGetRasterBand(self.c_dataset, band_index as c_int);
             let rv = gdal::GDALRasterIO(
@@ -135,6 +135,7 @@ impl Dataset {
                 0
             ) as isize;
             assert!(rv == 0);
+            data.set_len(nbytes);
         };
         return ByteBuffer{
             size: size,
