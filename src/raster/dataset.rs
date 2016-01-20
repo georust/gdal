@@ -76,7 +76,7 @@ impl Dataset {
 
     pub fn geo_transform(&self) -> Vec<f64> {
         let mut tr: Vec<c_double> = Vec::with_capacity(6);
-        for _ in (0isize..6) { tr.push(0.0); }
+        for _ in 0isize..6 { tr.push(0.0); }
         let rv = unsafe {
             gdal::GDALGetGeoTransform(
                 self.c_dataset,
