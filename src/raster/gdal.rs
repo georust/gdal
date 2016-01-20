@@ -1,4 +1,5 @@
 use libc::{c_int, c_char, c_double};
+use super::gdal_enums::*;
 
 #[link(name="gdal")]
 extern {
@@ -12,7 +13,7 @@ extern {
             nXSize: c_int,
             nYSize: c_int,
             nBands: c_int,
-            eBandType: c_int,
+            eBandType: GDALDataType,
             papszOptions: *const *const c_char
         ) -> *const ();
     pub fn GDALCreateCopy(
@@ -24,7 +25,7 @@ extern {
             pfnProgres: *const (),
             pProgressData: *const ()
         ) -> *const ();
-    pub fn GDALOpen(pszFilename: *const c_char, eAccess: c_int) -> *const ();
+    pub fn GDALOpen(pszFilename: *const c_char, eAccess: GDALAccess) -> *const ();
     pub fn GDALClose(hDS: *const ());
     pub fn GDALGetDatasetDriver(hDataset: *const ()) -> *const ();
     pub fn GDALGetRasterXSize(hDataset: *const ()) -> c_int;
@@ -37,7 +38,7 @@ extern {
     pub fn GDALGetRasterBand(hDS: *const (), nBandId: c_int) -> *const ();
     pub fn GDALRasterIO(
             hBand: *const (),
-            eRWFlag: c_int,
+            eRWFlag: GDALRWFlag,
             nXOff: c_int,
             nYOff: c_int,
             nXSize: c_int,
@@ -45,7 +46,7 @@ extern {
             pData: *const (),
             nBufXSize: c_int,
             nBufYSize: c_int,
-            GDALDataType: c_int,
+            GDALDataType: GDALDataType,
             nPixelSpace: c_int,
             nLineSpace: c_int
         ) -> c_int;
@@ -54,7 +55,7 @@ extern {
         pszSrcWKT: *const c_char,
         hDstDS: *const (),
         pszDstWKT: *const c_char,
-        eResampleAlg: c_int,
+        eResampleAlg: GDALResampleAlg,
         dfWarpMemoryLimit: c_double,
         dfMaxError: c_double,
         pfnProgress: *const (),
@@ -63,9 +64,4 @@ extern {
     ) -> c_int;
 }
 
-pub const GA_READONLY:  c_int = 0;
-pub const GDT_BYTE:     c_int = 1;
-pub const GF_READ:      c_int = 0;
-pub const GF_WRITE:     c_int = 1;
-pub static GRA_BILINEAR:           c_int = 1;
 pub static REPROJECT_MEMORY_LIMIT: c_double = 0.0;

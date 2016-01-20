@@ -1,6 +1,7 @@
 use libc::c_double;
 use std::ptr::null;
 use raster::{gdal, Dataset};
+use raster::gdal_enums::GDALResampleAlg;
 
 pub fn reproject(src: &Dataset, dst: &Dataset) {
     let rv = unsafe {
@@ -9,7 +10,7 @@ pub fn reproject(src: &Dataset, dst: &Dataset) {
                 null(),
                 dst._c_ptr(),
                 null(),
-                gdal::GRA_BILINEAR,
+                GDALResampleAlg::GRA_Bilinear,
                 gdal::REPROJECT_MEMORY_LIMIT,
                 0.0 as c_double,
                 null(),

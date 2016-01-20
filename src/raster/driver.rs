@@ -3,6 +3,7 @@ use std::ffi::CString;
 use std::sync::{Once, ONCE_INIT};
 use utils::_string;
 use raster::{gdal, Dataset};
+use raster::gdal_enums::{GDALDataType};
 
 
 static START: Once = ONCE_INIT;
@@ -68,7 +69,7 @@ impl Driver {
                 size_x as c_int,
                 size_y as c_int,
                 bands as c_int,
-                gdal::GDT_BYTE,
+                GDALDataType::GDT_Byte,
                 null()
             ) };
         return match c_dataset.is_null() {

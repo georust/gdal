@@ -5,6 +5,7 @@ use super::super::geom::Point;
 use utils::_string;
 use raster::{gdal, Driver};
 use raster::driver::_register_drivers;
+use raster::gdal_enums::{GDALRWFlag, GDALAccess, GDALDataType};
 
 
 pub struct Dataset {
@@ -24,7 +25,7 @@ impl Dataset {
         _register_drivers();
         let filename = path.to_str().unwrap();
         let c_filename = CString::new(filename.as_bytes()).unwrap();
-        let c_dataset = unsafe { gdal::GDALOpen(c_filename.as_ptr(), gdal::GA_READONLY) };
+        let c_dataset = unsafe { gdal::GDALOpen(c_filename.as_ptr(), GDALAccess::GA_ReadOnly) };
         return match c_dataset.is_null() {
             true  => None,
             false => Some(Dataset{c_dataset: c_dataset}),
@@ -122,7 +123,7 @@ impl Dataset {
             let c_band = gdal::GDALGetRasterBand(self.c_dataset, band_index as c_int);
             let rv = gdal::GDALRasterIO(
                 c_band,
-                gdal::GF_READ,
+                GDALRWFlag::GF_Read,
                 window.x as c_int,
                 window.y as c_int,
                 window_size.x as c_int,
@@ -130,7 +131,7 @@ impl Dataset {
                 data.as_mut_ptr() as *const (),
                 size.x as c_int,
                 size.y as c_int,
-                gdal::GDT_BYTE,
+                GDALDataType::GDT_Byte,
                 0,
                 0
             ) as isize;
@@ -155,7 +156,7 @@ impl Dataset {
             let c_band = gdal::GDALGetRasterBand(self.c_dataset, band_index as c_int);
             let rv = gdal::GDALRasterIO(
                 c_band,
-                gdal::GF_WRITE,
+                GDALRWFlag::GF_Write,
                 window.x as c_int,
                 window.y as c_int,
                 window_size.x as c_int,
@@ -163,7 +164,7 @@ impl Dataset {
                 buffer.data.as_ptr() as *const (),
                 buffer.size.x as c_int,
                 buffer.size.y as c_int,
-                gdal::GDT_BYTE,
+                GDALDataType::GDT_Byte,
                 0,
                 0
             ) as isize;

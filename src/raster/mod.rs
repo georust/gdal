@@ -5,6 +5,7 @@ pub use raster::driver::Driver;
 pub use raster::warp::reproject;
 
 mod gdal;
+mod gdal_enums;
 pub mod dataset;
 pub mod driver;
 pub mod warp;
