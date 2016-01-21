@@ -6,6 +6,7 @@ use utils::_string;
 use raster::{gdal, Driver};
 use raster::driver::_register_drivers;
 use raster::gdal_enums::{GDALRWFlag, GDALAccess, GDALDataType};
+use raster::types::GdalType;
 
 
 pub struct Dataset {
@@ -173,8 +174,15 @@ impl Dataset {
     }
 }
 
-
-pub struct ByteBuffer {
+pub struct Buffer<T: GdalType> {
     pub size: Point<usize>,
-    pub data: Vec<u8>,
+    pub data: Vec<T>,
 }
+
+impl<T: GdalType> Buffer<T> {
+    pub fn new(size: Point<usize>, data: Vec<T>) -> Buffer<T> {
+        Buffer{size: size, data: data}
+    }
+}
+
+pub type ByteBuffer = Buffer<u8>;
