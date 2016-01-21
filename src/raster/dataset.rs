@@ -111,6 +111,12 @@ impl Dataset {
         };
     }
 
+    /// Read a 'Buffer<u8>' from a 'Dataset'.
+    /// # Arguments
+    /// * band_index - the band_index
+    /// * window - the window position from top left
+    /// * window_size - the window size (GDAL will interpolate data if window_size != buffer_size)
+    /// * buffer_size - the desired size of the 'Buffer'
     pub fn read_raster(&self,
         band_index: isize,
         window: Point<isize>,
@@ -118,8 +124,55 @@ impl Dataset {
         size: Point<usize>
         ) -> ByteBuffer
     {
-        let nbytes = size.x * size.y;
-        let mut data: Vec<u8> = Vec::with_capacity(nbytes);
+        self.read_raster_as::<u8>(
+            band_index,
+            window,
+            window_size,
+            size
+        )
+    }
+
+    /// Read a full 'Dataset' as 'Buffer<T>'.
+    /// # Arguments
+    /// * band_index - the band_index
+    pub fn read_full_raster_as<T: Copy + GdalType>(
+        &self,
+        band_index: isize,
+    ) -> Buffer<T>
+    {
+        let size_x;
+        let size_y;
+
+        unsafe{
+            size_x = gdal::GDALGetRasterXSize(self.c_dataset) as usize;
+            size_y = gdal::GDALGetRasterYSize(self.c_dataset) as usize;
+        }
+
+        self.read_raster_as::<T>(
+            band_index,
+            Point::new(0, 0),
+            Point::new(size_x, size_y),
+            Point::new(size_y, size_y)
+        )
+    }
+
+    /// Read a 'Buffer<T>' from a 'Dataset'. T implements 'GdalType'
+    /// # Arguments
+    /// * band_index - the band_index
+    /// * window - the window position from top left
+    /// * window_size - the window size (GDAL will interpolate data if window_size != buffer_size)
+    /// * buffer_size - the desired size of the 'Buffer'
+    pub fn read_raster_as<T: Copy + GdalType>(
+        &self,
+        band_index: isize,
+        window: Point<isize>,
+        window_size: Point<usize>,
+        size: Point<usize>
+    ) -> Buffer<T>
+    {
+        let pixels = (size.x * size.y) as usize;
+        let mut data: Vec<T> = Vec::with_capacity(pixels);
+        //let no_data:
         unsafe {
             let c_band = gdal::GDALGetRasterBand(self.c_dataset, band_index as c_int);
             let rv = gdal::GDALRasterIO(
@@ -132,25 +185,30 @@ impl Dataset {
                 data.as_mut_ptr() as *const (),
                 size.x as c_int,
                 size.y as c_int,
-                GDALDataType::GDT_Byte,
+                T::gdal_type(),
                 0,
                 0
             ) as isize;
             assert!(rv == 0);
-            data.set_len(nbytes);
+            data.set_len(pixels);
         };
-        return ByteBuffer{
+        Buffer{
             size: size,
             data: data,
-        };
+        }
     }
 
-    pub fn write_raster(
+    /// Write a 'Buffer<T>' into a 'Dataset'.
+    /// # Arguments
+    /// * band_index - the band_index
+    /// * window - the window position from top left
+    /// * window_size - the window size (GDAL will interpolate data if window_size != Buffer.size)
+    pub fn write_raster<T: GdalType+Copy>(
         &self,
         band_index: isize,
         window: Point<isize>,
         window_size: Point<usize>,
-        buffer: ByteBuffer
+        buffer: Buffer<T>
     ) {
         assert_eq!(buffer.data.len(), buffer.size.x * buffer.size.y);
         unsafe {
@@ -165,12 +223,27 @@ impl Dataset {
                 buffer.data.as_ptr() as *const (),
                 buffer.size.x as c_int,
                 buffer.size.y as c_int,
-                GDALDataType::GDT_Byte,
+                T::gdal_type(),
                 0,
                 0
             ) as isize;
             assert!(rv == 0);
         };
+    }
+
+
+    pub fn get_band_type(&self, band_index: isize) -> Option<GDALDataType> {
+
+        let band_count = self.count();
+        if band_index < 1 || band_count < band_index {
+            return None
+        }
+
+        let gdal_type: c_int;
+        unsafe{
+            gdal_type = gdal::GDALGetRasterDataType(gdal::GDALGetRasterBand(self.c_dataset, band_index as c_int));
+        }
+        Some(GDALDataType::from_c_int(gdal_type))
     }
 }
 

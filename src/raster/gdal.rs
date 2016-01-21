@@ -31,6 +31,7 @@ extern {
     pub fn GDALGetRasterXSize(hDataset: *const ()) -> c_int;
     pub fn GDALGetRasterYSize(hDataset: *const ()) -> c_int;
     pub fn GDALGetRasterCount(hDataset: *const ()) -> c_int;
+    pub fn GDALGetRasterDataType(hBand: *const()) -> c_int;
     pub fn GDALGetProjectionRef(hDS: *const ()) -> *const c_char;
     pub fn GDALSetProjection(hDS: *const (), pszProjection: *const c_char) -> c_int;
     pub fn GDALSetGeoTransform(hDS: *const (), padfTransform: *const c_double) -> c_int;

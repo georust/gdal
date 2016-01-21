@@ -1,6 +1,7 @@
 use std::path::Path;
 use super::super::geom::Point;
 use super::{ByteBuffer, Driver, Dataset};
+use super::gdal_enums::{GDALDataType};
 
 
 macro_rules! fixture {
@@ -123,6 +124,15 @@ fn test_create() {
     assert_eq!(dataset.driver().short_name(), "MEM");
 }
 
+#[test]
+fn test_create_with_band_type() {
+    let driver = Driver::get("MEM").unwrap();
+    let dataset = driver.create_with_band_type::<f32>("", 10, 20, 3).unwrap();
+    assert_eq!(dataset.size(), (10, 20));
+    assert_eq!(dataset.count(), 3);
+    assert_eq!(dataset.driver().short_name(), "MEM");
+    assert_eq!(dataset.get_band_type(1), Some(GDALDataType::GDT_Float32))
+}
 
 #[test]
 fn test_create_copy() {
@@ -154,4 +164,37 @@ fn test_get_driver_by_name() {
     let driver = ok_driver.unwrap();
     assert_eq!(driver.short_name(), "GTiff");
     assert_eq!(driver.long_name(), "GeoTIFF");
+}
+
+#[test]
+fn test_read_raster_as() {
+    let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
+    let rv = dataset.read_raster_as::<u8>(
+        1,
+        Point::new(20, 30),
+        Point::new(2, 3),
+        Point::new(2, 3)
+    );
+    assert_eq!(rv.data, vec!(7, 7, 7, 10, 8, 12));
+    assert_eq!(rv.size.x, 2);
+    assert_eq!(rv.size.y, 3);
+    assert_eq!(dataset.get_band_type(1), Some(GDALDataType::GDT_Byte));
+}
+
+#[test]
+fn test_read_full_raster_as() {
+    let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
+    let rv = dataset.read_full_raster_as::<u8>(1);
+    assert_eq!(rv.size.x, 50);
+    assert_eq!(rv.size.y, 50);
+    assert_eq!(dataset.get_band_type(1), Some(GDALDataType::GDT_Byte));
+    //TODO: find a value to assert?
+}
+
+#[test]
+fn test_get_band_type() {
+    let driver = Driver::get("MEM").unwrap();
+    let dataset = driver.create("", 20, 10, 1).unwrap();
+    assert_eq!(dataset.get_band_type(1), Some(GDALDataType::GDT_Byte));
+    assert_eq!(dataset.get_band_type(2), None);
 }

@@ -3,7 +3,7 @@ use std::ffi::CString;
 use std::sync::{Once, ONCE_INIT};
 use utils::_string;
 use raster::{gdal, Dataset};
-use raster::gdal_enums::{GDALDataType};
+use raster::types::GdalType;
 
 
 static START: Once = ONCE_INIT;
@@ -61,6 +61,21 @@ impl Driver {
         size_y: isize,
         bands: isize
     ) -> Option<Dataset> {
+        self.create_with_band_type::<u8>(
+            filename,
+            size_x,
+            size_y,
+            bands,
+        )
+    }
+
+    pub fn create_with_band_type<T: GdalType>(
+        &self,
+        filename: &str,
+        size_x: isize,
+        size_y: isize,
+        bands: isize,
+    ) -> Option<Dataset> {
         use std::ptr::null;
         let c_filename = CString::new(filename.as_bytes()).unwrap();
         let c_dataset = unsafe { gdal::GDALCreate(
@@ -69,7 +84,7 @@ impl Driver {
                 size_x as c_int,
                 size_y as c_int,
                 bands as c_int,
-                GDALDataType::GDT_Byte,
+                T::gdal_type(),
                 null()
             ) };
         return match c_dataset.is_null() {

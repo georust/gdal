@@ -1,6 +1,6 @@
 use libc::{c_int};
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 #[allow(dead_code)]
 #[repr(C)]
 pub enum GDALDataType {
