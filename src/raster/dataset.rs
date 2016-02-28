@@ -1,7 +1,6 @@
 use libc::{c_int, c_double, c_void};
 use std::ffi::CString;
 use std::path::Path;
-use super::super::geom::Point;
 use utils::_string;
 use raster::{gdal, Driver};
 use raster::driver::_register_drivers;
@@ -119,9 +118,9 @@ impl Dataset {
     /// * buffer_size - the desired size of the 'Buffer'
     pub fn read_raster(&self,
         band_index: isize,
-        window: Point<isize>,
-        window_size: Point<usize>,
-        size: Point<usize>
+        window: (isize, isize),
+        window_size: (usize, usize),
+        size: (usize, usize)
         ) -> ByteBuffer
     {
         self.read_raster_as::<u8>(
@@ -150,9 +149,9 @@ impl Dataset {
 
         self.read_raster_as::<T>(
             band_index,
-            Point::new(0, 0),
-            Point::new(size_x, size_y),
-            Point::new(size_y, size_y)
+            (0, 0),
+            (size_x, size_y),
+            (size_y, size_y)
         )
     }
 
@@ -165,12 +164,12 @@ impl Dataset {
     pub fn read_raster_as<T: Copy + GdalType>(
         &self,
         band_index: isize,
-        window: Point<isize>,
-        window_size: Point<usize>,
-        size: Point<usize>
+        window: (isize, isize),
+        window_size: (usize, usize),
+        size: (usize, usize),
     ) -> Buffer<T>
     {
-        let pixels = (size.x * size.y) as usize;
+        let pixels = (size.0 * size.1) as usize;
         let mut data: Vec<T> = Vec::with_capacity(pixels);
         //let no_data:
         unsafe {
@@ -178,13 +177,13 @@ impl Dataset {
             let rv = gdal::GDALRasterIO(
                 c_band,
                 GDALRWFlag::GF_Read,
-                window.x as c_int,
-                window.y as c_int,
-                window_size.x as c_int,
-                window_size.y as c_int,
+                window.0 as c_int,
+                window.1 as c_int,
+                window_size.0 as c_int,
+                window_size.1 as c_int,
                 data.as_mut_ptr() as *const c_void,
-                size.x as c_int,
-                size.y as c_int,
+                size.0 as c_int,
+                size.1 as c_int,
                 T::gdal_type(),
                 0,
                 0
@@ -206,23 +205,23 @@ impl Dataset {
     pub fn write_raster<T: GdalType+Copy>(
         &self,
         band_index: isize,
-        window: Point<isize>,
-        window_size: Point<usize>,
+        window: (isize, isize),
+        window_size: (usize, usize),
         buffer: Buffer<T>
     ) {
-        assert_eq!(buffer.data.len(), buffer.size.x * buffer.size.y);
+        assert_eq!(buffer.data.len(), buffer.size.0 * buffer.size.1);
         unsafe {
             let c_band = gdal::GDALGetRasterBand(self.c_dataset, band_index as c_int);
             let rv = gdal::GDALRasterIO(
                 c_band,
                 GDALRWFlag::GF_Write,
-                window.x as c_int,
-                window.y as c_int,
-                window_size.x as c_int,
-                window_size.y as c_int,
+                window.0 as c_int,
+                window.1 as c_int,
+                window_size.0 as c_int,
+                window_size.1 as c_int,
                 buffer.data.as_ptr() as *const c_void,
-                buffer.size.x as c_int,
-                buffer.size.y as c_int,
+                buffer.size.0 as c_int,
+                buffer.size.1 as c_int,
                 T::gdal_type(),
                 0,
                 0
@@ -248,12 +247,12 @@ impl Dataset {
 }
 
 pub struct Buffer<T: GdalType> {
-    pub size: Point<usize>,
+    pub size: (usize, usize),
     pub data: Vec<T>,
 }
 
 impl<T: GdalType> Buffer<T> {
-    pub fn new(size: Point<usize>, data: Vec<T>) -> Buffer<T> {
+    pub fn new(size: (usize, usize), data: Vec<T>) -> Buffer<T> {
         Buffer{size: size, data: data}
     }
 }
