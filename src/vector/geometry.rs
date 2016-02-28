@@ -1,5 +1,5 @@
 use std::ptr::null;
-use libc::{c_char, c_int, c_double};
+use libc::{c_char, c_int, c_double, c_void};
 use std::ffi::CString;
 use std::cell::RefCell;
 use utils::_string;
@@ -7,7 +7,7 @@ use vector::ogr;
 
 /// OGR Geometry
 pub struct Geometry {
-    c_geometry_ref: RefCell<Option<*const ()>>,
+    c_geometry_ref: RefCell<Option<*const c_void>>,
     owned: bool,
 }
 
@@ -32,13 +32,13 @@ impl Geometry {
         return self.c_geometry_ref.borrow().is_some();
     }
 
-    pub unsafe fn set_c_geometry(&self, c_geometry: *const ()) {
+    pub unsafe fn set_c_geometry(&self, c_geometry: *const c_void) {
         assert!(! self.has_gdal_ptr());
         assert_eq!(self.owned, false);
         *(self.c_geometry_ref.borrow_mut()) = Some(c_geometry);
     }
 
-    unsafe fn with_c_geometry(c_geom: *const(), owned: bool) -> Geometry {
+    unsafe fn with_c_geometry(c_geom: *const c_void, owned: bool) -> Geometry {
         return Geometry{
             c_geometry_ref: RefCell::new(Some(c_geom)),
             owned: owned,
@@ -56,7 +56,7 @@ impl Geometry {
     pub fn from_wkt(wkt: &str) -> Geometry {
         let c_wkt = CString::new(wkt.as_bytes()).unwrap();
         let mut c_wkt_ptr: *const c_char = c_wkt.as_ptr();
-        let mut c_geom: *const () = null();
+        let mut c_geom: *const c_void = null();
         let rv = unsafe { ogr::OGR_G_CreateFromWkt(&mut c_wkt_ptr, null(), &mut c_geom) };
         assert_eq!(rv, ogr::OGRERR_NONE);
         return unsafe { Geometry::with_c_geometry(c_geom, true) };
@@ -78,7 +78,7 @@ impl Geometry {
     pub fn json(&self) -> String {
         let c_json = unsafe { ogr::OGR_G_ExportToJson(self.c_geometry()) };
         let rv = _string(c_json);
-        unsafe { ogr::VSIFree(c_json as *mut ()) };
+        unsafe { ogr::VSIFree(c_json as *mut c_void) };
         return rv;
     }
 
@@ -88,15 +88,15 @@ impl Geometry {
         let _err = unsafe { ogr::OGR_G_ExportToWkt(self.c_geometry(), &mut c_wkt) };
         assert_eq!(_err, ogr::OGRERR_NONE);
         let wkt = _string(c_wkt);
-        unsafe { ogr::OGRFree(c_wkt as *mut ()) };
+        unsafe { ogr::OGRFree(c_wkt as *mut c_void) };
         return wkt;
     }
 
-    pub unsafe fn c_geometry(&self) -> *const () {
+    pub unsafe fn c_geometry(&self) -> *const c_void {
         return self.c_geometry_ref.borrow().unwrap();
     }
 
-    pub unsafe fn into_c_geometry(mut self) -> *const () {
+    pub unsafe fn into_c_geometry(mut self) -> *const c_void {
         assert!(self.owned);
         self.owned = false;
         return self.c_geometry();
@@ -153,7 +153,7 @@ impl Drop for Geometry {
     fn drop(&mut self) {
         if self.owned {
             let c_geometry = self.c_geometry_ref.borrow();
-            unsafe { ogr::OGR_G_DestroyGeometry(c_geometry.unwrap() as *mut ()) };
+            unsafe { ogr::OGR_G_DestroyGeometry(c_geometry.unwrap() as *mut c_void) };
         }
     }
 }

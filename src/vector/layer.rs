@@ -1,4 +1,5 @@
 use std::ptr::null;
+use libc::{c_void};
 use vector::{ogr, Feature, Geometry};
 use vector::defn::Defn;
 
@@ -15,13 +16,13 @@ use vector::defn::Defn;
 /// }
 /// ```
 pub struct Layer {
-    c_layer: *const (),
+    c_layer: *const c_void,
     defn: Defn,
 }
 
 
 impl Layer {
-    pub unsafe fn _with_c_layer(c_layer: *const ()) -> Layer {
+    pub unsafe fn _with_c_layer(c_layer: *const c_void) -> Layer {
         let c_defn = ogr::OGR_L_GetLayerDefn(c_layer);
         let defn = Defn::_with_c_defn(c_defn);
         return Layer{c_layer: c_layer, defn: defn};

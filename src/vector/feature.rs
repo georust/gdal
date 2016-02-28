@@ -1,4 +1,5 @@
 use std::ffi::CString;
+use libc::{c_void};
 use vector::Defn;
 use utils::_string;
 use vector::ogr;
@@ -8,13 +9,13 @@ use vector::geometry::Geometry;
 /// OGR Feature
 pub struct Feature<'a> {
     _defn: &'a Defn,
-    c_feature: *const (),
+    c_feature: *const c_void,
     geometry: Geometry,
 }
 
 
 impl<'a> Feature<'a> {
-    pub unsafe fn _with_c_feature(defn: &'a Defn, c_feature: *const ()) -> Feature {
+    pub unsafe fn _with_c_feature(defn: &'a Defn, c_feature: *const c_void) -> Feature {
         return Feature{
             _defn: defn,
             c_feature: c_feature,

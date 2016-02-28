@@ -1,7 +1,7 @@
 use std::ffi::CString;
 use std::path::Path;
 use std::ptr::null;
-use libc::c_int;
+use libc::{c_int, c_void};
 use vector::{ogr, Layer};
 use vector::driver::_register_drivers;
 
@@ -15,13 +15,13 @@ use vector::driver::_register_drivers;
 /// println!("Dataset has {} layers", dataset.count());
 /// ```
 pub struct Dataset {
-    c_dataset: *const (),
+    c_dataset: *const c_void,
     layers: Vec<Layer>,
 }
 
 
 impl Dataset {
-    pub unsafe fn _with_c_dataset(c_dataset: *const ()) -> Dataset {
+    pub unsafe fn _with_c_dataset(c_dataset: *const c_void) -> Dataset {
         Dataset{c_dataset: c_dataset, layers: vec!()}
     }
 
@@ -42,7 +42,7 @@ impl Dataset {
         return unsafe { ogr::OGR_DS_GetLayerCount(self.c_dataset) } as isize;
     }
 
-    fn _child_layer(&mut self, c_layer: *const ()) -> &Layer {
+    fn _child_layer(&mut self, c_layer: *const c_void) -> &Layer {
         let layer = unsafe { Layer::_with_c_layer(c_layer) };
         self.layers.push(layer);
         return self.layers.last().unwrap();

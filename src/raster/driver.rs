@@ -1,4 +1,4 @@
-use libc::c_int;
+use libc::{c_int, c_void};
 use std::ffi::CString;
 use std::sync::{Once, ONCE_INIT};
 use utils::_string;
@@ -21,7 +21,7 @@ pub fn _register_drivers() {
 
 #[allow(missing_copy_implementations)]
 pub struct Driver {
-    c_driver: *const (),
+    c_driver: *const c_void,
 }
 
 
@@ -36,11 +36,11 @@ impl Driver {
         };
     }
 
-    pub unsafe fn _with_c_ptr(c_driver: *const ()) -> Driver {
+    pub unsafe fn _with_c_ptr(c_driver: *const c_void) -> Driver {
         return Driver{c_driver: c_driver};
     }
 
-    pub unsafe fn _c_ptr(&self) -> *const () {
+    pub unsafe fn _c_ptr(&self) -> *const c_void {
         return self.c_driver;
     }
 

@@ -1,4 +1,4 @@
-use libc::{c_int, c_double};
+use libc::{c_int, c_double, c_void};
 use std::ffi::CString;
 use std::path::Path;
 use super::super::geom::Point;
@@ -10,7 +10,7 @@ use raster::types::GdalType;
 
 
 pub struct Dataset {
-    c_dataset: *const (),
+    c_dataset: *const c_void,
 }
 
 
@@ -33,11 +33,11 @@ impl Dataset {
         };
     }
 
-    pub unsafe fn _with_c_ptr(c_dataset: *const ()) -> Dataset {
+    pub unsafe fn _with_c_ptr(c_dataset: *const c_void) -> Dataset {
         return Dataset{c_dataset: c_dataset};
     }
 
-    pub unsafe fn _c_ptr(&self) -> *const () {
+    pub unsafe fn _c_ptr(&self) -> *const c_void {
         return self.c_dataset;
     }
 
@@ -182,7 +182,7 @@ impl Dataset {
                 window.y as c_int,
                 window_size.x as c_int,
                 window_size.y as c_int,
-                data.as_mut_ptr() as *const (),
+                data.as_mut_ptr() as *const c_void,
                 size.x as c_int,
                 size.y as c_int,
                 T::gdal_type(),
@@ -220,7 +220,7 @@ impl Dataset {
                 window.y as c_int,
                 window_size.x as c_int,
                 window_size.y as c_int,
-                buffer.data.as_ptr() as *const (),
+                buffer.data.as_ptr() as *const c_void,
                 buffer.size.x as c_int,
                 buffer.size.y as c_int,
                 T::gdal_type(),
