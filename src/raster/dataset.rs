@@ -7,6 +7,7 @@ use raster::driver::_register_drivers;
 use raster::gdal_enums::{GDALRWFlag, GDALAccess, GDALDataType};
 use raster::types::GdalType;
 
+pub type GeoTransform = [c_double; 6];
 
 pub struct Dataset {
     c_dataset: *const c_void,
@@ -67,7 +68,7 @@ impl Dataset {
         unsafe { gdal::GDALSetProjection(self.c_dataset, c_projection.as_ptr()) };
     }
 
-    pub fn set_geo_transform(&self, tr: &[f64]) {
+    pub fn set_geo_transform(&self, tr: &GeoTransform) {
         assert_eq!(tr.len(), 6);
         let rv = unsafe {
             gdal::GDALSetGeoTransform(self.c_dataset, tr.as_ptr())
@@ -75,9 +76,8 @@ impl Dataset {
         assert!(rv == 0);
     }
 
-    pub fn geo_transform(&self) -> Vec<f64> {
-        let mut tr: Vec<c_double> = Vec::with_capacity(6);
-        for _ in 0isize..6 { tr.push(0.0); }
+    pub fn geo_transform(&self) -> GeoTransform {
+        let mut tr = GeoTransform::default();
         let rv = unsafe {
             gdal::GDALGetGeoTransform(
                 self.c_dataset,
