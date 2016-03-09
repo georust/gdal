@@ -76,7 +76,7 @@ impl Dataset {
         assert!(rv == 0);
     }
 
-    pub fn geo_transform(&self) -> GeoTransform {
+    pub fn geo_transform(&self) -> Option<GeoTransform> {
         let mut tr = GeoTransform::default();
         let rv = unsafe {
             gdal::GDALGetGeoTransform(
@@ -84,8 +84,12 @@ impl Dataset {
                 tr.as_mut_ptr()
             )
         } as isize;
-        assert!(rv == 0);
-        return tr;
+
+        // check if the dataset has a GeoTransform
+        if rv != 0 {
+            return None;
+        }
+        Some(tr)
     }
 
     pub fn create_copy(

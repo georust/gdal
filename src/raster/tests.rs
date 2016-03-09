@@ -149,7 +149,7 @@ fn test_geo_transform() {
     let dataset = driver.create("", 20, 10, 1).unwrap();
     let transform = [0., 1., 0., 0., 0., 1.];
     dataset.set_geo_transform(&transform);
-    assert_eq!(dataset.geo_transform(), transform);
+    assert_eq!(dataset.geo_transform(), Some(transform));
 }
 
 
