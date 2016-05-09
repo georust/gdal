@@ -1,8 +1,9 @@
-use libc::c_int;
+use libc::{c_int, c_void};
 use std::ffi::CString;
 use std::sync::{Once, ONCE_INIT};
 use utils::_string;
 use raster::{gdal, Dataset};
+use raster::types::GdalType;
 
 
 static START: Once = ONCE_INIT;
@@ -20,7 +21,7 @@ pub fn _register_drivers() {
 
 #[allow(missing_copy_implementations)]
 pub struct Driver {
-    c_driver: *const (),
+    c_driver: *const c_void,
 }
 
 
@@ -35,11 +36,11 @@ impl Driver {
         };
     }
 
-    pub unsafe fn _with_c_ptr(c_driver: *const ()) -> Driver {
+    pub unsafe fn _with_c_ptr(c_driver: *const c_void) -> Driver {
         return Driver{c_driver: c_driver};
     }
 
-    pub unsafe fn _c_ptr(&self) -> *const () {
+    pub unsafe fn _c_ptr(&self) -> *const c_void {
         return self.c_driver;
     }
 
@@ -60,6 +61,21 @@ impl Driver {
         size_y: isize,
         bands: isize
     ) -> Option<Dataset> {
+        self.create_with_band_type::<u8>(
+            filename,
+            size_x,
+            size_y,
+            bands,
+        )
+    }
+
+    pub fn create_with_band_type<T: GdalType>(
+        &self,
+        filename: &str,
+        size_x: isize,
+        size_y: isize,
+        bands: isize,
+    ) -> Option<Dataset> {
         use std::ptr::null;
         let c_filename = CString::new(filename.as_bytes()).unwrap();
         let c_dataset = unsafe { gdal::GDALCreate(
@@ -68,7 +84,7 @@ impl Driver {
                 size_x as c_int,
                 size_y as c_int,
                 bands as c_int,
-                gdal::GDT_BYTE,
+                T::gdal_type(),
                 null()
             ) };
         return match c_dataset.is_null() {

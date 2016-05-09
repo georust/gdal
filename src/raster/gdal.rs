@@ -1,71 +1,68 @@
-use libc::{c_int, c_char, c_double};
+use libc::{c_int, c_char, c_double, c_void};
+use super::gdal_enums::*;
 
 #[link(name="gdal")]
 extern {
     pub fn GDALAllRegister();
-    pub fn GDALGetDriverByName(pszName: *const c_char) -> *const ();
-    pub fn GDALGetDriverShortName(hDriver: *const ()) -> *const c_char;
-    pub fn GDALGetDriverLongName(hDriver: *const ()) -> *const c_char;
+    pub fn GDALGetDriverByName(pszName: *const c_char) -> *const c_void;
+    pub fn GDALGetDriverShortName(hDriver: *const c_void) -> *const c_char;
+    pub fn GDALGetDriverLongName(hDriver: *const c_void) -> *const c_char;
     pub fn GDALCreate(
-            hDriver: *const (),
+            hDriver: *const c_void,
             pszFilename: *const c_char,
             nXSize: c_int,
             nYSize: c_int,
             nBands: c_int,
-            eBandType: c_int,
+            eBandType: GDALDataType,
             papszOptions: *const *const c_char
-        ) -> *const ();
+        ) -> *const c_void;
     pub fn GDALCreateCopy(
-            hDriver: *const (),
+            hDriver: *const c_void,
             pszFilename: *const c_char,
-            hSrcDS: *const (),
+            hSrcDS: *const c_void,
             bStrict: c_int,
             papszOptions: *const *const c_char,
-            pfnProgres: *const (),
-            pProgressData: *const ()
-        ) -> *const ();
-    pub fn GDALOpen(pszFilename: *const c_char, eAccess: c_int) -> *const ();
-    pub fn GDALClose(hDS: *const ());
-    pub fn GDALGetDatasetDriver(hDataset: *const ()) -> *const ();
-    pub fn GDALGetRasterXSize(hDataset: *const ()) -> c_int;
-    pub fn GDALGetRasterYSize(hDataset: *const ()) -> c_int;
-    pub fn GDALGetRasterCount(hDataset: *const ()) -> c_int;
-    pub fn GDALGetProjectionRef(hDS: *const ()) -> *const c_char;
-    pub fn GDALSetProjection(hDS: *const (), pszProjection: *const c_char) -> c_int;
-    pub fn GDALSetGeoTransform(hDS: *const (), padfTransform: *const c_double) -> c_int;
-    pub fn GDALGetGeoTransform(hDS: *const (), padfTransform: *mut c_double) -> c_int;
-    pub fn GDALGetRasterBand(hDS: *const (), nBandId: c_int) -> *const ();
+            pfnProgres: *const c_void,
+            pProgressData: *const c_void
+        ) -> *const c_void;
+    pub fn GDALOpen(pszFilename: *const c_char, eAccess: GDALAccess) -> *const c_void;
+    pub fn GDALClose(hDS: *const c_void);
+    pub fn GDALGetDatasetDriver(hDataset: *const c_void) -> *const c_void;
+    pub fn GDALGetRasterXSize(hDataset: *const c_void) -> c_int;
+    pub fn GDALGetRasterYSize(hDataset: *const c_void) -> c_int;
+    pub fn GDALGetRasterCount(hDataset: *const c_void) -> c_int;
+    pub fn GDALGetRasterDataType(hBand: *const c_void) -> c_int;
+    pub fn GDALGetProjectionRef(hDS: *const c_void) -> *const c_char;
+    pub fn GDALSetProjection(hDS: *const c_void, pszProjection: *const c_char) -> c_int;
+    pub fn GDALSetGeoTransform(hDS: *const c_void, padfTransform: *const c_double) -> c_int;
+    pub fn GDALGetGeoTransform(hDS: *const c_void, padfTransform: *mut c_double) -> c_int;
+    pub fn GDALGetRasterBand(hDS: *const c_void, nBandId: c_int) -> *const c_void;
     pub fn GDALRasterIO(
-            hBand: *const (),
-            eRWFlag: c_int,
+            hBand: *const c_void,
+            eRWFlag: GDALRWFlag,
             nXOff: c_int,
             nYOff: c_int,
             nXSize: c_int,
             nYSize: c_int,
-            pData: *const (),
+            pData: *const c_void,
             nBufXSize: c_int,
             nBufYSize: c_int,
-            GDALDataType: c_int,
+            GDALDataType: GDALDataType,
             nPixelSpace: c_int,
             nLineSpace: c_int
         ) -> c_int;
     pub fn GDALReprojectImage(
-        hSrcDS: *const (),
+        hSrcDS: *const c_void,
         pszSrcWKT: *const c_char,
-        hDstDS: *const (),
+        hDstDS: *const c_void,
         pszDstWKT: *const c_char,
-        eResampleAlg: c_int,
+        eResampleAlg: GDALResampleAlg,
         dfWarpMemoryLimit: c_double,
         dfMaxError: c_double,
-        pfnProgress: *const (),
-        pProgressArg: *const (),
-        psOptions: *const ()
+        pfnProgress: *const c_void,
+        pProgressArg: *const c_void,
+        psOptions: *const c_void
     ) -> c_int;
 }
 
-pub const GA_READONLY:  c_int = 0;
-pub const GDT_BYTE:     c_int = 1;
-pub const GF_READ:      c_int = 0;
-pub const GF_WRITE:     c_int = 1;
-pub static GRA_BILINEAR:           c_int = 1;
 pub static REPROJECT_MEMORY_LIMIT: c_double = 0.0;

@@ -1,4 +1,4 @@
-use libc::c_int;
+use libc::{c_int, c_void};
 use utils::_string;
 use vector::ogr;
 
@@ -6,15 +6,15 @@ use vector::ogr;
 ///
 /// Defines the fields available for features in a layer.
 pub struct Defn {
-    c_defn: *const (),
+    c_defn: *const c_void,
 }
 
 impl Defn {
-    pub unsafe fn _with_c_defn(c_defn: *const ()) -> Defn {
+    pub unsafe fn _with_c_defn(c_defn: *const c_void) -> Defn {
         Defn{c_defn: c_defn}
     }
 
-    pub unsafe fn c_defn(&self) -> *const () { self.c_defn }
+    pub unsafe fn c_defn(&self) -> *const c_void { self.c_defn }
 
     /// Iterate over the field schema of this layer.
     pub fn fields(&self) -> FieldIterator {
@@ -30,7 +30,7 @@ impl Defn {
 
 pub struct FieldIterator<'a> {
     defn: &'a Defn,
-    c_feature_defn: *const (),
+    c_feature_defn: *const c_void,
     next_id: isize,
     total: isize,
 }
@@ -57,7 +57,7 @@ impl<'a> Iterator for FieldIterator<'a> {
 
 pub struct Field<'a> {
     _defn: &'a Defn,
-    c_field_defn: *const (),
+    c_field_defn: *const c_void,
 }
 
 impl<'a> Field<'a> {

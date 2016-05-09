@@ -29,7 +29,6 @@ mod utils;
 pub mod version;
 pub mod raster;
 pub mod vector;
-pub mod geom;
 
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct GdalError {

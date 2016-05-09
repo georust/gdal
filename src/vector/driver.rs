@@ -2,7 +2,9 @@ use std::ffi::CString;
 use std::ptr::null;
 use std::sync::{Once, ONCE_INIT};
 use std::path::Path;
+use libc::{c_void};
 use vector::{ogr, Dataset};
+
 
 static START: Once = ONCE_INIT;
 static mut registered_drivers: bool = false;
@@ -18,7 +20,7 @@ pub fn _register_drivers() {
 }
 
 pub struct Driver {
-    c_driver: *const (),
+    c_driver: *const c_void,
 }
 
 impl Driver {
