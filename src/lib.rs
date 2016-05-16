@@ -20,12 +20,15 @@
 #![crate_name="gdal"]
 #![crate_type="lib"]
 
+
 extern crate libc;
 extern crate geo;
 
 pub use version::version_info;
 
 mod utils;
+mod gdal_major_object;
+pub mod metadata;
 pub mod version;
 pub mod raster;
 pub mod vector;

@@ -113,6 +113,23 @@ fn test_get_dataset_driver() {
     assert_eq!(driver.long_name(), "Portable Network Graphics");
 }
 
+#[test]
+fn test_get_metadata_item() {
+
+    use metadata::Metadata;
+
+    let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
+    let key = "None";
+    let domain = "None";
+    let meta = dataset.get_metadata_item(key, domain);
+    assert_eq!(meta, None);
+
+    let key = "INTERLEAVE";
+    let domain = "IMAGE_STRUCTURE";
+    let meta = dataset.get_metadata_item(key, domain);
+    assert_eq!(meta, Some(String::from("PIXEL")));
+}
+
 
 #[test]
 fn test_create() {
