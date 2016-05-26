@@ -130,6 +130,23 @@ fn test_get_metadata_item() {
     assert_eq!(meta, Some(String::from("PIXEL")));
 }
 
+#[test]
+fn test_set_metadata_item() {
+
+    use metadata::Metadata;
+
+    let driver = Driver::get("MEM").unwrap();
+    let mut dataset = driver.create("", 1, 1, 1).unwrap();
+
+    let key = "Test_Key";
+    let domain = "Test_Domain";
+    let value = "Test_Value";
+    let result = dataset.set_metadata_item(key, value, domain);
+    assert_eq!(result, Ok(()));
+
+    let result = dataset.get_metadata_item(key, domain);
+    assert_eq!(Some(value.to_owned()), result);
+}
 
 #[test]
 fn test_create() {

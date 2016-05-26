@@ -12,30 +12,29 @@ extern {
 pub trait Metadata: MajorObject {
 
     fn get_metadata_item(&self, key: &str, domain: &str) -> Option<String> {
-        let c_key = CString::new(key.to_owned()).expect("Could not transform String to CString"); // FIXME: no unwrap
-        let c_domain = CString::new(domain.to_owned()).expect("Could not transform String to CString");
-
-        let c_res = unsafe { GDALGetMetadataItem(self.get_gdal_object_ptr(), c_key.as_ptr(), c_domain.as_ptr())};
-        if c_res.is_null() {
-            None
+        if let Ok(c_key) = CString::new(key.to_owned()) {
+            if let Ok(c_domain) = CString::new(domain.to_owned()){
+                let c_res = unsafe { GDALGetMetadataItem(self.get_gdal_object_ptr(), c_key.as_ptr(), c_domain.as_ptr())};
+                if !c_res.is_null() {
+                    return Some(_string(c_res));
+                }
+            }
         }
-        else {
-            Some(_string(c_res))
-        }
+        None
     }
 
     fn set_metadata_item(&mut self, key: &str, value: &str, domain: &str) -> Result<(), ()> {
-        let c_key = CString::new(key.to_owned()).expect("Could not transform String to CString"); // FIXME: no unwrap
-        let c_domain = CString::new(domain.to_owned()).expect("Could not transform String to CString");
-        let c_value =  CString::new(value.to_owned()).expect("Could not transform String to CString");
-
-        let c_res = unsafe { GDALSetMetadataItem(self.get_gdal_object_ptr(), c_key.as_ptr(), c_value.as_ptr(), c_domain.as_ptr())};
-        if c_res == 0 { // TODO: convert into CPLErr?
-            Ok(())
+        if let Ok(c_key) = CString::new(key.to_owned()){
+            if let Ok(c_domain) = CString::new(domain.to_owned()){
+                if let Ok(c_value) =  CString::new(value.to_owned()){
+                    let c_res = unsafe { GDALSetMetadataItem(self.get_gdal_object_ptr(), c_key.as_ptr(), c_value.as_ptr(), c_domain.as_ptr())};
+                    if c_res == 0 {
+                        return Ok(());
+                    }
+                }
+            }
         }
-        else {
-            Err(())
-        }
+        Err(())
     }
 
 }
