@@ -5,11 +5,21 @@ use gdal_major_object::MajorObject;
 
 #[link(name="gdal")]
 extern {
+    fn GDALGetDescription(hGdalMayorObject: *const c_void) -> *const c_char;
     fn GDALGetMetadataItem(hGdalMayorObject: *const c_void, pszName: *const c_char, pszDomain: *const c_char) -> *const c_char;
     fn GDALSetMetadataItem(hGdalMayorObject: *const c_void, pszName: *const c_char, pszValue: *const c_char, pszDomain: *const c_char ) -> c_int;
 }
 
 pub trait Metadata: MajorObject {
+
+    fn get_description(&self) -> Option<String>{
+        let c_res = unsafe { GDALGetDescription(self.get_gdal_object_ptr())};
+        if c_res.is_null() {
+            None
+        } else {
+             Some(_string(c_res))
+        }
+    }
 
     fn get_metadata_item(&self, key: &str, domain: &str) -> Option<String> {
         if let Ok(c_key) = CString::new(key.to_owned()) {

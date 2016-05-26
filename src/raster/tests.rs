@@ -1,6 +1,7 @@
 use std::path::Path;
 use super::{ByteBuffer, Driver, Dataset};
 use super::gdal_enums::{GDALDataType};
+use metadata::Metadata;
 
 
 macro_rules! fixture {
@@ -114,10 +115,14 @@ fn test_get_dataset_driver() {
 }
 
 #[test]
+fn test_get_description() {
+
+    let driver = Driver::get("mem").unwrap();
+    assert_eq!(driver.get_description(), Some("MEM".to_owned()));
+}
+
+#[test]
 fn test_get_metadata_item() {
-
-    use metadata::Metadata;
-
     let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
     let key = "None";
     let domain = "None";
@@ -132,9 +137,6 @@ fn test_get_metadata_item() {
 
 #[test]
 fn test_set_metadata_item() {
-
-    use metadata::Metadata;
-
     let driver = Driver::get("MEM").unwrap();
     let mut dataset = driver.create("", 1, 1, 1).unwrap();
 
