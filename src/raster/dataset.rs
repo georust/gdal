@@ -6,12 +6,22 @@ use raster::{gdal, Driver};
 use raster::driver::_register_drivers;
 use raster::gdal_enums::{GDALRWFlag, GDALAccess, GDALDataType};
 use raster::types::GdalType;
+use gdal_major_object::MajorObject;
+use metadata::Metadata;
 
 pub type GeoTransform = [c_double; 6];
 
 pub struct Dataset {
     c_dataset: *const c_void,
 }
+
+impl MajorObject for Dataset {
+    unsafe fn get_gdal_object_ptr(&self) -> *const c_void {
+        self.c_dataset
+    }
+}
+
+impl Metadata for Dataset {}
 
 
 impl Drop for Dataset {

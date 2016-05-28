@@ -4,6 +4,8 @@ use std::ptr::null;
 use libc::{c_int, c_void};
 use vector::{ogr, Layer};
 use vector::driver::_register_drivers;
+use gdal_major_object::MajorObject;
+use metadata::Metadata;
 
 /// Vector dataset
 ///
@@ -18,6 +20,14 @@ pub struct Dataset {
     c_dataset: *const c_void,
     layers: Vec<Layer>,
 }
+
+impl MajorObject for Dataset {
+    unsafe fn get_gdal_object_ptr(&self) -> *const c_void {
+        self.c_dataset
+    }
+}
+
+impl Metadata for Dataset {}
 
 
 impl Dataset {

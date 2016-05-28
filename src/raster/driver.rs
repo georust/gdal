@@ -4,6 +4,8 @@ use std::sync::{Once, ONCE_INIT};
 use utils::_string;
 use raster::{gdal, Dataset};
 use raster::types::GdalType;
+use gdal_major_object::MajorObject;
+use metadata::Metadata;
 
 
 static START: Once = ONCE_INIT;
@@ -93,3 +95,11 @@ impl Driver {
         };
     }
 }
+
+impl MajorObject for Driver {
+    unsafe fn get_gdal_object_ptr(&self) -> *const c_void {
+        return self.c_driver;
+    }
+}
+
+impl Metadata for Driver {}

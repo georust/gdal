@@ -2,6 +2,8 @@ use std::ptr::null;
 use libc::{c_void};
 use vector::{ogr, Feature, Geometry};
 use vector::defn::Defn;
+use gdal_major_object::MajorObject;
+use metadata::Metadata;
 
 /// Layer in a vector dataset
 ///
@@ -19,6 +21,14 @@ pub struct Layer {
     c_layer: *const c_void,
     defn: Defn,
 }
+
+impl MajorObject for Layer {
+    unsafe fn get_gdal_object_ptr(&self) -> *const c_void {
+        self.c_layer
+    }
+}
+
+impl Metadata for Layer {}
 
 
 impl Layer {

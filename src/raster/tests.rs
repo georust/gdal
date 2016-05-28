@@ -1,6 +1,7 @@
 use std::path::Path;
 use super::{ByteBuffer, Driver, Dataset};
 use super::gdal_enums::{GDALDataType};
+use metadata::Metadata;
 
 
 macro_rules! fixture {
@@ -113,6 +114,41 @@ fn test_get_dataset_driver() {
     assert_eq!(driver.long_name(), "Portable Network Graphics");
 }
 
+#[test]
+fn test_get_description() {
+
+    let driver = Driver::get("mem").unwrap();
+    assert_eq!(driver.get_description(), Some("MEM".to_owned()));
+}
+
+#[test]
+fn test_get_metadata_item() {
+    let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
+    let key = "None";
+    let domain = "None";
+    let meta = dataset.get_metadata_item(key, domain);
+    assert_eq!(meta, None);
+
+    let key = "INTERLEAVE";
+    let domain = "IMAGE_STRUCTURE";
+    let meta = dataset.get_metadata_item(key, domain);
+    assert_eq!(meta, Some(String::from("PIXEL")));
+}
+
+#[test]
+fn test_set_metadata_item() {
+    let driver = Driver::get("MEM").unwrap();
+    let mut dataset = driver.create("", 1, 1, 1).unwrap();
+
+    let key = "Test_Key";
+    let domain = "Test_Domain";
+    let value = "Test_Value";
+    let result = dataset.set_metadata_item(key, value, domain);
+    assert_eq!(result, Ok(()));
+
+    let result = dataset.get_metadata_item(key, domain);
+    assert_eq!(Some(value.to_owned()), result);
+}
 
 #[test]
 fn test_create() {
