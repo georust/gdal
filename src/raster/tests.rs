@@ -60,7 +60,7 @@ fn test_read_raster() {
         (20, 30),
         (2, 3),
         (2, 3)
-    );
+    ).unwrap();
     assert_eq!(rv.size.0, 2);
     assert_eq!(rv.size.1, 3);
     assert_eq!(rv.data, vec!(7, 7, 7, 10, 8, 12));
@@ -92,7 +92,7 @@ fn test_write_raster() {
         (5, 5),
         (1, 1),
         (1, 1)
-    );
+    ).unwrap();
     assert_eq!(left.data[0], 50u8);
 
     // read a pixel from the right side
@@ -101,7 +101,7 @@ fn test_write_raster() {
         (15, 5),
         (1, 1),
         (1, 1)
-    );
+    ).unwrap();
     assert_eq!(right.data[0], 20u8);
 }
 
@@ -209,7 +209,7 @@ fn test_read_raster_as() {
         (20, 30),
         (2, 3),
         (2, 3)
-    );
+    ).unwrap();
     assert_eq!(rv.data, vec!(7, 7, 7, 10, 8, 12));
     assert_eq!(rv.size.0, 2);
     assert_eq!(rv.size.1, 3);
@@ -219,11 +219,9 @@ fn test_read_raster_as() {
 #[test]
 fn test_read_full_raster_as() {
     let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
-    let rv = dataset.read_full_raster_as::<u8>(1);
-    assert_eq!(rv.size.0, 50);
+    let rv = dataset.read_full_raster_as::<u8>(1).unwrap();
+    assert_eq!(rv.size.0, 100);
     assert_eq!(rv.size.1, 50);
-    assert_eq!(dataset.get_band_type(1), Some(GDALDataType::GDT_Byte));
-    //TODO: find a value to assert?
 }
 
 #[test]
@@ -232,4 +230,41 @@ fn test_get_band_type() {
     let dataset = driver.create("", 20, 10, 1).unwrap();
     assert_eq!(dataset.get_band_type(1), Some(GDALDataType::GDT_Byte));
     assert_eq!(dataset.get_band_type(2), None);
+}
+
+#[test]
+fn test_get_rasterband() {
+    let driver = Driver::get("MEM").unwrap();
+    let dataset = driver.create("", 20, 10, 1).unwrap();
+    let rasterband = dataset.get_rasterband(1);
+    assert!(rasterband.is_some())
+}
+
+#[test]
+fn test_get_no_data_value() {
+    let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
+    let rasterband = dataset.get_rasterband(1).unwrap();
+    let no_data_value = rasterband.get_no_data_value();
+    assert!(no_data_value.is_none());
+
+    // let dataset = Dataset::open(fixture!("bluemarble.tif")).unwrap();
+    // let rasterband = dataset.get_rasterband(1).unwrap();
+    // let no_data_value = rasterband.get_no_data_value();
+    // assert_eq!(no_data_value, Some(0.0));
+}
+
+#[test]
+fn test_get_scale() {
+    let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
+    let rasterband = dataset.get_rasterband(1).unwrap();
+    let scale = rasterband.get_scale();
+    assert_eq!(scale, Some(1.0));
+}
+
+#[test]
+fn test_get_offset() {
+    let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
+    let rasterband = dataset.get_rasterband(1).unwrap();
+    let offset = rasterband.get_offset();
+    assert_eq!(offset, Some(0.0));
 }
