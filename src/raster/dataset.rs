@@ -16,7 +16,7 @@ pub struct Dataset {
 }
 
 impl MajorObject for Dataset {
-    unsafe fn get_gdal_object_ptr(&self) -> *const c_void {
+    unsafe fn gdal_object_ptr(&self) -> *const c_void {
         self.c_dataset
     }
 }
@@ -51,7 +51,7 @@ impl Dataset {
     }
 
 
-    pub fn get_rasterband<'a>(&'a self, band_index: isize) -> Option<RasterBand<'a>> {
+    pub fn rasterband<'a>(&'a self, band_index: isize) -> Option<RasterBand<'a>> {
         unsafe {
             let c_band = gdal::GDALGetRasterBand(self.c_dataset, band_index as c_int);
             if c_band.is_null() {
@@ -134,8 +134,8 @@ impl Dataset {
         };
     }
 
-    pub fn get_band_type(&self, band_index: isize) -> Option<GDALDataType> {
-        self.get_rasterband(band_index).map(|band| band.get_band_type())
+    pub fn band_type(&self, band_index: isize) -> Option<GDALDataType> {
+        self.rasterband(band_index).map(|band| band.band_type())
     }
 
     /// Read a 'Buffer<u8>' from a 'Dataset'.
@@ -167,7 +167,7 @@ impl Dataset {
         band_index: isize,
     ) -> Option<Buffer<T>>
     {
-        self.get_rasterband(band_index).map(|band| band.read_band_as())
+        self.rasterband(band_index).map(|band| band.read_band_as())
     }
 
     /// Read a 'Buffer<T>' from a 'Dataset'. T implements 'GdalType'
@@ -184,7 +184,7 @@ impl Dataset {
         size: (usize, usize),
     ) -> Option<Buffer<T>>
     {
-        self.get_rasterband(band_index).map(|band| band.read_as(window, window_size, size))
+        self.rasterband(band_index).map(|band| band.read_as(window, window_size, size))
     }
 
     /// Write a 'Buffer<T>' into a 'Dataset'.
@@ -199,7 +199,7 @@ impl Dataset {
         window_size: (usize, usize),
         buffer: Buffer<T>
     ) {
-        self.get_rasterband(band_index).expect("Invalid RasterBand").write(window, window_size, buffer)
+        self.rasterband(band_index).expect("Invalid RasterBand").write(window, window_size, buffer)
     }
 
 }

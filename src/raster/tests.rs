@@ -118,7 +118,7 @@ fn test_get_dataset_driver() {
 fn test_get_description() {
 
     let driver = Driver::get("mem").unwrap();
-    assert_eq!(driver.get_description(), Some("MEM".to_owned()));
+    assert_eq!(driver.description(), Some("MEM".to_owned()));
 }
 
 #[test]
@@ -126,12 +126,12 @@ fn test_get_metadata_item() {
     let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
     let key = "None";
     let domain = "None";
-    let meta = dataset.get_metadata_item(key, domain);
+    let meta = dataset.metadata_item(key, domain);
     assert_eq!(meta, None);
 
     let key = "INTERLEAVE";
     let domain = "IMAGE_STRUCTURE";
-    let meta = dataset.get_metadata_item(key, domain);
+    let meta = dataset.metadata_item(key, domain);
     assert_eq!(meta, Some(String::from("PIXEL")));
 }
 
@@ -146,7 +146,7 @@ fn test_set_metadata_item() {
     let result = dataset.set_metadata_item(key, value, domain);
     assert_eq!(result, Ok(()));
 
-    let result = dataset.get_metadata_item(key, domain);
+    let result = dataset.metadata_item(key, domain);
     assert_eq!(Some(value.to_owned()), result);
 }
 
@@ -166,7 +166,7 @@ fn test_create_with_band_type() {
     assert_eq!(dataset.size(), (10, 20));
     assert_eq!(dataset.count(), 3);
     assert_eq!(dataset.driver().short_name(), "MEM");
-    assert_eq!(dataset.get_band_type(1), Some(GDALDataType::GDT_Float32))
+    assert_eq!(dataset.band_type(1), Some(GDALDataType::GDT_Float32))
 }
 
 #[test]
@@ -213,7 +213,7 @@ fn test_read_raster_as() {
     assert_eq!(rv.data, vec!(7, 7, 7, 10, 8, 12));
     assert_eq!(rv.size.0, 2);
     assert_eq!(rv.size.1, 3);
-    assert_eq!(dataset.get_band_type(1), Some(GDALDataType::GDT_Byte));
+    assert_eq!(dataset.band_type(1), Some(GDALDataType::GDT_Byte));
 }
 
 #[test]
@@ -228,23 +228,23 @@ fn test_read_full_raster_as() {
 fn test_get_band_type() {
     let driver = Driver::get("MEM").unwrap();
     let dataset = driver.create("", 20, 10, 1).unwrap();
-    assert_eq!(dataset.get_band_type(1), Some(GDALDataType::GDT_Byte));
-    assert_eq!(dataset.get_band_type(2), None);
+    assert_eq!(dataset.band_type(1), Some(GDALDataType::GDT_Byte));
+    assert_eq!(dataset.band_type(2), None);
 }
 
 #[test]
 fn test_get_rasterband() {
     let driver = Driver::get("MEM").unwrap();
     let dataset = driver.create("", 20, 10, 1).unwrap();
-    let rasterband = dataset.get_rasterband(1);
+    let rasterband = dataset.rasterband(1);
     assert!(rasterband.is_some())
 }
 
 #[test]
 fn test_get_no_data_value() {
     let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
-    let rasterband = dataset.get_rasterband(1).unwrap();
-    let no_data_value = rasterband.get_no_data_value();
+    let rasterband = dataset.rasterband(1).unwrap();
+    let no_data_value = rasterband.no_data_value();
     assert!(no_data_value.is_none());
 
     // let dataset = Dataset::open(fixture!("bluemarble.tif")).unwrap();
@@ -256,15 +256,15 @@ fn test_get_no_data_value() {
 #[test]
 fn test_get_scale() {
     let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
-    let rasterband = dataset.get_rasterband(1).unwrap();
-    let scale = rasterband.get_scale();
+    let rasterband = dataset.rasterband(1).unwrap();
+    let scale = rasterband.scale();
     assert_eq!(scale, Some(1.0));
 }
 
 #[test]
 fn test_get_offset() {
     let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
-    let rasterband = dataset.get_rasterband(1).unwrap();
-    let offset = rasterband.get_offset();
+    let rasterband = dataset.rasterband(1).unwrap();
+    let offset = rasterband.offset();
     assert_eq!(offset, Some(0.0));
 }

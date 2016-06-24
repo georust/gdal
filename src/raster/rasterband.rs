@@ -105,7 +105,7 @@ impl <'a> RasterBand<'a> {
         };
     }
 
-    pub fn get_band_type(&self) -> gdal_enums::GDALDataType {
+    pub fn band_type(&self) -> gdal_enums::GDALDataType {
 
         let gdal_type: c_int;
         unsafe{
@@ -114,7 +114,7 @@ impl <'a> RasterBand<'a> {
         gdal_enums::GDALDataType::from_c_int(gdal_type)
     }
 
-    pub fn get_no_data_value(&self) ->Option<f64> {
+    pub fn no_data_value(&self) ->Option<f64> {
         unsafe {
             let mut pb_success: c_int = 1;
             let raw_pb_success = &mut pb_success as *mut c_int;
@@ -126,7 +126,7 @@ impl <'a> RasterBand<'a> {
         None
     }
 
-    pub fn get_scale(&self) ->Option<f64> {
+    pub fn scale(&self) ->Option<f64> {
         unsafe {
             let mut pb_success: c_int = 1;
             let raw_pb_success = &mut pb_success as *mut c_int;
@@ -138,7 +138,7 @@ impl <'a> RasterBand<'a> {
         None
     }
 
-    pub fn get_offset(&self) ->Option<f64> {
+    pub fn offset(&self) ->Option<f64> {
         unsafe {
             let mut pb_success: c_int = 1;
             let raw_pb_success = &mut pb_success as *mut c_int;
@@ -152,7 +152,7 @@ impl <'a> RasterBand<'a> {
 }
 
 impl<'a> MajorObject for RasterBand<'a> {
-    unsafe fn get_gdal_object_ptr(&self) -> *const c_void {
+    unsafe fn gdal_object_ptr(&self) -> *const c_void {
         self.c_rasterband
     }
 }

@@ -97,7 +97,7 @@ impl Driver {
 }
 
 impl MajorObject for Driver {
-    unsafe fn get_gdal_object_ptr(&self) -> *const c_void {
+    unsafe fn gdal_object_ptr(&self) -> *const c_void {
         return self.c_driver;
     }
 }
