@@ -3,6 +3,7 @@ use super::gdal_enums::*;
 
 #[link(name="gdal")]
 extern {
+    // driver
     pub fn GDALAllRegister();
     pub fn GDALGetDriverByName(pszName: *const c_char) -> *const c_void;
     pub fn GDALGetDriverShortName(hDriver: *const c_void) -> *const c_char;
@@ -26,17 +27,22 @@ extern {
             pProgressData: *const c_void
         ) -> *const c_void;
     pub fn GDALOpen(pszFilename: *const c_char, eAccess: GDALAccess) -> *const c_void;
+    // dataset
     pub fn GDALClose(hDS: *const c_void);
     pub fn GDALGetDatasetDriver(hDataset: *const c_void) -> *const c_void;
     pub fn GDALGetRasterXSize(hDataset: *const c_void) -> c_int;
     pub fn GDALGetRasterYSize(hDataset: *const c_void) -> c_int;
     pub fn GDALGetRasterCount(hDataset: *const c_void) -> c_int;
+    pub fn GDALGetProjectionRef(hDataset: *const c_void) -> *const c_char;
+    pub fn GDALSetProjection(hDataset: *const c_void, pszProjection: *const c_char) -> c_int;
+    pub fn GDALSetGeoTransform(hDataset: *const c_void, padfTransform: *const c_double) -> c_int;
+    pub fn GDALGetGeoTransform(hDataset: *const c_void, padfTransform: *mut c_double) -> c_int;
+    pub fn GDALGetRasterBand(hDataset: *const c_void, nBandId: c_int) -> *const c_void;
+    // band
     pub fn GDALGetRasterDataType(hBand: *const c_void) -> c_int;
-    pub fn GDALGetProjectionRef(hDS: *const c_void) -> *const c_char;
-    pub fn GDALSetProjection(hDS: *const c_void, pszProjection: *const c_char) -> c_int;
-    pub fn GDALSetGeoTransform(hDS: *const c_void, padfTransform: *const c_double) -> c_int;
-    pub fn GDALGetGeoTransform(hDS: *const c_void, padfTransform: *mut c_double) -> c_int;
-    pub fn GDALGetRasterBand(hDS: *const c_void, nBandId: c_int) -> *const c_void;
+    pub fn GDALGetRasterNoDataValue(hBand: *const c_void, pbSuccess: *mut c_int) -> c_double;
+    pub fn GDALGetRasterOffset(hBand: *const c_void, pbSuccess: *mut c_int) -> c_double;
+    pub fn GDALGetRasterScale(hBand: *const c_void, pbSuccess: *mut c_int) -> c_double;
     pub fn GDALRasterIO(
             hBand: *const c_void,
             eRWFlag: GDALRWFlag,

@@ -23,7 +23,7 @@ pub struct Layer {
 }
 
 impl MajorObject for Layer {
-    unsafe fn get_gdal_object_ptr(&self) -> *const c_void {
+    unsafe fn gdal_object_ptr(&self) -> *const c_void {
         self.c_layer
     }
 }

@@ -12,8 +12,8 @@ extern {
 
 pub trait Metadata: MajorObject {
 
-    fn get_description(&self) -> Option<String>{
-        let c_res = unsafe { GDALGetDescription(self.get_gdal_object_ptr())};
+    fn description(&self) -> Option<String>{
+        let c_res = unsafe { GDALGetDescription(self.gdal_object_ptr())};
         if c_res.is_null() {
             None
         } else {
@@ -21,10 +21,10 @@ pub trait Metadata: MajorObject {
         }
     }
 
-    fn get_metadata_item(&self, key: &str, domain: &str) -> Option<String> {
+    fn metadata_item(&self, key: &str, domain: &str) -> Option<String> {
         if let Ok(c_key) = CString::new(key.to_owned()) {
             if let Ok(c_domain) = CString::new(domain.to_owned()){
-                let c_res = unsafe { GDALGetMetadataItem(self.get_gdal_object_ptr(), c_key.as_ptr(), c_domain.as_ptr())};
+                let c_res = unsafe { GDALGetMetadataItem(self.gdal_object_ptr(), c_key.as_ptr(), c_domain.as_ptr())};
                 if !c_res.is_null() {
                     return Some(_string(c_res));
                 }
@@ -37,7 +37,7 @@ pub trait Metadata: MajorObject {
         if let Ok(c_key) = CString::new(key.to_owned()){
             if let Ok(c_domain) = CString::new(domain.to_owned()){
                 if let Ok(c_value) =  CString::new(value.to_owned()){
-                    let c_res = unsafe { GDALSetMetadataItem(self.get_gdal_object_ptr(), c_key.as_ptr(), c_value.as_ptr(), c_domain.as_ptr())};
+                    let c_res = unsafe { GDALSetMetadataItem(self.gdal_object_ptr(), c_key.as_ptr(), c_value.as_ptr(), c_domain.as_ptr())};
                     if c_res == 0 {
                         return Ok(());
                     }
