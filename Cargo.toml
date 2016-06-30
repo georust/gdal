@@ -8,5 +8,5 @@ repository = "https://github.com/georust/rust-gdal"
 documentation = "https://georust.github.io/rust-gdal/"
 
 [dependencies]
-libc = "0.1.7"
+libc = "0.2.13"
 geo = "0.0.5"
