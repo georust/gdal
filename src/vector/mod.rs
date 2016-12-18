@@ -23,12 +23,13 @@ pub use vector::defn::{Defn, FieldIterator, Field};
 pub use vector::feature::{Feature, FieldValue};
 pub use vector::geometry::Geometry;
 
+use gdal_sys::ogr;
+
 /// Convert object to a GDAL geometry.
 pub trait ToGdal {
     fn to_gdal(&self) -> Geometry;
 }
 
-mod ogr;
 mod driver;
 mod dataset;
 mod layer;
