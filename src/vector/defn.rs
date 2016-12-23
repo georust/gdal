@@ -1,6 +1,6 @@
 use libc::{c_int, c_void};
 use utils::_string;
-use vector::ogr;
+use gdal_sys::ogr;
 
 /// Layer definition
 ///

@@ -3,7 +3,7 @@ use libc::{c_char, c_int, c_double, c_void};
 use std::ffi::CString;
 use std::cell::RefCell;
 use utils::_string;
-use vector::ogr;
+use gdal_sys::ogr;
 
 /// OGR Geometry
 pub struct Geometry {

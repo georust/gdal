@@ -3,7 +3,8 @@ use std::ptr::null;
 use std::sync::{Once, ONCE_INIT};
 use std::path::Path;
 use libc::{c_void};
-use vector::{ogr, Dataset};
+use vector::{Dataset};
+use gdal_sys::ogr;
 
 
 static START: Once = ONCE_INIT;

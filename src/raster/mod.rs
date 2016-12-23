@@ -5,7 +5,6 @@ pub use raster::driver::Driver;
 pub use raster::warp::reproject;
 pub use raster::rasterband::{RasterBand};
 
-use gdal_sys::gdal;
 pub use gdal_sys::gdal_enums;
 
 mod types;

@@ -2,7 +2,7 @@ use std::ffi::CString;
 use libc::{c_void};
 use vector::Defn;
 use utils::_string;
-use vector::ogr;
+use gdal_sys::ogr;
 use vector::geometry::Geometry;
 
 

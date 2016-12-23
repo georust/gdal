@@ -2,11 +2,11 @@ use libc::{c_int, c_void};
 use std::ffi::CString;
 use std::sync::{Once, ONCE_INIT};
 use utils::_string;
-use raster::{gdal, Dataset};
+use raster::{Dataset};
 use raster::types::GdalType;
 use gdal_major_object::MajorObject;
 use metadata::Metadata;
-
+use gdal_sys::gdal;
 
 static START: Once = ONCE_INIT;
 static mut registered_drivers: bool = false;
