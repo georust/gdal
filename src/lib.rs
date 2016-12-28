@@ -20,10 +20,12 @@
 #![crate_name="gdal"]
 #![crate_type="lib"]
 
-
 extern crate libc;
 extern crate geo;
 extern crate gdal_sys;
+
+#[macro_use]
+extern crate error_chain;
 
 pub use version::version_info;
 
@@ -33,8 +35,4 @@ pub mod metadata;
 pub mod version;
 pub mod raster;
 pub mod vector;
-
-#[derive(Clone, Copy, PartialEq, Debug)]
-pub struct GdalError {
-    pub desc: &'static str,
-}
+pub mod errors;
