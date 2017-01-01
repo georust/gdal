@@ -4,7 +4,9 @@ use vector::{Feature, Geometry};
 use vector::defn::Defn;
 use gdal_major_object::MajorObject;
 use metadata::Metadata;
-use gdal_sys::ogr;
+use gdal_sys::{ogr, ogr_enums};
+
+use errors::*;
 
 /// Layer in a vector dataset
 ///
@@ -56,13 +58,18 @@ impl Layer {
         &self.defn
     }
 
-    pub fn create_feature(&mut self, geometry: Geometry) {
+    pub fn create_feature(&mut self, geometry: Geometry) -> Result<()> {
         let c_feature = unsafe { ogr::OGR_F_Create(self.defn.c_defn()) };
         let c_geometry = unsafe { geometry.into_c_geometry() };
         let rv = unsafe { ogr::OGR_F_SetGeometryDirectly(c_feature, c_geometry) };
-        assert_eq!(rv, ogr::OGRERR_NONE);
+        if rv != ogr_enums::OGRErr::OGRERR_NONE {
+            return Err(ErrorKind::OgrError(rv, "OGR_F_SetGeometryDirectly").into());
+        }
         let rv = unsafe { ogr::OGR_L_CreateFeature(self.c_layer, c_feature) };
-        assert_eq!(rv, ogr::OGRERR_NONE);
+        if rv != ogr_enums::OGRErr::OGRERR_NONE {
+            return Err(ErrorKind::OgrError(rv, "OGR_L_CreateFeature").into());
+        }
+        Ok(())
     }
 }
 

@@ -1,14 +1,16 @@
 use libc::{c_int, c_double, c_void};
-use std::ffi::CString;
+use std::ffi::{CString};
 use std::path::Path;
-use utils::_string;
+use utils::{_string, _last_cpl_err};
 use raster::{Driver, RasterBand};
 use raster::driver::_register_drivers;
 use raster::gdal_enums::{GDALAccess, GDALDataType};
 use raster::types::GdalType;
 use gdal_major_object::MajorObject;
 use metadata::Metadata;
-use gdal_sys::gdal;
+use gdal_sys::{gdal, cpl_error};
+
+use errors::*;
 
 pub type GeoTransform = [c_double; 6];
 
@@ -32,15 +34,15 @@ impl Drop for Dataset {
 
 
 impl Dataset {
-    pub fn open(path: &Path) -> Option<Dataset> {
+    pub fn open(path: &Path) -> Result<Dataset> {
         _register_drivers();
         let filename = path.to_str().unwrap();
         let c_filename = CString::new(filename.as_bytes()).unwrap();
         let c_dataset = unsafe { gdal::GDALOpen(c_filename.as_ptr(), GDALAccess::GA_ReadOnly) };
-        return match c_dataset.is_null() {
-            true  => None,
-            false => Some(Dataset{c_dataset: c_dataset}),
-        };
+        if c_dataset.is_null() {
+            return Err(ErrorKind::NullPointer("GDALOpen").into());
+        }
+        Ok(Dataset{c_dataset: c_dataset})
     }
 
     pub unsafe fn _with_c_ptr(c_dataset: *const c_void) -> Dataset {
@@ -52,13 +54,13 @@ impl Dataset {
     }
 
 
-    pub fn rasterband<'a>(&'a self, band_index: isize) -> Option<RasterBand<'a>> {
+    pub fn rasterband<'a>(&'a self, band_index: isize) -> Result<RasterBand<'a>> {
         unsafe {
             let c_band = gdal::GDALGetRasterBand(self.c_dataset, band_index as c_int);
             if c_band.is_null() {
-                return None;
+                return Err(ErrorKind::NullPointer("GDALGetRasterBand").into());
             }
-            Some(RasterBand::_with_c_ptr(c_band, self))
+            Ok(RasterBand::_with_c_ptr(c_band, self))
         }
     }
 
@@ -89,35 +91,38 @@ impl Dataset {
         unsafe { gdal::GDALSetProjection(self.c_dataset, c_projection.as_ptr()) };
     }
 
-    pub fn set_geo_transform(&self, tr: &GeoTransform) {
+    pub fn set_geo_transform(&self, tr: &GeoTransform) -> Result<()> {
         assert_eq!(tr.len(), 6);
         let rv = unsafe {
             gdal::GDALSetGeoTransform(self.c_dataset, tr.as_ptr())
-        } as isize;
-        assert!(rv == 0);
+        };
+        if rv != cpl_error::CPLErr::CE_None {            
+            return Err(_last_cpl_err(rv).into());
+        }
+        Ok(())
     }
 
-    pub fn geo_transform(&self) -> Option<GeoTransform> {
+    pub fn geo_transform(&self) -> Result<GeoTransform> {
         let mut tr = GeoTransform::default();
         let rv = unsafe {
             gdal::GDALGetGeoTransform(
                 self.c_dataset,
                 tr.as_mut_ptr()
             )
-        } as isize;
+        };
 
         // check if the dataset has a GeoTransform
-        if rv != 0 {
-            return None;
+        if rv != cpl_error::CPLErr::CE_None {            
+            return Err(_last_cpl_err(rv).into());
         }
-        Some(tr)
+        Ok(tr)
     }
 
     pub fn create_copy(
         &self,
         driver: Driver,
         filename: &str
-    ) -> Option<Dataset> {
+    ) -> Result<Dataset> {
         use std::ptr::null;
         let c_filename = CString::new(filename.as_bytes()).unwrap();
         let c_dataset = unsafe { gdal::GDALCreateCopy(
@@ -129,13 +134,13 @@ impl Dataset {
                 null(),
                 null()
             ) };
-        return match c_dataset.is_null() {
-            true  => None,
-            false => Some(Dataset{c_dataset: c_dataset}),
-        };
+        if c_dataset.is_null() {
+            return Err(ErrorKind::NullPointer("GDALCreateCopy").into());
+        }
+        Ok(Dataset{c_dataset: c_dataset})
     }
 
-    pub fn band_type(&self, band_index: isize) -> Option<GDALDataType> {
+    pub fn band_type(&self, band_index: isize) -> Result<GDALDataType> {
         self.rasterband(band_index).map(|band| band.band_type())
     }
 
@@ -150,7 +155,7 @@ impl Dataset {
         window: (isize, isize),
         window_size: (usize, usize),
         size: (usize, usize)
-    ) -> Option<ByteBuffer>
+    ) -> Result<ByteBuffer>
     {
         self.read_raster_as::<u8>(
             band_index,
@@ -166,7 +171,7 @@ impl Dataset {
     pub fn read_full_raster_as<T: Copy + GdalType>(
         &self,
         band_index: isize,
-    ) -> Option<Buffer<T>>
+    ) -> Result<Buffer<T>>
     {
         self.rasterband(band_index).map(|band| band.read_band_as())
     }
@@ -183,7 +188,7 @@ impl Dataset {
         window: (isize, isize),
         window_size: (usize, usize),
         size: (usize, usize),
-    ) -> Option<Buffer<T>>
+    ) -> Result<Buffer<T>>
     {
         self.rasterband(band_index).map(|band| band.read_as(window, window_size, size))
     }
@@ -199,8 +204,8 @@ impl Dataset {
         window: (isize, isize),
         window_size: (usize, usize),
         buffer: Buffer<T>
-    ) {
-        self.rasterband(band_index).expect("Invalid RasterBand").write(window, window_size, buffer)
+    ) -> Result<()> {
+        self.rasterband(band_index)?.write(window, window_size, buffer)
     }
 
 }

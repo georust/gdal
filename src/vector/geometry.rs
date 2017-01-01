@@ -3,7 +3,9 @@ use libc::{c_char, c_int, c_double, c_void};
 use std::ffi::CString;
 use std::cell::RefCell;
 use utils::_string;
-use gdal_sys::ogr;
+use gdal_sys::{ogr, ogr_enums};
+
+use errors::*;
 
 /// OGR Geometry
 pub struct Geometry {
@@ -53,17 +55,19 @@ impl Geometry {
 
     /// Create a geometry by parsing a
     /// [WKT](https://en.wikipedia.org/wiki/Well-known_text) string.
-    pub fn from_wkt(wkt: &str) -> Geometry {
+    pub fn from_wkt(wkt: &str) -> Result<Geometry> {
         let c_wkt = CString::new(wkt.as_bytes()).unwrap();
         let mut c_wkt_ptr: *const c_char = c_wkt.as_ptr();
         let mut c_geom: *const c_void = null();
         let rv = unsafe { ogr::OGR_G_CreateFromWkt(&mut c_wkt_ptr, null(), &mut c_geom) };
-        assert_eq!(rv, ogr::OGRERR_NONE);
-        return unsafe { Geometry::with_c_geometry(c_geom, true) };
+        if rv != ogr_enums::OGRErr::OGRERR_NONE {
+            return Err(ErrorKind::OgrError(rv, "OGR_G_CreateFromWkt").into());
+        }
+        Ok(unsafe { Geometry::with_c_geometry(c_geom, true) })
     }
 
     /// Create a rectangular geometry from West, South, East and North values.
-    pub fn bbox(w: f64, s: f64, e: f64, n: f64) -> Geometry {
+    pub fn bbox(w: f64, s: f64, e: f64, n: f64) -> Result<Geometry> {
         Geometry::from_wkt(&format!(
             "POLYGON (({} {}, {} {}, {} {}, {} {}, {} {}))",
             w, n,
@@ -79,21 +83,23 @@ impl Geometry {
         let c_json = unsafe { ogr::OGR_G_ExportToJson(self.c_geometry()) };
         let rv = _string(c_json);
         unsafe { ogr::VSIFree(c_json as *mut c_void) };
-        return rv;
+        rv
     }
 
     /// Serialize the geometry as WKT.
-    pub fn wkt(&self) -> String {
+    pub fn wkt(&self) -> Result<String> {
         let mut c_wkt: *const c_char = null();
         let _err = unsafe { ogr::OGR_G_ExportToWkt(self.c_geometry(), &mut c_wkt) };
-        assert_eq!(_err, ogr::OGRERR_NONE);
+        if _err != ogr_enums::OGRErr::OGRERR_NONE {
+            return Err(ErrorKind::OgrError(_err, "OGR_G_ExportToWkt").into());
+        }
         let wkt = _string(c_wkt);
         unsafe { ogr::OGRFree(c_wkt as *mut c_void) };
-        return wkt;
+        Ok(wkt)
     }
 
     pub unsafe fn c_geometry(&self) -> *const c_void {
-        return self.c_geometry_ref.borrow().unwrap();
+        self.c_geometry_ref.borrow().unwrap()
     }
 
     pub unsafe fn into_c_geometry(mut self) -> *const c_void {
@@ -126,9 +132,12 @@ impl Geometry {
     }
 
     /// Compute the convex hull of this geometry.
-    pub fn convex_hull(&self) -> Geometry {
+    pub fn convex_hull(&self) -> Result<Geometry> {
         let c_geom = unsafe { ogr::OGR_G_ConvexHull(self.c_geometry()) };
-        return unsafe { Geometry::with_c_geometry(c_geom, true) };
+        if c_geom.is_null() {
+            return Err(ErrorKind::NullPointer("OGR_G_ConvexHull").into());
+        };
+        Ok(unsafe { Geometry::with_c_geometry(c_geom, true) })
     }
 
     pub unsafe fn _get_geometry(&self, n: usize) -> Geometry {
@@ -138,14 +147,17 @@ impl Geometry {
         return Geometry::with_c_geometry(c_geom, false);
     }
 
-    pub fn add_geometry(&mut self, mut sub: Geometry) {
+    pub fn add_geometry(&mut self, mut sub: Geometry) -> Result<()> {
         assert!(sub.owned);
         sub.owned = false;
         let rv = unsafe { ogr::OGR_G_AddGeometryDirectly(
             self.c_geometry(),
             sub.c_geometry(),
         ) };
-        assert_eq!(rv, ogr::OGRERR_NONE);
+        if rv != ogr_enums::OGRErr::OGRERR_NONE {
+            return Err(ErrorKind::OgrError(rv, "OGR_G_AddGeometryDirectly").into());
+        }
+        Ok(())
     }
 }
 

@@ -6,16 +6,15 @@ use libc::{c_void};
 use vector::{Dataset};
 use gdal_sys::ogr;
 
+use errors::*;
+
 
 static START: Once = ONCE_INIT;
-static mut registered_drivers: bool = false;
-
 
 pub fn _register_drivers() {
     unsafe {
         START.call_once(|| {
             ogr::OGRRegisterAll();
-            registered_drivers = true;
         });
     }
 }
@@ -35,7 +34,7 @@ impl Driver {
         };
     }
 
-    pub fn create(&self, path: &Path) -> Option<Dataset> {
+    pub fn create(&self, path: &Path) -> Result<Dataset> {
         let filename = path.to_str().unwrap();
         let c_filename = CString::new(filename.as_bytes()).unwrap();
         let c_dataset = unsafe { ogr::OGR_Dr_CreateDataSource(
@@ -43,9 +42,9 @@ impl Driver {
             c_filename.as_ptr(),
             null(),
         ) };
-        return match c_dataset.is_null() {
-            true  => None,
-            false => unsafe { Some(Dataset::_with_c_dataset(c_dataset)) },
+        if c_dataset.is_null() {
+            return Err(ErrorKind::NullPointer("OGR_Dr_CreateDataSource").into());
         };
+        Ok( unsafe { Dataset::_with_c_dataset(c_dataset) } )
     }
 }

@@ -34,7 +34,7 @@ impl<'a> Feature<'a> {
         }
         let field_defn = unsafe { ogr::OGR_F_GetFieldDefnRef(self.c_feature, field_id) };
         let field_type = unsafe { ogr::OGR_Fld_GetType(field_defn) };
-        return match field_type {
+        match field_type {
             ogr::OFT_STRING => {
                 let rv = unsafe { ogr::OGR_F_GetFieldAsString(self.c_feature, field_id) };
                 return Some(FieldValue::StringValue(_string(rv)));

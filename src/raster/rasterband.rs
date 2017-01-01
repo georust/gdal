@@ -4,7 +4,10 @@ use raster::types::{GdalType};
 use raster::gdal_enums;
 use gdal_major_object::MajorObject;
 use metadata::Metadata;
-use gdal_sys::gdal;
+use gdal_sys::{gdal, cpl_error};
+use utils::{_last_cpl_err};
+
+use errors::*;
 
 pub struct RasterBand<'a> {
     c_rasterband: *const c_void,
@@ -85,25 +88,26 @@ impl <'a> RasterBand<'a> {
         window: (isize, isize),
         window_size: (usize, usize),
         buffer: Buffer<T>
-    ) {
+    ) -> Result<()> {
         assert_eq!(buffer.data.len(), buffer.size.0 * buffer.size.1);
-        unsafe {
-            let rv = gdal::GDALRasterIO(
-                self.c_rasterband,
-                gdal_enums::GDALRWFlag::GF_Write,
-                window.0 as c_int,
-                window.1 as c_int,
-                window_size.0 as c_int,
-                window_size.1 as c_int,
-                buffer.data.as_ptr() as *const c_void,
-                buffer.size.0 as c_int,
-                buffer.size.1 as c_int,
-                T::gdal_type(),
-                0,
-                0
-            ) as isize;
-            assert!(rv == 0);
-        };
+        let rv = unsafe { gdal::GDALRasterIO(
+            self.c_rasterband,
+            gdal_enums::GDALRWFlag::GF_Write,
+            window.0 as c_int,
+            window.1 as c_int,
+            window_size.0 as c_int,
+            window_size.1 as c_int,
+            buffer.data.as_ptr() as *const c_void,
+            buffer.size.0 as c_int,
+            buffer.size.1 as c_int,
+            T::gdal_type(),
+            0,
+            0
+            )};
+        if rv != cpl_error::CPLErr::CE_None {            
+            return Err(_last_cpl_err(rv).into());
+        }
+        Ok(())
     }
 
     pub fn band_type(&self) -> gdal_enums::GDALDataType {
