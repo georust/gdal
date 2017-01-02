@@ -1,5 +1,6 @@
-use vector::{Geometry, ogr};
+use vector::{Geometry};
 use geo;
+use gdal_sys::ogr;
 
 impl geo::ToGeo for Geometry {
     fn to_geo(&self) -> geo::Geometry {

@@ -1,9 +1,10 @@
 use libc::{c_int, c_void};
-use raster::{gdal, Dataset, Buffer};
+use raster::{Dataset, Buffer};
 use raster::types::{GdalType};
 use raster::gdal_enums;
 use gdal_major_object::MajorObject;
 use metadata::Metadata;
+use gdal_sys::gdal;
 
 pub struct RasterBand<'a> {
     c_rasterband: *const c_void,

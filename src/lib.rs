@@ -23,6 +23,7 @@
 
 extern crate libc;
 extern crate geo;
+extern crate gdal_sys;
 
 pub use version::version_info;
 

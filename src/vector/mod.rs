@@ -28,7 +28,6 @@ pub trait ToGdal {
     fn to_gdal(&self) -> Geometry;
 }
 
-mod ogr;
 mod driver;
 mod dataset;
 mod layer;

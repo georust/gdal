@@ -1,9 +1,10 @@
 use std::ptr::null;
 use libc::{c_void};
-use vector::{ogr, Feature, Geometry};
+use vector::{Feature, Geometry};
 use vector::defn::Defn;
 use gdal_major_object::MajorObject;
 use metadata::Metadata;
+use gdal_sys::ogr;
 
 /// Layer in a vector dataset
 ///

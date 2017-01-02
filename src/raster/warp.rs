@@ -1,7 +1,8 @@
 use libc::c_double;
 use std::ptr::null;
-use raster::{gdal, Dataset};
+use raster::{Dataset};
 use raster::gdal_enums::GDALResampleAlg;
+use gdal_sys::gdal;
 
 pub fn reproject(src: &Dataset, dst: &Dataset) {
     let rv = unsafe {

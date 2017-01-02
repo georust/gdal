@@ -2,10 +2,11 @@ use std::ffi::CString;
 use std::path::Path;
 use std::ptr::null;
 use libc::{c_int, c_void};
-use vector::{ogr, Layer};
+use vector::{Layer};
 use vector::driver::_register_drivers;
 use gdal_major_object::MajorObject;
 use metadata::Metadata;
+use gdal_sys::ogr;
 
 /// Vector dataset
 ///

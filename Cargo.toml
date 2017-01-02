@@ -10,3 +10,7 @@ documentation = "https://georust.github.io/rust-gdal/"
 [dependencies]
 libc = "0.2.13"
 geo = "0.0.5"
+gdal-sys = { path = "gdal-sys", version = "0.1.0"}
+
+[workspace]
+members = ["gdal-sys"]

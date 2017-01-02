@@ -2,12 +2,13 @@ use libc::{c_int, c_double, c_void};
 use std::ffi::CString;
 use std::path::Path;
 use utils::_string;
-use raster::{gdal, Driver, RasterBand};
+use raster::{Driver, RasterBand};
 use raster::driver::_register_drivers;
 use raster::gdal_enums::{GDALAccess, GDALDataType};
 use raster::types::GdalType;
 use gdal_major_object::MajorObject;
 use metadata::Metadata;
+use gdal_sys::gdal;
 
 pub type GeoTransform = [c_double; 6];
 

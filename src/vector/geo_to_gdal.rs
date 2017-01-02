@@ -1,6 +1,7 @@
 use libc::c_int;
-use vector::{Geometry, ToGdal, ogr};
+use vector::{Geometry, ToGdal};
 use geo;
+use gdal_sys::ogr;
 
 impl ToGdal for geo::Point {
     fn to_gdal(&self) -> Geometry {
