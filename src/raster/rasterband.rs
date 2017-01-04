@@ -34,13 +34,13 @@ impl <'a> RasterBand<'a> {
         window: (isize, isize),
         window_size: (usize, usize),
         size: (usize, usize),
-    ) -> Buffer<T>
+    ) -> Result<Buffer<T>>
     {
         let pixels = (size.0 * size.1) as usize;
         let mut data: Vec<T> = Vec::with_capacity(pixels);
         //let no_data:
-        unsafe {
-            let rv = gdal::GDALRasterIO(
+        let rv = unsafe {
+            gdal::GDALRasterIO(
                 self.c_rasterband,
                 gdal_enums::GDALRWFlag::GF_Read,
                 window.0 as c_int,
@@ -53,14 +53,20 @@ impl <'a> RasterBand<'a> {
                 T::gdal_type(),
                 0,
                 0
-            ) as isize;
-            assert!(rv == 0);
+            )
+        };
+        if rv != cpl_error::CPLErr::CE_None {            
+            return Err(_last_cpl_err(rv).into());
+        }
+        
+        unsafe {
             data.set_len(pixels);
         };
-        Buffer{
+
+        Ok(Buffer{
             size: size,
             data: data,
-        }
+        })
     }
 
     /// Read a full 'Dataset' as 'Buffer<T>'.
@@ -68,7 +74,7 @@ impl <'a> RasterBand<'a> {
     /// * band_index - the band_index
     pub fn read_band_as<T: Copy + GdalType>(
         &self,
-    ) -> Buffer<T>
+    ) -> Result<Buffer<T>>
     {
         let size = self.owning_dataset.size();
         self.read_as::<T>(

@@ -173,7 +173,7 @@ impl Dataset {
         band_index: isize,
     ) -> Result<Buffer<T>>
     {
-        self.rasterband(band_index).map(|band| band.read_band_as())
+        self.rasterband(band_index)?.read_band_as()
     }
 
     /// Read a 'Buffer<T>' from a 'Dataset'. T implements 'GdalType'
@@ -190,7 +190,7 @@ impl Dataset {
         size: (usize, usize),
     ) -> Result<Buffer<T>>
     {
-        self.rasterband(band_index).map(|band| band.read_as(window, window_size, size))
+        self.rasterband(band_index)?.read_as(window, window_size, size)
     }
 
     /// Write a 'Buffer<T>' into a 'Dataset'.
