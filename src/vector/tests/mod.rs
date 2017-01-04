@@ -95,7 +95,7 @@ fn test_missing_field() {
 #[test]
 fn test_wkt() {
     with_first_feature("roads.geojson", |feature| {
-        let wkt = feature.geometry().wkt();
+        let wkt = feature.geometry().wkt().unwrap();
         let wkt_ok = format!("{}{}",
             "LINESTRING (26.1019276 44.4302748,",
             "26.1019382 44.4303191,26.1020002 44.4304202)"
@@ -115,7 +115,7 @@ fn test_json() {
             "[ 26.1019382, 44.4303191 ], ",
             "[ 26.1020002, 44.4304202 ] ] }"
             ).to_string();
-        assert_eq!(json, json_ok);
+        assert_eq!(json.unwrap(), json_ok);
     });
 }
 
@@ -137,8 +137,8 @@ fn test_schema() {
 
 #[test]
 fn test_create_bbox() {
-    let bbox = Geometry::bbox(-27., 33., 52., 85.);
-    assert_eq!(bbox.json(), "{ \"type\": \"Polygon\", \"coordinates\": [ [ [ -27.0, 85.0 ], [ 52.0, 85.0 ], [ 52.0, 33.0 ], [ -27.0, 33.0 ], [ -27.0, 85.0 ] ] ] }");
+    let bbox = Geometry::bbox(-27., 33., 52., 85.).unwrap();
+    assert_eq!(bbox.json().unwrap(), "{ \"type\": \"Polygon\", \"coordinates\": [ [ [ -27.0, 85.0 ], [ 52.0, 85.0 ], [ 52.0, 33.0 ], [ -27.0, 33.0 ], [ -27.0, 85.0 ] ] ] }");
 }
 
 #[test]
@@ -149,7 +149,7 @@ fn test_spatial_filter() {
     let all_features: Vec<Feature> = layer.features().collect();
     assert_eq!(all_features.len(), 21);
 
-    let bbox = Geometry::bbox(26.1017, 44.4297, 26.1025, 44.4303);
+    let bbox = Geometry::bbox(26.1017, 44.4297, 26.1025, 44.4303).unwrap();
     layer.set_spatial_filter(&bbox);
 
     let some_features: Vec<Feature> = layer.features().collect();
@@ -165,7 +165,7 @@ fn test_spatial_filter() {
 fn test_convex_hull() {
     let star = "POLYGON ((0 1,3 1,1 3,1.5 0.0,2 3,0 1))";
     let hull = "POLYGON ((1.5 0.0,0 1,1 3,2 3,3 1,1.5 0.0))";
-    assert_eq!(Geometry::from_wkt(star).convex_hull().wkt(), hull);
+    assert_eq!(Geometry::from_wkt(star).unwrap().convex_hull().unwrap().wkt().unwrap(), hull);
 }
 
 #[test]
@@ -175,8 +175,8 @@ fn test_write_features() {
     {
         let driver = Driver::get("GeoJSON").unwrap();
         let mut ds = driver.create(fixture!("output.geojson")).unwrap();
-        let mut layer = ds.create_layer();
-        layer.create_feature(Geometry::from_wkt("POINT (1 2)"));
+        let mut layer = ds.create_layer().unwrap();
+        layer.create_feature(Geometry::from_wkt("POINT (1 2)").unwrap()).unwrap();
         // dataset is closed here
     }
 
@@ -184,7 +184,7 @@ fn test_write_features() {
     fs::remove_file(fixture!("output.geojson")).unwrap();
     let layer = ds.layer(0).unwrap();
     let wkt_list = layer.features()
-        .map(|f| f.geometry().wkt())
+        .map(|f| f.geometry().wkt().unwrap())
         .collect::<Vec<String>>();
     assert_eq!(wkt_list, vec!("POINT (1 2)"));
 }

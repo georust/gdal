@@ -8,6 +8,8 @@ use gdal_major_object::MajorObject;
 use metadata::Metadata;
 use gdal_sys::ogr;
 
+use errors::*;
+
 /// Vector dataset
 ///
 /// ```
@@ -37,15 +39,15 @@ impl Dataset {
     }
 
     /// Open the dataset at `path`.
-    pub fn open(path: &Path) -> Option<Dataset> {
+    pub fn open(path: &Path) -> Result<Dataset> {
         _register_drivers();
         let filename = path.to_str().unwrap();
         let c_filename = CString::new(filename.as_bytes()).unwrap();
         let c_dataset = unsafe { ogr::OGROpen(c_filename.as_ptr(), 0, null()) };
-        return match c_dataset.is_null() {
-            true  => None,
-            false => Some(Dataset{c_dataset: c_dataset, layers: vec!()}),
+        if c_dataset.is_null() {
+           return Err(ErrorKind::NullPointer("OGROpen").into());
         };
+        Ok(Dataset{c_dataset: c_dataset, layers: vec!()})
     }
 
     /// Get number of layers.
@@ -60,16 +62,16 @@ impl Dataset {
     }
 
     /// Get layer number `idx`.
-    pub fn layer(&mut self, idx: isize) -> Option<&Layer> {
+    pub fn layer(&mut self, idx: isize) -> Result<&Layer> {
         let c_layer = unsafe { ogr::OGR_DS_GetLayer(self.c_dataset, idx as c_int) };
-        return match c_layer.is_null() {
-            true  => None,
-            false => Some(self._child_layer(c_layer)),
-        };
+        if c_layer.is_null() {
+            return Err(ErrorKind::NullPointer("OGROpen").into());            
+        }
+        Ok(self._child_layer(c_layer))
     }
 
     /// Create a new layer with a blank definition.
-    pub fn create_layer(&mut self) -> &mut Layer {
+    pub fn create_layer(&mut self) -> Result<&mut Layer> {
         let c_name = CString::new("".as_bytes()).unwrap();
         let c_layer = unsafe { ogr::OGR_DS_CreateLayer(
             self.c_dataset,
@@ -78,13 +80,11 @@ impl Dataset {
             ogr::WKB_UNKNOWN,
             null(),
         ) };
-        match c_layer.is_null() {
-            true  => panic!("Layer creation failed"),
-            false => {
-                self._child_layer(c_layer);
-                return self.layers.last_mut().unwrap();
-            }
+        if c_layer.is_null() {
+            return Err(ErrorKind::NullPointer("OGR_DS_CreateLayer").into());            
         };
+        self._child_layer(c_layer);
+        Ok(self.layers.last_mut().unwrap()) // TODO: is this safe?
     }
 }
 

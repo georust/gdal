@@ -11,7 +11,7 @@
 //! for feature in layer.features() {
 //!     let highway_field = feature.field("highway").unwrap();
 //!     let geometry = feature.geometry();
-//!     println!("{} {}", highway_field.as_string(), geometry.wkt());
+//!     println!("{} {}", highway_field.as_string(), geometry.wkt().unwrap());
 //! }
 //! ```
 
@@ -23,9 +23,11 @@ pub use vector::defn::{Defn, FieldIterator, Field};
 pub use vector::feature::{Feature, FieldValue};
 pub use vector::geometry::Geometry;
 
+use errors::{Result};
+
 /// Convert object to a GDAL geometry.
 pub trait ToGdal {
-    fn to_gdal(&self) -> Geometry;
+    fn to_gdal(&self) -> Result<Geometry>;
 }
 
 mod driver;

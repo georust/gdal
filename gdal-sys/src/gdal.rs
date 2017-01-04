@@ -1,5 +1,6 @@
 use libc::{c_int, c_char, c_double, c_void};
-use super::gdal_enums::*;
+use gdal_enums::*;
+use cpl_error::{CPLErr};
 
 #[link(name="gdal")]
 extern {
@@ -35,8 +36,8 @@ extern {
     pub fn GDALGetRasterCount(hDataset: *const c_void) -> c_int;
     pub fn GDALGetProjectionRef(hDataset: *const c_void) -> *const c_char;
     pub fn GDALSetProjection(hDataset: *const c_void, pszProjection: *const c_char) -> c_int;
-    pub fn GDALSetGeoTransform(hDataset: *const c_void, padfTransform: *const c_double) -> c_int;
-    pub fn GDALGetGeoTransform(hDataset: *const c_void, padfTransform: *mut c_double) -> c_int;
+    pub fn GDALSetGeoTransform(hDataset: *const c_void, padfTransform: *const c_double) -> CPLErr;
+    pub fn GDALGetGeoTransform(hDataset: *const c_void, padfTransform: *mut c_double) -> CPLErr;
     pub fn GDALGetRasterBand(hDataset: *const c_void, nBandId: c_int) -> *const c_void;
     // band
     pub fn GDALGetRasterDataType(hBand: *const c_void) -> c_int;
@@ -56,7 +57,7 @@ extern {
             GDALDataType: GDALDataType,
             nPixelSpace: c_int,
             nLineSpace: c_int
-        ) -> c_int;
+        ) -> CPLErr;
     pub fn GDALReprojectImage(
         hSrcDS: *const c_void,
         pszSrcWKT: *const c_char,
@@ -68,7 +69,10 @@ extern {
         pfnProgress: *const c_void,
         pProgressArg: *const c_void,
         psOptions: *const c_void
-    ) -> c_int;
+    ) -> CPLErr;
+    pub fn GDALGetDescription(hGdalMayorObject: *const c_void) -> *const c_char;
+    pub fn GDALGetMetadataItem(hGdalMayorObject: *const c_void, pszName: *const c_char, pszDomain: *const c_char) -> *const c_char;
+    pub fn GDALSetMetadataItem(hGdalMayorObject: *const c_void, pszName: *const c_char, pszValue: *const c_char, pszDomain: *const c_char ) -> CPLErr;
 }
 
 pub static REPROJECT_MEMORY_LIMIT: c_double = 0.0;

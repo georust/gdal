@@ -8,14 +8,14 @@ use gdal_major_object::MajorObject;
 use metadata::Metadata;
 use gdal_sys::gdal;
 
+use errors::*;
+
 static START: Once = ONCE_INIT;
-static mut registered_drivers: bool = false;
 
 pub fn _register_drivers() {
     unsafe {
         START.call_once(|| {
             gdal::GDALAllRegister();
-            registered_drivers = true;
         });
     }
 }
@@ -28,14 +28,14 @@ pub struct Driver {
 
 
 impl Driver {
-    pub fn get(name: &str) -> Option<Driver> {
+    pub fn get(name: &str) -> Result<Driver> {
         _register_drivers();
         let c_name = CString::new(name.as_bytes()).unwrap();
         let c_driver = unsafe { gdal::GDALGetDriverByName(c_name.as_ptr()) };
-        return match c_driver.is_null() {
-            true  => None,
-            false => Some(Driver{c_driver: c_driver}),
+        if c_driver.is_null() {
+            return Err(ErrorKind::NullPointer("GDALGetDriverByName").into());
         };
+        Ok(Driver{c_driver: c_driver})
     }
 
     pub unsafe fn _with_c_ptr(c_driver: *const c_void) -> Driver {
@@ -62,7 +62,7 @@ impl Driver {
         size_x: isize,
         size_y: isize,
         bands: isize
-    ) -> Option<Dataset> {
+    ) -> Result<Dataset> {
         self.create_with_band_type::<u8>(
             filename,
             size_x,
@@ -77,7 +77,7 @@ impl Driver {
         size_x: isize,
         size_y: isize,
         bands: isize,
-    ) -> Option<Dataset> {
+    ) -> Result<Dataset> {
         use std::ptr::null;
         let c_filename = CString::new(filename.as_bytes()).unwrap();
         let c_dataset = unsafe { gdal::GDALCreate(
@@ -89,10 +89,10 @@ impl Driver {
                 T::gdal_type(),
                 null()
             ) };
-        return match c_dataset.is_null() {
-            true  => None,
-            false => unsafe { Some(Dataset::_with_c_ptr(c_dataset)) },
+        if c_dataset.is_null() {
+            return Err(ErrorKind::NullPointer("GDALCreate").into());
         };
+        Ok( unsafe { Dataset::_with_c_ptr(c_dataset) } )        
     }
 }
 

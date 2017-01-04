@@ -19,10 +19,10 @@ macro_rules! fixture {
 #[test]
 fn test_open() {
     let dataset = Dataset::open(fixture!("tinymarble.png"));
-    assert!(dataset.is_some());
+    assert!(dataset.is_ok());
 
     let missing_dataset = Dataset::open(fixture!("no_such_file.png"));
-    assert!(missing_dataset.is_none());
+    assert!(missing_dataset.is_err());
 }
 
 
@@ -79,12 +79,13 @@ fn test_write_raster() {
     };
 
     // epand it to fill the image (20x10)
-    dataset.write_raster(
+    let res = dataset.write_raster(
         1,
         (0, 0),
         (20, 10),
         raster
     );
+    assert!(res.is_ok());
 
     // read a pixel from the left side
     let left = dataset.read_raster(
@@ -118,7 +119,7 @@ fn test_get_dataset_driver() {
 fn test_get_description() {
 
     let driver = Driver::get("mem").unwrap();
-    assert_eq!(driver.description(), Some("MEM".to_owned()));
+    assert_eq!(driver.description().unwrap(), "MEM".to_string());
 }
 
 #[test]
@@ -144,7 +145,7 @@ fn test_set_metadata_item() {
     let domain = "Test_Domain";
     let value = "Test_Value";
     let result = dataset.set_metadata_item(key, value, domain);
-    assert_eq!(result, Ok(()));
+    assert!(result.is_ok());
 
     let result = dataset.metadata_item(key, domain);
     assert_eq!(Some(value.to_owned()), result);
@@ -166,7 +167,7 @@ fn test_create_with_band_type() {
     assert_eq!(dataset.size(), (10, 20));
     assert_eq!(dataset.count(), 3);
     assert_eq!(dataset.driver().short_name(), "MEM");
-    assert_eq!(dataset.band_type(1), Some(GDALDataType::GDT_Float32))
+    assert_eq!(dataset.band_type(1).unwrap(), GDALDataType::GDT_Float32)
 }
 
 #[test]
@@ -184,18 +185,18 @@ fn test_geo_transform() {
     let driver = Driver::get("MEM").unwrap();
     let dataset = driver.create("", 20, 10, 1).unwrap();
     let transform = [0., 1., 0., 0., 0., 1.];
-    dataset.set_geo_transform(&transform);
-    assert_eq!(dataset.geo_transform(), Some(transform));
+    assert!(dataset.set_geo_transform(&transform).is_ok());
+    assert_eq!(dataset.geo_transform().unwrap(), transform);
 }
 
 
 #[test]
 fn test_get_driver_by_name() {
     let missing_driver = Driver::get("wtf");
-    assert!(missing_driver.is_none());
+    assert!(missing_driver.is_err());
 
     let ok_driver = Driver::get("GTiff");
-    assert!(ok_driver.is_some());
+    assert!(ok_driver.is_ok());
     let driver = ok_driver.unwrap();
     assert_eq!(driver.short_name(), "GTiff");
     assert_eq!(driver.long_name(), "GeoTIFF");
@@ -213,7 +214,7 @@ fn test_read_raster_as() {
     assert_eq!(rv.data, vec!(7, 7, 7, 10, 8, 12));
     assert_eq!(rv.size.0, 2);
     assert_eq!(rv.size.1, 3);
-    assert_eq!(dataset.band_type(1), Some(GDALDataType::GDT_Byte));
+    assert_eq!(dataset.band_type(1).unwrap(), GDALDataType::GDT_Byte);
 }
 
 #[test]
@@ -228,8 +229,8 @@ fn test_read_full_raster_as() {
 fn test_get_band_type() {
     let driver = Driver::get("MEM").unwrap();
     let dataset = driver.create("", 20, 10, 1).unwrap();
-    assert_eq!(dataset.band_type(1), Some(GDALDataType::GDT_Byte));
-    assert_eq!(dataset.band_type(2), None);
+    assert_eq!(dataset.band_type(1).unwrap(), GDALDataType::GDT_Byte);
+    assert!(dataset.band_type(2).is_err());
 }
 
 #[test]
@@ -237,7 +238,7 @@ fn test_get_rasterband() {
     let driver = Driver::get("MEM").unwrap();
     let dataset = driver.create("", 20, 10, 1).unwrap();
     let rasterband = dataset.rasterband(1);
-    assert!(rasterband.is_some())
+    assert!(rasterband.is_ok())
 }
 
 #[test]
