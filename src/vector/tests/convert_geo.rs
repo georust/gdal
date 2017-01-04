@@ -9,7 +9,7 @@ fn test_import_export_point() {
     let geo = geo::Geometry::Point(geo::Point(coord));
 
     assert_eq!(Geometry::from_wkt(wkt).unwrap().to_geo(), geo);
-    assert_eq!(geo.to_gdal().wkt().unwrap(), wkt);
+    assert_eq!(geo.to_gdal().unwrap().wkt().unwrap(), wkt);
 }
 
 #[test]
@@ -23,7 +23,7 @@ fn test_import_export_multipoint() {
     let geo = geo::Geometry::MultiPoint(geo::MultiPoint(coord));
 
     assert_eq!(Geometry::from_wkt(wkt).unwrap().to_geo(), geo);
-    assert_eq!(geo.to_gdal().wkt().unwrap(), wkt);
+    assert_eq!(geo.to_gdal().unwrap().wkt().unwrap(), wkt);
 }
 
 #[test]
@@ -37,7 +37,7 @@ fn test_import_export_linestring() {
     let geo = geo::Geometry::LineString(geo::LineString(coord));
 
     assert_eq!(Geometry::from_wkt(wkt).unwrap().to_geo(), geo);
-    assert_eq!(geo.to_gdal().wkt().unwrap(), wkt);
+    assert_eq!(geo.to_gdal().unwrap().wkt().unwrap(), wkt);
 }
 
 #[test]
@@ -58,7 +58,7 @@ fn test_import_export_multilinestring() {
     let geo = geo::Geometry::MultiLineString(geo::MultiLineString(strings));
 
     assert_eq!(Geometry::from_wkt(wkt).unwrap().to_geo(), geo);
-    assert_eq!(geo.to_gdal().wkt().unwrap(), wkt);
+    assert_eq!(geo.to_gdal().unwrap().wkt().unwrap(), wkt);
 }
 
 fn square(x0: isize, y0: isize, x1: isize, y1: isize) -> geo::LineString {
@@ -81,7 +81,7 @@ fn test_import_export_polygon() {
     let geo = geo::Geometry::Polygon(geo::Polygon(outer, holes));
 
     assert_eq!(Geometry::from_wkt(wkt).unwrap().to_geo(), geo);
-    assert_eq!(geo.to_gdal().wkt().unwrap(), wkt);
+    assert_eq!(geo.to_gdal().unwrap().wkt().unwrap(), wkt);
 }
 
 #[test]
@@ -107,7 +107,7 @@ fn test_import_export_multipolygon() {
     let geo = geo::Geometry::MultiPolygon(multipolygon);
 
     assert_eq!(Geometry::from_wkt(wkt).unwrap().to_geo(), geo);
-    assert_eq!(geo.to_gdal().wkt().unwrap(), wkt);
+    assert_eq!(geo.to_gdal().unwrap().wkt().unwrap(), wkt);
 }
 
 #[test]
@@ -125,5 +125,5 @@ fn test_import_export_geometrycollection() {
     let geo = geo::Geometry::GeometryCollection(collection);
 
     assert_eq!(Geometry::from_wkt(wkt).unwrap().to_geo(), geo);
-    assert_eq!(geo.to_gdal().wkt().unwrap(), wkt);
+    assert_eq!(geo.to_gdal().unwrap().wkt().unwrap(), wkt);
 }

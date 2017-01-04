@@ -115,7 +115,7 @@ fn test_json() {
             "[ 26.1019382, 44.4303191 ], ",
             "[ 26.1020002, 44.4304202 ] ] }"
             ).to_string();
-        assert_eq!(json, json_ok);
+        assert_eq!(json.unwrap(), json_ok);
     });
 }
 
@@ -138,7 +138,7 @@ fn test_schema() {
 #[test]
 fn test_create_bbox() {
     let bbox = Geometry::bbox(-27., 33., 52., 85.).unwrap();
-    assert_eq!(bbox.json(), "{ \"type\": \"Polygon\", \"coordinates\": [ [ [ -27.0, 85.0 ], [ 52.0, 85.0 ], [ 52.0, 33.0 ], [ -27.0, 33.0 ], [ -27.0, 85.0 ] ] ] }");
+    assert_eq!(bbox.json().unwrap(), "{ \"type\": \"Polygon\", \"coordinates\": [ [ [ -27.0, 85.0 ], [ 52.0, 85.0 ], [ 52.0, 33.0 ], [ -27.0, 33.0 ], [ -27.0, 85.0 ] ] ] }");
 }
 
 #[test]

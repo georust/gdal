@@ -23,9 +23,11 @@ pub use vector::defn::{Defn, FieldIterator, Field};
 pub use vector::feature::{Feature, FieldValue};
 pub use vector::geometry::Geometry;
 
+use errors::{Result};
+
 /// Convert object to a GDAL geometry.
 pub trait ToGdal {
-    fn to_gdal(&self) -> Geometry;
+    fn to_gdal(&self) -> Result<Geometry>;
 }
 
 mod driver;

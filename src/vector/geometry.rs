@@ -27,11 +27,11 @@ impl Geometry {
         //   which is good, because that's when c_geometry (which is managed
         //   by the GDAL feature) becomes invalid. Because `self.owned` is
         //   `true`, we don't call `OGR_G_DestroyGeometry`.
-        return Geometry{c_geometry_ref: RefCell::new(None), owned: false};
+        Geometry{c_geometry_ref: RefCell::new(None), owned: false}
     }
 
     pub fn has_gdal_ptr(&self) -> bool {
-        return self.c_geometry_ref.borrow().is_some();
+        self.c_geometry_ref.borrow().is_some()
     }
 
     pub unsafe fn set_c_geometry(&self, c_geometry: *const c_void) {
@@ -41,16 +41,18 @@ impl Geometry {
     }
 
     unsafe fn with_c_geometry(c_geom: *const c_void, owned: bool) -> Geometry {
-        return Geometry{
+        Geometry{
             c_geometry_ref: RefCell::new(Some(c_geom)),
             owned: owned,
-        };
+        }
     }
 
-    pub fn empty(wkb_type: c_int) -> Geometry {
+    pub fn empty(wkb_type: c_int) -> Result<Geometry> {
         let c_geom = unsafe { ogr::OGR_G_CreateGeometry(wkb_type) };
-        assert!(c_geom != null());
-        return unsafe { Geometry::with_c_geometry(c_geom, true) };
+        if c_geom.is_null() {
+            return Err(ErrorKind::NullPointer("OGR_G_CreateGeometry").into());
+        };
+        Ok(unsafe { Geometry::with_c_geometry(c_geom, true) })
     }
 
     /// Create a geometry by parsing a
@@ -79,11 +81,14 @@ impl Geometry {
     }
 
     /// Serialize the geometry as JSON.
-    pub fn json(&self) -> String {
+    pub fn json(&self) -> Result<String> {
         let c_json = unsafe { ogr::OGR_G_ExportToJson(self.c_geometry()) };
+        if c_json.is_null() {
+            return Err(ErrorKind::NullPointer("OGR_G_ExportToJson").into());
+        };
         let rv = _string(c_json);
         unsafe { ogr::VSIFree(c_json as *mut c_void) };
-        rv
+        Ok(rv)
     }
 
     /// Serialize the geometry as WKT.
@@ -128,7 +133,7 @@ impl Geometry {
 
     pub fn get_point_vec(&self) -> Vec<(f64, f64, f64)> {
         let length = unsafe{ ogr::OGR_G_GetPointCount(self.c_geometry()) };
-        return (0..length).map(|i| self.get_point(i)).collect();
+        (0..length).map(|i| self.get_point(i)).collect()
     }
 
     /// Compute the convex hull of this geometry.
