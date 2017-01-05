@@ -1,5 +1,6 @@
 use std::ptr::null;
-use libc::{c_void};
+use std::ffi::CString;
+use libc::{c_void, c_int};
 use vector::{Feature, Geometry};
 use vector::defn::Defn;
 use gdal_major_object::MajorObject;
@@ -93,5 +94,28 @@ impl<'a> Iterator for FeatureIterator<'a> {
 impl<'a> FeatureIterator<'a> {
     pub fn _with_layer(layer: &'a Layer) -> FeatureIterator<'a> {
         return FeatureIterator{layer: layer};
+    }
+}
+
+pub struct FieldDefn(*const c_void);
+
+impl Drop for FieldDefn {
+    fn drop(&mut self){
+        unsafe { ogr::OGR_Fld_Destroy(self.0 as *mut c_void) };
+    }
+}
+
+impl FieldDefn {
+    pub fn new(name: &str, field_type: i32) -> FieldDefn {
+        let c_str = CString::new(name).unwrap();
+        let c_obj = unsafe { ogr::OGR_Fld_Create(c_str.as_ptr(), field_type as c_int) };
+        FieldDefn(c_obj)
+    }
+    pub fn set_width(&self, width: i32) {
+        unsafe {ogr:: OGR_Fld_SetWidth(self.0 as *mut c_void, width as c_int) };
+    }
+    pub fn add_to_layer(&self, layer: &Layer) {
+        let rv = unsafe { ogr::OGR_L_CreateField(layer.gdal_object_ptr(), self.0, 1) };
+        assert_eq!(rv, ogr_enums::OGRErr::OGRERR_NONE);
     }
 }

@@ -18,10 +18,11 @@
 
 pub use vector::driver::Driver;
 pub use vector::dataset::Dataset;
-pub use vector::layer::{Layer, FeatureIterator};
+pub use vector::layer::{Layer, FeatureIterator, FieldDefn};
 pub use vector::defn::{Defn, FieldIterator, Field};
 pub use vector::feature::{Feature, FieldValue};
 pub use vector::geometry::Geometry;
+pub use gdal_sys::ogr::{OFT_REAL, OFT_STRING};
 
 use errors::{Result};
 

@@ -1,10 +1,13 @@
 use std::ffi::CString;
-use libc::{c_void};
+use libc::{c_void, c_double};
 use vector::Defn;
 use utils::_string;
-use gdal_sys::ogr;
+use gdal_sys::{ogr, ogr_enums};
 use vector::geometry::Geometry;
+use vector::layer::Layer;
+use gdal_major_object::MajorObject;
 
+use errors::*;
 
 /// OGR Feature
 pub struct Feature<'a> {
@@ -15,6 +18,15 @@ pub struct Feature<'a> {
 
 
 impl<'a> Feature<'a> {
+    pub fn new(defn: &'a Defn) -> Feature {
+        let c_feature = unsafe { ogr::OGR_F_Create(defn.c_defn()) };
+            unsafe { Feature {
+                     _defn: defn,
+                     c_feature: c_feature,
+                     geometry: Geometry::lazy_feature_geometry(),
+                    } }
+    }
+
     pub unsafe fn _with_c_feature(defn: &'a Defn, c_feature: *const c_void) -> Feature {
         return Feature{
             _defn: defn,
@@ -54,6 +66,37 @@ impl<'a> Feature<'a> {
             unsafe { self.geometry.set_c_geometry(c_geom) };
         }
         return &self.geometry;
+    }
+
+    pub fn create(&self, lyr: &Layer) -> Result<()> {
+        let rv = unsafe { ogr::OGR_L_CreateFeature(lyr.gdal_object_ptr(), self.c_feature) };
+        // assert_eq!(rv, ogr::OGRERR_NONE);
+        if rv != ogr_enums::OGRErr::OGRERR_NONE {
+            return Err(ErrorKind::OgrError(rv, "OGR_L_CreateFeature").into());
+        }
+        Ok(())
+    }
+
+    pub fn set_field_string(&self, field_name: &str, value: &str){
+        let c_str_field_name = CString::new(field_name).unwrap();
+        let c_str_value = CString::new(value).unwrap();
+        let idx = unsafe { ogr::OGR_F_GetFieldIndex(self.c_feature, c_str_field_name.as_ptr())};
+        unsafe { ogr::OGR_F_SetFieldString(self.c_feature, idx, c_str_value.as_ptr()) };
+    }
+
+    pub fn set_field_double(&self, field_name: &str, value: f64){
+        let c_str_field_name = CString::new(field_name).unwrap();
+        let idx = unsafe { ogr::OGR_F_GetFieldIndex(self.c_feature, c_str_field_name.as_ptr())};
+        unsafe { ogr::OGR_F_SetFieldDouble(self.c_feature, idx, value as c_double) };
+    }
+
+    pub fn set_geometry(&mut self, geom: Geometry) -> Result<()> {
+        self.geometry = geom;
+        let rv = unsafe { ogr::OGR_F_SetGeometry(self.c_feature, self.geometry.c_geometry()) };
+        if rv != ogr_enums::OGRErr::OGRERR_NONE {
+            return Err(ErrorKind::OgrError(rv, "OGR_G_SetGeometry").into());
+        }
+        Ok(())
     }
 }
 

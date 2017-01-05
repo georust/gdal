@@ -15,6 +15,7 @@ extern {
     pub fn OGR_L_GetNextFeature(hLayer: *const c_void) -> *const c_void;
     pub fn OGR_L_SetSpatialFilter(hLayer: *const c_void, hGeom: *const c_void);
     pub fn OGR_L_CreateFeature(hLayer: *const c_void, hFeat: *const c_void) -> OGRErr;
+    pub fn OGR_L_CreateField(hLayer: *const c_void, hField: *const c_void, bApproxOK: c_int) -> OGRErr;
     pub fn OGR_FD_GetFieldCount(hDefn: *const c_void) -> c_int;
     pub fn OGR_FD_GetFieldDefn(hDefn: *const c_void, iField: c_int) -> *const c_void;
     pub fn OGR_F_Create(hDefn: *const c_void) -> *const c_void;
@@ -23,7 +24,10 @@ extern {
     pub fn OGR_F_GetFieldAsString(hFeat: *const c_void, iField: c_int) -> *const c_char;
     pub fn OGR_F_GetFieldAsDouble(hFeat: *const c_void, iField: c_int) -> c_double;
     pub fn OGR_F_GetGeometryRef(hFeat: *const c_void) -> *const c_void;
+    pub fn OGR_F_SetGeometry(hFeat: *const c_void, hGeom: *const c_void) -> OGRErr;
     pub fn OGR_F_SetGeometryDirectly(hFeat: *const c_void, hGeom: *const c_void) -> OGRErr;
+    pub fn OGR_F_SetFieldString(hFeat: *const c_void, iField: c_int, pszValue: *const c_char) -> c_void;
+    pub fn OGR_F_SetFieldDouble(hFeat: *const c_void, iField: c_int, dfValue: c_double) -> c_void;
     pub fn OGR_F_Destroy(hFeat: *const c_void);
     pub fn OGR_G_CreateGeometry(eGeometryType: c_int) -> *const c_void;
     pub fn OGR_G_CreateFromWkt(ppszData: &mut *const c_char, hSRS: *const c_void, phGeometry: &mut *const c_void) -> OGRErr;
@@ -42,6 +46,9 @@ extern {
     pub fn OGR_G_DestroyGeometry(hGeom: *mut c_void);
     pub fn OGR_Fld_GetNameRef(hDefn: *const c_void) -> *const c_char;
     pub fn OGR_Fld_GetType(hDefn: *const c_void) -> c_int;
+    pub fn OGR_Fld_Create(pszName: *const c_char, eType: c_int) -> *const c_void;
+    pub fn OGR_Fld_SetWidth(hDefn: *const c_void, nNewWidth: c_int) -> c_void;
+    pub fn OGR_Fld_Destroy(hDefn: *mut c_void) -> c_void;
     pub fn OGRFree(ptr: *mut c_void);
     pub fn VSIFree(ptr: *mut c_void);
 }

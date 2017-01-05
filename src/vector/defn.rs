@@ -1,6 +1,8 @@
 use libc::{c_int, c_void};
 use utils::_string;
 use gdal_sys::ogr;
+use vector::layer::Layer;
+use gdal_major_object::MajorObject;
 
 /// Layer definition
 ///
@@ -26,6 +28,11 @@ impl Defn {
             total: total
         };
     }
+
+    pub fn new_from_layer(lyr: &Layer) -> Defn {
+        let c_defn = unsafe { ogr::OGR_L_GetLayerDefn(lyr.gdal_object_ptr())};
+            Defn {c_defn: c_defn}
+        }
 }
 
 pub struct FieldIterator<'a> {
