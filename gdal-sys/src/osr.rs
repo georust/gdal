@@ -16,5 +16,3 @@ extern {
     pub fn OCTDestroyCoordinateTransformation(hCT: *mut c_void) -> c_void;
     pub fn OCTTransform(hCT: *const c_void, nCount: c_int, x: *mut c_double, y: *mut c_double, z: *mut c_double) -> bool;
 }
-
-pub const OGRERR_NONE: c_int = 0;
