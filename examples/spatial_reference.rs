@@ -7,8 +7,8 @@ fn main() {
     println!("Spatial ref from proj4 to wkt:\n{:?}\n", spatial_ref1.to_wkt().unwrap());
     let spatial_ref2 = SpatialRef::new_from_wkt("GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",7030]],TOWGS84[0,0,0,0,0,0,0],AUTHORITY[\"EPSG\",6326]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",8901]],UNIT[\"DMSH\",0.0174532925199433,AUTHORITY[\"EPSG\",9108]],AXIS[\"Lat\",NORTH],AXIS[\"Long\",EAST],AUTHORITY[\"EPSG\",4326]]").unwrap();
     println!("Spatial ref from wkt to proj4:\n{:?}\n", spatial_ref2.to_proj4().unwrap());
-    let spatial_ref3 = SpatialRef::new();
-    println!("Empty spatial ref to wkt:\n{:?}\n", spatial_ref3.to_wkt().unwrap());
+    let spatial_ref3 = SpatialRef::new("urn:ogc:def:crs:EPSG:6.3:26986").unwrap();
+    println!("Spatial ref from ogc naming to wkt:\n{:?}\n", spatial_ref3.to_wkt().unwrap());
     let spatial_ref4 = SpatialRef::new_from_epsg(4326).unwrap();
     println!("Spatial ref from epsg code to wkt:\n{:?}\n", spatial_ref4.to_wkt().unwrap());
     println!("Spatial ref from epsg code to pretty wkt:\n{:?}\n", spatial_ref4.to_pretty_wkt().unwrap());
@@ -23,4 +23,9 @@ fn main() {
     println!("Polygon before transformation:\n{:?}\n", geom.wkt().unwrap());
     geom.transform(&htransform).unwrap();
     println!("Polygon after transformation:\n{:?}\n", geom.wkt().unwrap());
+    let spatial_ref5 = SpatialRef::new_from_epsg(4326).unwrap();
+    println!("To wkt: {:?}", spatial_ref5.to_wkt());
+    spatial_ref5.morph_to_esri().unwrap();
+    println!("To esri wkt: {:?}", spatial_ref5.to_wkt());
+    println!("To xml: {:?}", spatial_ref5.to_xml());
 }

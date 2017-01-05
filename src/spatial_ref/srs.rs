@@ -65,19 +65,25 @@ impl PartialEq for SpatialRef {
 }
 
 impl SpatialRef {
-    pub fn new() -> SpatialRef {
+    pub fn new(definition: &str) -> Result<SpatialRef> {
         let c_obj = unsafe { osr::OSRNewSpatialReference(ptr::null()) };
-        SpatialRef(c_obj)
+        if c_obj.is_null() {
+            return Err(ErrorKind::NullPointer("OSRNewSpatialReference").into());
+        }
+        let rv = unsafe { osr::OSRSetFromUserInput(c_obj, CString::new(definition).unwrap().as_ptr()) };
+        if rv != ogr_enums::OGRErr::OGRERR_NONE {
+            return Err(ErrorKind::OgrError(rv, "OSRSetFromUserInput").into());
+        }
+        Ok(SpatialRef(c_obj))
     }
 
     pub fn new_from_wkt(wkt: &str) -> Result<SpatialRef> {
         let c_str = CString::new(wkt).unwrap();
         let c_obj = unsafe { osr::OSRNewSpatialReference(c_str.as_ptr()) };
         if c_obj.is_null() {
-            Err(ErrorKind::NullPointer("OSRNewSpatialReference").into())
-        } else {
-            Ok(SpatialRef(c_obj))
+            return Err(ErrorKind::NullPointer("OSRNewSpatialReference").into());
         }
+        Ok(SpatialRef(c_obj))
     }
 
     pub fn new_from_epsg(epsg_code: u32) -> Result<SpatialRef> {
@@ -107,19 +113,37 @@ impl SpatialRef {
         let mut c_wkt: *const c_char = ptr::null_mut();
         let _err = unsafe { osr::OSRExportToWkt(self.0, &mut c_wkt) };
         if _err != ogr_enums::OGRErr::OGRERR_NONE {
-            Err(ErrorKind::OgrError(_err, "OSRImportFromProj4").into())
+            Err(ErrorKind::OgrError(_err, "OSRExportToWkt").into())
         } else {
             Ok(_string(c_wkt))
         }
+    }
+
+    pub fn morph_to_esri(&self) -> Result<()> {
+        let _err = unsafe { osr::OSRMorphToESRI(self.0) };
+        if _err != ogr_enums::OGRErr::OGRERR_NONE {
+            return Err(ErrorKind::OgrError(_err, "OSRMorphToESRI").into());
+        }
+        Ok(())
     }
 
     pub fn to_pretty_wkt(&self) -> Result<String> {
         let mut c_wkt: *const c_char = ptr::null_mut();
         let _err = unsafe { osr::OSRExportToPrettyWkt(self.0, &mut c_wkt, false as c_int) };
         if _err != ogr_enums::OGRErr::OGRERR_NONE {
-            Err(ErrorKind::OgrError(_err, "OSRImportFromProj4").into())
+            Err(ErrorKind::OgrError(_err, "OSRExportToPrettyWkt").into())
         } else {
             Ok(_string(c_wkt))
+        }
+    }
+
+    pub fn to_xml(&self) -> Result<String> {
+        let mut c_raw_xml: *const c_char = ptr::null_mut();
+        let _err = unsafe { osr::OSRExportToXML(self.0, &mut c_raw_xml, ptr::null() as *const c_char) };
+        if _err != ogr_enums::OGRErr::OGRERR_NONE {
+            Err(ErrorKind::OgrError(_err, "OSRExportToXML").into())
+        } else {
+            Ok(_string(c_raw_xml))
         }
     }
 
@@ -127,7 +151,7 @@ impl SpatialRef {
         let mut c_proj4str: *const c_char = ptr::null_mut();
         let _err = unsafe { osr::OSRExportToProj4(self.0, &mut c_proj4str) };
         if _err != ogr_enums::OGRErr::OGRERR_NONE {
-            Err(ErrorKind::OgrError(_err, "OSRImportFromProj4").into())
+            Err(ErrorKind::OgrError(_err, "OSRExportToProj4").into())
         } else {
             Ok(_string(c_proj4str))
         }
