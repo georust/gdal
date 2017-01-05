@@ -35,4 +35,5 @@ pub mod metadata;
 pub mod version;
 pub mod raster;
 pub mod vector;
+pub mod spatial_ref;
 pub mod errors;

@@ -37,6 +37,8 @@ extern {
     pub fn OGR_G_GetGeometryCount(hGeom: *const c_void) -> c_int;
     pub fn OGR_G_GetGeometryRef(hGeom: *const c_void, iSubGeom: c_int) -> *const c_void;
     pub fn OGR_G_AddGeometryDirectly(hGeom: *const c_void, hNewSubGeom: *const c_void) -> OGRErr;
+    pub fn OGR_G_Transform(hGeom: *const c_void, hCT: *const c_void) -> OGRErr;
+    pub fn OGR_G_TransformTo(hGeom: *const c_void, hSRS: *const c_void) -> OGRErr;
     pub fn OGR_G_DestroyGeometry(hGeom: *mut c_void);
     pub fn OGR_Fld_GetNameRef(hDefn: *const c_void) -> *const c_char;
     pub fn OGR_Fld_GetType(hDefn: *const c_void) -> c_int;

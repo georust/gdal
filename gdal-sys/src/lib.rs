@@ -8,5 +8,8 @@ pub mod gdal_enums;
 pub mod ogr;
 pub mod ogr_enums;
 
+// OGR Spatial Reference module
+pub mod osr;
+
 // cpl modules
 pub mod cpl_error;
