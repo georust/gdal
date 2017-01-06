@@ -65,7 +65,15 @@ impl PartialEq for SpatialRef {
 }
 
 impl SpatialRef {
-    pub fn new(definition: &str) -> Result<SpatialRef> {
+    pub fn new() -> Result<SpatialRef> {
+        let c_obj = unsafe { osr::OSRNewSpatialReference(ptr::null()) };
+        if c_obj.is_null() {
+            return Err(ErrorKind::NullPointer("OSRNewSpatialReference").into());
+        }
+        Ok(SpatialRef(c_obj))
+    }
+
+    pub fn new_from_definition(definition: &str) -> Result<SpatialRef> {
         let c_obj = unsafe { osr::OSRNewSpatialReference(ptr::null()) };
         if c_obj.is_null() {
             return Err(ErrorKind::NullPointer("OSRNewSpatialReference").into());
