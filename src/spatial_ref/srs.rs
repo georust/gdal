@@ -73,7 +73,7 @@ impl SpatialRef {
         Ok(SpatialRef(c_obj))
     }
 
-    pub fn new_from_definition(definition: &str) -> Result<SpatialRef> {
+    pub fn from_definition(definition: &str) -> Result<SpatialRef> {
         let c_obj = unsafe { osr::OSRNewSpatialReference(ptr::null()) };
         if c_obj.is_null() {
             return Err(ErrorKind::NullPointer("OSRNewSpatialReference").into());
@@ -85,7 +85,7 @@ impl SpatialRef {
         Ok(SpatialRef(c_obj))
     }
 
-    pub fn new_from_wkt(wkt: &str) -> Result<SpatialRef> {
+    pub fn from_wkt(wkt: &str) -> Result<SpatialRef> {
         let c_str = CString::new(wkt).unwrap();
         let c_obj = unsafe { osr::OSRNewSpatialReference(c_str.as_ptr()) };
         if c_obj.is_null() {
@@ -94,7 +94,7 @@ impl SpatialRef {
         Ok(SpatialRef(c_obj))
     }
 
-    pub fn new_from_epsg(epsg_code: u32) -> Result<SpatialRef> {
+    pub fn from_epsg(epsg_code: u32) -> Result<SpatialRef> {
         let null_ptr = ptr::null_mut();
         let c_obj = unsafe { osr::OSRNewSpatialReference(null_ptr) };
         let rv = unsafe { osr::OSRImportFromEPSG(c_obj, epsg_code as c_int) };
@@ -105,7 +105,7 @@ impl SpatialRef {
         }
     }
 
-    pub fn new_from_proj4(proj4_string: &str) -> Result<SpatialRef> {
+    pub fn from_proj4(proj4_string: &str) -> Result<SpatialRef> {
         let c_str = CString::new(proj4_string).unwrap();
         let null_ptr = ptr::null_mut();
         let c_obj = unsafe { osr::OSRNewSpatialReference(null_ptr) };
