@@ -4,6 +4,7 @@ use std::ffi::CString;
 use std::cell::RefCell;
 use utils::_string;
 use gdal_sys::{ogr, ogr_enums};
+use spatial_ref::{SpatialRef, CoordTransform};
 
 use errors::*;
 
@@ -164,6 +165,28 @@ impl Geometry {
         }
         Ok(())
     }
+
+    pub fn transform(&mut self, htransform: &CoordTransform) -> Result<()> {
+        let rv = unsafe { ogr::OGR_G_Transform(
+            self.c_geometry(),
+            htransform.to_c_hct()
+        ) };
+        if rv != ogr_enums::OGRErr::OGRERR_NONE {
+            return Err(ErrorKind::OgrError(rv, "OGR_G_Transform").into());
+        }
+        Ok(())
+    }
+
+    pub fn transform_to(&mut self, spatial_ref: &SpatialRef) -> Result<()> {
+        let rv = unsafe { ogr::OGR_G_TransformTo(
+            self.c_geometry(),
+            spatial_ref.to_c_hsrs()
+        ) };
+        if rv != ogr_enums::OGRErr::OGRERR_NONE {
+            return Err(ErrorKind::OgrError(rv, "OGR_G_TransformTo").into());
+        }
+        Ok(())
+}
 }
 
 impl Drop for Geometry {
