@@ -1,5 +1,5 @@
 use std::ffi::CString;
-use libc::{c_void, c_double};
+use libc::{c_void, c_double, c_int};
 use vector::Defn;
 use utils::_string;
 use gdal_sys::{ogr, ogr_enums};
@@ -55,6 +55,10 @@ impl<'a> Feature<'a> {
                 let rv = unsafe { ogr::OGR_F_GetFieldAsDouble(self.c_feature, field_id) };
                 return Some(FieldValue::RealValue(rv as f64));
             },
+            ogr::OFT_INTEGER => {
+                let rv = unsafe { ogr::OGR_F_GetFieldAsInteger(self.c_feature, field_id) };
+                return Some(FieldValue::IntegerValue(rv as i32));
+            },
             _ => panic!("Unknown field type {}", field_type)
         }
     }
@@ -90,6 +94,12 @@ impl<'a> Feature<'a> {
         unsafe { ogr::OGR_F_SetFieldDouble(self.c_feature, idx, value as c_double) };
     }
 
+    pub fn set_field_integer(&self, field_name: &str, value: i32){
+        let c_str_field_name = CString::new(field_name).unwrap();
+        let idx = unsafe { ogr::OGR_F_GetFieldIndex(self.c_feature, c_str_field_name.as_ptr())};
+        unsafe { ogr::OGR_F_SetFieldInteger(self.c_feature, idx, value as c_int) };
+    }
+
     pub fn set_geometry(&mut self, geom: Geometry) -> Result<()> {
         self.geometry = geom;
         let rv = unsafe { ogr::OGR_F_SetGeometry(self.c_feature, self.geometry.c_geometry()) };
@@ -109,6 +119,7 @@ impl<'a> Drop for Feature<'a> {
 
 
 pub enum FieldValue {
+    IntegerValue(i32),
     StringValue(String),
     RealValue(f64),
 }
@@ -128,6 +139,14 @@ impl FieldValue {
         match self {
             FieldValue::RealValue(rv) => rv,
             _ => panic!("not a RealValue")
+        }
+    }
+
+    /// Interpret the value as `f64`. Panics if the value is something else.
+    pub fn as_int(self) -> i32 {
+        match self {
+            FieldValue::IntegerValue(rv) => rv,
+            _ => panic!("not an IntegerValue")
         }
     }
 }

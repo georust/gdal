@@ -4,6 +4,7 @@ use gdal_sys::ogr;
 use vector::layer::Layer;
 use gdal_major_object::MajorObject;
 
+
 /// Layer definition
 ///
 /// Defines the fields available for features in a layer.
@@ -72,5 +73,17 @@ impl<'a> Field<'a> {
     pub fn name(&'a self) -> String {
         let rv = unsafe { ogr::OGR_Fld_GetNameRef(self.c_field_defn) };
         return _string(rv);
+    }
+
+    pub fn get_type(&'a self) -> i32 {
+        unsafe { ogr::OGR_Fld_GetType(self.c_field_defn) }
+    }
+
+    pub fn get_width(&'a self) -> i32 {
+        unsafe { ogr::OGR_Fld_GetWidth(self.c_field_defn) }
+    }
+
+    pub fn get_precision(&'a self) -> i32 {
+        unsafe { ogr::OGR_Fld_GetPrecision(self.c_field_defn) }
     }
 }
