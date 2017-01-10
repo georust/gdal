@@ -3,18 +3,15 @@ extern crate gdal;
 use std::fs;
 use std::path::Path;
 use std::fmt::Display;
-use gdal::vector::{Dataset, Defn, Driver, Feature, FieldDefn, Geometry, OFT_STRING, OFT_REAL, OFT_INTEGER};
+use gdal::vector::*;
 use gdal::spatial_ref::{SpatialRef, CoordTransform};
 
 fn main() {
-    // let mut dataset_a = Dataset::open(Path::new("/home/mz/Bureau/nuts2_data.geojson")).unwrap();
-    // let layer_a = dataset_a.layer(0).unwrap();
-    let mut dataset_a = Dataset::open(Path::new("/home/mz/code_rust/rust-geos/examples/GrandParisMunicipalities.geojson")).unwrap();
+    let mut dataset_a = Dataset::open(Path::new("fixtures/GrandParisMunicipalities.geojson")).unwrap();
     let layer_a = dataset_a.layer(0).unwrap();
     let fields_defn = layer_a.defn().fields()
             .map(|field| (field.name(), field.get_type(), field.get_width()))
             .collect::<Vec<_>>();
-    // println!("{:?}", fields_defn);
 
     // Create a new dataset :
     fs::remove_file("/tmp/abcde.shp");

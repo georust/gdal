@@ -142,7 +142,7 @@ impl FieldValue {
         }
     }
 
-    /// Interpret the value as `f64`. Panics if the value is something else.
+    /// Interpret the value as `i32`. Panics if the value is something else.
     pub fn as_int(self) -> i32 {
         match self {
             FieldValue::IntegerValue(rv) => rv,
