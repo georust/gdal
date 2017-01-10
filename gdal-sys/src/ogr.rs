@@ -31,6 +31,7 @@ extern {
     pub fn OGR_F_Destroy(hFeat: *const c_void);
     pub fn OGR_G_CreateGeometry(eGeometryType: c_int) -> *const c_void;
     pub fn OGR_G_CreateFromWkt(ppszData: &mut *const c_char, hSRS: *const c_void, phGeometry: &mut *const c_void) -> OGRErr;
+    pub fn OGR_G_Clone(OGRGeometryH: *const c_void) -> *const c_void;
     pub fn OGR_G_GetGeometryType(hGeom: *const c_void) -> c_int;
     pub fn OGR_G_GetPoint(hGeom: *const c_void, i: c_int, pdfX: &mut c_double, pdfY: &mut c_double, pdfZ: &mut c_double);
     pub fn OGR_G_GetPointCount(hGeom: *const c_void) -> c_int;
