@@ -53,6 +53,7 @@ extern {
     pub fn OGR_Fld_GetWidth(hDefn: *const c_void) -> c_int;
     pub fn OGR_Fld_GetPrecision(hDefn: *const c_void) -> c_int;
     pub fn OGR_Fld_SetWidth(hDefn: *const c_void, nNewWidth: c_int) -> c_void;
+    pub fn OGR_Fld_SetPrecision(hDefn: *const c_void, nNewPrecision: c_int) -> c_void;
     pub fn OGR_Fld_Destroy(hDefn: *mut c_void) -> c_void;
     pub fn OGRFree(ptr: *mut c_void);
     pub fn VSIFree(ptr: *mut c_void);

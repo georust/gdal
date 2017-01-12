@@ -21,7 +21,6 @@ fn main() {
 
     // Copy the origin layer shema to the destination layer :
     for fd in &fields_defn {
-        println!("{:?} {:?} {:?}", fd.0, fd.1, fd.2);
         let field_defn = FieldDefn::new(&fd.0, fd.1);
         field_defn.set_width(fd.2);
         field_defn.add_to_layer(&lyr);
@@ -37,26 +36,17 @@ fn main() {
     // Get the definition to use on each feature :
     let defn = Defn::new_from_layer(&lyr);
 
-    for (i, feature_a) in layer_a.features().enumerate() {
+    for feature_a in layer_a.features() {
         // Get the original geometry :
         let geom = feature_a.geometry();
         // Get a new transformed geometry :
-        let new_geom = unsafe { geom.transform_new(&htransform).unwrap() };
+        let new_geom = geom.transform(&htransform).unwrap();
         // Create the new feature, set its geometry :
         let mut ft = Feature::new(&defn);
         ft.set_geometry(new_geom);
         // copy each field value of the feature :
         for fd in &fields_defn {
-            if fd.1 == 2 {
-                let val = feature_a.field(&fd.0).unwrap().as_real();
-                ft.set_field_double(&fd.0, val);
-            } else if fd.1 == 4 {
-                let val = &feature_a.field(&fd.0).unwrap().as_string();
-                ft.set_field_string(&fd.0, val);
-            } else if fd.1 == 0 {
-                let val = &feature_a.field(&fd.0).unwrap().as_int();
-                ft.set_field_integer(&fd.0, *val);
-            }
+            ft.set_field(&fd.0, fd.1, feature_a.field(&fd.0).unwrap())
         }
         // Add the feature to the layer :
         ft.create(&lyr);

@@ -1,7 +1,7 @@
 use std::ptr::null;
 use std::ffi::CString;
-use libc::{c_void, c_int};
-use vector::{Feature, Geometry};
+use libc::{c_void, c_int, c_double};
+use vector::{Feature, Geometry, FieldValue};
 use vector::defn::Defn;
 use gdal_major_object::MajorObject;
 use metadata::Metadata;
@@ -59,12 +59,47 @@ impl Layer {
         &self.defn
     }
 
+    pub fn create_defn_fields(&self, fields_def: &[FieldDefn]){
+        for fd in fields_def {
+            fd.add_to_layer(self);
+        }
+    }
+
     pub fn create_feature(&mut self, geometry: Geometry) -> Result<()> {
         let c_feature = unsafe { ogr::OGR_F_Create(self.defn.c_defn()) };
         let c_geometry = unsafe { geometry.into_c_geometry() };
         let rv = unsafe { ogr::OGR_F_SetGeometryDirectly(c_feature, c_geometry) };
         if rv != ogr_enums::OGRErr::OGRERR_NONE {
             return Err(ErrorKind::OgrError(rv, "OGR_F_SetGeometryDirectly").into());
+        }
+        let rv = unsafe { ogr::OGR_L_CreateFeature(self.c_layer, c_feature) };
+        if rv != ogr_enums::OGRErr::OGRERR_NONE {
+            return Err(ErrorKind::OgrError(rv, "OGR_L_CreateFeature").into());
+        }
+        Ok(())
+    }
+
+    pub fn create_feature_fields(&mut self, geometry: Geometry,
+                                 field_names: &[&str], values: &[FieldValue]) -> Result<()> {
+        let c_feature = unsafe { ogr::OGR_F_Create(self.defn.c_defn()) };
+        let c_geometry = unsafe { geometry.into_c_geometry() };
+        let rv = unsafe { ogr::OGR_F_SetGeometryDirectly(c_feature, c_geometry) };
+        if rv != ogr_enums::OGRErr::OGRERR_NONE {
+            return Err(ErrorKind::OgrError(rv, "OGR_F_SetGeometryDirectly").into());
+        }
+        for (i, fd) in field_names.iter().enumerate() {
+            let c_str_field_name = CString::new(*fd).unwrap();
+            let idx = unsafe { ogr::OGR_F_GetFieldIndex(c_feature, c_str_field_name.as_ptr())};
+            let val = &values[i];
+            match val {
+                &FieldValue::StringValue(ref v) => {
+                    unsafe { ogr::OGR_F_SetFieldString(c_feature, idx, CString::new(v.as_str()).unwrap().as_ptr()) };
+                }, &FieldValue::IntegerValue(ref v) => {
+                    unsafe { ogr::OGR_F_SetFieldInteger(c_feature, idx, *v as c_int) };
+                }, &FieldValue::RealValue(ref v) => {
+                    unsafe { ogr::OGR_F_SetFieldDouble(c_feature, idx, *v as c_double) };
+                }
+            }
         }
         let rv = unsafe { ogr::OGR_L_CreateFeature(self.c_layer, c_feature) };
         if rv != ogr_enums::OGRErr::OGRERR_NONE {
@@ -97,11 +132,19 @@ impl<'a> FeatureIterator<'a> {
     }
 }
 
-pub struct FieldDefn(*const c_void);
+pub struct FieldDefn {
+    c_obj: *const c_void,
+}
 
 impl Drop for FieldDefn {
     fn drop(&mut self){
-        unsafe { ogr::OGR_Fld_Destroy(self.0 as *mut c_void) };
+        unsafe { ogr::OGR_Fld_Destroy(self.c_obj as *mut c_void) };
+    }
+}
+
+impl MajorObject for FieldDefn {
+    unsafe fn gdal_object_ptr(&self) -> *const c_void {
+        self.c_obj
     }
 }
 
@@ -109,13 +152,16 @@ impl FieldDefn {
     pub fn new(name: &str, field_type: i32) -> FieldDefn {
         let c_str = CString::new(name).unwrap();
         let c_obj = unsafe { ogr::OGR_Fld_Create(c_str.as_ptr(), field_type as c_int) };
-        FieldDefn(c_obj)
+        FieldDefn { c_obj: c_obj}
     }
     pub fn set_width(&self, width: i32) {
-        unsafe {ogr:: OGR_Fld_SetWidth(self.0 as *mut c_void, width as c_int) };
+        unsafe {ogr:: OGR_Fld_SetWidth(self.c_obj as *mut c_void, width as c_int) };
+    }
+    pub fn set_precision(&self, precision: i32) {
+        unsafe {ogr:: OGR_Fld_SetPrecision(self.c_obj as *mut c_void, precision as c_int) };
     }
     pub fn add_to_layer(&self, layer: &Layer) {
-        let rv = unsafe { ogr::OGR_L_CreateField(layer.gdal_object_ptr(), self.0, 1) };
+        let rv = unsafe { ogr::OGR_L_CreateField(layer.gdal_object_ptr(), self.c_obj, 1) };
         assert_eq!(rv, ogr_enums::OGRErr::OGRERR_NONE);
     }
 }

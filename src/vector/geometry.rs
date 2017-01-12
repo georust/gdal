@@ -166,7 +166,8 @@ impl Geometry {
         Ok(())
     }
 
-    pub fn transform(&self, htransform: &CoordTransform) -> Result<()> {
+    // Transform the geometry inplace (when we own the Geometry)
+    pub fn transform_inplace(&self, htransform: &CoordTransform) -> Result<()> {
         let rv = unsafe { ogr::OGR_G_Transform(
             self.c_geometry_ref.borrow().unwrap(),
             htransform.to_c_hct()
@@ -177,7 +178,8 @@ impl Geometry {
         Ok(())
     }
 
-    pub fn transform_new(&self, htransform: &CoordTransform) -> Result<(Geometry)> {
+    // Return a new transformed geometry (when the Geometry is owned by a Feature)
+    pub fn transform(&self, htransform: &CoordTransform) -> Result<(Geometry)> {
         let new_c_geom = unsafe { ogr::OGR_G_Clone(self.c_geometry()) };
         let rv = unsafe { ogr::OGR_G_Transform(new_c_geom, htransform.to_c_hct()) };
         if rv != ogr_enums::OGRErr::OGRERR_NONE {
@@ -186,7 +188,7 @@ impl Geometry {
         Ok((unsafe { Geometry::with_c_geometry(new_c_geom, true) } ))
     }
 
-    pub fn transform_to(&self, spatial_ref: &SpatialRef) -> Result<()> {
+    pub fn transform_to_inplace(&self, spatial_ref: &SpatialRef) -> Result<()> {
         let rv = unsafe { ogr::OGR_G_TransformTo(
             self.c_geometry(),
             spatial_ref.to_c_hsrs()
@@ -197,7 +199,7 @@ impl Geometry {
         Ok(())
     }
 
-    pub fn transform_to_new(&self, spatial_ref: &SpatialRef) -> Result<Geometry> {
+    pub fn transform_to(&self, spatial_ref: &SpatialRef) -> Result<Geometry> {
         let new_c_geom = unsafe { ogr::OGR_G_Clone(self.c_geometry()) };
         let rv = unsafe { ogr::OGR_G_TransformTo(new_c_geom, spatial_ref.to_c_hsrs()) };
         if rv != ogr_enums::OGRErr::OGRERR_NONE {

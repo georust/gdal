@@ -74,7 +74,6 @@ impl<'a> Feature<'a> {
 
     pub fn create(&self, lyr: &Layer) -> Result<()> {
         let rv = unsafe { ogr::OGR_L_CreateFeature(lyr.gdal_object_ptr(), self.c_feature) };
-        // assert_eq!(rv, ogr::OGRERR_NONE);
         if rv != ogr_enums::OGRErr::OGRERR_NONE {
             return Err(ErrorKind::OgrError(rv, "OGR_L_CreateFeature").into());
         }
@@ -98,6 +97,16 @@ impl<'a> Feature<'a> {
         let c_str_field_name = CString::new(field_name).unwrap();
         let idx = unsafe { ogr::OGR_F_GetFieldIndex(self.c_feature, c_str_field_name.as_ptr())};
         unsafe { ogr::OGR_F_SetFieldInteger(self.c_feature, idx, value as c_int) };
+    }
+
+    pub fn set_field(&self, field_name: &str, type_value: i32, value: FieldValue){
+        if type_value == 2 {
+            self.set_field_double(field_name, value.as_real());
+        } else if type_value == 4 {
+            self.set_field_string(field_name, value.as_string().as_str());
+        } else if type_value == 0 {
+            self.set_field_integer(field_name, value.as_int());
+        }
     }
 
     pub fn set_geometry(&mut self, geom: Geometry) -> Result<()> {

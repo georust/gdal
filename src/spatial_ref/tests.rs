@@ -55,6 +55,6 @@ fn transform_ogr_geometry(){
     let spatial_ref1 = SpatialRef::from_proj4("+proj=laea +lat_0=52 +lon_0=10 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +units=m +no_defs").unwrap();
     let spatial_ref2 = SpatialRef::from_wkt("GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",7030]],TOWGS84[0,0,0,0,0,0,0],AUTHORITY[\"EPSG\",6326]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",8901]],UNIT[\"DMSH\",0.0174532925199433,AUTHORITY[\"EPSG\",9108]],AXIS[\"Lat\",NORTH],AXIS[\"Long\",EAST],AUTHORITY[\"EPSG\",4326]]").unwrap();
     let htransform = CoordTransform::new(&spatial_ref2, &spatial_ref1).unwrap();
-    geom.transform(&htransform).unwrap();
+    geom.transform_inplace(&htransform).unwrap();
     assert_eq!(expected_value, geom.wkt().unwrap());
 }
