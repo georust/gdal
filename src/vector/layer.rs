@@ -59,12 +59,12 @@ impl Layer {
         &self.defn
     }
 
-    pub fn create_defn_fields(&self, fields_def: &[FieldDefn]){
+    pub fn create_defn_fields(&self, fields_def: &[(&str, i32)]){
         for fd in fields_def {
-            fd.add_to_layer(self);
+            let fdefn = FieldDefn::new(fd.0, fd.1);
+            fdefn.add_to_layer(self);
         }
     }
-
     pub fn create_feature(&mut self, geometry: Geometry) -> Result<()> {
         let c_feature = unsafe { ogr::OGR_F_Create(self.defn.c_defn()) };
         let c_geometry = unsafe { geometry.into_c_geometry() };

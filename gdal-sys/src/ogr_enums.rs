@@ -13,21 +13,3 @@ pub enum OGRErr {
     OGRERR_INVALID_HANDLE = 8,
     OGRERR_NON_EXISTING_FEATURE = 9
 }
-
-#[derive(Clone, Copy, Debug, PartialEq)]
-#[allow(dead_code)]
-#[repr(C)]
-pub enum OGRFieldType {
-    OFTInteger = 0,
-    OFTIntegerList = 1,
-    OFTReal = 2,
-    OFTRealList = 3,
-    OFTString = 4,
-    OFTStringList = 5,
-    OFTWideString = 6,
-    OFTWideStringList = 7,
-    OFTBinary = 8,
-    OFTDate = 9,
-    OFTTime = 10,
-    OFTDateTime = 11
-}

@@ -2,12 +2,11 @@ extern crate gdal;
 
 use std::fs;
 use std::path::Path;
-use std::fmt::Display;
 use gdal::vector::*;
 use gdal::spatial_ref::{SpatialRef, CoordTransform};
 
 fn main() {
-    let mut dataset_a = Dataset::open(Path::new("fixtures/GrandParisMunicipalities.geojson")).unwrap();
+    let mut dataset_a = Dataset::open(Path::new("fixtures/roads.geojson")).unwrap();
     let layer_a = dataset_a.layer(0).unwrap();
     let fields_defn = layer_a.defn().fields()
             .map(|field| (field.name(), field.get_type(), field.get_width()))
