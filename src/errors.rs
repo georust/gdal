@@ -16,11 +16,15 @@ error_chain! {
         }
         NullPointer(method_name: &'static str) {
             description("GDAL method returned a NULL pointer.")
-            display("GDAL method '{}' returned a NULL pointer.", method_name) 
+            display("GDAL method '{}' returned a NULL pointer.", method_name)
         }
         OgrError(err: OGRErr, method_name: &'static str) {
             description("OGR error")
             display("OGR method '{}' returned error: '{:?}'", method_name, err)
+        }
+        InvalidInput(method_name: &'static str) {
+            description("Invalid input")
+            display("Invalid input : {}", method_name)
         }
     }
 }

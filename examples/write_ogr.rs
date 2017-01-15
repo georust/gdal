@@ -2,7 +2,7 @@ extern crate gdal;
 
 use std::path::Path;
 use std::fs;
-use gdal::vector::{Defn, Driver, Feature, FieldDefn, Geometry, OFT_INTEGER, OFT_REAL, OFT_STRING, FieldValue};
+use gdal::vector::{Defn, Driver, Feature, FieldDefn, Geometry, OGRFieldType, FieldValue};
 
 fn main(){
     /// Example 1, the detailed way :
@@ -13,14 +13,14 @@ fn main(){
 
         let lyr = ds.create_layer().unwrap();
 
-        let field_defn = FieldDefn::new("Name", OFT_STRING);
+        let field_defn = FieldDefn::new("Name", OGRFieldType::OFTString);
         field_defn.set_width(80);
         field_defn.add_to_layer(&lyr);
 
-        let field_defn = FieldDefn::new("Value", OFT_REAL);
+        let field_defn = FieldDefn::new("Value", OGRFieldType::OFTReal);
         field_defn.add_to_layer(&lyr);
 
-        let defn = Defn::new_from_layer(&lyr);
+        let defn = Defn::from_layer(&lyr);
 
         // 1st feature :
         let mut ft = Feature::new(&defn);
@@ -44,7 +44,7 @@ fn main(){
         let mut ds = driver.create(Path::new("/tmp/output2.geojson")).unwrap();
         let mut layer = ds.create_layer().unwrap();
 
-        layer.create_defn_fields(&[("Name", OFT_STRING), ("Value", OFT_REAL)]);
+        layer.create_defn_fields(&[("Name", OGRFieldType::OFTString), ("Value", OGRFieldType::OFTReal)]);
         // Shortcut for :
         // let field_defn = FieldDefn::new("Name", OFT_STRING);
         // field_defn.add_to_layer(&layer);

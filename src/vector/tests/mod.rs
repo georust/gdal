@@ -1,5 +1,5 @@
 use std::path::Path;
-use super::{Driver, Dataset, Feature, FeatureIterator, FieldValue, Geometry, OFT_INTEGER, OFT_REAL, OFT_STRING};
+use super::{Driver, Dataset, Feature, FeatureIterator, FieldValue, Geometry, OGRFieldType};
 
 mod convert_geo;
 
@@ -57,13 +57,13 @@ fn test_string_field() {
         let feature = features.next().unwrap();
         assert_eq!(feature.field("highway")
                           .unwrap()
-                          .as_string(),
+                          .to_string(),
                    "footway".to_string());
         assert_eq!(
             features.filter(|field| {
                 let highway = field.field("highway")
                                    .unwrap()
-                                   .as_string();
+                                   .to_string();
                 highway == "residential".to_string() })
                 .count(),
             2);
@@ -77,7 +77,7 @@ fn test_float_field() {
         assert_almost_eq(
             feature.field("sort_key")
                    .unwrap()
-                   .as_real(),
+                   .to_real(),
             -9.0
         );
     });
@@ -124,18 +124,18 @@ fn test_json() {
 fn test_schema() {
     let mut ds = Dataset::open(fixture!("roads.geojson")).unwrap();
     let layer = ds.layer(0).unwrap();
-    let name_list: Vec<(String, i32)> = layer
+    let name_list: Vec<(String, OGRFieldType)> = layer
         .defn().fields()
-        .map(|f| (f.name(), f.get_type()))
+        .map(|f| (f.name(), f.field_type()))
         .collect();
-    let ok_names_types: Vec<(String, i32)> = vec!(
-        ("kind", OFT_STRING),
-        ("sort_key", OFT_REAL),
-        ("is_link", OFT_STRING),
-        ("is_tunnel", OFT_STRING),
-        ("is_bridge", OFT_STRING),
-        ("railway", OFT_STRING),
-        ("highway", OFT_STRING))
+    let ok_names_types: Vec<(String, OGRFieldType)> = vec!(
+        ("kind", OGRFieldType::OFTString),
+        ("sort_key",  OGRFieldType::OFTReal),
+        ("is_link", OGRFieldType::OFTString),
+        ("is_tunnel", OGRFieldType::OFTString),
+        ("is_bridge", OGRFieldType::OFTString),
+        ("railway", OGRFieldType::OFTString),
+        ("highway", OGRFieldType::OFTString))
         .iter().map(|s| (s.0.to_string(), s.1)).collect();
     assert_eq!(name_list, ok_names_types);
 }
@@ -181,7 +181,7 @@ fn test_write_features() {
         let driver = Driver::get("GeoJSON").unwrap();
         let mut ds = driver.create(fixture!("output.geojson")).unwrap();
         let mut layer = ds.create_layer().unwrap();
-        layer.create_defn_fields(&[("Name", OFT_STRING), ("Value", OFT_REAL), ("Int_value", OFT_INTEGER)]);
+        layer.create_defn_fields(&[("Name",  OGRFieldType::OFTString), ("Value",  OGRFieldType::OFTReal), ("Int_value", OGRFieldType::OFTInteger)]);
         layer.create_feature_fields(
             Geometry::from_wkt("POINT (1 2)").unwrap(), &["Name", "Value", "Int_value"],
             &[FieldValue::StringValue("Feature 1".to_string()), FieldValue::RealValue(45.78), FieldValue::IntegerValue(1)]
@@ -194,7 +194,7 @@ fn test_write_features() {
     let layer = ds.layer(0).unwrap();
     let ft = layer.features().next().unwrap();
     assert_eq!(ft.geometry().wkt().unwrap(), "POINT (1 2)");
-    assert_eq!(ft.field("Name").unwrap().as_string(), "Feature 1");
-    assert_eq!(ft.field("Value").unwrap().as_real(), 45.78);
-    assert_eq!(ft.field("Int_value").unwrap().as_int(), 1);
+    assert_eq!(ft.field("Name").unwrap().to_string(), "Feature 1");
+    assert_eq!(ft.field("Value").unwrap().to_real(), 45.78);
+    assert_eq!(ft.field("Int_value").unwrap().to_int(), 1);
 }

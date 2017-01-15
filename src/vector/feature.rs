@@ -6,6 +6,7 @@ use gdal_sys::{ogr, ogr_enums};
 use vector::geometry::Geometry;
 use vector::layer::Layer;
 use gdal_major_object::MajorObject;
+use gdal_sys::ogr_enums::OGRFieldType;
 
 use errors::*;
 
@@ -47,19 +48,19 @@ impl<'a> Feature<'a> {
         let field_defn = unsafe { ogr::OGR_F_GetFieldDefnRef(self.c_feature, field_id) };
         let field_type = unsafe { ogr::OGR_Fld_GetType(field_defn) };
         match field_type {
-            ogr::OFT_STRING => {
+            OGRFieldType::OFTString => {
                 let rv = unsafe { ogr::OGR_F_GetFieldAsString(self.c_feature, field_id) };
                 return Some(FieldValue::StringValue(_string(rv)));
             },
-            ogr::OFT_REAL => {
+            OGRFieldType::OFTReal => {
                 let rv = unsafe { ogr::OGR_F_GetFieldAsDouble(self.c_feature, field_id) };
                 return Some(FieldValue::RealValue(rv as f64));
             },
-            ogr::OFT_INTEGER => {
+            OGRFieldType::OFTInteger => {
                 let rv = unsafe { ogr::OGR_F_GetFieldAsInteger(self.c_feature, field_id) };
                 return Some(FieldValue::IntegerValue(rv as i32));
             },
-            _ => panic!("Unknown field type {}", field_type)
+            _ => panic!("Unknown field type {:?}", field_type)
         }
     }
 
@@ -80,32 +81,34 @@ impl<'a> Feature<'a> {
         Ok(())
     }
 
-    pub fn set_field_string(&self, field_name: &str, value: &str){
-        let c_str_field_name = CString::new(field_name).unwrap();
+    pub fn set_field_string(&self, field_name: &str, value: &str) -> Result<()> {
+        let c_str_field_name = CString::new(field_name)?;
         let c_str_value = CString::new(value).unwrap();
         let idx = unsafe { ogr::OGR_F_GetFieldIndex(self.c_feature, c_str_field_name.as_ptr())};
         unsafe { ogr::OGR_F_SetFieldString(self.c_feature, idx, c_str_value.as_ptr()) };
+        Ok(())
     }
 
-    pub fn set_field_double(&self, field_name: &str, value: f64){
-        let c_str_field_name = CString::new(field_name).unwrap();
+    pub fn set_field_double(&self, field_name: &str, value: f64) -> Result<()> {
+        let c_str_field_name = CString::new(field_name)?;
         let idx = unsafe { ogr::OGR_F_GetFieldIndex(self.c_feature, c_str_field_name.as_ptr())};
         unsafe { ogr::OGR_F_SetFieldDouble(self.c_feature, idx, value as c_double) };
+        Ok(())
     }
 
-    pub fn set_field_integer(&self, field_name: &str, value: i32){
-        let c_str_field_name = CString::new(field_name).unwrap();
+    pub fn set_field_integer(&self, field_name: &str, value: i32) -> Result<()> {
+        let c_str_field_name = CString::new(field_name)?;
         let idx = unsafe { ogr::OGR_F_GetFieldIndex(self.c_feature, c_str_field_name.as_ptr())};
         unsafe { ogr::OGR_F_SetFieldInteger(self.c_feature, idx, value as c_int) };
+        Ok(())
     }
 
-    pub fn set_field(&self, field_name: &str, type_value: i32, value: FieldValue){
-        if type_value == 2 {
-            self.set_field_double(field_name, value.as_real());
-        } else if type_value == 4 {
-            self.set_field_string(field_name, value.as_string().as_str());
-        } else if type_value == 0 {
-            self.set_field_integer(field_name, value.as_int());
+    pub fn set_field(&self, field_name: &str, type_value: OGRFieldType, value: FieldValue) -> Result<()> {
+        match type_value {
+            OGRFieldType::OFTReal => self.set_field_double(field_name, value.to_real()),
+            OGRFieldType::OFTString => self.set_field_string(field_name, value.to_string().as_str()),
+            OGRFieldType::OFTInteger => self.set_field_integer(field_name, value.to_int()),
+            _ => Err(ErrorKind::InvalidInput("set_field").into())
         }
     }
 
@@ -136,7 +139,7 @@ pub enum FieldValue {
 
 impl FieldValue {
     /// Interpret the value as `String`. Panics if the value is something else.
-    pub fn as_string(self) -> String {
+    pub fn to_string(self) -> String {
         match self {
             FieldValue::StringValue(rv) => rv,
             _ => panic!("not a StringValue")
@@ -144,7 +147,7 @@ impl FieldValue {
     }
 
     /// Interpret the value as `f64`. Panics if the value is something else.
-    pub fn as_real(self) -> f64 {
+    pub fn to_real(self) -> f64 {
         match self {
             FieldValue::RealValue(rv) => rv,
             _ => panic!("not a RealValue")
@@ -152,7 +155,7 @@ impl FieldValue {
     }
 
     /// Interpret the value as `i32`. Panics if the value is something else.
-    pub fn as_int(self) -> i32 {
+    pub fn to_int(self) -> i32 {
         match self {
             FieldValue::IntegerValue(rv) => rv,
             _ => panic!("not an IntegerValue")

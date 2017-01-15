@@ -48,8 +48,8 @@ extern {
     pub fn OGR_G_TransformTo(hGeom: *const c_void, hSRS: *const c_void) -> OGRErr;
     pub fn OGR_G_DestroyGeometry(hGeom: *mut c_void);
     pub fn OGR_Fld_GetNameRef(hDefn: *const c_void) -> *const c_char;
-    pub fn OGR_Fld_GetType(hDefn: *const c_void) -> c_int;
-    pub fn OGR_Fld_Create(pszName: *const c_char, eType: c_int) -> *const c_void;
+    pub fn OGR_Fld_GetType(hDefn: *const c_void) -> OGRFieldType;
+    pub fn OGR_Fld_Create(pszName: *const c_char, eType: OGRFieldType) -> *const c_void;
     pub fn OGR_Fld_GetWidth(hDefn: *const c_void) -> c_int;
     pub fn OGR_Fld_GetPrecision(hDefn: *const c_void) -> c_int;
     pub fn OGR_Fld_SetWidth(hDefn: *const c_void, nNewWidth: c_int) -> c_void;
@@ -58,10 +58,6 @@ extern {
     pub fn OGRFree(ptr: *mut c_void);
     pub fn VSIFree(ptr: *mut c_void);
 }
-
-pub const OFT_INTEGER:            c_int = 0;
-pub const OFT_REAL:               c_int = 2;
-pub const OFT_STRING:             c_int = 4;
 
 pub const WKB_UNKNOWN:            c_int = 0;
 pub const WKB_POINT:              c_int = 1;

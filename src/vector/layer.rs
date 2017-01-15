@@ -59,7 +59,7 @@ impl Layer {
         &self.defn
     }
 
-    pub fn create_defn_fields(&self, fields_def: &[(&str, i32)]){
+    pub fn create_defn_fields(&self, fields_def: &[(&str, ogr_enums::OGRFieldType)]){
         for fd in fields_def {
             let fdefn = FieldDefn::new(fd.0, fd.1);
             fdefn.add_to_layer(self);
@@ -149,9 +149,9 @@ impl MajorObject for FieldDefn {
 }
 
 impl FieldDefn {
-    pub fn new(name: &str, field_type: i32) -> FieldDefn {
+    pub fn new(name: &str, field_type: ogr_enums::OGRFieldType) -> FieldDefn {
         let c_str = CString::new(name).unwrap();
-        let c_obj = unsafe { ogr::OGR_Fld_Create(c_str.as_ptr(), field_type as c_int) };
+        let c_obj = unsafe { ogr::OGR_Fld_Create(c_str.as_ptr(), field_type) };
         FieldDefn { c_obj: c_obj}
     }
     pub fn set_width(&self, width: i32) {

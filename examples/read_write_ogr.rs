@@ -9,7 +9,7 @@ fn main() {
     let mut dataset_a = Dataset::open(Path::new("fixtures/roads.geojson")).unwrap();
     let layer_a = dataset_a.layer(0).unwrap();
     let fields_defn = layer_a.defn().fields()
-            .map(|field| (field.name(), field.get_type(), field.get_width()))
+            .map(|field| (field.name(), field.field_type(), field.width()))
             .collect::<Vec<_>>();
 
     // Create a new dataset :
@@ -33,7 +33,7 @@ fn main() {
     let htransform = CoordTransform::new(&spatial_ref_src, &spatial_ref_dst).unwrap();
 
     // Get the definition to use on each feature :
-    let defn = Defn::new_from_layer(&lyr);
+    let defn = Defn::from_layer(&lyr);
 
     for feature_a in layer_a.features() {
         // Get the original geometry :
@@ -45,7 +45,7 @@ fn main() {
         ft.set_geometry(new_geom);
         // copy each field value of the feature :
         for fd in &fields_defn {
-            ft.set_field(&fd.0, fd.1, feature_a.field(&fd.0).unwrap())
+            ft.set_field(&fd.0, fd.1, feature_a.field(&fd.0).unwrap()).unwrap();
         }
         // Add the feature to the layer :
         ft.create(&lyr);

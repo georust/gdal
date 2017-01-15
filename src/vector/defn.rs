@@ -3,7 +3,7 @@ use utils::_string;
 use gdal_sys::ogr;
 use vector::layer::Layer;
 use gdal_major_object::MajorObject;
-
+use gdal_sys::ogr_enums::OGRFieldType;
 
 /// Layer definition
 ///
@@ -30,7 +30,7 @@ impl Defn {
         };
     }
 
-    pub fn new_from_layer(lyr: &Layer) -> Defn {
+    pub fn from_layer(lyr: &Layer) -> Defn {
         let c_defn = unsafe { ogr::OGR_L_GetLayerDefn(lyr.gdal_object_ptr())};
             Defn {c_defn: c_defn}
         }
@@ -75,15 +75,15 @@ impl<'a> Field<'a> {
         return _string(rv);
     }
 
-    pub fn get_type(&'a self) -> i32 {
+    pub fn field_type(&'a self) -> OGRFieldType {
         unsafe { ogr::OGR_Fld_GetType(self.c_field_defn) }
     }
 
-    pub fn get_width(&'a self) -> i32 {
+    pub fn width(&'a self) -> i32 {
         unsafe { ogr::OGR_Fld_GetWidth(self.c_field_defn) }
     }
 
-    pub fn get_precision(&'a self) -> i32 {
+    pub fn precision(&'a self) -> i32 {
         unsafe { ogr::OGR_Fld_GetPrecision(self.c_field_defn) }
     }
 }
