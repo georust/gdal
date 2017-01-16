@@ -1,6 +1,6 @@
 use std::ptr::null;
 use std::ffi::CString;
-use libc::{c_void, c_int, c_double};
+use libc::{c_void, c_int};
 use vector::{Feature, Geometry, FieldValue};
 use vector::defn::Defn;
 use gdal_major_object::MajorObject;
@@ -59,11 +59,12 @@ impl Layer {
         &self.defn
     }
 
-    pub fn create_defn_fields(&self, fields_def: &[(&str, ogr_enums::OGRFieldType)]){
+    pub fn create_defn_fields(&self, fields_def: &[(&str, ogr_enums::OGRFieldType)]) -> Result<()> {
         for fd in fields_def {
-            let fdefn = FieldDefn::new(fd.0, fd.1);
-            fdefn.add_to_layer(self);
+            let fdefn = FieldDefn::new(fd.0, fd.1)?;
+            fdefn.add_to_layer(self)?;
         }
+        Ok(())
     }
     pub fn create_feature(&mut self, geometry: Geometry) -> Result<()> {
         let c_feature = unsafe { ogr::OGR_F_Create(self.defn.c_defn()) };
@@ -81,30 +82,12 @@ impl Layer {
 
     pub fn create_feature_fields(&mut self, geometry: Geometry,
                                  field_names: &[&str], values: &[FieldValue]) -> Result<()> {
-        let c_feature = unsafe { ogr::OGR_F_Create(self.defn.c_defn()) };
-        let c_geometry = unsafe { geometry.into_c_geometry() };
-        let rv = unsafe { ogr::OGR_F_SetGeometryDirectly(c_feature, c_geometry) };
-        if rv != ogr_enums::OGRErr::OGRERR_NONE {
-            return Err(ErrorKind::OgrError(rv, "OGR_F_SetGeometryDirectly").into());
+        let mut ft = Feature::new(&self.defn)?;
+        ft.set_geometry(geometry)?;
+        for (fd, ref val) in field_names.iter().zip(values.iter()) {
+            ft.set_field(fd, val)?;
         }
-        for (i, fd) in field_names.iter().enumerate() {
-            let c_str_field_name = CString::new(*fd).unwrap();
-            let idx = unsafe { ogr::OGR_F_GetFieldIndex(c_feature, c_str_field_name.as_ptr())};
-            let val = &values[i];
-            match val {
-                &FieldValue::StringValue(ref v) => {
-                    unsafe { ogr::OGR_F_SetFieldString(c_feature, idx, CString::new(v.as_str()).unwrap().as_ptr()) };
-                }, &FieldValue::IntegerValue(ref v) => {
-                    unsafe { ogr::OGR_F_SetFieldInteger(c_feature, idx, *v as c_int) };
-                }, &FieldValue::RealValue(ref v) => {
-                    unsafe { ogr::OGR_F_SetFieldDouble(c_feature, idx, *v as c_double) };
-                }
-            }
-        }
-        let rv = unsafe { ogr::OGR_L_CreateFeature(self.c_layer, c_feature) };
-        if rv != ogr_enums::OGRErr::OGRERR_NONE {
-            return Err(ErrorKind::OgrError(rv, "OGR_L_CreateFeature").into());
-        }
+        ft.create(self)?;
         Ok(())
     }
 }
@@ -149,10 +132,13 @@ impl MajorObject for FieldDefn {
 }
 
 impl FieldDefn {
-    pub fn new(name: &str, field_type: ogr_enums::OGRFieldType) -> FieldDefn {
-        let c_str = CString::new(name).unwrap();
+    pub fn new(name: &str, field_type: ogr_enums::OGRFieldType) -> Result<FieldDefn> {
+        let c_str = CString::new(name)?;
         let c_obj = unsafe { ogr::OGR_Fld_Create(c_str.as_ptr(), field_type) };
-        FieldDefn { c_obj: c_obj}
+        if c_obj.is_null() {
+            return Err(ErrorKind::NullPointer("OGR_Fld_Create").into());
+        };
+        Ok(FieldDefn { c_obj: c_obj})
     }
     pub fn set_width(&self, width: i32) {
         unsafe {ogr:: OGR_Fld_SetWidth(self.c_obj as *mut c_void, width as c_int) };
@@ -160,8 +146,11 @@ impl FieldDefn {
     pub fn set_precision(&self, precision: i32) {
         unsafe {ogr:: OGR_Fld_SetPrecision(self.c_obj as *mut c_void, precision as c_int) };
     }
-    pub fn add_to_layer(&self, layer: &Layer) {
+    pub fn add_to_layer(&self, layer: &Layer) -> Result<()> {
         let rv = unsafe { ogr::OGR_L_CreateField(layer.gdal_object_ptr(), self.c_obj, 1) };
-        assert_eq!(rv, ogr_enums::OGRErr::OGRERR_NONE);
+        if rv != ogr_enums::OGRErr::OGRERR_NONE {
+            return Err(ErrorKind::OgrError(rv, "OGR_L_CreateFeature").into());
+        }
+        Ok(())
     }
 }

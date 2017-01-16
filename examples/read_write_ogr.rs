@@ -20,7 +20,7 @@ fn main() {
 
     // Copy the origin layer shema to the destination layer :
     for fd in &fields_defn {
-        let field_defn = FieldDefn::new(&fd.0, fd.1);
+        let field_defn = FieldDefn::new(&fd.0, fd.1).unwrap();
         field_defn.set_width(fd.2);
         field_defn.add_to_layer(&lyr);
     }
@@ -41,11 +41,11 @@ fn main() {
         // Get a new transformed geometry :
         let new_geom = geom.transform(&htransform).unwrap();
         // Create the new feature, set its geometry :
-        let mut ft = Feature::new(&defn);
+        let mut ft = Feature::new(&defn).unwrap();
         ft.set_geometry(new_geom);
         // copy each field value of the feature :
         for fd in &fields_defn {
-            ft.set_field(&fd.0, fd.1, feature_a.field(&fd.0).unwrap()).unwrap();
+            ft.set_field(&fd.0, &feature_a.field(&fd.0).unwrap()).unwrap();
         }
         // Add the feature to the layer :
         ft.create(&lyr);

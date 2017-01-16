@@ -19,13 +19,16 @@ pub struct Feature<'a> {
 
 
 impl<'a> Feature<'a> {
-    pub fn new(defn: &'a Defn) -> Feature {
+    pub fn new(defn: &'a Defn) -> Result<Feature> {
         let c_feature = unsafe { ogr::OGR_F_Create(defn.c_defn()) };
-            unsafe { Feature {
-                     _defn: defn,
-                     c_feature: c_feature,
-                     geometry: Geometry::lazy_feature_geometry(),
-                    } }
+        if c_feature.is_null() {
+            return Err(ErrorKind::NullPointer("OGR_F_Create").into());
+        };
+        Ok(unsafe { Feature {
+                 _defn: defn,
+                 c_feature: c_feature,
+                 geometry: Geometry::lazy_feature_geometry(),
+             } })
     }
 
     pub unsafe fn _with_c_feature(defn: &'a Defn, c_feature: *const c_void) -> Feature {
@@ -83,8 +86,11 @@ impl<'a> Feature<'a> {
 
     pub fn set_field_string(&self, field_name: &str, value: &str) -> Result<()> {
         let c_str_field_name = CString::new(field_name)?;
-        let c_str_value = CString::new(value).unwrap();
+        let c_str_value = CString::new(value)?;
         let idx = unsafe { ogr::OGR_F_GetFieldIndex(self.c_feature, c_str_field_name.as_ptr())};
+        if idx == -1 {
+            return Err(ErrorKind::InvalidFieldName(field_name.to_string(), "set_field_string").into());
+        }
         unsafe { ogr::OGR_F_SetFieldString(self.c_feature, idx, c_str_value.as_ptr()) };
         Ok(())
     }
@@ -92,6 +98,9 @@ impl<'a> Feature<'a> {
     pub fn set_field_double(&self, field_name: &str, value: f64) -> Result<()> {
         let c_str_field_name = CString::new(field_name)?;
         let idx = unsafe { ogr::OGR_F_GetFieldIndex(self.c_feature, c_str_field_name.as_ptr())};
+        if idx == -1 {
+            return Err(ErrorKind::InvalidFieldName(field_name.to_string(), "set_field_string").into());
+        }
         unsafe { ogr::OGR_F_SetFieldDouble(self.c_feature, idx, value as c_double) };
         Ok(())
     }
@@ -99,25 +108,27 @@ impl<'a> Feature<'a> {
     pub fn set_field_integer(&self, field_name: &str, value: i32) -> Result<()> {
         let c_str_field_name = CString::new(field_name)?;
         let idx = unsafe { ogr::OGR_F_GetFieldIndex(self.c_feature, c_str_field_name.as_ptr())};
+        if idx == -1 {
+            return Err(ErrorKind::InvalidFieldName(field_name.to_string(), "set_field_string").into());
+        }
         unsafe { ogr::OGR_F_SetFieldInteger(self.c_feature, idx, value as c_int) };
         Ok(())
     }
 
-    pub fn set_field(&self, field_name: &str, type_value: OGRFieldType, value: FieldValue) -> Result<()> {
-        match type_value {
-            OGRFieldType::OFTReal => self.set_field_double(field_name, value.to_real()),
-            OGRFieldType::OFTString => self.set_field_string(field_name, value.to_string().as_str()),
-            OGRFieldType::OFTInteger => self.set_field_integer(field_name, value.to_int()),
-            _ => Err(ErrorKind::InvalidInput("set_field").into())
-        }
-    }
+    pub fn set_field(&self, field_name: &str,  value: &FieldValue) -> Result<()> {
+          match value {
+             &FieldValue::RealValue(value) => self.set_field_double(field_name, value),
+             &FieldValue::StringValue(ref value) => self.set_field_string(field_name, value.as_str()),
+             &FieldValue::IntegerValue(value) => self.set_field_integer(field_name, value)
+         }
+     }
 
     pub fn set_geometry(&mut self, geom: Geometry) -> Result<()> {
-        self.geometry = geom;
-        let rv = unsafe { ogr::OGR_F_SetGeometry(self.c_feature, self.geometry.c_geometry()) };
+        let rv = unsafe { ogr::OGR_F_SetGeometry(self.c_feature, geom.c_geometry()) };
         if rv != ogr_enums::OGRErr::OGRERR_NONE {
             return Err(ErrorKind::OgrError(rv, "OGR_G_SetGeometry").into());
         }
+        self.geometry = geom;
         Ok(())
     }
 }
@@ -139,26 +150,26 @@ pub enum FieldValue {
 
 impl FieldValue {
     /// Interpret the value as `String`. Panics if the value is something else.
-    pub fn to_string(self) -> String {
+    pub fn to_string(self) -> Option<String> {
         match self {
-            FieldValue::StringValue(rv) => rv,
-            _ => panic!("not a StringValue")
+            FieldValue::StringValue(rv) => Some(rv),
+            _ => None
         }
     }
 
     /// Interpret the value as `f64`. Panics if the value is something else.
-    pub fn to_real(self) -> f64 {
+    pub fn to_real(self) -> Option<f64> {
         match self {
-            FieldValue::RealValue(rv) => rv,
-            _ => panic!("not a RealValue")
+            FieldValue::RealValue(rv) => Some(rv),
+            _ => None
         }
     }
 
     /// Interpret the value as `i32`. Panics if the value is something else.
-    pub fn to_int(self) -> i32 {
+    pub fn to_int(self) -> Option<i32> {
         match self {
-            FieldValue::IntegerValue(rv) => rv,
-            _ => panic!("not an IntegerValue")
+            FieldValue::IntegerValue(rv) => Some(rv),
+            _ => None
         }
     }
 }

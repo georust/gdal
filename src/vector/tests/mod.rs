@@ -58,13 +58,13 @@ fn test_string_field() {
         assert_eq!(feature.field("highway")
                           .unwrap()
                           .to_string(),
-                   "footway".to_string());
+                   Some("footway".to_string()));
         assert_eq!(
             features.filter(|field| {
                 let highway = field.field("highway")
                                    .unwrap()
                                    .to_string();
-                highway == "residential".to_string() })
+                highway == Some("residential".to_string()) })
                 .count(),
             2);
     });
@@ -77,7 +77,8 @@ fn test_float_field() {
         assert_almost_eq(
             feature.field("sort_key")
                    .unwrap()
-                   .to_real(),
+                   .to_real()
+                   .unwrap(),
             -9.0
         );
     });
@@ -194,7 +195,7 @@ fn test_write_features() {
     let layer = ds.layer(0).unwrap();
     let ft = layer.features().next().unwrap();
     assert_eq!(ft.geometry().wkt().unwrap(), "POINT (1 2)");
-    assert_eq!(ft.field("Name").unwrap().to_string(), "Feature 1");
-    assert_eq!(ft.field("Value").unwrap().to_real(), 45.78);
-    assert_eq!(ft.field("Int_value").unwrap().to_int(), 1);
+    assert_eq!(ft.field("Name").unwrap().to_string(), Some("Feature 1".to_string()));
+    assert_eq!(ft.field("Value").unwrap().to_real(), Some(45.78));
+    assert_eq!(ft.field("Int_value").unwrap().to_int(), Some(1));
 }
