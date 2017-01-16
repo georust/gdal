@@ -42,28 +42,28 @@ impl<'a> Feature<'a> {
     /// Get the value of a named field. If the field exists, it returns a
     /// `FieldValue` wrapper, that you need to unpack to a base type
     /// (string, float, etc). If the field is missing, returns `None`.
-    pub fn field(&self, name: &str) -> Option<FieldValue> {
+    pub fn field(&self, name: &str) -> Result<FieldValue> {
         let c_name = CString::new(name.as_bytes()).unwrap();
         let field_id = unsafe { ogr::OGR_F_GetFieldIndex(self.c_feature, c_name.as_ptr()) };
         if field_id == -1 {
-            return None;
+            return Err(ErrorKind::InvalidFieldName(name.to_string(), "field").into());
         }
         let field_defn = unsafe { ogr::OGR_F_GetFieldDefnRef(self.c_feature, field_id) };
         let field_type = unsafe { ogr::OGR_Fld_GetType(field_defn) };
         match field_type {
             OGRFieldType::OFTString => {
                 let rv = unsafe { ogr::OGR_F_GetFieldAsString(self.c_feature, field_id) };
-                return Some(FieldValue::StringValue(_string(rv)));
+                return Ok(FieldValue::StringValue(_string(rv)));
             },
             OGRFieldType::OFTReal => {
                 let rv = unsafe { ogr::OGR_F_GetFieldAsDouble(self.c_feature, field_id) };
-                return Some(FieldValue::RealValue(rv as f64));
+                return Ok(FieldValue::RealValue(rv as f64));
             },
             OGRFieldType::OFTInteger => {
                 let rv = unsafe { ogr::OGR_F_GetFieldAsInteger(self.c_feature, field_id) };
-                return Some(FieldValue::IntegerValue(rv as i32));
+                return Ok(FieldValue::IntegerValue(rv as i32));
             },
-            _ => panic!("Unknown field type {:?}", field_type)
+            _ => Err(ErrorKind::UnhandledFieldType(field_type, "OGR_Fld_GetType").into())
         }
     }
 

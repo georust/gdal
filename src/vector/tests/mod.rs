@@ -88,7 +88,7 @@ fn test_float_field() {
 #[test]
 fn test_missing_field() {
     with_first_feature("roads.geojson", |feature| {
-        assert!(feature.field("no such field").is_none());
+        assert!(feature.field("no such field").is_err());
     });
 }
 

@@ -205,7 +205,7 @@ impl Geometry {
         if rv != ogr_enums::OGRErr::OGRERR_NONE {
             return Err(ErrorKind::OgrError(rv, "OGR_G_TransformTo").into());
         }
-        Ok((unsafe { Geometry::with_c_geometry(new_c_geom, true) } ))
+        Ok(unsafe { Geometry::with_c_geometry(new_c_geom, true) } )
     }
 }
 
