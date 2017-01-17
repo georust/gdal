@@ -19,7 +19,7 @@ fn main() {
     println!("Before transformation :\n{:?} {:?}", xs, ys);
     htransform.transform_coord(xs, ys, &mut [0.0, 0.0]);
     println!("After transformation :\n{:?} {:?}\n", xs, ys);
-    let mut geom = Geometry::from_wkt("POLYGON((23.43 37.58, 23.43 40.0, 25.29 40.0, 25.29 37.58, 23.43 37.58))").unwrap();
+    let geom = Geometry::from_wkt("POLYGON((23.43 37.58, 23.43 40.0, 25.29 40.0, 25.29 37.58, 23.43 37.58))").unwrap();
     println!("Polygon before transformation:\n{:?}\n", geom.wkt().unwrap());
     geom.transform(&htransform).unwrap();
     println!("Polygon after transformation:\n{:?}\n", geom.wkt().unwrap());

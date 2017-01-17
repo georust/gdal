@@ -1,6 +1,9 @@
 use libc::{c_int, c_void};
 use utils::_string;
 use gdal_sys::ogr;
+use vector::layer::Layer;
+use gdal_major_object::MajorObject;
+use gdal_sys::ogr_enums::OGRFieldType;
 
 /// Layer definition
 ///
@@ -26,6 +29,11 @@ impl Defn {
             total: total
         };
     }
+
+    pub fn from_layer(lyr: &Layer) -> Defn {
+        let c_defn = unsafe { ogr::OGR_L_GetLayerDefn(lyr.gdal_object_ptr())};
+            Defn {c_defn: c_defn}
+        }
 }
 
 pub struct FieldIterator<'a> {
@@ -65,5 +73,17 @@ impl<'a> Field<'a> {
     pub fn name(&'a self) -> String {
         let rv = unsafe { ogr::OGR_Fld_GetNameRef(self.c_field_defn) };
         return _string(rv);
+    }
+
+    pub fn field_type(&'a self) -> OGRFieldType {
+        unsafe { ogr::OGR_Fld_GetType(self.c_field_defn) }
+    }
+
+    pub fn width(&'a self) -> i32 {
+        unsafe { ogr::OGR_Fld_GetWidth(self.c_field_defn) }
+    }
+
+    pub fn precision(&'a self) -> i32 {
+        unsafe { ogr::OGR_Fld_GetPrecision(self.c_field_defn) }
     }
 }

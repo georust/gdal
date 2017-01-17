@@ -1,5 +1,5 @@
 use std::path::Path;
-use super::{Driver, Dataset, Feature, FeatureIterator, Geometry};
+use super::{Driver, Dataset, Feature, FeatureIterator, FieldValue, Geometry, OGRFieldType};
 
 mod convert_geo;
 
@@ -57,14 +57,14 @@ fn test_string_field() {
         let feature = features.next().unwrap();
         assert_eq!(feature.field("highway")
                           .unwrap()
-                          .as_string(),
-                   "footway".to_string());
+                          .to_string(),
+                   Some("footway".to_string()));
         assert_eq!(
             features.filter(|field| {
                 let highway = field.field("highway")
                                    .unwrap()
-                                   .as_string();
-                highway == "residential".to_string() })
+                                   .to_string();
+                highway == Some("residential".to_string()) })
                 .count(),
             2);
     });
@@ -77,7 +77,8 @@ fn test_float_field() {
         assert_almost_eq(
             feature.field("sort_key")
                    .unwrap()
-                   .as_real(),
+                   .to_real()
+                   .unwrap(),
             -9.0
         );
     });
@@ -87,7 +88,7 @@ fn test_float_field() {
 #[test]
 fn test_missing_field() {
     with_first_feature("roads.geojson", |feature| {
-        assert!(feature.field("no such field").is_none());
+        assert!(feature.field("no such field").is_err());
     });
 }
 
@@ -124,15 +125,20 @@ fn test_json() {
 fn test_schema() {
     let mut ds = Dataset::open(fixture!("roads.geojson")).unwrap();
     let layer = ds.layer(0).unwrap();
-    let name_list: Vec<String> = layer
+    let name_list: Vec<(String, OGRFieldType)> = layer
         .defn().fields()
-        .map(|f| f.name())
+        .map(|f| (f.name(), f.field_type()))
         .collect();
-    let ok_names: Vec<String> = vec!(
-        "kind", "sort_key", "is_link", "is_tunnel",
-        "is_bridge", "railway", "highway")
-        .iter().map(|s| s.to_string()).collect();
-    assert_eq!(name_list, ok_names);
+    let ok_names_types: Vec<(String, OGRFieldType)> = vec!(
+        ("kind", OGRFieldType::OFTString),
+        ("sort_key",  OGRFieldType::OFTReal),
+        ("is_link", OGRFieldType::OFTString),
+        ("is_tunnel", OGRFieldType::OFTString),
+        ("is_bridge", OGRFieldType::OFTString),
+        ("railway", OGRFieldType::OFTString),
+        ("highway", OGRFieldType::OFTString))
+        .iter().map(|s| (s.0.to_string(), s.1)).collect();
+    assert_eq!(name_list, ok_names_types);
 }
 
 #[test]
@@ -176,15 +182,20 @@ fn test_write_features() {
         let driver = Driver::get("GeoJSON").unwrap();
         let mut ds = driver.create(fixture!("output.geojson")).unwrap();
         let mut layer = ds.create_layer().unwrap();
-        layer.create_feature(Geometry::from_wkt("POINT (1 2)").unwrap()).unwrap();
+        layer.create_defn_fields(&[("Name",  OGRFieldType::OFTString), ("Value",  OGRFieldType::OFTReal), ("Int_value", OGRFieldType::OFTInteger)]);
+        layer.create_feature_fields(
+            Geometry::from_wkt("POINT (1 2)").unwrap(), &["Name", "Value", "Int_value"],
+            &[FieldValue::StringValue("Feature 1".to_string()), FieldValue::RealValue(45.78), FieldValue::IntegerValue(1)]
+            ).unwrap();
         // dataset is closed here
     }
 
     let mut ds = Dataset::open(fixture!("output.geojson")).unwrap();
     fs::remove_file(fixture!("output.geojson")).unwrap();
     let layer = ds.layer(0).unwrap();
-    let wkt_list = layer.features()
-        .map(|f| f.geometry().wkt().unwrap())
-        .collect::<Vec<String>>();
-    assert_eq!(wkt_list, vec!("POINT (1 2)"));
+    let ft = layer.features().next().unwrap();
+    assert_eq!(ft.geometry().wkt().unwrap(), "POINT (1 2)");
+    assert_eq!(ft.field("Name").unwrap().to_string(), Some("Feature 1".to_string()));
+    assert_eq!(ft.field("Value").unwrap().to_real(), Some(45.78));
+    assert_eq!(ft.field("Int_value").unwrap().to_int(), Some(1));
 }

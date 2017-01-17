@@ -11,17 +11,18 @@
 //! for feature in layer.features() {
 //!     let highway_field = feature.field("highway").unwrap();
 //!     let geometry = feature.geometry();
-//!     println!("{} {}", highway_field.as_string(), geometry.wkt().unwrap());
+//!     println!("{} {}", highway_field.to_string().unwrap(), geometry.wkt().unwrap());
 //! }
 //! ```
 
 
 pub use vector::driver::Driver;
 pub use vector::dataset::Dataset;
-pub use vector::layer::{Layer, FeatureIterator};
+pub use vector::layer::{Layer, FeatureIterator, FieldDefn};
 pub use vector::defn::{Defn, FieldIterator, Field};
 pub use vector::feature::{Feature, FieldValue};
 pub use vector::geometry::Geometry;
+pub use gdal_sys::ogr_enums::OGRFieldType;
 
 use errors::{Result};
 
