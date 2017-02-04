@@ -5,6 +5,7 @@ use std::path::Path;
 use libc::{c_void};
 use vector::{Dataset};
 use gdal_sys::ogr;
+use utils::{_last_null_pointer_err};
 
 use errors::*;
 
@@ -24,27 +25,29 @@ pub struct Driver {
 }
 
 impl Driver {
-    pub fn get(name: &str) -> Option<Driver> {
+    pub fn get(name: &str) -> Result<Driver> {
         _register_drivers();
-        let c_name = CString::new(name.as_bytes()).unwrap();
+        let c_name = CString::new(name)?;
         let c_driver = unsafe { ogr::OGRGetDriverByName(c_name.as_ptr()) };
-        return match c_driver.is_null() {
-            true  => None,
-            false => Some(Driver{c_driver: c_driver}),
-        };
+       if c_driver.is_null() {
+            Err(_last_null_pointer_err("OGRGetDriverByName").into())
+        } else {
+            Ok(Driver{c_driver: c_driver})
+        }
     }
 
     pub fn create(&self, path: &Path) -> Result<Dataset> {
-        let filename = path.to_str().unwrap();
-        let c_filename = CString::new(filename.as_bytes()).unwrap();
+        let filename = path.to_string_lossy();
+        let c_filename = CString::new(filename.as_ref())?;
         let c_dataset = unsafe { ogr::OGR_Dr_CreateDataSource(
             self.c_driver,
             c_filename.as_ptr(),
             null(),
         ) };
         if c_dataset.is_null() {
-            return Err(ErrorKind::NullPointer("OGR_Dr_CreateDataSource").into());
-        };
-        Ok( unsafe { Dataset::_with_c_dataset(c_dataset) } )
+            Err(_last_null_pointer_err("OGR_Dr_CreateDataSource").into())
+        } else {
+            Ok( unsafe { Dataset::_with_c_dataset(c_dataset) } )
+        }
     }
 }

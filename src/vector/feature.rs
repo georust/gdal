@@ -1,7 +1,7 @@
 use std::ffi::CString;
 use libc::{c_void, c_double, c_int};
 use vector::Defn;
-use utils::_string;
+use utils::{_string, _last_null_pointer_err};
 use gdal_sys::{ogr, ogr_enums};
 use vector::geometry::Geometry;
 use vector::layer::Layer;
@@ -22,7 +22,7 @@ impl<'a> Feature<'a> {
     pub fn new(defn: &'a Defn) -> Result<Feature> {
         let c_feature = unsafe { ogr::OGR_F_Create(defn.c_defn()) };
         if c_feature.is_null() {
-            return Err(ErrorKind::NullPointer("OGR_F_Create").into());
+            return Err(_last_null_pointer_err("OGR_F_Create").into());
         };
         Ok(unsafe { Feature {
                  _defn: defn,
@@ -43,7 +43,7 @@ impl<'a> Feature<'a> {
     /// `FieldValue` wrapper, that you need to unpack to a base type
     /// (string, float, etc). If the field is missing, returns `None`.
     pub fn field(&self, name: &str) -> Result<FieldValue> {
-        let c_name = CString::new(name.as_bytes()).unwrap();
+        let c_name = CString::new(name)?;
         let field_id = unsafe { ogr::OGR_F_GetFieldIndex(self.c_feature, c_name.as_ptr()) };
         if field_id == -1 {
             return Err(ErrorKind::InvalidFieldName(name.to_string(), "field").into());

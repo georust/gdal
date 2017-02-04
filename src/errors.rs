@@ -14,9 +14,9 @@ error_chain! {
             description("GDAL internal error")
             display("CPL error class: '{:?}', error number: '{}', error msg: '{}'", class, number, msg)
         }
-        NullPointer(method_name: &'static str) {
+        NullPointer(method_name: &'static str, msg: String) {
             description("GDAL method returned a NULL pointer.")
-            display("GDAL method '{}' returned a NULL pointer.", method_name)
+            display("GDAL method '{}' returned a NULL pointer. Error msg: '{}'", method_name, msg)
         }
         OgrError(err: OGRErr, method_name: &'static str) {
             description("OGR error")

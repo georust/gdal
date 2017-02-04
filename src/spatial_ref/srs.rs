@@ -1,7 +1,7 @@
 use libc::{c_int, c_char, c_void};
 use std::ffi::{CString};
 use std::ptr;
-use utils::_string;
+use utils::{_string, _last_null_pointer_err};
 use gdal_sys::{osr, ogr_enums};
 
 use errors::*;
@@ -19,7 +19,7 @@ impl CoordTransform {
     pub fn new(sp_ref1: &SpatialRef, sp_ref2: &SpatialRef) -> Result<CoordTransform> {
         let c_obj = unsafe { osr::OCTNewCoordinateTransformation(sp_ref1.0, sp_ref2.0) };
         if c_obj.is_null() {
-            return Err(ErrorKind::NullPointer("OCTNewCoordinateTransformation").into());
+            return Err(_last_null_pointer_err("OCTNewCoordinateTransformation").into());
         }
         Ok(CoordTransform(c_obj))
     }
@@ -68,7 +68,7 @@ impl SpatialRef {
     pub fn new() -> Result<SpatialRef> {
         let c_obj = unsafe { osr::OSRNewSpatialReference(ptr::null()) };
         if c_obj.is_null() {
-            return Err(ErrorKind::NullPointer("OSRNewSpatialReference").into());
+            return Err(_last_null_pointer_err("OSRNewSpatialReference").into());
         }
         Ok(SpatialRef(c_obj))
     }
@@ -76,9 +76,9 @@ impl SpatialRef {
     pub fn from_definition(definition: &str) -> Result<SpatialRef> {
         let c_obj = unsafe { osr::OSRNewSpatialReference(ptr::null()) };
         if c_obj.is_null() {
-            return Err(ErrorKind::NullPointer("OSRNewSpatialReference").into());
+            return Err(_last_null_pointer_err("OSRNewSpatialReference").into());
         }
-        let rv = unsafe { osr::OSRSetFromUserInput(c_obj, CString::new(definition).unwrap().as_ptr()) };
+        let rv = unsafe { osr::OSRSetFromUserInput(c_obj, CString::new(definition)?.as_ptr()) };
         if rv != ogr_enums::OGRErr::OGRERR_NONE {
             return Err(ErrorKind::OgrError(rv, "OSRSetFromUserInput").into());
         }
@@ -86,10 +86,10 @@ impl SpatialRef {
     }
 
     pub fn from_wkt(wkt: &str) -> Result<SpatialRef> {
-        let c_str = CString::new(wkt).unwrap();
+        let c_str = CString::new(wkt)?;
         let c_obj = unsafe { osr::OSRNewSpatialReference(c_str.as_ptr()) };
         if c_obj.is_null() {
-            return Err(ErrorKind::NullPointer("OSRNewSpatialReference").into());
+            return Err(_last_null_pointer_err("OSRNewSpatialReference").into());
         }
         Ok(SpatialRef(c_obj))
     }
@@ -106,7 +106,7 @@ impl SpatialRef {
     }
 
     pub fn from_proj4(proj4_string: &str) -> Result<SpatialRef> {
-        let c_str = CString::new(proj4_string).unwrap();
+        let c_str = CString::new(proj4_string)?;
         let null_ptr = ptr::null_mut();
         let c_obj = unsafe { osr::OSRNewSpatialReference(null_ptr) };
         let rv = unsafe { osr::OSRImportFromProj4(c_obj, c_str.as_ptr()) };

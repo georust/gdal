@@ -6,6 +6,7 @@ use vector::defn::Defn;
 use gdal_major_object::MajorObject;
 use metadata::Metadata;
 use gdal_sys::{ogr, ogr_enums};
+use utils::{_last_null_pointer_err};
 
 use errors::*;
 
@@ -136,7 +137,7 @@ impl FieldDefn {
         let c_str = CString::new(name)?;
         let c_obj = unsafe { ogr::OGR_Fld_Create(c_str.as_ptr(), field_type) };
         if c_obj.is_null() {
-            return Err(ErrorKind::NullPointer("OGR_Fld_Create").into());
+            return Err(_last_null_pointer_err("OGR_Fld_Create").into());
         };
         Ok(FieldDefn { c_obj: c_obj})
     }

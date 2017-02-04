@@ -1,7 +1,7 @@
 use libc::{c_int, c_double, c_void};
 use std::ffi::{CString};
 use std::path::Path;
-use utils::{_string, _last_cpl_err};
+use utils::{_string, _last_cpl_err, _last_null_pointer_err};
 use raster::{Driver, RasterBand};
 use raster::driver::_register_drivers;
 use raster::gdal_enums::{GDALAccess, GDALDataType};
@@ -36,11 +36,11 @@ impl Drop for Dataset {
 impl Dataset {
     pub fn open(path: &Path) -> Result<Dataset> {
         _register_drivers();
-        let filename = path.to_str().unwrap();
-        let c_filename = CString::new(filename.as_bytes()).unwrap();
+        let filename = path.to_string_lossy();
+        let c_filename = CString::new(filename.as_ref())?;
         let c_dataset = unsafe { gdal::GDALOpen(c_filename.as_ptr(), GDALAccess::GA_ReadOnly) };
         if c_dataset.is_null() {
-            return Err(ErrorKind::NullPointer("GDALOpen").into());
+            return Err(_last_null_pointer_err("GDALOpen").into());
         }
         Ok(Dataset{c_dataset: c_dataset})
     }
@@ -58,7 +58,7 @@ impl Dataset {
         unsafe {
             let c_band = gdal::GDALGetRasterBand(self.c_dataset, band_index as c_int);
             if c_band.is_null() {
-                return Err(ErrorKind::NullPointer("GDALGetRasterBand").into());
+                return Err(_last_null_pointer_err("GDALGetRasterBand").into());
             }
             Ok(RasterBand::_with_c_ptr(c_band, self))
         }
@@ -86,9 +86,10 @@ impl Dataset {
         return _string(rv);
     }
 
-    pub fn set_projection(&self, projection: &str) {
-        let c_projection = CString::new(projection.as_bytes()).unwrap();
+    pub fn set_projection(&self, projection: &str) -> Result<()>{
+        let c_projection = CString::new(projection)?;
         unsafe { gdal::GDALSetProjection(self.c_dataset, c_projection.as_ptr()) };
+        Ok(())
     }
 
     pub fn set_geo_transform(&self, tr: &GeoTransform) -> Result<()> {
@@ -124,7 +125,7 @@ impl Dataset {
         filename: &str
     ) -> Result<Dataset> {
         use std::ptr::null;
-        let c_filename = CString::new(filename.as_bytes()).unwrap();
+        let c_filename = CString::new(filename)?;
         let c_dataset = unsafe { gdal::GDALCreateCopy(
                 driver._c_ptr(),
                 c_filename.as_ptr(),
@@ -135,7 +136,7 @@ impl Dataset {
                 null()
             ) };
         if c_dataset.is_null() {
-            return Err(ErrorKind::NullPointer("GDALCreateCopy").into());
+            return Err(_last_null_pointer_err("GDALCreateCopy").into());
         }
         Ok(Dataset{c_dataset: c_dataset})
     }
