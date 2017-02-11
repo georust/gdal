@@ -7,6 +7,8 @@ use vector::driver::_register_drivers;
 use gdal_major_object::MajorObject;
 use metadata::Metadata;
 use gdal_sys::ogr;
+use utils::{_last_null_pointer_err};
+
 
 use errors::*;
 
@@ -41,11 +43,11 @@ impl Dataset {
     /// Open the dataset at `path`.
     pub fn open(path: &Path) -> Result<Dataset> {
         _register_drivers();
-        let filename = path.to_str().unwrap();
-        let c_filename = CString::new(filename.as_bytes()).unwrap();
+        let filename = path.to_string_lossy();
+        let c_filename = CString::new(filename.as_ref())?;
         let c_dataset = unsafe { ogr::OGROpen(c_filename.as_ptr(), 0, null()) };
         if c_dataset.is_null() {
-           return Err(ErrorKind::NullPointer("OGROpen").into());
+           return Err(_last_null_pointer_err("OGROpen").into());
         };
         Ok(Dataset{c_dataset: c_dataset, layers: vec!()})
     }
@@ -65,14 +67,14 @@ impl Dataset {
     pub fn layer(&mut self, idx: isize) -> Result<&Layer> {
         let c_layer = unsafe { ogr::OGR_DS_GetLayer(self.c_dataset, idx as c_int) };
         if c_layer.is_null() {
-            return Err(ErrorKind::NullPointer("OGROpen").into());            
+            return Err(_last_null_pointer_err("OGROpen").into());            
         }
         Ok(self._child_layer(c_layer))
     }
 
     /// Create a new layer with a blank definition.
     pub fn create_layer(&mut self) -> Result<&mut Layer> {
-        let c_name = CString::new("".as_bytes()).unwrap();
+        let c_name = CString::new("")?;
         let c_layer = unsafe { ogr::OGR_DS_CreateLayer(
             self.c_dataset,
             c_name.as_ptr(),
@@ -81,7 +83,7 @@ impl Dataset {
             null(),
         ) };
         if c_layer.is_null() {
-            return Err(ErrorKind::NullPointer("OGR_DS_CreateLayer").into());            
+            return Err(_last_null_pointer_err("OGR_DS_CreateLayer").into());            
         };
         self._child_layer(c_layer);
         Ok(self.layers.last_mut().unwrap()) // TODO: is this safe?

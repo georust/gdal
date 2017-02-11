@@ -2,7 +2,7 @@ use std::ptr::null;
 use libc::{c_char, c_int, c_double, c_void};
 use std::ffi::CString;
 use std::cell::RefCell;
-use utils::_string;
+use utils::{_string, _last_null_pointer_err};
 use gdal_sys::{ogr, ogr_enums};
 use spatial_ref::{SpatialRef, CoordTransform};
 
@@ -51,7 +51,7 @@ impl Geometry {
     pub fn empty(wkb_type: c_int) -> Result<Geometry> {
         let c_geom = unsafe { ogr::OGR_G_CreateGeometry(wkb_type) };
         if c_geom.is_null() {
-            return Err(ErrorKind::NullPointer("OGR_G_CreateGeometry").into());
+            return Err(_last_null_pointer_err("OGR_G_CreateGeometry").into());
         };
         Ok(unsafe { Geometry::with_c_geometry(c_geom, true) })
     }
@@ -59,7 +59,7 @@ impl Geometry {
     /// Create a geometry by parsing a
     /// [WKT](https://en.wikipedia.org/wiki/Well-known_text) string.
     pub fn from_wkt(wkt: &str) -> Result<Geometry> {
-        let c_wkt = CString::new(wkt.as_bytes()).unwrap();
+        let c_wkt = CString::new(wkt)?;
         let mut c_wkt_ptr: *const c_char = c_wkt.as_ptr();
         let mut c_geom: *const c_void = null();
         let rv = unsafe { ogr::OGR_G_CreateFromWkt(&mut c_wkt_ptr, null(), &mut c_geom) };
@@ -85,7 +85,7 @@ impl Geometry {
     pub fn json(&self) -> Result<String> {
         let c_json = unsafe { ogr::OGR_G_ExportToJson(self.c_geometry()) };
         if c_json.is_null() {
-            return Err(ErrorKind::NullPointer("OGR_G_ExportToJson").into());
+            return Err(_last_null_pointer_err("OGR_G_ExportToJson").into());
         };
         let rv = _string(c_json);
         unsafe { ogr::VSIFree(c_json as *mut c_void) };
@@ -141,7 +141,7 @@ impl Geometry {
     pub fn convex_hull(&self) -> Result<Geometry> {
         let c_geom = unsafe { ogr::OGR_G_ConvexHull(self.c_geometry()) };
         if c_geom.is_null() {
-            return Err(ErrorKind::NullPointer("OGR_G_ConvexHull").into());
+            return Err(_last_null_pointer_err("OGR_G_ConvexHull").into());
         };
         Ok(unsafe { Geometry::with_c_geometry(c_geom, true) })
     }

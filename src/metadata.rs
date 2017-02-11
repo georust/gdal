@@ -1,7 +1,7 @@
 use utils::{_string};
 use std::ffi::{CString};
 use gdal_major_object::MajorObject;
-use utils::{_last_cpl_err};
+use utils::{_last_cpl_err, _last_null_pointer_err};
 use errors::*;
 use gdal_sys::{gdal, cpl_error};
 
@@ -10,7 +10,7 @@ pub trait Metadata: MajorObject {
     fn description(&self) -> Result<String>{
         let c_res = unsafe { gdal::GDALGetDescription(self.gdal_object_ptr())};
         if c_res.is_null() {
-            return Err(ErrorKind::NullPointer("GDALGetDescription").into());
+            return Err(_last_null_pointer_err("GDALGetDescription").into());
         }
         Ok(_string(c_res))
     }
