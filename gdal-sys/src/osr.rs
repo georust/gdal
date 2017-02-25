@@ -1,7 +1,6 @@
 use libc::{c_int, c_char, c_double, c_void};
 use ogr_enums::*;
 
-#[link(name="gdal")]
 extern {
     pub fn OSRNewSpatialReference(pszWKT: *const c_char) -> *mut c_void;
     pub fn OSRClone(hSRS: *const c_void) -> *mut c_void;

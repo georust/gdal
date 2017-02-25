@@ -2,6 +2,7 @@ use libc::{c_int, c_char};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[allow(dead_code)]
+#[allow(non_camel_case_types)]
 #[repr(C)]
 pub enum CPLErr {
   CE_None = 0,
@@ -11,7 +12,6 @@ pub enum CPLErr {
   CE_Fatal = 4 
 }
 
-#[link(name="gdal")]
 extern {
     /// Erase any traces of previous errors.
     pub fn CPLErrorReset();

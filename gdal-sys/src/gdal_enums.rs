@@ -2,6 +2,7 @@ use libc::{c_int};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[allow(dead_code)]
+#[allow(non_camel_case_types)]
 #[repr(C)]
 pub enum GDALDataType {
     GDT_Unknown = 0,    // Unknown or unspecified type
@@ -38,6 +39,7 @@ impl GDALDataType {
 
 #[derive(Clone, Copy, Debug)]
 #[allow(dead_code)]
+#[allow(non_camel_case_types)]
 #[repr(C)]
 pub enum GDALRWFlag {
     GF_Read,    //Read data
@@ -46,6 +48,7 @@ pub enum GDALRWFlag {
 
 #[derive(Clone, Copy, Debug)]
 #[allow(dead_code)]
+#[allow(non_camel_case_types)]
 #[repr(C)]
 pub enum GDALAccess {
     GA_ReadOnly,    //Read only (no update) access
@@ -54,6 +57,7 @@ pub enum GDALAccess {
 
 #[derive(Clone, Copy, Debug)]
 #[allow(dead_code)]
+#[allow(non_camel_case_types)]
 #[repr(C)]
 pub enum GDALResampleAlg {
     GRA_NearestNeighbour,   //Nearest neighbour (select on one input pixel)

@@ -2,7 +2,6 @@ use libc::{c_int, c_char, c_double, c_void};
 use gdal_enums::*;
 use cpl_error::{CPLErr};
 
-#[link(name="gdal")]
 extern {
     // driver
     pub fn GDALAllRegister();
@@ -73,6 +72,7 @@ extern {
     pub fn GDALGetDescription(hGdalMayorObject: *const c_void) -> *const c_char;
     pub fn GDALGetMetadataItem(hGdalMayorObject: *const c_void, pszName: *const c_char, pszDomain: *const c_char) -> *const c_char;
     pub fn GDALSetMetadataItem(hGdalMayorObject: *const c_void, pszName: *const c_char, pszValue: *const c_char, pszDomain: *const c_char ) -> CPLErr;
+    pub fn GDALVersionInfo(key: *const c_char) -> *const c_char;
 }
 
 pub static REPROJECT_MEMORY_LIMIT: c_double = 0.0;
