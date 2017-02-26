@@ -2,6 +2,8 @@
 name = "gdal-sys"
 version = "0.1.0"
 authors = ["Johannes Drönner <droenner@informatik.uni-marburg.de>"]
+build="build.rs"
+
 
 [dependencies]
-libc = "0.2.13"
+libc = "0.2.20"

@@ -1,7 +1,6 @@
 use libc::{c_int, c_char, c_double, c_void};
 use ogr_enums::*;
 
-#[link(name="gdal")]
 extern {
     pub fn OGRRegisterAll();
     pub fn OGRGetDriverByName(pszName: *const c_char) -> *const c_void;

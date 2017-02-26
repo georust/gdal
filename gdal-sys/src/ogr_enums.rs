@@ -1,5 +1,6 @@
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[allow(dead_code)]
+#[allow(non_camel_case_types)]
 #[repr(C)]
 pub enum OGRErr {
     OGRERR_NONE = 0,
@@ -16,6 +17,7 @@ pub enum OGRErr {
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[allow(dead_code)]
+#[allow(non_camel_case_types)]
 #[repr(C)]
 pub enum OGRFieldType {
     OFTInteger = 0,

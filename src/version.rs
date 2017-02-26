@@ -1,11 +1,6 @@
-use libc::c_char;
 use std::ffi::CString;
 use utils::_string;
-
-#[link(name="gdal")]
-extern {
-    fn GDALVersionInfo(key: *const c_char) -> *const c_char;
-}
+use gdal_sys::gdal::GDALVersionInfo;
 
 pub fn version_info(key: &str) -> String {
     let c_key = CString::new(key.as_bytes()).unwrap();
