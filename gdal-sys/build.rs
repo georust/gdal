@@ -5,7 +5,7 @@ fn main() {
     let link_type = "dylib";
     let lib_name = "gdal";
     
-    #[cfg(target_family="windows")]
+    #[cfg(windows)]
     {
         use std::path::Path;
         use std::env;
@@ -44,7 +44,7 @@ fn main() {
         }             
     }
 
-    #[cfg(target_family="unix")]
+    #[cfg(unix)]
     {
         println!("cargo:rustc-link-lib={}={}", link_type, lib_name);
     }
