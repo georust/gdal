@@ -61,7 +61,7 @@ fn test_import_export_multilinestring() {
     assert_eq!(geo.to_gdal().unwrap().wkt().unwrap(), wkt);
 }
 
-fn square(x0: isize, y0: isize, x1: isize, y1: isize) -> geo::LineString {
+fn square(x0: isize, y0: isize, x1: isize, y1: isize) -> geo::LineString<f64> {
     geo::LineString(vec!(
         geo::Point(geo::Coordinate{x: x0 as f64, y: y0 as f64}),
         geo::Point(geo::Coordinate{x: x0 as f64, y: y1 as f64}),
@@ -78,7 +78,7 @@ fn test_import_export_polygon() {
                         (3 3,3 4,4 4,4 3,3 3))";
     let outer = square(0, 0, 5, 5);
     let holes = vec!(square(1, 1, 2, 2), square(3, 3, 4, 4));
-    let geo = geo::Geometry::Polygon(geo::Polygon(outer, holes));
+    let geo = geo::Geometry::Polygon(geo::Polygon::new(outer, holes));
 
     assert_eq!(Geometry::from_wkt(wkt).unwrap().to_geo(), geo);
     assert_eq!(geo.to_gdal().unwrap().wkt().unwrap(), wkt);
@@ -95,11 +95,11 @@ fn test_import_export_multipolygon() {
          (7 7,7 8,8 8,8 7,7 7))\
         )";
     let multipolygon = geo::MultiPolygon(vec!(
-        geo::Polygon(
+        geo::Polygon::new(
             square(0, 0, 5, 5),
             vec!(square(1, 1, 2, 2), square(3, 3, 4, 4)),
         ),
-        geo::Polygon(
+        geo::Polygon::new(
             square(4, 4, 9, 9),
             vec!(square(5, 5, 6, 6), square(7, 7, 8, 8)),
         ),

@@ -2,8 +2,8 @@ use vector::{Geometry};
 use geo;
 use gdal_sys::ogr;
 
-impl geo::ToGeo for Geometry {
-    fn to_geo(&self) -> geo::Geometry {
+impl geo::ToGeo<f64> for Geometry {
+    fn to_geo(&self) -> geo::Geometry<f64> {
         let geometry_type = unsafe { ogr::OGR_G_GetGeometryType(self.c_geometry()) };
 
         let ring = |n: usize| {
@@ -53,7 +53,7 @@ impl geo::ToGeo for Geometry {
                 let ring_count = unsafe { ogr::OGR_G_GetGeometryCount(self.c_geometry()) } as usize;
                 let outer = ring(0);
                 let holes = (1..ring_count).map(|n| ring(n)).collect();
-                geo::Geometry::Polygon(geo::Polygon(outer, holes))
+                geo::Geometry::Polygon(geo::Polygon::new(outer, holes))
             },
             ogr::WKB_MULTIPOLYGON => {
                 let string_count = unsafe { ogr::OGR_G_GetGeometryCount(self.c_geometry()) } as usize;
