@@ -9,6 +9,7 @@ extern {
     pub fn OGR_DS_GetLayerCount(hDS: *const c_void) -> c_int;
     pub fn OGR_DS_Destroy(hDataSource: *const c_void);
     pub fn OGR_DS_GetLayer(hDS: *const c_void, iLayer: c_int) -> *const c_void;
+    pub fn OGR_DS_GetLayerByName(hDS: *const c_void, pszName: *const c_char) -> *const c_void;
     pub fn OGR_DS_CreateLayer(hDS: *const c_void, pszName: *const c_char, hSpatialRef: *const c_char, eType: c_int, papszOptions: *const c_void) -> *const c_void;
     pub fn OGR_L_GetLayerDefn(hLayer: *const c_void) -> *const c_void;
     pub fn OGR_L_GetNextFeature(hLayer: *const c_void) -> *const c_void;
