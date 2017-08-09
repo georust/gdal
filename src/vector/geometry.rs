@@ -14,6 +14,7 @@ pub struct Geometry {
     owned: bool,
 }
 
+#[derive(PartialEq,Debug)]
 pub enum WkbType {
     WkbUnknown = ogr::WKB_UNKNOWN as isize,
     WkbPoint = ogr::WKB_POINT as isize,
