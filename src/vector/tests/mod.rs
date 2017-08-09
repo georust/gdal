@@ -125,6 +125,7 @@ fn test_json() {
 fn test_schema() {
     let mut ds = Dataset::open(fixture!("roads.geojson")).unwrap();
     let layer = ds.layer(0).unwrap();
+    assert_eq!(layer.name(), "OGRGeoJSON".to_string());
     let name_list: Vec<(String, OGRFieldType)> = layer
         .defn().fields()
         .map(|f| (f.name(), f.field_type()))

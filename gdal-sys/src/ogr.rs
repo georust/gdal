@@ -11,6 +11,7 @@ extern {
     pub fn OGR_DS_GetLayer(hDS: *const c_void, iLayer: c_int) -> *const c_void;
     pub fn OGR_DS_GetLayerByName(hDS: *const c_void, pszName: *const c_char) -> *const c_void;
     pub fn OGR_DS_CreateLayer(hDS: *const c_void, pszName: *const c_char, hSpatialRef: *const c_char, eType: c_int, papszOptions: *const c_void) -> *const c_void;
+    pub fn OGR_L_GetName(hLayer: *const c_void) -> *const c_char;
     pub fn OGR_L_GetLayerDefn(hLayer: *const c_void) -> *const c_void;
     pub fn OGR_L_GetNextFeature(hLayer: *const c_void) -> *const c_void;
     pub fn OGR_L_SetSpatialFilter(hLayer: *const c_void, hGeom: *const c_void);
