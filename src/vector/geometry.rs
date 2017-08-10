@@ -14,7 +14,7 @@ pub struct Geometry {
     owned: bool,
 }
 
-#[derive(PartialEq,Debug)]
+#[derive(Clone,PartialEq,Debug)]
 pub enum WkbType {
     WkbUnknown = ogr::WKB_UNKNOWN as isize,
     WkbPoint = ogr::WKB_POINT as isize,
@@ -25,6 +25,23 @@ pub enum WkbType {
     WkbMultipolygon = ogr::WKB_MULTIPOLYGON as isize,
     WkbGeometrycollection = ogr::WKB_GEOMETRYCOLLECTION as isize,
     WkbLinearring = ogr::WKB_LINEARRING as isize,
+}
+
+impl WkbType {
+    pub fn from_ogr_type(ogr_type: c_int) -> WkbType {
+        match ogr_type {
+            ogr::WKB_UNKNOWN => WkbType::WkbUnknown,
+            ogr::WKB_POINT => WkbType::WkbPoint,
+            ogr::WKB_LINESTRING => WkbType::WkbLinestring,
+            ogr::WKB_POLYGON => WkbType::WkbPolygon,
+            ogr::WKB_MULTIPOINT => WkbType::WkbMultipoint,
+            ogr::WKB_MULTILINESTRING => WkbType::WkbMultilinestring,
+            ogr::WKB_MULTIPOLYGON => WkbType::WkbMultipolygon,
+            ogr::WKB_GEOMETRYCOLLECTION => WkbType::WkbGeometrycollection,
+            ogr::WKB_LINEARRING => WkbType::WkbLinearring,
+            _ => WkbType::WkbUnknown
+        }
+    }
 }
 
 impl Geometry {
@@ -159,18 +176,8 @@ impl Geometry {
     }
 
     pub fn geometry_type(&self) -> WkbType {
-        match unsafe { ogr::OGR_G_GetGeometryType(self.c_geometry()) } {
-            ogr::WKB_UNKNOWN => WkbType::WkbUnknown,
-            ogr::WKB_POINT => WkbType::WkbPoint,
-            ogr::WKB_LINESTRING => WkbType::WkbLinestring,
-            ogr::WKB_POLYGON => WkbType::WkbPolygon,
-            ogr::WKB_MULTIPOINT => WkbType::WkbMultipoint,
-            ogr::WKB_MULTILINESTRING => WkbType::WkbMultilinestring,
-            ogr::WKB_MULTIPOLYGON => WkbType::WkbMultipolygon,
-            ogr::WKB_GEOMETRYCOLLECTION => WkbType::WkbGeometrycollection,
-            ogr::WKB_LINEARRING => WkbType::WkbLinearring,
-            _ => WkbType::WkbUnknown
-        }
+        let ogr_type = unsafe { ogr::OGR_G_GetGeometryType(self.c_geometry()) };
+        WkbType::from_ogr_type(ogr_type)
     }
 
     pub fn geometry_count(&self) -> usize {

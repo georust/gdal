@@ -59,3 +59,11 @@ fn transform_ogr_geometry(){
     geom.transform_inplace(&htransform).unwrap();
     assert_eq!(expected_value, geom.wkt().unwrap());
 }
+
+#[test]
+fn authority(){
+    let spatial_ref = SpatialRef::from_epsg(4326).unwrap();
+    assert_eq!(spatial_ref.auth_code().unwrap(), 4326);
+    //let spatial_ref = SpatialRef::from_proj4("+proj=laea +lat_0=52 +lon_0=10 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +units=m +no_defs").unwrap();
+    //assert!(spatial_ref.auth_code().is_err()); //-> "An unknown error occurred"
+}

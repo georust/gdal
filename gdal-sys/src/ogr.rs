@@ -1,6 +1,8 @@
 use libc::{c_int, c_char, c_double, c_void};
 use ogr_enums::*;
 
+// http://gdal.org/ogr__api_8h.html
+
 extern {
     pub fn OGRRegisterAll();
     pub fn OGRGetDriverByName(pszName: *const c_char) -> *const c_void;
@@ -19,6 +21,8 @@ extern {
     pub fn OGR_L_CreateField(hLayer: *const c_void, hField: *const c_void, bApproxOK: c_int) -> OGRErr;
     pub fn OGR_FD_GetFieldCount(hDefn: *const c_void) -> c_int;
     pub fn OGR_FD_GetFieldDefn(hDefn: *const c_void, iField: c_int) -> *const c_void;
+    pub fn OGR_FD_GetGeomFieldCount(hDefn: *const c_void) -> c_int;
+    pub fn OGR_FD_GetGeomFieldDefn(hDefn: *const c_void, iField: c_int) -> *const c_void;
     pub fn OGR_F_Create(hDefn: *const c_void) -> *const c_void;
     pub fn OGR_F_GetFieldIndex(hFeat: *const c_void, pszName: *const c_char) -> c_int;
     pub fn OGR_F_GetFieldDefnRef(hFeat: *const c_void, i: c_int) -> *const c_void;
@@ -56,6 +60,9 @@ extern {
     pub fn OGR_Fld_SetWidth(hDefn: *const c_void, nNewWidth: c_int) -> c_void;
     pub fn OGR_Fld_SetPrecision(hDefn: *const c_void, nNewPrecision: c_int) -> c_void;
     pub fn OGR_Fld_Destroy(hDefn: *mut c_void) -> c_void;
+    pub fn OGR_GFld_GetNameRef(hDefn: *const c_void) -> *const c_char;
+    pub fn OGR_GFld_GetType(hDefn: *const c_void) -> c_int;
+    pub fn OGR_GFld_GetSpatialRef(hDefn: *const c_void) -> *const c_void;
     pub fn OGRFree(ptr: *mut c_void);
     pub fn VSIFree(ptr: *mut c_void);
 }

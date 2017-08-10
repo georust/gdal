@@ -1,5 +1,6 @@
 use std::path::Path;
 use super::{Driver, Dataset, Feature, FeatureIterator, FieldValue, Geometry, OGRFieldType, WkbType};
+use spatial_ref::SpatialRef;
 
 mod convert_geo;
 
@@ -153,6 +154,24 @@ fn test_schema() {
         ("highway", OGRFieldType::OFTString))
         .iter().map(|s| (s.0.to_string(), s.1)).collect();
     assert_eq!(name_list, ok_names_types);
+}
+
+#[test]
+fn test_geom_fields() {
+    let mut ds = Dataset::open(fixture!("roads.geojson")).unwrap();
+    let layer = ds.layer(0).unwrap();
+    let name_list: Vec<(String, WkbType)> = layer
+        .defn().geom_fields()
+        .map(|f| (f.name(), f.field_type()))
+        .collect();
+    let ok_names_types: Vec<(String, WkbType)> = vec!(
+        ("", WkbType::WkbLinestring))
+        .iter().map(|s| (s.0.to_string(), s.1.clone())).collect();
+    assert_eq!(name_list, ok_names_types);
+
+    let geom_field = layer.defn().geom_fields().next().unwrap();
+    let spatial_ref2 = SpatialRef::from_epsg(4326).unwrap();
+    assert!(geom_field.spatial_ref().unwrap() == spatial_ref2);
 }
 
 #[test]
