@@ -176,13 +176,40 @@ impl SpatialRef {
         }
     }
 
+    pub fn auth_name(&self) -> Result<String> {
+        let c_ptr = unsafe { osr::OSRGetAuthorityName(self.0, ptr::null() as *const c_char) };
+        if c_ptr.is_null() {
+            Err(_last_null_pointer_err("SRGetAuthorityName").into())
+        } else {
+            Ok(_string(c_ptr))
+        }
+    }
+
     pub fn auth_code(&self) -> Result<i32> {
-        let c_str = unsafe { CStr::from_ptr(osr::OSRGetAuthorityCode(self.0, ptr::null() as *const c_char)) };
+        let c_ptr = unsafe { osr::OSRGetAuthorityCode(self.0, ptr::null() as *const c_char) };
+        if c_ptr.is_null() {
+            return Err(_last_null_pointer_err("OSRGetAuthorityCode").into());
+        }
+        let c_str = unsafe { CStr::from_ptr(c_ptr) };
         let epsg = i32::from_str(c_str.to_str()?);
         match epsg {
             Ok(n) => Ok(n),
             Err(_) => Err(ErrorKind::OgrError(OGRErr::OGRERR_UNSUPPORTED_SRS, "OSRGetAuthorityCode").into())
         }
+    }
+
+    pub fn authority(&self) -> Result<String> {
+        let c_ptr = unsafe { osr::OSRGetAuthorityName(self.0, ptr::null() as *const c_char) };
+        if c_ptr.is_null() {
+            return Err(_last_null_pointer_err("SRGetAuthorityName").into());
+        }
+        let name = unsafe { CStr::from_ptr(c_ptr) }.to_str()?;
+        let c_ptr = unsafe { osr::OSRGetAuthorityCode(self.0, ptr::null() as *const c_char) };
+        if c_ptr.is_null() {
+            return Err(_last_null_pointer_err("OSRGetAuthorityCode").into());
+        }
+        let code = unsafe { CStr::from_ptr(c_ptr) }.to_str()?;
+        Ok(format!("{}:{}", name, code))
     }
 
     pub fn to_c_hsrs(&self) -> *const c_void {
