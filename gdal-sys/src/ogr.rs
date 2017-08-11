@@ -25,11 +25,13 @@ extern {
     pub fn OGR_FD_GetGeomFieldDefn(hDefn: *const c_void, iField: c_int) -> *const c_void;
     pub fn OGR_F_Create(hDefn: *const c_void) -> *const c_void;
     pub fn OGR_F_GetFieldIndex(hFeat: *const c_void, pszName: *const c_char) -> c_int;
+    pub fn OGR_F_GetGeomFieldIndex(hFeat: *const c_void, pszName: *const c_char) -> c_int;
     pub fn OGR_F_GetFieldDefnRef(hFeat: *const c_void, i: c_int) -> *const c_void;
     pub fn OGR_F_GetFieldAsString(hFeat: *const c_void, iField: c_int) -> *const c_char;
     pub fn OGR_F_GetFieldAsDouble(hFeat: *const c_void, iField: c_int) -> c_double;
     pub fn OGR_F_GetFieldAsInteger(hFeat: *const c_void, iField: c_int) -> c_int;
     pub fn OGR_F_GetGeometryRef(hFeat: *const c_void) -> *const c_void;
+    pub fn OGR_F_GetGeomFieldRef(hFeat: *const c_void, iField: c_int) -> *const c_void;
     pub fn OGR_F_SetGeometry(hFeat: *const c_void, hGeom: *const c_void) -> OGRErr;
     pub fn OGR_F_SetGeometryDirectly(hFeat: *const c_void, hGeom: *const c_void) -> OGRErr;
     pub fn OGR_F_SetFieldString(hFeat: *const c_void, iField: c_int, pszValue: *const c_char) -> c_void;

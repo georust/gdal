@@ -102,6 +102,15 @@ fn test_geom_accessors() {
         let coords = geom.get_point_vec();
         assert_eq!(coords, [(26.1019276, 44.4302748, 0.0), (26.1019382, 44.4303191, 0.0), (26.1020002, 44.4304202, 0.0)]);
         assert_eq!(geom.geometry_count(), 0);
+
+        let geom = feature.geometry_by_index(0).unwrap();
+        assert_eq!(geom.geometry_type(), WkbType::WkbLinestring);
+        assert!(feature.geometry_by_index(1).is_err());
+        let geom = feature.geometry_by_name("");
+        assert!(!geom.is_err());
+        let geom = feature.geometry_by_name("").unwrap();
+        assert_eq!(geom.geometry_type(), WkbType::WkbLinestring);
+        assert!(feature.geometry_by_name("FOO").is_err());
     });
 }
 

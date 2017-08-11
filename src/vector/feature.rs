@@ -14,7 +14,7 @@ use errors::*;
 pub struct Feature<'a> {
     _defn: &'a Defn,
     c_feature: *const c_void,
-    geometry: Geometry,
+    geometry: Vec<Geometry>,
 }
 
 
@@ -24,19 +24,25 @@ impl<'a> Feature<'a> {
         if c_feature.is_null() {
             return Err(_last_null_pointer_err("OGR_F_Create").into());
         };
-        Ok(unsafe { Feature {
+        Ok(Feature {
                  _defn: defn,
                  c_feature: c_feature,
-                 geometry: Geometry::lazy_feature_geometry(),
-             } })
+                 geometry: Feature::_lazy_feature_geometries(defn),
+             })
     }
 
     pub unsafe fn _with_c_feature(defn: &'a Defn, c_feature: *const c_void) -> Feature {
         return Feature{
             _defn: defn,
             c_feature: c_feature,
-            geometry: Geometry::lazy_feature_geometry(),
+            geometry: Feature::_lazy_feature_geometries(defn),
         };
+    }
+
+    pub fn _lazy_feature_geometries(defn: &'a Defn) -> Vec<Geometry> {
+        let geom_field_count = unsafe { ogr::OGR_FD_GetGeomFieldCount(defn.c_defn()) } as isize;
+        let geometries = (0..geom_field_count).map(|_| unsafe { Geometry::lazy_feature_geometry() }).collect();
+        geometries
     }
 
     /// Get the value of a named field. If the field exists, it returns a
@@ -69,11 +75,35 @@ impl<'a> Feature<'a> {
 
     /// Get the field's geometry.
     pub fn geometry(&self) -> &Geometry {
-        if ! self.geometry.has_gdal_ptr() {
+        if ! self.geometry[0].has_gdal_ptr() {
             let c_geom = unsafe { ogr::OGR_F_GetGeometryRef(self.c_feature) };
-            unsafe { self.geometry.set_c_geometry(c_geom) };
+            unsafe { self.geometry[0].set_c_geometry(c_geom) };
         }
-        return &self.geometry;
+        return &self.geometry[0];
+    }
+
+    pub fn geometry_by_name(&self, field_name: &str) -> Result<&Geometry> {
+        let c_str_field_name = CString::new(field_name)?;
+        let idx = unsafe { ogr::OGR_F_GetGeomFieldIndex(self.c_feature, c_str_field_name.as_ptr())};
+        if idx == -1 {
+            Err(ErrorKind::InvalidFieldName(field_name.to_string(), "geometry_by_name").into())
+        } else {
+            self.geometry_by_index(idx as usize)
+        }
+    }
+
+    pub fn geometry_by_index(&self, idx: usize) -> Result<&Geometry> {
+        if idx >= self.geometry.len() {
+            return Err(ErrorKind::InvalidFieldIndex(idx, "geometry_by_name").into())
+        }
+        if ! self.geometry[idx].has_gdal_ptr() {
+            let c_geom = unsafe { ogr::OGR_F_GetGeomFieldRef(self.c_feature, idx as i32) };
+            if c_geom.is_null() {
+                return Err(_last_null_pointer_err("OGR_F_GetGeomFieldRef").into());
+            }
+            unsafe { self.geometry[idx].set_c_geometry(c_geom) };
+        }
+        Ok(&self.geometry[idx])
     }
 
     pub fn create(&self, lyr: &Layer) -> Result<()> {
@@ -128,7 +158,7 @@ impl<'a> Feature<'a> {
         if rv != ogr_enums::OGRErr::OGRERR_NONE {
             return Err(ErrorKind::OgrError(rv, "OGR_G_SetGeometry").into());
         }
-        self.geometry = geom;
+        self.geometry[0] = geom;
         Ok(())
     }
 }
