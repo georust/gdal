@@ -130,6 +130,7 @@ fn test_schema() {
         .map(|f| (f.name(), f.field_type()))
         .collect();
     let ok_names_types: Vec<(String, OGRFieldType)> = vec!(
+        ("id", OGRFieldType::OFTString),
         ("kind", OGRFieldType::OFTString),
         ("sort_key",  OGRFieldType::OFTReal),
         ("is_link", OGRFieldType::OFTString),
