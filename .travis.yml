@@ -1,12 +1,16 @@
 language: rust
-sudo: false
+sudo: enabled
+dist: trusty
+
+before_install:
+  - sudo add-apt-repository ppa:ubuntugis/ppa -y
+  - sudo apt-get update -q
+  - sudo apt-get install -y libgdal-dev libgdal20
 
 addons:
-  apt:
-    packages:
-    - libgdal-dev
-    - libgdal1-dev
-    - libgdal1h
+ apt:
+  packages:
+    - build-essential
 
 rust:
   - stable
