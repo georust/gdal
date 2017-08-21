@@ -14,6 +14,35 @@ pub struct Geometry {
     owned: bool,
 }
 
+#[derive(Clone,PartialEq,Debug)]
+pub enum WkbType {
+    WkbUnknown = ogr::WKB_UNKNOWN as isize,
+    WkbPoint = ogr::WKB_POINT as isize,
+    WkbLinestring = ogr::WKB_LINESTRING as isize,
+    WkbPolygon = ogr::WKB_POLYGON as isize,
+    WkbMultipoint = ogr::WKB_MULTIPOINT as isize,
+    WkbMultilinestring = ogr::WKB_MULTILINESTRING as isize,
+    WkbMultipolygon = ogr::WKB_MULTIPOLYGON as isize,
+    WkbGeometrycollection = ogr::WKB_GEOMETRYCOLLECTION as isize,
+    WkbLinearring = ogr::WKB_LINEARRING as isize,
+}
+
+impl WkbType {
+    pub fn from_ogr_type(ogr_type: c_int) -> WkbType {
+        match ogr_type {
+            ogr::WKB_UNKNOWN => WkbType::WkbUnknown,
+            ogr::WKB_POINT => WkbType::WkbPoint,
+            ogr::WKB_LINESTRING => WkbType::WkbLinestring,
+            ogr::WKB_POLYGON => WkbType::WkbPolygon,
+            ogr::WKB_MULTIPOINT => WkbType::WkbMultipoint,
+            ogr::WKB_MULTILINESTRING => WkbType::WkbMultilinestring,
+            ogr::WKB_MULTIPOLYGON => WkbType::WkbMultipolygon,
+            ogr::WKB_GEOMETRYCOLLECTION => WkbType::WkbGeometrycollection,
+            ogr::WKB_LINEARRING => WkbType::WkbLinearring,
+            _ => WkbType::WkbUnknown
+        }
+    }
+}
 
 impl Geometry {
     pub unsafe fn lazy_feature_geometry() -> Geometry {
@@ -144,6 +173,16 @@ impl Geometry {
             return Err(_last_null_pointer_err("OGR_G_ConvexHull").into());
         };
         Ok(unsafe { Geometry::with_c_geometry(c_geom, true) })
+    }
+
+    pub fn geometry_type(&self) -> WkbType {
+        let ogr_type = unsafe { ogr::OGR_G_GetGeometryType(self.c_geometry()) };
+        WkbType::from_ogr_type(ogr_type)
+    }
+
+    pub fn geometry_count(&self) -> usize {
+        let cnt = unsafe { ogr::OGR_G_GetGeometryCount(self.c_geometry()) };
+        cnt as usize
     }
 
     pub unsafe fn _get_geometry(&self, n: usize) -> Geometry {

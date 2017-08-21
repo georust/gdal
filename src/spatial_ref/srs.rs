@@ -1,8 +1,10 @@
 use libc::{c_int, c_char, c_void};
-use std::ffi::{CString};
+use std::ffi::{CString, CStr};
 use std::ptr;
+use std::str::FromStr;
 use utils::{_string, _last_null_pointer_err};
 use gdal_sys::{osr, ogr_enums};
+use gdal_sys::ogr_enums::OGRErr;
 
 use errors::*;
 
@@ -117,6 +119,15 @@ impl SpatialRef {
         }
     }
 
+    pub fn from_c_obj(c_obj: *const c_void) -> Result<SpatialRef> {
+        let mut_c_obj = unsafe { osr::OSRClone(c_obj) };
+        if mut_c_obj.is_null() {
+           return Err(_last_null_pointer_err("OSRClone").into());
+        } else {
+            Ok(SpatialRef(mut_c_obj))
+        }
+    }
+
     pub fn to_wkt(&self) -> Result<String> {
         let mut c_wkt: *const c_char = ptr::null_mut();
         let _err = unsafe { osr::OSRExportToWkt(self.0, &mut c_wkt) };
@@ -163,6 +174,42 @@ impl SpatialRef {
         } else {
             Ok(_string(c_proj4str))
         }
+    }
+
+    pub fn auth_name(&self) -> Result<String> {
+        let c_ptr = unsafe { osr::OSRGetAuthorityName(self.0, ptr::null() as *const c_char) };
+        if c_ptr.is_null() {
+            Err(_last_null_pointer_err("SRGetAuthorityName").into())
+        } else {
+            Ok(_string(c_ptr))
+        }
+    }
+
+    pub fn auth_code(&self) -> Result<i32> {
+        let c_ptr = unsafe { osr::OSRGetAuthorityCode(self.0, ptr::null() as *const c_char) };
+        if c_ptr.is_null() {
+            return Err(_last_null_pointer_err("OSRGetAuthorityCode").into());
+        }
+        let c_str = unsafe { CStr::from_ptr(c_ptr) };
+        let epsg = i32::from_str(c_str.to_str()?);
+        match epsg {
+            Ok(n) => Ok(n),
+            Err(_) => Err(ErrorKind::OgrError(OGRErr::OGRERR_UNSUPPORTED_SRS, "OSRGetAuthorityCode").into())
+        }
+    }
+
+    pub fn authority(&self) -> Result<String> {
+        let c_ptr = unsafe { osr::OSRGetAuthorityName(self.0, ptr::null() as *const c_char) };
+        if c_ptr.is_null() {
+            return Err(_last_null_pointer_err("SRGetAuthorityName").into());
+        }
+        let name = unsafe { CStr::from_ptr(c_ptr) }.to_str()?;
+        let c_ptr = unsafe { osr::OSRGetAuthorityCode(self.0, ptr::null() as *const c_char) };
+        if c_ptr.is_null() {
+            return Err(_last_null_pointer_err("OSRGetAuthorityCode").into());
+        }
+        let code = unsafe { CStr::from_ptr(c_ptr) }.to_str()?;
+        Ok(format!("{}:{}", name, code))
     }
 
     pub fn to_c_hsrs(&self) -> *const c_void {

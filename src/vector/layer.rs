@@ -6,7 +6,7 @@ use vector::defn::Defn;
 use gdal_major_object::MajorObject;
 use metadata::Metadata;
 use gdal_sys::{ogr, ogr_enums};
-use utils::{_last_null_pointer_err};
+use utils::{_last_null_pointer_err, _string};
 
 use errors::*;
 
@@ -54,6 +54,12 @@ impl Layer {
 
     pub fn clear_spatial_filter(&self) {
         unsafe { ogr::OGR_L_SetSpatialFilter(self.c_layer, null()) };
+    }
+
+    /// Get the name of this layer.
+    pub fn name(&self) -> String {
+        let rv = unsafe { ogr::OGR_L_GetName(self.c_layer) };
+        return _string(rv);
     }
 
     pub fn defn(&self) -> &Defn {

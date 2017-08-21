@@ -1,9 +1,13 @@
 use libc::{c_int, c_void};
-use utils::_string;
+use utils::{_last_null_pointer_err, _string};
 use gdal_sys::ogr;
 use vector::layer::Layer;
+use vector::geometry::WkbType;
+use spatial_ref::SpatialRef;
 use gdal_major_object::MajorObject;
 use gdal_sys::ogr_enums::OGRFieldType;
+
+use errors::*;
 
 /// Layer definition
 ///
@@ -23,6 +27,17 @@ impl Defn {
     pub fn fields(&self) -> FieldIterator {
         let total = unsafe { ogr::OGR_FD_GetFieldCount(self.c_defn) } as isize;
         return FieldIterator{
+            defn: self,
+            c_feature_defn: self.c_defn,
+            next_id: 0,
+            total: total
+        };
+    }
+
+    /// Iterate over the geometry field schema of this layer.
+    pub fn geom_fields(&self) -> GeomFieldIterator {
+        let total = unsafe { ogr::OGR_FD_GetGeomFieldCount(self.c_defn) } as isize;
+        return GeomFieldIterator{
             defn: self,
             c_feature_defn: self.c_defn,
             next_id: 0,
@@ -85,5 +100,59 @@ impl<'a> Field<'a> {
 
     pub fn precision(&'a self) -> i32 {
         unsafe { ogr::OGR_Fld_GetPrecision(self.c_field_defn) }
+    }
+}
+
+pub struct GeomFieldIterator<'a> {
+    defn: &'a Defn,
+    c_feature_defn: *const c_void,
+    next_id: isize,
+    total: isize,
+}
+
+impl<'a> Iterator for GeomFieldIterator<'a> {
+    type Item = GeomField<'a>;
+
+    #[inline]
+    fn next(&mut self) -> Option<GeomField<'a>> {
+        if self.next_id == self.total {
+            return None;
+        }
+        let field = GeomField{
+            _defn: self.defn,
+            c_field_defn: unsafe { ogr::OGR_FD_GetGeomFieldDefn(
+                self.c_feature_defn,
+                self.next_id as c_int
+            ) }
+        };
+        self.next_id += 1;
+        return Some(field);
+    }
+}
+
+// http://gdal.org/classOGRGeomFieldDefn.html
+pub struct GeomField<'a> {
+    _defn: &'a Defn,
+    c_field_defn: *const c_void,
+}
+
+impl<'a> GeomField<'a> {
+    /// Get the name of this field.
+    pub fn name(&'a self) -> String {
+        let rv = unsafe { ogr::OGR_GFld_GetNameRef(self.c_field_defn) };
+        return _string(rv);
+    }
+
+    pub fn field_type(&'a self) -> WkbType {
+        let ogr_type = unsafe { ogr::OGR_GFld_GetType(self.c_field_defn) };
+        WkbType::from_ogr_type(ogr_type)
+    }
+
+    pub fn spatial_ref(&'a self) -> Result<SpatialRef> {
+        let c_obj = unsafe { ogr::OGR_GFld_GetSpatialRef(self.c_field_defn) };
+        if c_obj.is_null() {
+            return Err(_last_null_pointer_err("OGR_GFld_GetSpatialRef").into());
+        }
+        SpatialRef::from_c_obj(c_obj)
     }
 }

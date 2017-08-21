@@ -59,3 +59,23 @@ fn transform_ogr_geometry(){
     geom.transform_inplace(&htransform).unwrap();
     assert_eq!(expected_value, geom.wkt().unwrap());
 }
+
+#[test]
+fn authority(){
+    let spatial_ref = SpatialRef::from_epsg(4326).unwrap();
+    assert_eq!(spatial_ref.auth_name().unwrap(), "EPSG".to_string());
+    assert_eq!(spatial_ref.auth_code().unwrap(), 4326);
+    assert_eq!(spatial_ref.authority().unwrap(), "EPSG:4326".to_string());
+    let spatial_ref = SpatialRef::from_wkt("GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",7030]],TOWGS84[0,0,0,0,0,0,0],AUTHORITY[\"EPSG\",6326]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",8901]],UNIT[\"DMSH\",0.0174532925199433,AUTHORITY[\"EPSG\",9108]],AXIS[\"Lat\",NORTH],AXIS[\"Long\",EAST],AUTHORITY[\"EPSG\",4326]]").unwrap();
+    assert_eq!(spatial_ref.auth_name().unwrap(), "EPSG".to_string());
+    assert_eq!(spatial_ref.auth_code().unwrap(), 4326);
+    assert_eq!(spatial_ref.authority().unwrap(), "EPSG:4326".to_string());
+    let spatial_ref = SpatialRef::from_wkt("GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",7030]],TOWGS84[0,0,0,0,0,0,0],AUTHORITY[\"EPSG\",6326]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",8901]],UNIT[\"DMSH\",0.0174532925199433,AUTHORITY[\"EPSG\",9108]],AXIS[\"Lat\",NORTH],AXIS[\"Long\",EAST]]").unwrap();
+    assert!(spatial_ref.auth_name().is_err());
+    assert!(spatial_ref.auth_code().is_err());
+    assert!(spatial_ref.authority().is_err());
+    let spatial_ref = SpatialRef::from_proj4("+proj=laea +lat_0=52 +lon_0=10 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +units=m +no_defs").unwrap();
+    assert!(spatial_ref.auth_name().is_err());
+    assert!(spatial_ref.auth_code().is_err());
+    assert!(spatial_ref.authority().is_err());
+}

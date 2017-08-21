@@ -67,7 +67,17 @@ impl Dataset {
     pub fn layer(&mut self, idx: isize) -> Result<&Layer> {
         let c_layer = unsafe { ogr::OGR_DS_GetLayer(self.c_dataset, idx as c_int) };
         if c_layer.is_null() {
-            return Err(_last_null_pointer_err("OGROpen").into());            
+            return Err(_last_null_pointer_err("OGR_DS_GetLayer").into());
+        }
+        Ok(self._child_layer(c_layer))
+    }
+
+    /// Get layer with `name`.
+    pub fn layer_by_name(&mut self, name: &str) -> Result<&Layer> {
+        let c_name = CString::new(name)?;
+        let c_layer = unsafe { ogr::OGR_DS_GetLayerByName(self.c_dataset, c_name.as_ptr()) };
+        if c_layer.is_null() {
+            return Err(_last_null_pointer_err("OGR_DS_GetLayerByName").into());
         }
         Ok(self._child_layer(c_layer))
     }

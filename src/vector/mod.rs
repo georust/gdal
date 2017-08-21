@@ -21,7 +21,7 @@ pub use vector::dataset::Dataset;
 pub use vector::layer::{Layer, FeatureIterator, FieldDefn};
 pub use vector::defn::{Defn, FieldIterator, Field};
 pub use vector::feature::{Feature, FieldValue};
-pub use vector::geometry::Geometry;
+pub use vector::geometry::{Geometry, WkbType};
 pub use gdal_sys::ogr_enums::OGRFieldType;
 
 use errors::{Result};

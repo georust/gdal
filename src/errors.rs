@@ -30,6 +30,10 @@ error_chain! {
             description("Invalid field name error")
             display("Invalid field name '{}' used on method {}", field_name, method_name)
         }
+        InvalidFieldIndex(index: usize, method_name: &'static str){
+            description("Invalid field index error")
+            display("Invalid field index {} used on method {}", index, method_name)
+        }
         UnlinkedGeometry(method_name: &'static str){
             description("Unlinked Geometry")
             display("Unlinked Geometry on method {}", method_name)

@@ -1,5 +1,6 @@
 use std::path::Path;
-use super::{Driver, Dataset, Feature, FeatureIterator, FieldValue, Geometry, OGRFieldType};
+use super::{Driver, Dataset, Feature, FeatureIterator, FieldValue, Geometry, OGRFieldType, WkbType};
+use spatial_ref::SpatialRef;
 
 mod convert_geo;
 
@@ -94,6 +95,27 @@ fn test_missing_field() {
 
 
 #[test]
+fn test_geom_accessors() {
+    with_first_feature("roads.geojson", |feature| {
+        let geom = feature.geometry();
+        assert_eq!(geom.geometry_type(), WkbType::WkbLinestring);
+        let coords = geom.get_point_vec();
+        assert_eq!(coords, [(26.1019276, 44.4302748, 0.0), (26.1019382, 44.4303191, 0.0), (26.1020002, 44.4304202, 0.0)]);
+        assert_eq!(geom.geometry_count(), 0);
+
+        let geom = feature.geometry_by_index(0).unwrap();
+        assert_eq!(geom.geometry_type(), WkbType::WkbLinestring);
+        assert!(feature.geometry_by_index(1).is_err());
+        let geom = feature.geometry_by_name("");
+        assert!(!geom.is_err());
+        let geom = feature.geometry_by_name("").unwrap();
+        assert_eq!(geom.geometry_type(), WkbType::WkbLinestring);
+        assert!(feature.geometry_by_name("FOO").is_err());
+    });
+}
+
+
+#[test]
 fn test_wkt() {
     with_first_feature("roads.geojson", |feature| {
         let wkt = feature.geometry().wkt().unwrap();
@@ -125,6 +147,7 @@ fn test_json() {
 fn test_schema() {
     let mut ds = Dataset::open(fixture!("roads.geojson")).unwrap();
     let layer = ds.layer(0).unwrap();
+    assert_eq!(layer.name(), "OGRGeoJSON".to_string());
     let name_list: Vec<(String, OGRFieldType)> = layer
         .defn().fields()
         .map(|f| (f.name(), f.field_type()))
@@ -140,6 +163,31 @@ fn test_schema() {
         ("highway", OGRFieldType::OFTString))
         .iter().map(|s| (s.0.to_string(), s.1)).collect();
     assert_eq!(name_list, ok_names_types);
+}
+
+#[test]
+fn test_geom_fields() {
+    let mut ds = Dataset::open(fixture!("roads.geojson")).unwrap();
+    let layer = ds.layer(0).unwrap();
+    let name_list: Vec<(String, WkbType)> = layer
+        .defn().geom_fields()
+        .map(|f| (f.name(), f.field_type()))
+        .collect();
+    let ok_names_types: Vec<(String, WkbType)> = vec!(
+        ("", WkbType::WkbLinestring))
+        .iter().map(|s| (s.0.to_string(), s.1.clone())).collect();
+    assert_eq!(name_list, ok_names_types);
+
+    let geom_field = layer.defn().geom_fields().next().unwrap();
+    let spatial_ref2 = SpatialRef::from_epsg(4326).unwrap();
+    assert!(geom_field.spatial_ref().unwrap() == spatial_ref2);
+}
+
+#[test]
+fn test_get_layer_by_name() {
+    let mut ds = Dataset::open(fixture!("roads.geojson")).unwrap();
+    let layer = ds.layer_by_name("OGRGeoJSON").unwrap();
+    assert_eq!(layer.name(), "OGRGeoJSON");
 }
 
 #[test]
