@@ -25,14 +25,24 @@ fn from_epsg_to_wkt_proj4(){
 }
 
 #[test]
+fn from_esri_to_proj4() {
+    let spatial_ref = SpatialRef::from_esri("GEOGCS[\"GCS_WGS_1984\",DATUM[\"D_WGS_1984\",SPHEROID[\"WGS_1984\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.017453292519943295]]").unwrap();
+    let proj4string = spatial_ref.to_proj4().unwrap();
+    assert_eq!("+proj=longlat +datum=WGS84 +no_defs ", proj4string);
+}
+
+#[test]
 fn comparison(){
     let spatial_ref1 = SpatialRef::from_wkt("GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",7030]],TOWGS84[0,0,0,0,0,0,0],AUTHORITY[\"EPSG\",6326]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",8901]],UNIT[\"DMSH\",0.0174532925199433,AUTHORITY[\"EPSG\",9108]],AXIS[\"Lat\",NORTH],AXIS[\"Long\",EAST],AUTHORITY[\"EPSG\",4326]]").unwrap();
     let spatial_ref2 = SpatialRef::from_epsg(4326).unwrap();
     let spatial_ref3 = SpatialRef::from_epsg(3025).unwrap();
     let spatial_ref4 = SpatialRef::from_proj4("+proj=longlat +datum=WGS84 +no_defs ").unwrap();
+    let spatial_ref5 = SpatialRef::from_esri("GEOGCS[\"GCS_WGS_1984\",DATUM[\"D_WGS_1984\",SPHEROID[\"WGS_1984\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.017453292519943295]]").unwrap();
+
     assert_eq!(true, spatial_ref1 == spatial_ref2);
     assert_eq!(false, spatial_ref2 == spatial_ref3);
     assert_eq!(true, spatial_ref4 == spatial_ref2);
+    assert_eq!(true, spatial_ref5 == spatial_ref4);
 }
 
 #[test]

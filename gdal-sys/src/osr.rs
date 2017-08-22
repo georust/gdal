@@ -10,6 +10,7 @@ extern {
     pub fn OSRSetFromUserInput(hSRS: *mut c_void, pszDefinition: *const c_char) -> OGRErr;
     pub fn OSRImportFromEPSG(hSRS: *const c_void, nCode: c_int) -> OGRErr;
     pub fn OSRImportFromProj4(hSRS: *mut c_void, proj4_string: *const c_char) -> OGRErr;
+    pub fn OSRImportFromESRI(hSRS: *mut c_void, esri_wkt: *const *const c_char) -> OGRErr;
     pub fn OSRExportToWkt(hSRS: *const c_void, ppszReturn: &mut *const c_char) -> OGRErr;
     pub fn OSRExportToPrettyWkt(hSRS: *const c_void, ppszReturn: &mut *const c_char, bSimplify: c_int) -> OGRErr;
     pub fn OSRExportToProj4(hSRS: *const c_void, ppszReturn: &mut *const c_char) -> OGRErr;
