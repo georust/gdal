@@ -119,6 +119,19 @@ impl SpatialRef {
         }
     }
 
+    pub fn from_esri(esri_wkt: &str) -> Result<SpatialRef> {
+        let c_str = CString::new(esri_wkt)?;
+        let ptrs = vec![c_str.as_ptr(), ptr::null_mut()];
+        let null_ptr = ptr::null_mut();
+        let c_obj = unsafe { osr::OSRNewSpatialReference(null_ptr) };
+        let rv = unsafe { osr::OSRImportFromESRI(c_obj, ptrs.as_ptr()) };
+        if rv != ogr_enums::OGRErr::OGRERR_NONE {
+            Err(ErrorKind::OgrError(rv, "OSRImportFromESRI").into())
+        } else {
+            Ok(SpatialRef(c_obj))
+        }
+    }
+
     pub fn from_c_obj(c_obj: *const c_void) -> Result<SpatialRef> {
         let mut_c_obj = unsafe { osr::OSRClone(c_obj) };
         if mut_c_obj.is_null() {
