@@ -1,9 +1,11 @@
 [package]
 name = "gdal-sys"
+description = "Low level GDAL bindings for Rust"
+license = "MIT"
 version = "0.1.0"
+repository = "https://github.com/georust/rust-gdal"
 authors = ["Johannes Drönner <droenner@informatik.uni-marburg.de>"]
 build="build.rs"
 
-
 [dependencies]
-libc = "0.2.20"
+libc = "0.2"
