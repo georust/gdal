@@ -2,7 +2,7 @@
 name = "gdal"
 description = "GDAL bindings for Rust"
 license = "MIT"
-version = "0.3.0"
+version = "0.3.1-alpha.0"
 authors = ["Alex Morega <alex@grep.ro>"]
 repository = "https://github.com/georust/rust-gdal"
 documentation = "https://georust.github.io/rust-gdal/"
