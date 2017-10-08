@@ -1,4 +1,4 @@
-## Rust-GDAL ##
+# Rust-GDAL
 
 [![Build Status](https://travis-ci.org/georust/rust-gdal.png?branch=master)](https://travis-ci.org/georust/rust-gdal)
 
@@ -13,6 +13,7 @@ So far, you can:
 * get/set projection and geo-transform
 * read and write raster data
 * warp between datasets
-* read vector data
+* read and write vector data
+* access metadata
 
 Many raster and vector functions are not available. Patches welcome :)
