@@ -44,6 +44,7 @@ impl CoordTransform {
     }
 }
 
+#[derive(Debug)]
 pub struct SpatialRef(*mut c_void);
 
 impl Drop for SpatialRef {

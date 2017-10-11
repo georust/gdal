@@ -254,6 +254,28 @@ impl Geometry {
     pub fn area(&self) -> f64 {
         unsafe { ogr::OGR_G_Area(self.c_geometry()) }
     }
+
+    /// May or may not contain a reference to a SpatialRef: if not, it returns
+    /// an `Ok(None)`; if it does, it tries to build a SpatialRef. If that
+    /// succeeds, it returns an Ok(Some(SpatialRef)), otherwise, you get the
+    /// Err.
+    ///
+    pub fn spatial_reference(&self) -> Option<SpatialRef> {
+        let c_spatial_ref = unsafe { ogr::OGR_G_GetSpatialReference(self.c_geometry()) };
+
+        if c_spatial_ref.is_null() {
+            None
+        } else {
+            match SpatialRef::from_c_obj(c_spatial_ref) {
+                Ok(sr) => Some(sr),
+                Err(_) => None
+            }
+        }
+    }
+
+    pub fn set_spatial_reference(&mut self, spatial_ref: SpatialRef) {
+        unsafe { ogr::OGR_G_AssignSpatialReference(self.c_geometry(), spatial_ref.to_c_hsrs()) };
+    }
 }
 
 impl Drop for Geometry {
@@ -277,6 +299,7 @@ impl Clone for Geometry {
 #[cfg(test)]
 mod tests {
     use super::Geometry;
+    use spatial_ref::SpatialRef;
 
     #[test]
     pub fn test_area() {
@@ -302,5 +325,22 @@ mod tests {
         let wkt = "POLYGON ((45.0 45.0, 45.0 50.0, 50.0 50.0, 50.0 45.0, 45.0 45.0))";
         let geom = Geometry::from_wkt(wkt).unwrap();
         assert!(!geom.is_empty());
+    }
+
+    #[test]
+    pub fn test_spatial_reference() {
+        let geom = Geometry::empty(::gdal_sys::ogr::WKB_MULTIPOLYGON).unwrap();
+        assert!(geom.spatial_reference().is_none());
+
+        let geom = Geometry::from_wkt("POINT(0 0)").unwrap();
+        assert!(geom.spatial_reference().is_none());
+
+        let wkt = "POLYGON ((45.0 45.0, 45.0 50.0, 50.0 50.0, 50.0 45.0, 45.0 45.0))";
+        let mut geom = Geometry::from_wkt(wkt).unwrap();
+        assert!(geom.spatial_reference().is_none());
+
+        let srs = SpatialRef::from_epsg(4326).unwrap();
+        geom.set_spatial_reference(srs);
+        assert!(geom.spatial_reference().is_some());
     }
 }
