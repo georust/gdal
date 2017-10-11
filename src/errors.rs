@@ -38,5 +38,8 @@ error_chain! {
             description("Unlinked Geometry")
             display("Unlinked Geometry on method {}", method_name)
         }
+        InvalidCoordinateRange {
+            description("Invalid coordinatie range while transformation points")
+        }
     }
 }

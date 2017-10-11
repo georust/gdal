@@ -26,7 +26,7 @@ impl CoordTransform {
         Ok(CoordTransform(c_obj))
     }
 
-    pub fn transform_coord(&self, x: &mut [f64], y: &mut [f64], z: &mut [f64]){
+    pub fn transform_coord_err(&self, x: &mut [f64], y: &mut [f64], z: &mut [f64]) -> Result<()> {
         let nb_coords = x.len();
         assert_eq!(nb_coords, y.len());
         let ret_val = unsafe { osr::OCTTransform(
@@ -36,7 +36,15 @@ impl CoordTransform {
             y.as_mut_ptr(),
             z.as_mut_ptr()
         ) };
-        assert_eq!(true, ret_val);
+        if ret_val {
+            Ok(())
+        } else {
+            Err(ErrorKind::InvalidCoordinateRange.into())
+        }
+    }
+
+    pub fn transform_coord(&self, x: &mut [f64], y: &mut [f64], z: &mut [f64]){
+        self.transform_coord_err(x, y, z).expect("Coordinate transform successful")
     }
 
     pub fn to_c_hct(&self) -> *const c_void {

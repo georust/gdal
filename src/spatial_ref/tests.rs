@@ -89,3 +89,18 @@ fn authority(){
     assert!(spatial_ref.auth_code().is_err());
     assert!(spatial_ref.authority().is_err());
 }
+
+
+#[test]
+fn failing_transformation() {
+    let wgs84 = SpatialRef::from_epsg(4326).unwrap();
+    let dhd_2 = SpatialRef::from_epsg(31462).unwrap();
+
+    let mut x = [1979105.06, 0.0];
+    let mut y = [5694052.67, 0.0];
+    let mut z = [0.0, 0.0];
+
+    let trafo = CoordTransform::new(&wgs84, &dhd_2).unwrap();
+    let r = trafo.transform_coord_err(&mut x, &mut y, &mut z);
+    assert_eq!(r.is_err(), true);
+}
