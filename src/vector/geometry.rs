@@ -246,6 +246,10 @@ impl Geometry {
         }
         Ok(unsafe { Geometry::with_c_geometry(new_c_geom, true) } )
     }
+
+    pub fn area(&self) -> f64 {
+        unsafe { ogr::OGR_G_Area(self.c_geometry()) }
+    }
 }
 
 impl Drop for Geometry {
@@ -263,5 +267,23 @@ impl Clone for Geometry {
         let c_geometry = self.c_geometry_ref.borrow();
         let new_c_geom = unsafe { ogr::OGR_G_Clone(c_geometry.unwrap())};
         unsafe { Geometry::with_c_geometry(new_c_geom, true) }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Geometry;
+
+    #[test]
+    pub fn test_area() {
+        let geom = Geometry::empty(::gdal_sys::ogr::WKB_MULTIPOLYGON).unwrap();
+        assert_eq!(geom.area(), 0.0);
+
+        let geom = Geometry::from_wkt("POINT(0 0)").unwrap();
+        assert_eq!(geom.area(), 0.0);
+
+        let wkt = "POLYGON ((45.0 45.0, 45.0 50.0, 50.0 50.0, 50.0 45.0, 45.0 45.0))";
+        let geom = Geometry::from_wkt(wkt).unwrap();
+        assert_eq!(geom.area().floor(), 25.0);
     }
 }
