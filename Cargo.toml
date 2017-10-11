@@ -11,7 +11,7 @@ documentation = "https://georust.github.io/rust-gdal/"
 error-chain = "0.11"
 libc = "0.2"
 geo = "0.6"
-gdal-sys = "0.1"
+gdal-sys = { path = "gdal-sys", version = "0.1"}
 num-traits = "0.1"
 
 [workspace]
