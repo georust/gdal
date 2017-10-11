@@ -85,6 +85,10 @@ impl Geometry {
         Ok(unsafe { Geometry::with_c_geometry(c_geom, true) })
     }
 
+    pub fn is_empty(&self) -> bool {
+        unsafe { ogr::OGR_G_IsEmpty(self.c_geometry()) }
+    }
+
     /// Create a geometry by parsing a
     /// [WKT](https://en.wikipedia.org/wiki/Well-known_text) string.
     pub fn from_wkt(wkt: &str) -> Result<Geometry> {
@@ -285,5 +289,18 @@ mod tests {
         let wkt = "POLYGON ((45.0 45.0, 45.0 50.0, 50.0 50.0, 50.0 45.0, 45.0 45.0))";
         let geom = Geometry::from_wkt(wkt).unwrap();
         assert_eq!(geom.area().floor(), 25.0);
+    }
+
+    #[test]
+    pub fn test_is_empty() {
+        let geom = Geometry::empty(::gdal_sys::ogr::WKB_MULTIPOLYGON).unwrap();
+        assert!(geom.is_empty());
+
+        let geom = Geometry::from_wkt("POINT(0 0)").unwrap();
+        assert!(!geom.is_empty());
+
+        let wkt = "POLYGON ((45.0 45.0, 45.0 50.0, 50.0 50.0, 50.0 45.0, 45.0 45.0))";
+        let geom = Geometry::from_wkt(wkt).unwrap();
+        assert!(!geom.is_empty());
     }
 }

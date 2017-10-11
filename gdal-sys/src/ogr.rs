@@ -55,6 +55,7 @@ extern {
     pub fn OGR_G_TransformTo(hGeom: *const c_void, hSRS: *const c_void) -> OGRErr;
     pub fn OGR_G_DestroyGeometry(hGeom: *mut c_void);
     pub fn OGR_G_Area(hGeom: *const c_void) -> c_double;
+    pub fn OGR_G_IsEmpty(hGeom: *const c_void) -> bool;
     pub fn OGR_Fld_GetNameRef(hDefn: *const c_void) -> *const c_char;
     pub fn OGR_Fld_GetType(hDefn: *const c_void) -> OGRFieldType;
     pub fn OGR_Fld_Create(pszName: *const c_char, eType: OGRFieldType) -> *const c_void;
