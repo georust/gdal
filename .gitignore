@@ -2,3 +2,8 @@
 /target
 /.vscode
 /gdal-sys/target
+
+# gtags
+GPATH
+GTAGS
+GRTAGS
