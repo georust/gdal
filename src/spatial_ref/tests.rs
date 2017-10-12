@@ -101,6 +101,6 @@ fn failing_transformation() {
     let mut z = [0.0, 0.0];
 
     let trafo = CoordTransform::new(&wgs84, &dhd_2).unwrap();
-    let r = trafo.transform_coord_err(&mut x, &mut y, &mut z);
+    let r = trafo.transform_coords(&mut x, &mut y, &mut z);
     assert_eq!(r.is_err(), true);
 }

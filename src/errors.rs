@@ -38,8 +38,9 @@ error_chain! {
             description("Unlinked Geometry")
             display("Unlinked Geometry on method {}", method_name)
         }
-        InvalidCoordinateRange {
-            description("Invalid coordinatie range while transformation points")
+        InvalidCoordinateRange(from: String, to: String) {
+            description("Invalid coordinate range while transforming points")
+            display("Invalid coordinate range while transforming points from {} to {}", from, to)
         }
     }
 }

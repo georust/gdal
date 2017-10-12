@@ -8,12 +8,16 @@ use gdal_sys::ogr_enums::OGRErr;
 
 use errors::*;
 
-pub struct CoordTransform(*mut c_void);
+pub struct CoordTransform{
+    inner: *mut c_void,
+    from: String,
+    to: String,
+}
 
 impl Drop for CoordTransform {
     fn drop(&mut self) {
-        unsafe { osr::OCTDestroyCoordinateTransformation(self.0) };
-        self.0 = ptr::null_mut();
+        unsafe { osr::OCTDestroyCoordinateTransformation(self.inner) };
+        self.inner = ptr::null_mut();
     }
 }
 
@@ -23,14 +27,18 @@ impl CoordTransform {
         if c_obj.is_null() {
             return Err(_last_null_pointer_err("OCTNewCoordinateTransformation").into());
         }
-        Ok(CoordTransform(c_obj))
+        Ok(CoordTransform{
+            inner: c_obj,
+            from: sp_ref1.authority().or_else(|_| sp_ref1.to_proj4())?,
+            to: sp_ref2.authority().or_else(|_| sp_ref2.to_proj4())?
+        })
     }
 
-    pub fn transform_coord_err(&self, x: &mut [f64], y: &mut [f64], z: &mut [f64]) -> Result<()> {
+    pub fn transform_coords(&self, x: &mut [f64], y: &mut [f64], z: &mut [f64]) -> Result<()> {
         let nb_coords = x.len();
         assert_eq!(nb_coords, y.len());
         let ret_val = unsafe { osr::OCTTransform(
-            self.0,
+            self.inner,
             nb_coords as c_int,
             x.as_mut_ptr(),
             y.as_mut_ptr(),
@@ -39,16 +47,17 @@ impl CoordTransform {
         if ret_val {
             Ok(())
         } else {
-            Err(ErrorKind::InvalidCoordinateRange.into())
+            Err(ErrorKind::InvalidCoordinateRange(self.from.clone(), self.to.clone()).into())
         }
     }
 
+    #[deprecated(since = "0.3.1", note = "use `transform_coords` instead")]
     pub fn transform_coord(&self, x: &mut [f64], y: &mut [f64], z: &mut [f64]){
-        self.transform_coord_err(x, y, z).expect("Coordinate transform successful")
+        self.transform_coords(x, y, z).expect("Coordinate transform successful")
     }
 
     pub fn to_c_hct(&self) -> *const c_void {
-        self.0 as *const c_void
+        self.inner as *const c_void
     }
 }
 
