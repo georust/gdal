@@ -13,3 +13,4 @@ pub mod osr;
 
 // cpl modules
 pub mod cpl_error;
+pub mod cpl_conv;
