@@ -5,13 +5,13 @@
 //! module override options set in environment variables.
 //!
 //! ```
-//! use gdal::config:*;
+//! use gdal::config::*;
 //!
 //! // Increase GDAL's cache size to 1024Mb
 //! set_config_option("GDAL_CACHEMAX", "1024").unwrap();
 //!
 //! // Get the size of GDAL's cache
-//! assert_eq!(get_config_option("GDAL_CACHEMAX", ""), "1024");
+//! assert_eq!(get_config_option("GDAL_CACHEMAX", "").unwrap(), "1024");
 //!
 //! // Set the cache size back to default
 //! clear_config_option("GDAL_CACHEMAX").unwrap();
