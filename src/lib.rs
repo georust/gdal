@@ -38,3 +38,4 @@ pub mod raster;
 pub mod vector;
 pub mod spatial_ref;
 pub mod errors;
+pub mod config;
