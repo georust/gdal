@@ -49,7 +49,7 @@ pub struct SpatialRef(*mut c_void);
 
 impl Drop for SpatialRef {
     fn drop(&mut self){
-        unsafe { osr::OSRDestroySpatialReference(self.0)};
+        unsafe { osr::OSRRelease(self.0)};
         self.0 = ptr::null_mut();
     }
 }

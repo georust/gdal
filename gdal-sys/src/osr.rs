@@ -6,7 +6,7 @@ use ogr_enums::*;
 extern {
     pub fn OSRNewSpatialReference(pszWKT: *const c_char) -> *mut c_void;
     pub fn OSRClone(hSRS: *const c_void) -> *mut c_void;
-    pub fn OSRDestroySpatialReference(hSRS: *mut c_void) -> c_void;
+    pub fn OSRRelease(hSRS: *mut c_void) -> c_void;
     pub fn OSRSetFromUserInput(hSRS: *mut c_void, pszDefinition: *const c_char) -> OGRErr;
     pub fn OSRImportFromEPSG(hSRS: *const c_void, nCode: c_int) -> OGRErr;
     pub fn OSRImportFromProj4(hSRS: *mut c_void, proj4_string: *const c_char) -> OGRErr;
