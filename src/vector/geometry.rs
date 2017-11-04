@@ -273,8 +273,8 @@ impl Geometry {
         }
     }
 
-    pub fn set_spatial_reference(&mut self, spatial_ref: &SpatialRef) {
-        unsafe { ogr::OGR_G_AssignSpatialReference(self.c_geometry(), (*spatial_ref).to_c_hsrs()) };
+    pub fn set_spatial_reference(&mut self, spatial_ref: SpatialRef) {
+        unsafe { ogr::OGR_G_AssignSpatialReference(self.c_geometry(), spatial_ref.to_c_hsrs()) };
     }
 }
 
@@ -340,7 +340,7 @@ mod tests {
         assert!(geom.spatial_reference().is_none());
 
         let srs = SpatialRef::from_epsg(4326).unwrap();
-        geom.set_spatial_reference(&srs);
+        geom.set_spatial_reference(srs);
         assert!(geom.spatial_reference().is_some());
     }
 }
