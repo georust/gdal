@@ -1,5 +1,6 @@
 use super::srs::{SpatialRef, CoordTransform};
 use vector::Geometry;
+use errors::ErrorKind;
 
 #[test]
 fn from_wkt_to_proj4() {
@@ -52,7 +53,7 @@ fn transform_coordinates(){
     let transform = CoordTransform::new(&spatial_ref1, &spatial_ref2).unwrap();
     let mut xs = &mut [23.43, 23.50];
     let mut ys = &mut [37.58, 37.70];
-    transform.transform_coord(xs, ys, &mut [0.0, 0.0]);
+    transform.transform_coords(xs, ys, &mut [0.0, 0.0]).unwrap();
     assert_eq!(xs.get(0), Some(&5509543.1508097));
     assert_eq!(ys.get(0), Some(&1716062.1916192223));
 }
@@ -103,4 +104,21 @@ fn failing_transformation() {
     let trafo = CoordTransform::new(&wgs84, &dhd_2).unwrap();
     let r = trafo.transform_coords(&mut x, &mut y, &mut z);
     assert_eq!(r.is_err(), true);
+
+    let wgs84 = SpatialRef::from_epsg(4326).unwrap();
+    let webmercator = SpatialRef::from_epsg(3857).unwrap();
+
+    let mut x = [1000000.0];
+    let mut y = [1000000.0];
+    let mut z = [0.0, 0.0];
+
+    let trafo = CoordTransform::new(&wgs84, &webmercator).unwrap();
+    let r = trafo.transform_coords(&mut x, &mut y, &mut z);
+
+    assert_eq!(r.is_err(), true);
+    if let &ErrorKind::InvalidCoordinateRange(_, _, ref msg) = r.unwrap_err().kind() {
+        assert_eq!(msg, &Some("latitude or longitude exceeded limits".into()));
+    } else {
+        panic!("Wrong error type");
+    }
 }

@@ -2,9 +2,10 @@ use libc::{c_int, c_char, c_void};
 use std::ffi::{CString, CStr};
 use std::ptr;
 use std::str::FromStr;
-use utils::{_string, _last_null_pointer_err};
+use utils::{_string, _last_null_pointer_err, _last_cpl_err};
 use gdal_sys::{osr, ogr_enums};
 use gdal_sys::ogr_enums::OGRErr;
+use gdal_sys::cpl_error::CPLErr;
 
 use errors::*;
 
@@ -44,10 +45,21 @@ impl CoordTransform {
             y.as_mut_ptr(),
             z.as_mut_ptr()
         ) };
+
         if ret_val {
             Ok(())
         } else {
-            Err(ErrorKind::InvalidCoordinateRange(self.from.clone(), self.to.clone()).into())
+            let err = _last_cpl_err(CPLErr::CE_Failure);
+            let msg = if let ErrorKind::CplError(_, _, msg) = err {
+                if msg.trim().len() == 0 {
+                    None
+                } else {
+                    Some(msg)
+                }
+            } else {
+                return Err(err.into());
+            };
+            Err(ErrorKind::InvalidCoordinateRange(self.from.clone(), self.to.clone(), msg).into())
         }
     }
 
