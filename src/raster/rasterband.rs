@@ -93,8 +93,7 @@ impl <'a> RasterBand<'a> {
     }
 
     /// Read a full 'Dataset' as an 'ndarray::Array2<T>'.
-    /// # Arguments
-    /// * band_index - the band_index
+    /// 'U' is the primitive you want the data elements of the result 'Array2' to be returned in.
     pub fn read_band_as_array<U: 'static + Copy + FromPrimitive>(&self) -> Result<Array2<U>> {
         read_to_array::<U>(&self)
     }
