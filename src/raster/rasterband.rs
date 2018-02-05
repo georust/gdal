@@ -185,8 +185,9 @@ impl<'a> MajorObject for RasterBand<'a> {
 
 impl<'a> Metadata for RasterBand<'a> {}
 
-
-/// Read a rasterband into an ndarray. band should be greater than 0
+/// # Read To Array
+/// A helper function that takes a raster band as input. It will
+/// read the rasterband into an ndarray.
 fn read_to_array<T: 'static + Copy + FromPrimitive>(rband: &RasterBand) -> Result<Array2<T>> {
     // get the data type of the dataset
     let gt: GDALDataType = rband.band_type();
@@ -209,7 +210,8 @@ fn read_to_array<T: 'static + Copy + FromPrimitive>(rband: &RasterBand) -> Resul
 }
 
 /// # Extract
-/// A helper function that extracts data from a ByteBuffer.
+/// A helper function that extracts data from a ByteBuffer. It uses the byteorder
+/// crate to read the correct size words from the bytes of the actual raster.
 fn extract<T: 'static + Copy + FromPrimitive>(bytes: Vec<u8>) -> Result<Vec<T>> {
     // wrap the bytes in a cursor
     let mut cursor = Cursor::new(bytes);
