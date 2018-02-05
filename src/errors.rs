@@ -7,9 +7,14 @@ error_chain! {
     foreign_links {
         FfiNulError(::std::ffi::NulError);
         StrUtf8Error(::std::str::Utf8Error);
+        NdarrayShapeError(::ndarray::ShapeError);
     }
 
     errors {
+        ConversionError {
+            description("GDAL gdal type to number type conversion error")
+            display("GDAL gdal type to number type conversion error")
+        }
         CplError(class: CPLErr, number: c_int, msg: String) {
             description("GDAL internal error")
             display("CPL error class: '{:?}', error number: '{}', error msg: '{}'", class, number, msg)

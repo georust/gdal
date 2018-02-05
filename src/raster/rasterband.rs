@@ -6,6 +6,14 @@ use gdal_major_object::MajorObject;
 use metadata::Metadata;
 use gdal_sys::{gdal, cpl_error};
 use utils::{_last_cpl_err};
+use ndarray::Array2;
+use num::FromPrimitive;
+use std::any::TypeId;
+use byteorder::LittleEndian;
+use byteorder::ReadBytesExt;
+use super::gdal_enums::GDALDataType;
+use errors::ErrorKind::ConversionError;
+use std::io::Cursor;
 
 use errors::*;
 
@@ -82,6 +90,13 @@ impl <'a> RasterBand<'a> {
             (size.0 as usize, size.1 as usize),
             (size.0 as usize, size.1 as usize)
         )
+    }
+
+    /// Read a full 'Dataset' as an 'ndarray::Array2<T>'.
+    /// # Arguments
+    /// * band_index - the band_index
+    pub fn read_band_as_array<U: 'static + Copy + FromPrimitive>(&self) -> Result<Array2<U>> {
+        read_to_array::<U>(&self)
     }
 
     // Write a 'Buffer<T>' into a 'Dataset'.
@@ -169,3 +184,83 @@ impl<'a> MajorObject for RasterBand<'a> {
 }
 
 impl<'a> Metadata for RasterBand<'a> {}
+
+
+/// Read a rasterband into an ndarray. band should be greater than 0
+fn read_to_array<T: 'static + Copy + FromPrimitive>(rband: &RasterBand) -> Result<Array2<T>> {
+    // get the data type of the dataset
+    let gt: GDALDataType = rband.band_type();
+    // get the byte buffer of the full dataset
+    let buffer: Buffer<u8> = rband.read_band_as::<u8>()?;
+    // get the data from the byte buffer
+    let shape: (usize, usize) = buffer.size;
+    let data = buffer.data;
+    // convert the bytes of the buffer to type T
+    return match gt {
+        GDALDataType::GDT_Byte => Ok(Array2::from_shape_vec(shape, extract::<T>(data)?)?),
+        GDALDataType::GDT_UInt16 => Ok(Array2::from_shape_vec(shape, extract::<T>(data)?)?),
+        GDALDataType::GDT_Int16 => Ok(Array2::from_shape_vec(shape, extract::<T>(data)?)?),
+        GDALDataType::GDT_UInt32 => Ok(Array2::from_shape_vec(shape, extract::<T>(data)?)?),
+        GDALDataType::GDT_Int32 => Ok(Array2::from_shape_vec(shape, extract::<T>(data)?)?),
+        GDALDataType::GDT_Float32 => Ok(Array2::from_shape_vec(shape, extract::<T>(data)?)?),
+        GDALDataType::GDT_Float64 => Ok(Array2::from_shape_vec(shape, extract::<T>(data)?)?),
+        _ => Err(ConversionError.into()),
+    };
+}
+
+/// # Extract
+/// A helper function that extracts data from a ByteBuffer.
+fn extract<T: 'static + Copy + FromPrimitive>(bytes: Vec<u8>) -> Result<Vec<T>> {
+    // wrap the bytes in a cursor
+    let mut cursor = Cursor::new(bytes);
+    // construct an output location
+    let mut output: Vec<T> = vec![];
+    // read values from cursor
+    if TypeId::of::<T>() == TypeId::of::<u8>() {
+        while let Ok(value) = cursor.read_u8() {
+            if let Some(v) = T::from_u8(value) {
+                output.push(v);
+            }
+        }
+    } else if TypeId::of::<T>() == TypeId::of::<u16>() {
+        while let Ok(value) = cursor.read_u16::<LittleEndian>() {
+            if let Some(v) = T::from_u16(value) {
+                output.push(v);
+            }
+        }
+    } else if TypeId::of::<T>() == TypeId::of::<i16>() {
+        while let Ok(value) = cursor.read_i16::<LittleEndian>() {
+            if let Some(v) = T::from_i16(value) {
+                output.push(v);
+            }
+        }
+    } else if TypeId::of::<T>() == TypeId::of::<u32>() {
+        while let Ok(value) = cursor.read_u32::<LittleEndian>() {
+            if let Some(v) = T::from_u32(value) {
+                output.push(v);
+            }
+        }
+    } else if TypeId::of::<T>() == TypeId::of::<i32>() {
+        while let Ok(value) = cursor.read_i32::<LittleEndian>() {
+            if let Some(v) = T::from_i32(value) {
+                output.push(v);
+            }
+        }
+    } else if TypeId::of::<T>() == TypeId::of::<f32>() {
+        while let Ok(value) = cursor.read_f32::<LittleEndian>() {
+            if let Some(v) = T::from_f32(value) {
+                output.push(v);
+            }
+        }
+    } else if TypeId::of::<T>() == TypeId::of::<f64>() {
+        while let Ok(value) = cursor.read_f64::<LittleEndian>() {
+            if let Some(v) = T::from_f64(value) {
+                output.push(v);
+            }
+        }
+    } else {
+        return Err(ConversionError.into());
+    }
+    // return the output
+    Ok(output)
+}

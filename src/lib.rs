@@ -24,6 +24,9 @@ extern crate libc;
 extern crate geo;
 extern crate gdal_sys;
 extern crate num_traits;
+extern crate ndarray;
+extern crate num;
+extern crate byteorder;
 
 #[macro_use]
 extern crate error_chain;
