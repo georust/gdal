@@ -52,9 +52,9 @@ fn transform_coordinates(){
     let spatial_ref1 = SpatialRef::from_wkt("GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",7030]],TOWGS84[0,0,0,0,0,0,0],AUTHORITY[\"EPSG\",6326]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",8901]],UNIT[\"DMSH\",0.0174532925199433,AUTHORITY[\"EPSG\",9108]],AXIS[\"Lat\",NORTH],AXIS[\"Long\",EAST],AUTHORITY[\"EPSG\",4326]]").unwrap();
     let spatial_ref2 = SpatialRef::from_epsg(3035).unwrap();
     let transform = CoordTransform::new(&spatial_ref1, &spatial_ref2).unwrap();
-    let mut xs = &mut [23.43, 23.50];
-    let mut ys = &mut [37.58, 37.70];
-    transform.transform_coords(xs, ys, &mut [0.0, 0.0]).unwrap();
+    let mut xs = [23.43, 23.50];
+    let mut ys = [37.58, 37.70];
+    transform.transform_coords(&mut xs, &mut ys, &mut [0.0, 0.0]).unwrap();
     assert_almost_eq(xs[0], 5509543.1508097);
     assert_almost_eq(ys[0], 1716062.1916192223);
 }

@@ -248,8 +248,8 @@ fn test_write_features() {
     {
         let driver = Driver::get("GeoJSON").unwrap();
         let mut ds = driver.create(fixture!("output.geojson")).unwrap();
-        let mut layer = ds.create_layer().unwrap();
-        layer.create_defn_fields(&[("Name",  OGRFieldType::OFTString), ("Value",  OGRFieldType::OFTReal), ("Int_value", OGRFieldType::OFTInteger)]);
+        let layer = ds.create_layer().unwrap();
+        layer.create_defn_fields(&[("Name",  OGRFieldType::OFTString), ("Value",  OGRFieldType::OFTReal), ("Int_value", OGRFieldType::OFTInteger)]).unwrap();
         layer.create_feature_fields(
             Geometry::from_wkt("POINT (1 2)").unwrap(), &["Name", "Value", "Int_value"],
             &[FieldValue::StringValue("Feature 1".to_string()), FieldValue::RealValue(45.78), FieldValue::IntegerValue(1)]
