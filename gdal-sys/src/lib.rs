@@ -7,6 +7,7 @@ pub mod gdal_enums;
 // OGR modules
 pub mod ogr;
 pub mod ogr_enums;
+pub mod ogr_structs;
 
 // OGR Spatial Reference module
 pub mod osr;

@@ -97,6 +97,16 @@ impl Layer {
         ft.create(self)?;
         Ok(())
     }
+
+    pub fn get_extent(&self, force: bool) -> Result<ogr::OGREnvelope> {
+        let mut envelope = ogr::OGREnvelope::default();
+        let force = if force { 1 } else { 0 };
+        let rv = unsafe { ogr::OGR_L_GetExtent(self.c_layer, &mut envelope, force) };
+        if rv != ogr_enums::OGRErr::OGRERR_NONE {
+            return Err(ErrorKind::OgrError(rv, "OGR_L_GetExtent").into());
+        }
+        Ok(envelope)
+    }
 }
 
 pub struct FeatureIterator<'a> {

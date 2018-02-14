@@ -30,6 +30,18 @@ fn test_layer_count() {
     assert_eq!(ds.count(), 1);
 }
 
+#[test]
+fn test_layer_extent() {
+    let mut ds = Dataset::open(fixture!("roads.geojson")).unwrap();
+    let layer = ds.layer(0).unwrap();
+    assert!(layer.get_extent(false).is_err());
+    let extent = layer.get_extent(true).unwrap();
+    assert_almost_eq(extent.MinX, 26.100768);
+    assert_almost_eq(extent.MaxX, 26.103515);
+    assert_almost_eq(extent.MinY, 44.429858);
+    assert_almost_eq(extent.MaxY, 44.431818);
+}
+
 
 fn with_features<F>(name: &str, f: F) where F: Fn(FeatureIterator) {
     let mut ds = Dataset::open(fixture!(name)).unwrap();
