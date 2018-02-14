@@ -1,5 +1,6 @@
 use libc::{c_int, c_char, c_double, c_void};
 use ogr_enums::*;
+pub use ogr_structs::*;
 
 // http://gdal.org/ogr__api_8h.html
 
@@ -19,6 +20,7 @@ extern {
     pub fn OGR_L_SetSpatialFilter(hLayer: *const c_void, hGeom: *const c_void);
     pub fn OGR_L_CreateFeature(hLayer: *const c_void, hFeat: *const c_void) -> OGRErr;
     pub fn OGR_L_CreateField(hLayer: *const c_void, hField: *const c_void, bApproxOK: c_int) -> OGRErr;
+    pub fn OGR_L_GetExtent(hLayer: *const c_void, pEnvelope: &mut OGREnvelope, bForce: c_int) -> OGRErr;
     pub fn OGR_FD_GetFieldCount(hDefn: *const c_void) -> c_int;
     pub fn OGR_FD_GetFieldDefn(hDefn: *const c_void, iField: c_int) -> *const c_void;
     pub fn OGR_FD_GetGeomFieldCount(hDefn: *const c_void) -> c_int;
