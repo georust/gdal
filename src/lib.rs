@@ -39,3 +39,10 @@ pub mod vector;
 pub mod spatial_ref;
 pub mod errors;
 pub mod config;
+
+#[cfg(test)]
+fn assert_almost_eq(a: f64, b: f64) {
+    let f: f64 = a / b;
+    assert!(f < 1.00001);
+    assert!(f > 0.99999);
+}

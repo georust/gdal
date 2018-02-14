@@ -1,6 +1,7 @@
 use super::srs::{SpatialRef, CoordTransform};
 use vector::Geometry;
 use errors::ErrorKind;
+use assert_almost_eq;
 
 #[test]
 fn from_wkt_to_proj4() {
@@ -54,8 +55,8 @@ fn transform_coordinates(){
     let mut xs = &mut [23.43, 23.50];
     let mut ys = &mut [37.58, 37.70];
     transform.transform_coords(xs, ys, &mut [0.0, 0.0]).unwrap();
-    assert_eq!(xs.get(0), Some(&5509543.1508097));
-    assert_eq!(ys.get(0), Some(&1716062.1916192223));
+    assert_almost_eq(xs[0], 5509543.1508097);
+    assert_almost_eq(ys[0], 1716062.1916192223);
 }
 
 #[test]
