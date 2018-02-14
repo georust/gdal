@@ -19,6 +19,7 @@ extern {
     pub fn OSRGetAuthorityCode(hSRS: *const c_void, key: *const c_char) -> *const c_char;
     pub fn OSRGetAuthorityName(hSRS: *const c_void, key: *const c_char) -> *const c_char;
     pub fn OSRIsSame(hSRS1: *const c_void, hSRS2: *const c_void) -> bool;
+    pub fn OSRAutoIdentifyEPSG(hSRS: *mut c_void) -> OGRErr;
     pub fn OCTNewCoordinateTransformation(hSourceSRS: *const c_void, hTargetSRS: *const c_void) -> *mut c_void;
     pub fn OCTDestroyCoordinateTransformation(hCT: *mut c_void) -> c_void;
     pub fn OCTTransform(hCT: *const c_void, nCount: c_int, x: *mut c_double, y: *mut c_double, z: *mut c_double) -> bool;

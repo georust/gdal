@@ -255,6 +255,15 @@ impl SpatialRef {
         Ok(format!("{}:{}", name, code))
     }
 
+    pub fn auto_identify_epsg(&mut self) -> Result<()> {
+        let _err = unsafe { osr::OSRAutoIdentifyEPSG(self.0) };
+        if _err != ogr_enums::OGRErr::OGRERR_NONE {
+            Err(ErrorKind::OgrError(_err, "OSRAutoIdentifyEPSG").into())
+        } else {
+            Ok(())
+        }
+    }
+
     pub fn to_c_hsrs(&self) -> *const c_void {
         self.0 as *const c_void
     }
