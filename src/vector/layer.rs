@@ -7,6 +7,7 @@ use gdal_major_object::MajorObject;
 use metadata::Metadata;
 use gdal_sys::{ogr, ogr_enums};
 use utils::{_last_null_pointer_err, _string};
+use spatial_ref::SpatialRef;
 
 use errors::*;
 
@@ -106,6 +107,14 @@ impl Layer {
             return Err(ErrorKind::OgrError(rv, "OGR_L_GetExtent").into());
         }
         Ok(envelope)
+    }
+
+    pub fn spatial_reference(&self) -> Result<SpatialRef> {
+        let c_obj = unsafe { ogr::OGR_L_GetSpatialRef(self.c_layer) };
+        if c_obj.is_null() {
+            return Err(_last_null_pointer_err("OGR_L_GetSpatialRef").into());
+        }
+        SpatialRef::from_c_obj(c_obj)
     }
 }
 
