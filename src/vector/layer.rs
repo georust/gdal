@@ -101,7 +101,7 @@ impl Layer {
 
     pub fn get_extent(&self, force: bool) -> Result<ogr::OGREnvelope> {
         let mut envelope = ogr::OGREnvelope::default();
-        let force = if force { 1 } else { 0 };
+        let force = if force { ogr_enums::C_TRUE } else { ogr_enums::C_FALSE };
         let rv = unsafe { ogr::OGR_L_GetExtent(self.c_layer, &mut envelope, force) };
         if rv != ogr_enums::OGRErr::OGRERR_NONE {
             return Err(ErrorKind::OgrError(rv, "OGR_L_GetExtent").into());

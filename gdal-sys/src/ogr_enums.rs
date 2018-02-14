@@ -1,3 +1,5 @@
+use libc::c_int;
+
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[allow(dead_code)]
 #[allow(non_camel_case_types)]
@@ -36,3 +38,6 @@ pub enum OGRFieldType {
     OFTInteger64List = 13,
     OFTMaxType = 14
 }
+
+pub const C_FALSE: c_int = 0;
+pub const C_TRUE: c_int = 1;
