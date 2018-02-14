@@ -42,6 +42,13 @@ fn test_layer_extent() {
     assert_almost_eq(extent.MaxY, 44.431818);
 }
 
+#[test]
+fn test_layer_spatial_reference() {
+    let mut ds = Dataset::open(fixture!("roads.geojson")).unwrap();
+    let layer = ds.layer(0).unwrap();
+    let srs = layer.spatial_reference().unwrap();
+    assert_eq!(srs.auth_code().unwrap(), 4326);
+}
 
 fn with_features<F>(name: &str, f: F) where F: Fn(FeatureIterator) {
     let mut ds = Dataset::open(fixture!(name)).unwrap();

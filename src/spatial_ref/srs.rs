@@ -4,7 +4,7 @@ use std::ptr;
 use std::str::FromStr;
 use utils::{_string, _last_null_pointer_err, _last_cpl_err};
 use gdal_sys::{osr, ogr_enums};
-use gdal_sys::ogr_enums::OGRErr;
+use gdal_sys::ogr_enums::*;
 use gdal_sys::cpl_error::CPLErr;
 
 use errors::*;
@@ -38,13 +38,15 @@ impl CoordTransform {
     pub fn transform_coords(&self, x: &mut [f64], y: &mut [f64], z: &mut [f64]) -> Result<()> {
         let nb_coords = x.len();
         assert_eq!(nb_coords, y.len());
-        let ret_val = unsafe { osr::OCTTransform(
-            self.inner,
-            nb_coords as c_int,
-            x.as_mut_ptr(),
-            y.as_mut_ptr(),
-            z.as_mut_ptr()
-        ) };
+        let ret_val = unsafe {
+            osr::OCTTransform(
+                self.inner,
+                nb_coords as c_int,
+                x.as_mut_ptr(),
+                y.as_mut_ptr(),
+                z.as_mut_ptr(),
+            ) == C_TRUE
+        };
 
         if ret_val {
             Ok(())
@@ -92,7 +94,7 @@ impl Clone for SpatialRef {
 
 impl PartialEq for SpatialRef {
     fn eq(&self, other: &SpatialRef) -> bool {
-        unsafe { osr::OSRIsSame(self.0, other.0)}
+        unsafe { osr::OSRIsSame(self.0, other.0) == C_TRUE }
     }
 }
 
@@ -253,6 +255,15 @@ impl SpatialRef {
         }
         let code = unsafe { CStr::from_ptr(c_ptr) }.to_str()?;
         Ok(format!("{}:{}", name, code))
+    }
+
+    pub fn auto_identify_epsg(&mut self) -> Result<()> {
+        let _err = unsafe { osr::OSRAutoIdentifyEPSG(self.0) };
+        if _err != ogr_enums::OGRErr::OGRERR_NONE {
+            Err(ErrorKind::OgrError(_err, "OSRAutoIdentifyEPSG").into())
+        } else {
+            Ok(())
+        }
     }
 
     pub fn to_c_hsrs(&self) -> *const c_void {

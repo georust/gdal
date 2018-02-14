@@ -122,3 +122,25 @@ fn failing_transformation() {
         panic!("Wrong error type");
     }
 }
+
+#[test]
+fn auto_identify() {
+    let mut spatial_ref = SpatialRef::from_wkt(r#"
+        PROJCS["WGS_1984_UTM_Zone_32N",
+            GEOGCS["GCS_WGS_1984",
+                DATUM["D_WGS_1984",
+                    SPHEROID["WGS_1984",6378137,298.257223563]],
+                PRIMEM["Greenwich",0],
+                UNIT["Degree",0.017453292519943295]],
+            PROJECTION["Transverse_Mercator"],
+            PARAMETER["latitude_of_origin",0],
+            PARAMETER["central_meridian",9],
+            PARAMETER["scale_factor",0.9996],
+            PARAMETER["false_easting",500000],
+            PARAMETER["false_northing",0],
+            UNIT["Meter",1]]
+    "#).unwrap();
+    assert!(spatial_ref.auth_code().is_err());
+    spatial_ref.auto_identify_epsg().unwrap();
+    assert_eq!(spatial_ref.auth_code().unwrap(), 32632);
+}
