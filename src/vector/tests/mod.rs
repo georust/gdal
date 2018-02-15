@@ -1,6 +1,7 @@
 use std::path::Path;
 use super::{Driver, Dataset, Feature, FeatureIterator, FieldValue, Geometry, OGRFieldType, WkbType};
 use spatial_ref::SpatialRef;
+use assert_almost_eq;
 
 mod convert_geo;
 
@@ -15,14 +16,6 @@ macro_rules! fixture {
             .join($name).as_path()
     )
 }
-
-
-fn assert_almost_eq(a: f64, b: f64) {
-    let f: f64 = a / b;
-    assert!(f < 1.00001);
-    assert!(f > 0.99999);
-}
-
 
 #[test]
 fn test_layer_count() {
@@ -166,7 +159,8 @@ fn test_json() {
 fn test_schema() {
     let mut ds = Dataset::open(fixture!("roads.geojson")).unwrap();
     let layer = ds.layer(0).unwrap();
-    assert_eq!(layer.name(), "OGRGeoJSON".to_string()); // change to "roads" for GDAL >= 2.2
+    // The layer name is "roads" in GDAL 2.2
+    assert!(layer.name() == "OGRGeoJSON" || layer.name() == "roads");
     let name_list: Vec<(String, OGRFieldType)> = layer
         .defn().fields()
         .map(|f| (f.name(), f.field_type()))
@@ -205,8 +199,13 @@ fn test_geom_fields() {
 #[test]
 fn test_get_layer_by_name() {
     let mut ds = Dataset::open(fixture!("roads.geojson")).unwrap();
-    let layer = ds.layer_by_name("OGRGeoJSON").unwrap(); // change to "roads" for GDAL >= 2.2
-    assert_eq!(layer.name(), "OGRGeoJSON"); // change to "roads" for GDAL >= 2.2
+    // The layer name is "roads" in GDAL 2.2
+    if let Ok(layer) = ds.layer_by_name("OGRGeoJSON") {
+        assert_eq!(layer.name(), "OGRGeoJSON");
+    }
+    if let Ok(layer) = ds.layer_by_name("roads") {
+        assert_eq!(layer.name(), "roads");
+    }
 }
 
 #[test]
@@ -249,8 +248,8 @@ fn test_write_features() {
     {
         let driver = Driver::get("GeoJSON").unwrap();
         let mut ds = driver.create(fixture!("output.geojson")).unwrap();
-        let mut layer = ds.create_layer().unwrap();
-        layer.create_defn_fields(&[("Name",  OGRFieldType::OFTString), ("Value",  OGRFieldType::OFTReal), ("Int_value", OGRFieldType::OFTInteger)]);
+        let layer = ds.create_layer().unwrap();
+        layer.create_defn_fields(&[("Name",  OGRFieldType::OFTString), ("Value",  OGRFieldType::OFTReal), ("Int_value", OGRFieldType::OFTInteger)]).unwrap();
         layer.create_feature_fields(
             Geometry::from_wkt("POINT (1 2)").unwrap(), &["Name", "Value", "Int_value"],
             &[FieldValue::StringValue("Feature 1".to_string()), FieldValue::RealValue(45.78), FieldValue::IntegerValue(1)]
