@@ -1,12 +1,12 @@
 extern crate gdal;
 
 use std::path::Path;
-use std::error::Error;
 use std::fs;
+use gdal::errors::Error;
 use gdal::vector::{Defn, Driver, Feature, FieldDefn, FieldValue, Geometry, OGRFieldType};
 
 /// Example 1, the detailed way:
-fn example_1() -> Result<(), Box<Error>> {
+fn example_1() -> Result<(), Error> {
     let _ = fs::remove_file("/tmp/output1.geojson");
     let drv = Driver::get("GeoJSON")?;
     let mut ds = drv.create(Path::new("/tmp/output1.geojson"))?;
@@ -50,7 +50,7 @@ fn example_1() -> Result<(), Box<Error>> {
 }
 
 /// Example 2, same output, shortened way:
-fn example_2() -> Result<(), Box<Error>> {
+fn example_2() -> Result<(), Error> {
     let _ = fs::remove_file("/tmp/output2.geojson");
     let driver = Driver::get("GeoJSON")?;
     let mut ds = driver.create(Path::new("/tmp/output2.geojson"))?;
