@@ -5,7 +5,9 @@ license = "MIT"
 version = "0.1.1"
 repository = "https://github.com/georust/rust-gdal"
 authors = ["Johannes Drönner <droenner@informatik.uni-marburg.de>"]
-build="build.rs"
 
 [dependencies]
 libc = "0.2"
+
+[build-dependencies]
+bindgen = "0.33.0"

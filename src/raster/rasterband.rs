@@ -1,16 +1,15 @@
 use libc::{c_int, c_void};
 use raster::{Dataset, Buffer};
 use raster::types::{GdalType};
-use raster::gdal_enums;
 use gdal_major_object::MajorObject;
 use metadata::Metadata;
-use gdal_sys::{gdal, cpl_error};
+use gdal_sys::{self, CPLErr, GDALDataType, GF_Read, GF_Write};
 use utils::{_last_cpl_err};
 
 use errors::*;
 
 pub struct RasterBand<'a> {
-    c_rasterband: *const c_void,
+    c_rasterband: *mut c_void,
     owning_dataset: &'a Dataset,
 }
 
@@ -19,7 +18,7 @@ impl <'a> RasterBand<'a> {
         self.owning_dataset
     }
 
-    pub unsafe fn _with_c_ptr(c_rasterband: *const c_void, owning_dataset: &'a Dataset) -> Self {
+    pub unsafe fn _with_c_ptr(c_rasterband: *mut c_void, owning_dataset: &'a Dataset) -> Self {
         RasterBand { c_rasterband: c_rasterband, owning_dataset: owning_dataset }
     }
 
@@ -40,14 +39,14 @@ impl <'a> RasterBand<'a> {
         let mut data: Vec<T> = Vec::with_capacity(pixels);
         //let no_data:
         let rv = unsafe {
-            gdal::GDALRasterIO(
+            gdal_sys::GDALRasterIO(
                 self.c_rasterband,
-                gdal_enums::GDALRWFlag::GF_Read,
+                GF_Read,
                 window.0 as c_int,
                 window.1 as c_int,
                 window_size.0 as c_int,
                 window_size.1 as c_int,
-                data.as_mut_ptr() as *const c_void,
+                data.as_mut_ptr() as *mut c_void,
                 size.0 as c_int,
                 size.1 as c_int,
                 T::gdal_type(),
@@ -55,10 +54,10 @@ impl <'a> RasterBand<'a> {
                 0
             )
         };
-        if rv != cpl_error::CPLErr::CE_None {            
+        if rv != CPLErr::CE_None {
             return Err(_last_cpl_err(rv).into());
         }
-        
+
         unsafe {
             data.set_len(pixels);
         };
@@ -96,40 +95,36 @@ impl <'a> RasterBand<'a> {
         buffer: Buffer<T>
     ) -> Result<()> {
         assert_eq!(buffer.data.len(), buffer.size.0 * buffer.size.1);
-        let rv = unsafe { gdal::GDALRasterIO(
+        let rv = unsafe { gdal_sys::GDALRasterIO(
             self.c_rasterband,
-            gdal_enums::GDALRWFlag::GF_Write,
+            GF_Write,
             window.0 as c_int,
             window.1 as c_int,
             window_size.0 as c_int,
             window_size.1 as c_int,
-            buffer.data.as_ptr() as *const c_void,
+            buffer.data.as_ptr() as *mut c_void,
             buffer.size.0 as c_int,
             buffer.size.1 as c_int,
             T::gdal_type(),
             0,
             0
             )};
-        if rv != cpl_error::CPLErr::CE_None {            
+        if rv != CPLErr::CE_None {
             return Err(_last_cpl_err(rv).into());
         }
         Ok(())
     }
 
-    pub fn band_type(&self) -> gdal_enums::GDALDataType {
-
-        let gdal_type: c_int;
-        unsafe{
-            gdal_type = gdal::GDALGetRasterDataType(self.c_rasterband);
-        }
-        gdal_enums::GDALDataType::from_c_int(gdal_type)
+    pub fn band_type(&self) -> GDALDataType {
+        let gdal_type = unsafe { gdal_sys::GDALGetRasterDataType(self.c_rasterband) };
+        gdal_type
     }
 
     pub fn no_data_value(&self) ->Option<f64> {
         unsafe {
             let mut pb_success: c_int = 1;
             let raw_pb_success = &mut pb_success as *mut c_int;
-            let no_data = gdal::GDALGetRasterNoDataValue(self.c_rasterband, raw_pb_success);
+            let no_data = gdal_sys::GDALGetRasterNoDataValue(self.c_rasterband, raw_pb_success);
             if pb_success == 1 {
                 return Some(no_data as f64);
             }
@@ -141,7 +136,7 @@ impl <'a> RasterBand<'a> {
         unsafe {
             let mut pb_success: c_int = 1;
             let raw_pb_success = &mut pb_success as *mut c_int;
-            let scale = gdal::GDALGetRasterScale(self.c_rasterband, raw_pb_success);
+            let scale = gdal_sys::GDALGetRasterScale(self.c_rasterband, raw_pb_success);
             if pb_success == 1 {
                 return Some(scale as f64);
             }
@@ -153,7 +148,7 @@ impl <'a> RasterBand<'a> {
         unsafe {
             let mut pb_success: c_int = 1;
             let raw_pb_success = &mut pb_success as *mut c_int;
-            let offset = gdal::GDALGetRasterOffset(self.c_rasterband, raw_pb_success);
+            let offset = gdal_sys::GDALGetRasterOffset(self.c_rasterband, raw_pb_success);
             if pb_success == 1 {
                 return Some(offset as f64);
             }
@@ -163,7 +158,7 @@ impl <'a> RasterBand<'a> {
 }
 
 impl<'a> MajorObject for RasterBand<'a> {
-    unsafe fn gdal_object_ptr(&self) -> *const c_void {
+    unsafe fn gdal_object_ptr(&self) -> *mut c_void {
         self.c_rasterband
     }
 }

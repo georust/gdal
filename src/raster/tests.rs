@@ -1,6 +1,6 @@
 use std::path::Path;
 use super::{ByteBuffer, Driver, Dataset};
-use super::gdal_enums::{GDALDataType};
+use gdal_sys::{GDT_Byte, GDT_Float32};
 use metadata::Metadata;
 
 
@@ -167,7 +167,7 @@ fn test_create_with_band_type() {
     assert_eq!(dataset.size(), (10, 20));
     assert_eq!(dataset.count(), 3);
     assert_eq!(dataset.driver().short_name(), "MEM");
-    assert_eq!(dataset.band_type(1).unwrap(), GDALDataType::GDT_Float32)
+    assert_eq!(dataset.band_type(1).unwrap(), GDT_Float32)
 }
 
 #[test]
@@ -214,7 +214,7 @@ fn test_read_raster_as() {
     assert_eq!(rv.data, vec!(7, 7, 7, 10, 8, 12));
     assert_eq!(rv.size.0, 2);
     assert_eq!(rv.size.1, 3);
-    assert_eq!(dataset.band_type(1).unwrap(), GDALDataType::GDT_Byte);
+    assert_eq!(dataset.band_type(1).unwrap(), GDT_Byte);
 }
 
 #[test]
@@ -229,7 +229,7 @@ fn test_read_full_raster_as() {
 fn test_get_band_type() {
     let driver = Driver::get("MEM").unwrap();
     let dataset = driver.create("", 20, 10, 1).unwrap();
-    assert_eq!(dataset.band_type(1).unwrap(), GDALDataType::GDT_Byte);
+    assert_eq!(dataset.band_type(1).unwrap(), GDT_Byte);
     assert!(dataset.band_type(2).is_err());
 }
 

@@ -1,10 +1,10 @@
 use std::ffi::CString;
 use utils::_string;
-use gdal_sys::gdal::GDALVersionInfo;
+use gdal_sys;
 
 pub fn version_info(key: &str) -> String {
     let c_key = CString::new(key.as_bytes()).unwrap();
-    return _string(unsafe { GDALVersionInfo(c_key.as_ptr()) });
+    return _string(unsafe { gdal_sys::GDALVersionInfo(c_key.as_ptr()) });
 }
 
 #[cfg(test)]

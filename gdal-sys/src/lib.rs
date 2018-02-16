@@ -1,17 +1,7 @@
+#![allow(non_upper_case_globals)]
+#![allow(non_camel_case_types)]
+#![allow(non_snake_case)]
+
 extern crate libc;
 
-// gdal modules
-pub mod gdal;
-pub mod gdal_enums;
-
-// OGR modules
-pub mod ogr;
-pub mod ogr_enums;
-pub mod ogr_structs;
-
-// OGR Spatial Reference module
-pub mod osr;
-
-// cpl modules
-pub mod cpl_error;
-pub mod cpl_conv;
+include!(concat!(env!("OUT_DIR"), "/bindings.rs"));

@@ -25,7 +25,7 @@
 
 use std::ffi::CString;
 use utils::_string;
-use gdal_sys::cpl_conv::{CPLSetConfigOption, CPLGetConfigOption};
+use gdal_sys;
 use errors::*;
 
 /// Set a GDAL library configuration option
@@ -36,7 +36,7 @@ use errors::*;
 pub fn set_config_option(key: &str, value: &str) -> Result<()> {
     let c_key = CString::new(key.as_bytes())?;
     let c_val = CString::new(value.as_bytes())?;
-    unsafe { CPLSetConfigOption(c_key.as_ptr(), c_val.as_ptr()); };
+    unsafe { gdal_sys::CPLSetConfigOption(c_key.as_ptr(), c_val.as_ptr()); };
     Ok(())
 }
 
@@ -49,7 +49,7 @@ pub fn set_config_option(key: &str, value: &str) -> Result<()> {
 pub fn get_config_option(key: &str, default: &str) -> Result<String> {
     let c_key = CString::new(key.as_bytes())?;
     let c_default = CString::new(default.as_bytes())?;
-    let rv = unsafe { CPLGetConfigOption(c_key.as_ptr(), c_default.as_ptr()) };
+    let rv = unsafe { gdal_sys::CPLGetConfigOption(c_key.as_ptr(), c_default.as_ptr()) };
     Ok(_string(rv))
 }
 
@@ -59,7 +59,7 @@ pub fn get_config_option(key: &str, default: &str) -> Result<String> {
 /// a full list of options.
 pub fn clear_config_option(key: &str) -> Result<()> {
     let c_key = CString::new(key.as_bytes())?;
-    unsafe { CPLSetConfigOption(c_key.as_ptr(), ::std::ptr::null()); };
+    unsafe { gdal_sys::CPLSetConfigOption(c_key.as_ptr(), ::std::ptr::null()); };
     Ok(())
 }
 

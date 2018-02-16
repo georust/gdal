@@ -58,8 +58,7 @@ fn with_first_feature<F>(name: &str, f: F) where F: Fn(Feature) {
 #[test]
 fn test_iterate_features() {
     with_features("roads.geojson", |features| {
-        let feature_vec: Vec<Feature> = features.collect();
-        assert_eq!(feature_vec.len(), 21);
+        assert_eq!(features.count(), 21);
     });
 }
 
@@ -161,11 +160,11 @@ fn test_schema() {
     let layer = ds.layer(0).unwrap();
     // The layer name is "roads" in GDAL 2.2
     assert!(layer.name() == "OGRGeoJSON" || layer.name() == "roads");
-    let name_list: Vec<(String, OGRFieldType)> = layer
+    let name_list = layer
         .defn().fields()
         .map(|f| (f.name(), f.field_type()))
-        .collect();
-    let ok_names_types: Vec<(String, OGRFieldType)> = vec!(
+        .collect::<Vec<_>>();
+    let ok_names_types = vec!(
         ("id", OGRFieldType::OFTString),
         ("kind", OGRFieldType::OFTString),
         ("sort_key",  OGRFieldType::OFTReal),
@@ -174,7 +173,7 @@ fn test_schema() {
         ("is_bridge", OGRFieldType::OFTString),
         ("railway", OGRFieldType::OFTString),
         ("highway", OGRFieldType::OFTString))
-        .iter().map(|s| (s.0.to_string(), s.1)).collect();
+        .iter().map(|s| (s.0.to_string(), s.1)).collect::<Vec<_>>();
     assert_eq!(name_list, ok_names_types);
 }
 
@@ -182,13 +181,13 @@ fn test_schema() {
 fn test_geom_fields() {
     let mut ds = Dataset::open(fixture!("roads.geojson")).unwrap();
     let layer = ds.layer(0).unwrap();
-    let name_list: Vec<(String, WkbType)> = layer
+    let name_list = layer
         .defn().geom_fields()
         .map(|f| (f.name(), f.field_type()))
-        .collect();
-    let ok_names_types: Vec<(String, WkbType)> = vec!(
+        .collect::<Vec<_>>();
+    let ok_names_types = vec!(
         ("", WkbType::WkbLinestring))
-        .iter().map(|s| (s.0.to_string(), s.1.clone())).collect();
+        .iter().map(|s| (s.0.to_string(), s.1.clone())).collect::<Vec<_>>();
     assert_eq!(name_list, ok_names_types);
 
     let geom_field = layer.defn().geom_fields().next().unwrap();
@@ -218,20 +217,14 @@ fn test_create_bbox() {
 fn test_spatial_filter() {
     let mut ds = Dataset::open(fixture!("roads.geojson")).unwrap();
     let layer = ds.layer(0).unwrap();
-
-    let all_features: Vec<Feature> = layer.features().collect();
-    assert_eq!(all_features.len(), 21);
+    assert_eq!(layer.features().count(), 21);
 
     let bbox = Geometry::bbox(26.1017, 44.4297, 26.1025, 44.4303).unwrap();
     layer.set_spatial_filter(&bbox);
-
-    let some_features: Vec<Feature> = layer.features().collect();
-    assert_eq!(some_features.len(), 7);
+    assert_eq!(layer.features().count(), 7);
 
     layer.clear_spatial_filter();
-
-    let again_all_features: Vec<Feature> = layer.features().collect();
-    assert_eq!(again_all_features.len(), 21);
+    assert_eq!(layer.features().count(), 21);
 }
 
 #[test]

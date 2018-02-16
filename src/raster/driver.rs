@@ -1,12 +1,13 @@
 use libc::{c_int, c_void};
 use std::ffi::CString;
+use std::ptr::null_mut;
 use std::sync::{Once, ONCE_INIT};
 use utils::{_string, _last_null_pointer_err};
 use raster::{Dataset};
 use raster::types::GdalType;
 use gdal_major_object::MajorObject;
 use metadata::Metadata;
-use gdal_sys::gdal;
+use gdal_sys;
 
 use errors::*;
 
@@ -15,7 +16,7 @@ static START: Once = ONCE_INIT;
 pub fn _register_drivers() {
     unsafe {
         START.call_once(|| {
-            gdal::GDALAllRegister();
+            gdal_sys::GDALAllRegister();
         });
     }
 }
@@ -23,7 +24,7 @@ pub fn _register_drivers() {
 
 #[allow(missing_copy_implementations)]
 pub struct Driver {
-    c_driver: *const c_void,
+    c_driver: *mut c_void,
 }
 
 
@@ -31,28 +32,28 @@ impl Driver {
     pub fn get(name: &str) -> Result<Driver> {
         _register_drivers();
         let c_name = CString::new(name)?;
-        let c_driver = unsafe { gdal::GDALGetDriverByName(c_name.as_ptr()) };
+        let c_driver = unsafe { gdal_sys::GDALGetDriverByName(c_name.as_ptr()) };
         if c_driver.is_null() {
             return Err(_last_null_pointer_err("GDALGetDriverByName").into());
         };
         Ok(Driver{c_driver: c_driver})
     }
 
-    pub unsafe fn _with_c_ptr(c_driver: *const c_void) -> Driver {
+    pub unsafe fn _with_c_ptr(c_driver: *mut c_void) -> Driver {
         return Driver{c_driver: c_driver};
     }
 
-    pub unsafe fn _c_ptr(&self) -> *const c_void {
+    pub unsafe fn _c_ptr(&self) -> *mut c_void {
         return self.c_driver;
     }
 
     pub fn short_name(&self) -> String {
-        let rv = unsafe { gdal::GDALGetDriverShortName(self.c_driver) };
+        let rv = unsafe { gdal_sys::GDALGetDriverShortName(self.c_driver) };
         return _string(rv);
     }
 
     pub fn long_name(&self) -> String {
-        let rv = unsafe { gdal::GDALGetDriverLongName(self.c_driver) };
+        let rv = unsafe { gdal_sys::GDALGetDriverLongName(self.c_driver) };
         return _string(rv);
     }
 
@@ -78,26 +79,25 @@ impl Driver {
         size_y: isize,
         bands: isize,
     ) -> Result<Dataset> {
-        use std::ptr::null;
         let c_filename = CString::new(filename)?;
-        let c_dataset = unsafe { gdal::GDALCreate(
+        let c_dataset = unsafe { gdal_sys::GDALCreate(
                 self.c_driver,
                 c_filename.as_ptr(),
                 size_x as c_int,
                 size_y as c_int,
                 bands as c_int,
                 T::gdal_type(),
-                null()
+                null_mut()
             ) };
         if c_dataset.is_null() {
             return Err(_last_null_pointer_err("GDALCreate").into());
         };
-        Ok( unsafe { Dataset::_with_c_ptr(c_dataset) } )        
+        Ok( unsafe { Dataset::_with_c_ptr(c_dataset) } )
     }
 }
 
 impl MajorObject for Driver {
-    unsafe fn gdal_object_ptr(&self) -> *const c_void {
+    unsafe fn gdal_object_ptr(&self) -> *mut c_void {
         return self.c_driver;
     }
 }
