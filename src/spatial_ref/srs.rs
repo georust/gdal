@@ -1,4 +1,4 @@
-use libc::{c_int, c_char};
+use libc::c_int;
 use std::ffi::{CString, CStr};
 use std::ptr;
 use std::str::FromStr;
@@ -201,7 +201,7 @@ impl SpatialRef {
 
     pub fn to_xml(&self) -> Result<String> {
         let mut c_raw_xml = ptr::null_mut();
-        let _err = unsafe { gdal_sys::OSRExportToXML(self.0, &mut c_raw_xml, ptr::null() as *const c_char) };
+        let _err = unsafe { gdal_sys::OSRExportToXML(self.0, &mut c_raw_xml, ptr::null()) };
         if _err != OGRErr::OGRERR_NONE {
             Err(ErrorKind::OgrError(_err, "OSRExportToXML").into())
         } else {
@@ -220,7 +220,7 @@ impl SpatialRef {
     }
 
     pub fn auth_name(&self) -> Result<String> {
-        let c_ptr = unsafe { gdal_sys::OSRGetAuthorityName(self.0, ptr::null() as *const c_char) };
+        let c_ptr = unsafe { gdal_sys::OSRGetAuthorityName(self.0, ptr::null()) };
         if c_ptr.is_null() {
             Err(_last_null_pointer_err("SRGetAuthorityName").into())
         } else {
@@ -229,7 +229,7 @@ impl SpatialRef {
     }
 
     pub fn auth_code(&self) -> Result<i32> {
-        let c_ptr = unsafe { gdal_sys::OSRGetAuthorityCode(self.0, ptr::null() as *const c_char) };
+        let c_ptr = unsafe { gdal_sys::OSRGetAuthorityCode(self.0, ptr::null()) };
         if c_ptr.is_null() {
             return Err(_last_null_pointer_err("OSRGetAuthorityCode").into());
         }
@@ -242,12 +242,12 @@ impl SpatialRef {
     }
 
     pub fn authority(&self) -> Result<String> {
-        let c_ptr = unsafe { gdal_sys::OSRGetAuthorityName(self.0, ptr::null() as *const c_char) };
+        let c_ptr = unsafe { gdal_sys::OSRGetAuthorityName(self.0, ptr::null()) };
         if c_ptr.is_null() {
             return Err(_last_null_pointer_err("SRGetAuthorityName").into());
         }
         let name = unsafe { CStr::from_ptr(c_ptr) }.to_str()?;
-        let c_ptr = unsafe { gdal_sys::OSRGetAuthorityCode(self.0, ptr::null() as *const c_char) };
+        let c_ptr = unsafe { gdal_sys::OSRGetAuthorityCode(self.0, ptr::null()) };
         if c_ptr.is_null() {
             return Err(_last_null_pointer_err("OSRGetAuthorityCode").into());
         }
