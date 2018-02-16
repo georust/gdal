@@ -1,18 +1,25 @@
 extern crate bindgen;
+extern crate pkg_config;
 
+use bindgen::Builder;
+use pkg_config::Config;
 use std::env;
 use std::path::PathBuf;
 
 fn main() {
-    println!("cargo:rustc-link-lib=gdal");
+    let mut builder = Builder::default();
 
-    let bindings = bindgen::Builder::default()
+    let gdal = Config::new().probe("gdal").unwrap();
+    for path in &gdal.libs {
+        println!("cargo:rustc-link-lib={}", path);
+    }
+    for path in &gdal.include_paths {
+        builder = builder.clang_arg("-I");
+        builder = builder.clang_arg(path.to_str().unwrap());
+    }
+
+    let bindings = builder
         .header("wrapper.h")
-        .blacklist_type("FP_NAN")
-        .blacklist_type("FP_INFINITE")
-        .blacklist_type("FP_ZERO")
-        .blacklist_type("FP_SUBNORMAL")
-        .blacklist_type("FP_NORMAL")
         .prepend_enum_name(false)
         .constified_enum_module("CPLErr")
         .constified_enum_module("OGRwkbGeometryType")
