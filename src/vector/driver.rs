@@ -2,9 +2,8 @@ use std::ffi::CString;
 use std::ptr::null_mut;
 use std::sync::{Once, ONCE_INIT};
 use std::path::Path;
-use libc::{c_void};
 use vector::{Dataset};
-use gdal_sys::{self};
+use gdal_sys::{self, OGRSFDriverH};
 use utils::{_last_null_pointer_err};
 
 use errors::*;
@@ -21,7 +20,7 @@ pub fn _register_drivers() {
 }
 
 pub struct Driver {
-    c_driver: *mut c_void,
+    c_driver: OGRSFDriverH,
 }
 
 impl Driver {

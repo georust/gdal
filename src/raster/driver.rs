@@ -1,13 +1,13 @@
-use libc::{c_int, c_void};
+use libc::c_int;
 use std::ffi::CString;
 use std::ptr::null_mut;
 use std::sync::{Once, ONCE_INIT};
 use utils::{_string, _last_null_pointer_err};
-use raster::{Dataset};
+use raster::Dataset;
 use raster::types::GdalType;
 use gdal_major_object::MajorObject;
 use metadata::Metadata;
-use gdal_sys;
+use gdal_sys::{self, GDALDriverH, GDALMajorObjectH};
 
 use errors::*;
 
@@ -24,7 +24,7 @@ pub fn _register_drivers() {
 
 #[allow(missing_copy_implementations)]
 pub struct Driver {
-    c_driver: *mut c_void,
+    c_driver: GDALDriverH,
 }
 
 
@@ -39,11 +39,11 @@ impl Driver {
         Ok(Driver{c_driver: c_driver})
     }
 
-    pub unsafe fn _with_c_ptr(c_driver: *mut c_void) -> Driver {
+    pub unsafe fn _with_c_ptr(c_driver: GDALDriverH) -> Driver {
         return Driver{c_driver: c_driver};
     }
 
-    pub unsafe fn _c_ptr(&self) -> *mut c_void {
+    pub unsafe fn _c_ptr(&self) -> GDALDriverH {
         return self.c_driver;
     }
 
@@ -97,7 +97,7 @@ impl Driver {
 }
 
 impl MajorObject for Driver {
-    unsafe fn gdal_object_ptr(&self) -> *mut c_void {
+    unsafe fn gdal_object_ptr(&self) -> GDALMajorObjectH {
         return self.c_driver;
     }
 }

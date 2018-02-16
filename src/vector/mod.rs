@@ -22,7 +22,7 @@ pub use vector::layer::{Layer, FeatureIterator, FieldDefn};
 pub use vector::defn::{Defn, FieldIterator, Field};
 pub use vector::feature::{Feature, FieldValue};
 pub use vector::geometry::{Geometry, WkbType};
-pub use gdal_sys::{OGRFieldType};
+pub use gdal_sys::OGRFieldType;
 
 use errors::{Result};
 

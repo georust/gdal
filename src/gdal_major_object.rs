@@ -1,5 +1,5 @@
-use libc::{c_void};
+use gdal_sys::GDALMajorObjectH;
 
 pub trait MajorObject {
-    unsafe fn gdal_object_ptr(&self) -> *mut c_void;
+    unsafe fn gdal_object_ptr(&self) -> GDALMajorObjectH;
 }

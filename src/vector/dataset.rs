@@ -1,13 +1,13 @@
 use std::ffi::CString;
 use std::path::Path;
 use std::ptr::null_mut;
-use libc::{c_int, c_void};
-use vector::{Layer};
+use libc::c_int;
+use vector::Layer;
 use vector::driver::_register_drivers;
 use gdal_major_object::MajorObject;
 use metadata::Metadata;
-use gdal_sys::{self, OGRwkbGeometryType};
-use utils::{_last_null_pointer_err};
+use gdal_sys::{self, GDALMajorObjectH, OGRDataSourceH, OGRLayerH, OGRwkbGeometryType};
+use utils::_last_null_pointer_err;
 
 
 use errors::*;
@@ -22,12 +22,12 @@ use errors::*;
 /// println!("Dataset has {} layers", dataset.count());
 /// ```
 pub struct Dataset {
-    c_dataset: *mut c_void,
+    c_dataset: OGRDataSourceH,
     layers: Vec<Layer>,
 }
 
 impl MajorObject for Dataset {
-    unsafe fn gdal_object_ptr(&self) -> *mut c_void {
+    unsafe fn gdal_object_ptr(&self) -> GDALMajorObjectH {
         self.c_dataset
     }
 }
@@ -36,7 +36,7 @@ impl Metadata for Dataset {}
 
 
 impl Dataset {
-    pub unsafe fn _with_c_dataset(c_dataset: *mut c_void) -> Dataset {
+    pub unsafe fn _with_c_dataset(c_dataset: OGRDataSourceH) -> Dataset {
         Dataset{c_dataset: c_dataset, layers: vec!()}
     }
 
@@ -57,7 +57,7 @@ impl Dataset {
         return unsafe { gdal_sys::OGR_DS_GetLayerCount(self.c_dataset) } as isize;
     }
 
-    fn _child_layer(&mut self, c_layer: *mut c_void) -> &Layer {
+    fn _child_layer(&mut self, c_layer: OGRLayerH) -> &Layer {
         let layer = unsafe { Layer::_with_c_layer(c_layer) };
         self.layers.push(layer);
         return self.layers.last().unwrap();

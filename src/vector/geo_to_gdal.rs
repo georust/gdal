@@ -2,7 +2,7 @@ use vector::{Geometry, ToGdal};
 use geo;
 use gdal_sys::{OGRwkbGeometryType};
 use errors::*;
-use num_traits::{Float};
+use num_traits::Float;
 
 impl <T> ToGdal for geo::Point<T> where T: Float {
     fn to_gdal(&self) -> Result<Geometry> {

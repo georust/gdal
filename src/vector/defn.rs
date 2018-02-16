@@ -1,10 +1,9 @@
-use libc::{c_int, c_void};
+use libc::c_int;
 use utils::{_last_null_pointer_err, _string};
 use vector::layer::Layer;
 use vector::geometry::WkbType;
 use spatial_ref::SpatialRef;
-use gdal_major_object::MajorObject;
-use gdal_sys::{self, OGRFieldType, OGRGeomFieldDefnH};
+use gdal_sys::{self, OGRFeatureDefnH, OGRFieldDefnH, OGRFieldType, OGRGeomFieldDefnH};
 
 use errors::*;
 
@@ -12,15 +11,15 @@ use errors::*;
 ///
 /// Defines the fields available for features in a layer.
 pub struct Defn {
-    c_defn: *mut c_void,
+    c_defn: OGRFeatureDefnH,
 }
 
 impl Defn {
-    pub unsafe fn _with_c_defn(c_defn: *mut c_void) -> Defn {
+    pub unsafe fn _with_c_defn(c_defn: OGRFeatureDefnH) -> Defn {
         Defn{c_defn: c_defn}
     }
 
-    pub unsafe fn c_defn(&self) -> *mut c_void { self.c_defn }
+    pub unsafe fn c_defn(&self) -> OGRFeatureDefnH { self.c_defn }
 
     /// Iterate over the field schema of this layer.
     pub fn fields(&self) -> FieldIterator {
@@ -45,14 +44,14 @@ impl Defn {
     }
 
     pub fn from_layer(lyr: &Layer) -> Defn {
-        let c_defn = unsafe { gdal_sys::OGR_L_GetLayerDefn(lyr.gdal_object_ptr())};
+        let c_defn = unsafe { gdal_sys::OGR_L_GetLayerDefn(lyr.c_layer())};
             Defn {c_defn: c_defn}
         }
 }
 
 pub struct FieldIterator<'a> {
     defn: &'a Defn,
-    c_feature_defn: *mut c_void,
+    c_feature_defn: OGRFeatureDefnH,
     next_id: isize,
     total: isize,
 }
@@ -79,7 +78,7 @@ impl<'a> Iterator for FieldIterator<'a> {
 
 pub struct Field<'a> {
     _defn: &'a Defn,
-    c_field_defn: *mut c_void,
+    c_field_defn: OGRFieldDefnH,
 }
 
 impl<'a> Field<'a> {
@@ -104,7 +103,7 @@ impl<'a> Field<'a> {
 
 pub struct GeomFieldIterator<'a> {
     defn: &'a Defn,
-    c_feature_defn: *mut c_void,
+    c_feature_defn: OGRFeatureDefnH,
     next_id: isize,
     total: isize,
 }

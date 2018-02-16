@@ -1,4 +1,4 @@
-use vector::{Geometry};
+use vector::Geometry;
 use geo;
 use gdal_sys::{self, OGRwkbGeometryType};
 

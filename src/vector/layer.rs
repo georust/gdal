@@ -1,11 +1,11 @@
 use std::ptr::null_mut;
 use std::ffi::CString;
-use libc::{c_void, c_int};
+use libc::c_int;
 use vector::{Feature, Geometry, FieldValue};
 use vector::defn::Defn;
 use gdal_major_object::MajorObject;
 use metadata::Metadata;
-use gdal_sys::{self, OGRErr, OGREnvelope, OGRFieldType};
+use gdal_sys::{self, OGRErr, OGREnvelope, OGRFieldDefnH, OGRFieldType, OGRLayerH, GDALMajorObjectH};
 use utils::{_last_null_pointer_err, _string};
 use spatial_ref::SpatialRef;
 
@@ -24,12 +24,12 @@ use errors::*;
 /// }
 /// ```
 pub struct Layer {
-    c_layer: *mut c_void,
+    c_layer: OGRLayerH,
     defn: Defn,
 }
 
 impl MajorObject for Layer {
-    unsafe fn gdal_object_ptr(&self) -> *mut c_void {
+    unsafe fn gdal_object_ptr(&self) -> GDALMajorObjectH {
         self.c_layer
     }
 }
@@ -38,10 +38,14 @@ impl Metadata for Layer {}
 
 
 impl Layer {
-    pub unsafe fn _with_c_layer(c_layer: *mut c_void) -> Layer {
+    pub unsafe fn _with_c_layer(c_layer: OGRLayerH) -> Layer {
         let c_defn = gdal_sys::OGR_L_GetLayerDefn(c_layer);
         let defn = Defn::_with_c_defn(c_defn);
         return Layer{c_layer: c_layer, defn: defn};
+    }
+
+    pub unsafe fn c_layer(&self) -> OGRLayerH {
+        self.c_layer
     }
 
     /// Iterate over all features in this layer.
@@ -142,17 +146,17 @@ impl<'a> FeatureIterator<'a> {
 }
 
 pub struct FieldDefn {
-    c_obj: *mut c_void,
+    c_obj: OGRFieldDefnH,
 }
 
 impl Drop for FieldDefn {
     fn drop(&mut self){
-        unsafe { gdal_sys::OGR_Fld_Destroy(self.c_obj as *mut c_void) };
+        unsafe { gdal_sys::OGR_Fld_Destroy(self.c_obj) };
     }
 }
 
 impl MajorObject for FieldDefn {
-    unsafe fn gdal_object_ptr(&self) -> *mut c_void {
+    unsafe fn gdal_object_ptr(&self) -> GDALMajorObjectH {
         self.c_obj
     }
 }
@@ -167,13 +171,13 @@ impl FieldDefn {
         Ok(FieldDefn { c_obj: c_obj})
     }
     pub fn set_width(&self, width: i32) {
-        unsafe {gdal_sys:: OGR_Fld_SetWidth(self.c_obj as *mut c_void, width as c_int) };
+        unsafe {gdal_sys:: OGR_Fld_SetWidth(self.c_obj, width as c_int) };
     }
     pub fn set_precision(&self, precision: i32) {
-        unsafe {gdal_sys:: OGR_Fld_SetPrecision(self.c_obj as *mut c_void, precision as c_int) };
+        unsafe {gdal_sys:: OGR_Fld_SetPrecision(self.c_obj, precision as c_int) };
     }
     pub fn add_to_layer(&self, layer: &Layer) -> Result<()> {
-        let rv = unsafe { gdal_sys::OGR_L_CreateField(layer.gdal_object_ptr(), self.c_obj, 1) };
+        let rv = unsafe { gdal_sys::OGR_L_CreateField(layer.c_layer(), self.c_obj, 1) };
         if rv != OGRErr::OGRERR_NONE {
             return Err(ErrorKind::OgrError(rv, "OGR_L_CreateFeature").into());
         }

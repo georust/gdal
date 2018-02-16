@@ -1,4 +1,4 @@
-use libc::{c_int, c_double, c_void};
+use libc::{c_int, c_double};
 use std::ffi::{CString};
 use std::path::Path;
 use std::ptr::null_mut;
@@ -8,18 +8,18 @@ use raster::driver::_register_drivers;
 use raster::types::GdalType;
 use gdal_major_object::MajorObject;
 use metadata::Metadata;
-use gdal_sys::{self, CPLErr, GDALAccess, GDALDataType};
+use gdal_sys::{self, CPLErr, GDALAccess, GDALDatasetH, GDALDataType, GDALMajorObjectH};
 
 use errors::*;
 
 pub type GeoTransform = [c_double; 6];
 
 pub struct Dataset {
-    c_dataset: *mut c_void,
+    c_dataset: GDALDatasetH,
 }
 
 impl MajorObject for Dataset {
-    unsafe fn gdal_object_ptr(&self) -> *mut c_void {
+    unsafe fn gdal_object_ptr(&self) -> GDALMajorObjectH {
         self.c_dataset
     }
 }
@@ -45,11 +45,11 @@ impl Dataset {
         Ok(Dataset{c_dataset: c_dataset})
     }
 
-    pub unsafe fn _with_c_ptr(c_dataset: *mut c_void) -> Dataset {
+    pub unsafe fn _with_c_ptr(c_dataset: GDALDatasetH) -> Dataset {
         return Dataset{c_dataset: c_dataset};
     }
 
-    pub unsafe fn _c_ptr(&self) -> *mut c_void {
+    pub unsafe fn _c_ptr(&self) -> GDALDatasetH {
         return self.c_dataset;
     }
 

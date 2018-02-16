@@ -1,18 +1,17 @@
 use std::ffi::CString;
-use libc::{c_void, c_double, c_int};
+use libc::{c_double, c_int};
 use vector::Defn;
 use utils::{_string, _last_null_pointer_err};
-use gdal_sys::{self, OGRErr, OGRFieldType};
+use gdal_sys::{self, OGRErr, OGRFeatureH, OGRFieldType};
 use vector::geometry::Geometry;
 use vector::layer::Layer;
-use gdal_major_object::MajorObject;
 
 use errors::*;
 
 /// OGR Feature
 pub struct Feature<'a> {
     _defn: &'a Defn,
-    c_feature: *mut c_void,
+    c_feature: OGRFeatureH,
     geometry: Vec<Geometry>,
 }
 
@@ -30,7 +29,7 @@ impl<'a> Feature<'a> {
              })
     }
 
-    pub unsafe fn _with_c_feature(defn: &'a Defn, c_feature: *mut c_void) -> Feature {
+    pub unsafe fn _with_c_feature(defn: &'a Defn, c_feature: OGRFeatureH) -> Feature {
         return Feature{
             _defn: defn,
             c_feature: c_feature,
@@ -106,7 +105,7 @@ impl<'a> Feature<'a> {
     }
 
     pub fn create(&self, lyr: &Layer) -> Result<()> {
-        let rv = unsafe { gdal_sys::OGR_L_CreateFeature(lyr.gdal_object_ptr(), self.c_feature) };
+        let rv = unsafe { gdal_sys::OGR_L_CreateFeature(lyr.c_layer(), self.c_feature) };
         if rv != OGRErr::OGRERR_NONE {
             return Err(ErrorKind::OgrError(rv, "OGR_L_CreateFeature").into());
         }

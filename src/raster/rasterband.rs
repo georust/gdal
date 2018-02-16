@@ -1,15 +1,15 @@
-use libc::{c_int, c_void};
+use libc::c_int;
 use raster::{Dataset, Buffer};
-use raster::types::{GdalType};
+use raster::types::GdalType;
 use gdal_major_object::MajorObject;
 use metadata::Metadata;
-use gdal_sys::{self, CPLErr, GDALDataType, GDALRWFlag};
-use utils::{_last_cpl_err};
+use gdal_sys::{self, CPLErr, GDALDataType, GDALMajorObjectH, GDALRasterBandH, GDALRWFlag};
+use utils::_last_cpl_err;
 
 use errors::*;
 
 pub struct RasterBand<'a> {
-    c_rasterband: *mut c_void,
+    c_rasterband: GDALRasterBandH,
     owning_dataset: &'a Dataset,
 }
 
@@ -18,7 +18,7 @@ impl <'a> RasterBand<'a> {
         self.owning_dataset
     }
 
-    pub unsafe fn _with_c_ptr(c_rasterband: *mut c_void, owning_dataset: &'a Dataset) -> Self {
+    pub unsafe fn _with_c_ptr(c_rasterband: GDALRasterBandH, owning_dataset: &'a Dataset) -> Self {
         RasterBand { c_rasterband: c_rasterband, owning_dataset: owning_dataset }
     }
 
@@ -46,7 +46,7 @@ impl <'a> RasterBand<'a> {
                 window.1 as c_int,
                 window_size.0 as c_int,
                 window_size.1 as c_int,
-                data.as_mut_ptr() as *mut c_void,
+                data.as_mut_ptr() as GDALRasterBandH,
                 size.0 as c_int,
                 size.1 as c_int,
                 T::gdal_type(),
@@ -102,7 +102,7 @@ impl <'a> RasterBand<'a> {
             window.1 as c_int,
             window_size.0 as c_int,
             window_size.1 as c_int,
-            buffer.data.as_ptr() as *mut c_void,
+            buffer.data.as_ptr() as GDALRasterBandH,
             buffer.size.0 as c_int,
             buffer.size.1 as c_int,
             T::gdal_type(),
@@ -158,7 +158,7 @@ impl <'a> RasterBand<'a> {
 }
 
 impl<'a> MajorObject for RasterBand<'a> {
-    unsafe fn gdal_object_ptr(&self) -> *mut c_void {
+    unsafe fn gdal_object_ptr(&self) -> GDALMajorObjectH {
         self.c_rasterband
     }
 }

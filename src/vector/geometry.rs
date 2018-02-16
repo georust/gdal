@@ -1,16 +1,16 @@
 use std::ptr::null_mut;
-use libc::{c_char, c_int, c_double, c_void};
+use libc::{c_int, c_double, c_void};
 use std::ffi::CString;
 use std::cell::RefCell;
 use utils::{_string, _last_null_pointer_err};
-use gdal_sys::{self, OGRErr, OGRwkbGeometryType};
+use gdal_sys::{self, OGRErr, OGRGeometryH, OGRwkbGeometryType};
 use spatial_ref::{SpatialRef, CoordTransform};
 
 use errors::*;
 
 /// OGR Geometry
 pub struct Geometry {
-    c_geometry_ref: RefCell<Option<*mut c_void>>,
+    c_geometry_ref: RefCell<Option<OGRGeometryH>>,
     owned: bool,
 }
 
@@ -64,13 +64,13 @@ impl Geometry {
         self.c_geometry_ref.borrow().is_some()
     }
 
-    pub unsafe fn set_c_geometry(&self, c_geometry: *mut c_void) {
+    pub unsafe fn set_c_geometry(&self, c_geometry: OGRGeometryH) {
         assert!(! self.has_gdal_ptr());
         assert_eq!(self.owned, false);
         *(self.c_geometry_ref.borrow_mut()) = Some(c_geometry);
     }
 
-    unsafe fn with_c_geometry(c_geom: *mut c_void, owned: bool) -> Geometry {
+    unsafe fn with_c_geometry(c_geom: OGRGeometryH, owned: bool) -> Geometry {
         Geometry{
             c_geometry_ref: RefCell::new(Some(c_geom)),
             owned: owned,
@@ -93,8 +93,8 @@ impl Geometry {
     /// [WKT](https://en.wikipedia.org/wiki/Well-known_text) string.
     pub fn from_wkt(wkt: &str) -> Result<Geometry> {
         let c_wkt = CString::new(wkt)?;
-        let mut c_wkt_ptr: *mut c_char = c_wkt.into_raw();
-        let mut c_geom: *mut c_void = null_mut();
+        let mut c_wkt_ptr = c_wkt.into_raw();
+        let mut c_geom = null_mut();
         let rv = unsafe { gdal_sys::OGR_G_CreateFromWkt(&mut c_wkt_ptr, null_mut(), &mut c_geom) };
         if rv != OGRErr::OGRERR_NONE {
             return Err(ErrorKind::OgrError(rv, "OGR_G_CreateFromWkt").into());
@@ -127,7 +127,7 @@ impl Geometry {
 
     /// Serialize the geometry as WKT.
     pub fn wkt(&self) -> Result<String> {
-        let mut c_wkt: *mut c_char = null_mut();
+        let mut c_wkt = null_mut();
         let _err = unsafe { gdal_sys::OGR_G_ExportToWkt(self.c_geometry(), &mut c_wkt) };
         if _err != OGRErr::OGRERR_NONE {
             return Err(ErrorKind::OgrError(_err, "OGR_G_ExportToWkt").into());
@@ -137,11 +137,11 @@ impl Geometry {
         Ok(wkt)
     }
 
-    pub unsafe fn c_geometry(&self) -> *mut c_void {
+    pub unsafe fn c_geometry(&self) -> OGRGeometryH {
         self.c_geometry_ref.borrow().unwrap()
     }
 
-    pub unsafe fn into_c_geometry(mut self) -> *mut c_void {
+    pub unsafe fn into_c_geometry(mut self) -> OGRGeometryH {
         assert!(self.owned);
         self.owned = false;
         return self.c_geometry();
@@ -282,7 +282,7 @@ impl Drop for Geometry {
     fn drop(&mut self) {
         if self.owned {
             let c_geometry = self.c_geometry_ref.borrow();
-            unsafe { gdal_sys::OGR_G_DestroyGeometry(c_geometry.unwrap() as *mut c_void) };
+            unsafe { gdal_sys::OGR_G_DestroyGeometry(c_geometry.unwrap()) };
         }
     }
 }

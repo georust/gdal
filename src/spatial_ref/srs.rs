@@ -1,14 +1,14 @@
-use libc::{c_int, c_char, c_void};
+use libc::{c_int, c_char};
 use std::ffi::{CString, CStr};
 use std::ptr;
 use std::str::FromStr;
 use utils::{_string, _last_null_pointer_err, _last_cpl_err};
-use gdal_sys::{self, CPLErr, OGRErr, TRUE};
+use gdal_sys::{self, CPLErr, OGRCoordinateTransformationH, OGRErr, OGRSpatialReferenceH, TRUE};
 
 use errors::*;
 
 pub struct CoordTransform{
-    inner: *mut c_void,
+    inner: OGRCoordinateTransformationH,
     from: String,
     to: String,
 }
@@ -68,13 +68,13 @@ impl CoordTransform {
         self.transform_coords(x, y, z).expect("Coordinate transform successful")
     }
 
-    pub fn to_c_hct(&self) -> *mut c_void {
+    pub fn to_c_hct(&self) -> OGRCoordinateTransformationH {
         self.inner
     }
 }
 
 #[derive(Debug)]
-pub struct SpatialRef(*mut c_void);
+pub struct SpatialRef(OGRSpatialReferenceH);
 
 impl Drop for SpatialRef {
     fn drop(&mut self){
@@ -162,7 +162,7 @@ impl SpatialRef {
         }
     }
 
-    pub fn from_c_obj(c_obj: *mut c_void) -> Result<SpatialRef> {
+    pub fn from_c_obj(c_obj: OGRSpatialReferenceH) -> Result<SpatialRef> {
         let mut_c_obj = unsafe { gdal_sys::OSRClone(c_obj) };
         if mut_c_obj.is_null() {
            return Err(_last_null_pointer_err("OSRClone").into());
@@ -264,7 +264,7 @@ impl SpatialRef {
         }
     }
 
-    pub fn to_c_hsrs(&self) -> *mut c_void {
+    pub fn to_c_hsrs(&self) -> OGRSpatialReferenceH {
         self.0
     }
 }
