@@ -18,10 +18,7 @@ fn main() {
     let bindings = builder
         .header("wrapper.h")
         .prepend_enum_name(false)
-        .constified_enum_module("CPLErr")
-        .constified_enum_module("OGRwkbGeometryType")
-        .constified_enum_module("OGRErr")
-        .constified_enum_module("OGRFieldType")
+        .constified_enum_module(".*")
         .ctypes_prefix("libc")
         .whitelist_function("CPL.*")
         .whitelist_function("GDAL.*")

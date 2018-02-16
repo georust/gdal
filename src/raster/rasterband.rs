@@ -3,7 +3,7 @@ use raster::{Dataset, Buffer};
 use raster::types::{GdalType};
 use gdal_major_object::MajorObject;
 use metadata::Metadata;
-use gdal_sys::{self, CPLErr, GDALDataType, GF_Read, GF_Write};
+use gdal_sys::{self, CPLErr, GDALDataType, GDALRWFlag};
 use utils::{_last_cpl_err};
 
 use errors::*;
@@ -41,7 +41,7 @@ impl <'a> RasterBand<'a> {
         let rv = unsafe {
             gdal_sys::GDALRasterIO(
                 self.c_rasterband,
-                GF_Read,
+                GDALRWFlag::GF_Read,
                 window.0 as c_int,
                 window.1 as c_int,
                 window_size.0 as c_int,
@@ -97,7 +97,7 @@ impl <'a> RasterBand<'a> {
         assert_eq!(buffer.data.len(), buffer.size.0 * buffer.size.1);
         let rv = unsafe { gdal_sys::GDALRasterIO(
             self.c_rasterband,
-            GF_Write,
+            GDALRWFlag::GF_Write,
             window.0 as c_int,
             window.1 as c_int,
             window_size.0 as c_int,
@@ -115,7 +115,7 @@ impl <'a> RasterBand<'a> {
         Ok(())
     }
 
-    pub fn band_type(&self) -> GDALDataType {
+    pub fn band_type(&self) -> GDALDataType::Type {
         let gdal_type = unsafe { gdal_sys::GDALGetRasterDataType(self.c_rasterband) };
         gdal_type
     }

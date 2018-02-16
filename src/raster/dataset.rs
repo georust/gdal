@@ -8,7 +8,7 @@ use raster::driver::_register_drivers;
 use raster::types::GdalType;
 use gdal_major_object::MajorObject;
 use metadata::Metadata;
-use gdal_sys::{self, CPLErr, GA_ReadOnly, GDALDataType};
+use gdal_sys::{self, CPLErr, GDALAccess, GDALDataType};
 
 use errors::*;
 
@@ -38,7 +38,7 @@ impl Dataset {
         _register_drivers();
         let filename = path.to_string_lossy();
         let c_filename = CString::new(filename.as_ref())?;
-        let c_dataset = unsafe { gdal_sys::GDALOpen(c_filename.as_ptr(), GA_ReadOnly) };
+        let c_dataset = unsafe { gdal_sys::GDALOpen(c_filename.as_ptr(), GDALAccess::GA_ReadOnly) };
         if c_dataset.is_null() {
             return Err(_last_null_pointer_err("GDALOpen").into());
         }
@@ -140,7 +140,7 @@ impl Dataset {
         Ok(Dataset{c_dataset: c_dataset})
     }
 
-    pub fn band_type(&self, band_index: isize) -> Result<GDALDataType> {
+    pub fn band_type(&self, band_index: isize) -> Result<GDALDataType::Type> {
         self.rasterband(band_index).map(|band| band.band_type())
     }
 
