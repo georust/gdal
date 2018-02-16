@@ -10,9 +10,6 @@ fn main() {
     let mut builder = Builder::default();
 
     let gdal = Config::new().probe("gdal").unwrap();
-    for path in &gdal.libs {
-        println!("cargo:rustc-link-lib={}", path);
-    }
     for path in &gdal.include_paths {
         builder = builder.clang_arg("-I");
         builder = builder.clang_arg(path.to_str().unwrap());
