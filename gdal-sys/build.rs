@@ -26,9 +26,6 @@ fn main() {
         .whitelist_function("OSR.*")
         .whitelist_function("OCT.*")
         .whitelist_function("VSI.*")
-        .whitelist_var("OGR.*")
-        .whitelist_var("FALSE")
-        .whitelist_var("TRUE")
         .generate()
         .expect("Unable to generate bindings");
 

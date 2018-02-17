@@ -121,34 +121,28 @@ impl <'a> RasterBand<'a> {
     }
 
     pub fn no_data_value(&self) ->Option<f64> {
-        unsafe {
-            let mut pb_success = 1;
-            let no_data = gdal_sys::GDALGetRasterNoDataValue(self.c_rasterband, &mut pb_success);
-            if pb_success == 1 {
-                return Some(no_data as f64);
-            }
+        let mut pb_success = 1;
+        let no_data = unsafe { gdal_sys::GDALGetRasterNoDataValue(self.c_rasterband, &mut pb_success) };
+        if pb_success == 1 {
+            return Some(no_data as f64);
         }
         None
     }
 
     pub fn scale(&self) ->Option<f64> {
-        unsafe {
-            let mut pb_success = 1;
-            let scale = gdal_sys::GDALGetRasterScale(self.c_rasterband, &mut pb_success);
-            if pb_success == 1 {
-                return Some(scale as f64);
-            }
+        let mut pb_success = 1;
+        let scale = unsafe { gdal_sys::GDALGetRasterScale(self.c_rasterband, &mut pb_success) };
+        if pb_success == 1 {
+            return Some(scale as f64);
         }
         None
     }
 
     pub fn offset(&self) ->Option<f64> {
-        unsafe {
-            let mut pb_success = 1;
-            let offset = gdal_sys::GDALGetRasterOffset(self.c_rasterband, &mut pb_success);
-            if pb_success == 1 {
-                return Some(offset as f64);
-            }
+        let mut pb_success = 1;
+        let offset = unsafe { gdal_sys::GDALGetRasterOffset(self.c_rasterband, &mut pb_success) };
+        if pb_success == 1 {
+            return Some(offset as f64);
         }
         None
     }
