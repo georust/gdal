@@ -15,7 +15,6 @@ pub struct Feature<'a> {
     geometry: Vec<Geometry>,
 }
 
-
 impl<'a> Feature<'a> {
     pub fn new(defn: &'a Defn) -> Result<Feature> {
         let c_feature = unsafe { gdal_sys::OGR_F_Create(defn.c_defn()) };
@@ -30,17 +29,16 @@ impl<'a> Feature<'a> {
     }
 
     pub unsafe fn _with_c_feature(defn: &'a Defn, c_feature: OGRFeatureH) -> Feature {
-        return Feature{
+        Feature {
             _defn: defn,
             c_feature: c_feature,
             geometry: Feature::_lazy_feature_geometries(defn),
-        };
+        }
     }
 
     pub fn _lazy_feature_geometries(defn: &'a Defn) -> Vec<Geometry> {
         let geom_field_count = unsafe { gdal_sys::OGR_FD_GetGeomFieldCount(defn.c_defn()) } as isize;
-        let geometries = (0..geom_field_count).map(|_| unsafe { Geometry::lazy_feature_geometry() }).collect();
-        geometries
+        (0..geom_field_count).map(|_| unsafe { Geometry::lazy_feature_geometry() }).collect()
     }
 
     /// Get the value of a named field. If the field exists, it returns a
@@ -57,15 +55,15 @@ impl<'a> Feature<'a> {
         match field_type {
             OGRFieldType::OFTString => {
                 let rv = unsafe { gdal_sys::OGR_F_GetFieldAsString(self.c_feature, field_id) };
-                return Ok(FieldValue::StringValue(_string(rv)));
+                Ok(FieldValue::StringValue(_string(rv)))
             },
             OGRFieldType::OFTReal => {
                 let rv = unsafe { gdal_sys::OGR_F_GetFieldAsDouble(self.c_feature, field_id) };
-                return Ok(FieldValue::RealValue(rv as f64));
+                Ok(FieldValue::RealValue(rv as f64))
             },
             OGRFieldType::OFTInteger => {
                 let rv = unsafe { gdal_sys::OGR_F_GetFieldAsInteger(self.c_feature, field_id) };
-                return Ok(FieldValue::IntegerValue(rv as i32));
+                Ok(FieldValue::IntegerValue(rv as i32))
             },
             _ => Err(ErrorKind::UnhandledFieldType(field_type, "OGR_Fld_GetType").into())
         }
@@ -73,11 +71,11 @@ impl<'a> Feature<'a> {
 
     /// Get the field's geometry.
     pub fn geometry(&self) -> &Geometry {
-        if ! self.geometry[0].has_gdal_ptr() {
+        if !self.geometry[0].has_gdal_ptr() {
             let c_geom = unsafe { gdal_sys::OGR_F_GetGeometryRef(self.c_feature) };
             unsafe { self.geometry[0].set_c_geometry(c_geom) };
         }
-        return &self.geometry[0];
+        &self.geometry[0]
     }
 
     pub fn geometry_by_name(&self, field_name: &str) -> Result<&Geometry> {
@@ -144,10 +142,10 @@ impl<'a> Feature<'a> {
     }
 
     pub fn set_field(&self, field_name: &str,  value: &FieldValue) -> Result<()> {
-          match value {
-             &FieldValue::RealValue(value) => self.set_field_double(field_name, value),
-             &FieldValue::StringValue(ref value) => self.set_field_string(field_name, value.as_str()),
-             &FieldValue::IntegerValue(value) => self.set_field_integer(field_name, value)
+          match *value {
+             FieldValue::RealValue(value) => self.set_field_double(field_name, value),
+             FieldValue::StringValue(ref value) => self.set_field_string(field_name, value.as_str()),
+             FieldValue::IntegerValue(value) => self.set_field_integer(field_name, value)
          }
      }
 
@@ -168,7 +166,6 @@ impl<'a> Drop for Feature<'a> {
     }
 }
 
-
 pub enum FieldValue {
     IntegerValue(i32),
     StringValue(String),
@@ -178,7 +175,7 @@ pub enum FieldValue {
 
 impl FieldValue {
     /// Interpret the value as `String`. Panics if the value is something else.
-    pub fn to_string(self) -> Option<String> {
+    pub fn into_string(self) -> Option<String> {
         match self {
             FieldValue::StringValue(rv) => Some(rv),
             _ => None
@@ -186,7 +183,7 @@ impl FieldValue {
     }
 
     /// Interpret the value as `f64`. Panics if the value is something else.
-    pub fn to_real(self) -> Option<f64> {
+    pub fn into_real(self) -> Option<f64> {
         match self {
             FieldValue::RealValue(rv) => Some(rv),
             _ => None
@@ -194,7 +191,7 @@ impl FieldValue {
     }
 
     /// Interpret the value as `i32`. Panics if the value is something else.
-    pub fn to_int(self) -> Option<i32> {
+    pub fn into_int(self) -> Option<i32> {
         match self {
             FieldValue::IntegerValue(rv) => Some(rv),
             _ => None

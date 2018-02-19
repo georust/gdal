@@ -51,7 +51,7 @@ impl CoordTransform {
         } else {
             let err = _last_cpl_err(CPLErr::CE_Failure);
             let msg = if let ErrorKind::CplError(_, _, msg) = err {
-                if msg.trim().len() == 0 {
+                if msg.trim().is_empty() {
                     None
                 } else {
                     Some(msg)
@@ -165,7 +165,7 @@ impl SpatialRef {
     pub fn from_c_obj(c_obj: OGRSpatialReferenceH) -> Result<SpatialRef> {
         let mut_c_obj = unsafe { gdal_sys::OSRClone(c_obj) };
         if mut_c_obj.is_null() {
-           return Err(_last_null_pointer_err("OSRClone").into());
+           Err(_last_null_pointer_err("OSRClone").into())
         } else {
             Ok(SpatialRef(mut_c_obj))
         }

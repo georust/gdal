@@ -16,7 +16,7 @@ pub struct Defn {
 
 impl Defn {
     pub unsafe fn _with_c_defn(c_defn: OGRFeatureDefnH) -> Defn {
-        Defn{c_defn: c_defn}
+        Defn { c_defn: c_defn }
     }
 
     pub unsafe fn c_defn(&self) -> OGRFeatureDefnH { self.c_defn }
@@ -24,28 +24,28 @@ impl Defn {
     /// Iterate over the field schema of this layer.
     pub fn fields(&self) -> FieldIterator {
         let total = unsafe { gdal_sys::OGR_FD_GetFieldCount(self.c_defn) } as isize;
-        return FieldIterator{
+        FieldIterator{
             defn: self,
             c_feature_defn: self.c_defn,
             next_id: 0,
             total: total
-        };
+        }
     }
 
     /// Iterate over the geometry field schema of this layer.
     pub fn geom_fields(&self) -> GeomFieldIterator {
         let total = unsafe { gdal_sys::OGR_FD_GetGeomFieldCount(self.c_defn) } as isize;
-        return GeomFieldIterator{
+        GeomFieldIterator {
             defn: self,
             c_feature_defn: self.c_defn,
             next_id: 0,
             total: total
-        };
+        }
     }
 
     pub fn from_layer(lyr: &Layer) -> Defn {
         let c_defn = unsafe { gdal_sys::OGR_L_GetLayerDefn(lyr.c_layer())};
-            Defn {c_defn: c_defn}
+            Defn { c_defn: c_defn }
         }
 }
 
@@ -72,7 +72,7 @@ impl<'a> Iterator for FieldIterator<'a> {
             ) }
         };
         self.next_id += 1;
-        return Some(field);
+        Some(field)
     }
 }
 
@@ -85,7 +85,7 @@ impl<'a> Field<'a> {
     /// Get the name of this field.
     pub fn name(&'a self) -> String {
         let rv = unsafe { gdal_sys::OGR_Fld_GetNameRef(self.c_field_defn) };
-        return _string(rv);
+        _string(rv)
     }
 
     pub fn field_type(&'a self) -> OGRFieldType::Type {
@@ -124,7 +124,7 @@ impl<'a> Iterator for GeomFieldIterator<'a> {
             ) }
         };
         self.next_id += 1;
-        return Some(field);
+        Some(field)
     }
 }
 
@@ -138,7 +138,7 @@ impl<'a> GeomField<'a> {
     /// Get the name of this field.
     pub fn name(&'a self) -> String {
         let rv = unsafe { gdal_sys::OGR_GFld_GetNameRef(self.c_field_defn) };
-        return _string(rv);
+        _string(rv)
     }
 
     pub fn field_type(&'a self) -> WkbType {

@@ -4,7 +4,7 @@ use gdal_sys;
 
 pub fn version_info(key: &str) -> String {
     let c_key = CString::new(key.as_bytes()).unwrap();
-    return _string(unsafe { gdal_sys::GDALVersionInfo(c_key.as_ptr()) });
+    _string(unsafe { gdal_sys::GDALVersionInfo(c_key.as_ptr()) })
 }
 
 #[cfg(test)]

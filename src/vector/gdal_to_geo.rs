@@ -8,10 +8,10 @@ impl geo::ToGeo<f64> for Geometry {
 
         let ring = |n: usize| {
             let ring = unsafe { self._get_geometry(n) };
-            return match ring.to_geo() {
+            match ring.to_geo() {
                 geo::Geometry::LineString(r) => r,
                 _ => panic!("Expected to get a LineString")
-            };
+            }
         };
 
         match geometry_type {
@@ -52,7 +52,7 @@ impl geo::ToGeo<f64> for Geometry {
             OGRwkbGeometryType::wkbPolygon => {
                 let ring_count = unsafe { gdal_sys::OGR_G_GetGeometryCount(self.c_geometry()) } as usize;
                 let outer = ring(0);
-                let holes = (1..ring_count).map(|n| ring(n)).collect();
+                let holes = (1..ring_count).map(ring).collect();
                 geo::Geometry::Polygon(geo::Polygon::new(outer, holes))
             },
             OGRwkbGeometryType::wkbMultiPolygon => {

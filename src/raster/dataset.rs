@@ -46,15 +46,14 @@ impl Dataset {
     }
 
     pub unsafe fn _with_c_ptr(c_dataset: GDALDatasetH) -> Dataset {
-        return Dataset{c_dataset: c_dataset};
+        Dataset { c_dataset: c_dataset }
     }
 
     pub unsafe fn _c_ptr(&self) -> GDALDatasetH {
-        return self.c_dataset;
+        self.c_dataset
     }
 
-
-    pub fn rasterband<'a>(&'a self, band_index: isize) -> Result<RasterBand<'a>> {
+    pub fn rasterband(&self, band_index: isize) -> Result<RasterBand> {
         unsafe {
             let c_band = gdal_sys::GDALGetRasterBand(self.c_dataset, band_index as c_int);
             if c_band.is_null() {
@@ -67,23 +66,23 @@ impl Dataset {
     pub fn size(&self) -> (usize, usize) {
         let size_x = unsafe { gdal_sys::GDALGetRasterXSize(self.c_dataset) } as usize;
         let size_y = unsafe { gdal_sys::GDALGetRasterYSize(self.c_dataset) } as usize;
-        return (size_x, size_y);
+        (size_x, size_y)
     }
 
     pub fn driver(&self) -> Driver {
         unsafe {
             let c_driver = gdal_sys::GDALGetDatasetDriver(self.c_dataset);
-            return Driver::_with_c_ptr(c_driver);
-        };
+            Driver::_with_c_ptr(c_driver)
+        }
     }
 
     pub fn count(&self) -> isize {
-        return unsafe { gdal_sys::GDALGetRasterCount(self.c_dataset) } as isize;
+        (unsafe { gdal_sys::GDALGetRasterCount(self.c_dataset) }) as isize
     }
 
     pub fn projection(&self) -> String {
         let rv = unsafe { gdal_sys::GDALGetProjectionRef(self.c_dataset) };
-        return _string(rv);
+        _string(rv)
     }
 
     pub fn set_projection(&self, projection: &str) -> Result<()>{

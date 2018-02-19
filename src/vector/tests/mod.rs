@@ -69,13 +69,13 @@ fn test_string_field() {
         let feature = features.next().unwrap();
         assert_eq!(feature.field("highway")
                           .unwrap()
-                          .to_string(),
+                          .into_string(),
                    Some("footway".to_string()));
         assert_eq!(
             features.filter(|field| {
                 let highway = field.field("highway")
                                    .unwrap()
-                                   .to_string();
+                                   .into_string();
                 highway == Some("residential".to_string()) })
                 .count(),
             2);
@@ -89,7 +89,7 @@ fn test_float_field() {
         assert_almost_eq(
             feature.field("sort_key")
                    .unwrap()
-                   .to_real()
+                   .into_real()
                    .unwrap(),
             -9.0
         );
@@ -133,7 +133,7 @@ fn test_wkt() {
         let wkt_ok = format!("{}{}",
             "LINESTRING (26.1019276 44.4302748,",
             "26.1019382 44.4303191,26.1020002 44.4304202)"
-            ).to_string();
+            );
         assert_eq!(wkt, wkt_ok);
     });
 }
@@ -148,7 +148,7 @@ fn test_json() {
             "[ 26.1019276, 44.4302748 ], ",
             "[ 26.1019382, 44.4303191 ], ",
             "[ 26.1020002, 44.4304202 ] ] }"
-            ).to_string();
+            );
         assert_eq!(json.unwrap(), json_ok);
     });
 }
@@ -255,7 +255,7 @@ fn test_write_features() {
     let layer = ds.layer(0).unwrap();
     let ft = layer.features().next().unwrap();
     assert_eq!(ft.geometry().wkt().unwrap(), "POINT (1 2)");
-    assert_eq!(ft.field("Name").unwrap().to_string(), Some("Feature 1".to_string()));
-    assert_eq!(ft.field("Value").unwrap().to_real(), Some(45.78));
-    assert_eq!(ft.field("Int_value").unwrap().to_int(), Some(1));
+    assert_eq!(ft.field("Name").unwrap().into_string(), Some("Feature 1".to_string()));
+    assert_eq!(ft.field("Value").unwrap().into_real(), Some(45.78));
+    assert_eq!(ft.field("Int_value").unwrap().into_int(), Some(1));
 }

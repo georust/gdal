@@ -15,26 +15,26 @@ fn example_1() -> Result<(), Error> {
 
     let field_defn = FieldDefn::new("Name", OGRFieldType::OFTString)?;
     field_defn.set_width(80);
-    field_defn.add_to_layer(&lyr)?;
+    field_defn.add_to_layer(lyr)?;
 
     let field_defn = FieldDefn::new("Value", OGRFieldType::OFTReal)?;
-    field_defn.add_to_layer(&lyr)?;
+    field_defn.add_to_layer(lyr)?;
 
-    let defn = Defn::from_layer(&lyr);
+    let defn = Defn::from_layer(lyr);
 
     // 1st feature:
     let mut ft = Feature::new(&defn)?;
     ft.set_geometry(Geometry::from_wkt("POINT (45.21 21.76)")?)?;
     ft.set_field_string("Name", "Feature 1")?;
     ft.set_field_double("Value", 45.78)?;
-    ft.create(&lyr)?;
+    ft.create(lyr)?;
 
     // 2nd feature:
     let mut ft = Feature::new(&defn)?;
     ft.set_field_double("Value", 0.789)?;
     ft.set_geometry(Geometry::from_wkt("POINT (46.50 22.50)")?)?;
     ft.set_field_string("Name", "Feature 2")?;
-    ft.create(&lyr)?;
+    ft.create(lyr)?;
 
     // Feature triggering an error due to a wrong field name:
     let mut ft = Feature::new(&defn)?;
@@ -44,7 +44,7 @@ fn example_1() -> Result<(), Error> {
         Ok(v) => v,
         Err(err) => println!("{}", err),
     };
-    ft.create(&lyr)?;
+    ft.create(lyr)?;
 
     Ok(())
 }

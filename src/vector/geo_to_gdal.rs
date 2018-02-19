@@ -86,7 +86,7 @@ impl <T> ToGdal for geo::GeometryCollection<T> where T: Float {
 
 impl <T> ToGdal for geo::Geometry<T> where T: Float {
     fn to_gdal(&self) -> Result<Geometry> {
-        return match *self {
+        match *self {
             geo::Geometry::Point(ref c) => c.to_gdal(),
             geo::Geometry::MultiPoint(ref c) => c.to_gdal(),
             geo::Geometry::LineString(ref c) => c.to_gdal(),

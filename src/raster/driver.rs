@@ -40,21 +40,21 @@ impl Driver {
     }
 
     pub unsafe fn _with_c_ptr(c_driver: GDALDriverH) -> Driver {
-        return Driver{c_driver: c_driver};
+        Driver { c_driver: c_driver }
     }
 
     pub unsafe fn _c_ptr(&self) -> GDALDriverH {
-        return self.c_driver;
+        self.c_driver
     }
 
     pub fn short_name(&self) -> String {
         let rv = unsafe { gdal_sys::GDALGetDriverShortName(self.c_driver) };
-        return _string(rv);
+        _string(rv)
     }
 
     pub fn long_name(&self) -> String {
         let rv = unsafe { gdal_sys::GDALGetDriverLongName(self.c_driver) };
-        return _string(rv);
+        _string(rv)
     }
 
     pub fn create(
@@ -92,13 +92,13 @@ impl Driver {
         if c_dataset.is_null() {
             return Err(_last_null_pointer_err("GDALCreate").into());
         };
-        Ok( unsafe { Dataset::_with_c_ptr(c_dataset) } )
+        Ok(unsafe { Dataset::_with_c_ptr(c_dataset) })
     }
 }
 
 impl MajorObject for Driver {
     unsafe fn gdal_object_ptr(&self) -> GDALMajorObjectH {
-        return self.c_driver;
+        self.c_driver
     }
 }
 

@@ -116,8 +116,7 @@ impl <'a> RasterBand<'a> {
     }
 
     pub fn band_type(&self) -> GDALDataType::Type {
-        let gdal_type = unsafe { gdal_sys::GDALGetRasterDataType(self.c_rasterband) };
-        gdal_type
+        unsafe { gdal_sys::GDALGetRasterDataType(self.c_rasterband) }
     }
 
     pub fn no_data_value(&self) ->Option<f64> {

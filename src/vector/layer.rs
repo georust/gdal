@@ -41,7 +41,7 @@ impl Layer {
     pub unsafe fn _with_c_layer(c_layer: OGRLayerH) -> Layer {
         let c_defn = gdal_sys::OGR_L_GetLayerDefn(c_layer);
         let defn = Defn::_with_c_defn(c_defn);
-        return Layer{c_layer: c_layer, defn: defn};
+        Layer{c_layer: c_layer, defn: defn}
     }
 
     pub unsafe fn c_layer(&self) -> OGRLayerH {
@@ -49,8 +49,8 @@ impl Layer {
     }
 
     /// Iterate over all features in this layer.
-    pub fn features<'a>(&'a self) -> FeatureIterator<'a> {
-        return FeatureIterator::_with_layer(&self);
+    pub fn features(&self) -> FeatureIterator {
+        FeatureIterator::_with_layer(self)
     }
 
     pub fn set_spatial_filter(&self, geometry: &Geometry) {
@@ -64,7 +64,7 @@ impl Layer {
     /// Get the name of this layer.
     pub fn name(&self) -> String {
         let rv = unsafe { gdal_sys::OGR_L_GetName(self.c_layer) };
-        return _string(rv);
+        _string(rv)
     }
 
     pub fn defn(&self) -> &Defn {
@@ -96,7 +96,7 @@ impl Layer {
                                  field_names: &[&str], values: &[FieldValue]) -> Result<()> {
         let mut ft = Feature::new(&self.defn)?;
         ft.set_geometry(geometry)?;
-        for (fd, ref val) in field_names.iter().zip(values.iter()) {
+        for (fd, val) in field_names.iter().zip(values.iter()) {
             ft.set_field(fd, val)?;
         }
         ft.create(self)?;
@@ -132,16 +132,17 @@ impl<'a> Iterator for FeatureIterator<'a> {
     #[inline]
     fn next(&mut self) -> Option<Feature<'a>> {
         let c_feature = unsafe { gdal_sys::OGR_L_GetNextFeature(self.layer.c_layer) };
-        return match c_feature.is_null() {
-            true  => None,
-            false => Some(unsafe { Feature::_with_c_feature(self.layer.defn(), c_feature) }),
-        };
+        if c_feature.is_null() {
+            None
+        } else {
+            Some(unsafe { Feature::_with_c_feature(self.layer.defn(), c_feature) })
+        }
     }
 }
 
 impl<'a> FeatureIterator<'a> {
     pub fn _with_layer(layer: &'a Layer) -> FeatureIterator<'a> {
-        return FeatureIterator{layer: layer};
+        FeatureIterator { layer: layer }
     }
 }
 
@@ -150,7 +151,7 @@ pub struct FieldDefn {
 }
 
 impl Drop for FieldDefn {
-    fn drop(&mut self){
+    fn drop(&mut self) {
         unsafe { gdal_sys::OGR_Fld_Destroy(self.c_obj) };
     }
 }

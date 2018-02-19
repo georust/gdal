@@ -54,13 +54,13 @@ impl Dataset {
 
     /// Get number of layers.
     pub fn count(&self) -> isize {
-        return unsafe { gdal_sys::OGR_DS_GetLayerCount(self.c_dataset) } as isize;
+        (unsafe { gdal_sys::OGR_DS_GetLayerCount(self.c_dataset) }) as isize
     }
 
     fn _child_layer(&mut self, c_layer: OGRLayerH) -> &Layer {
         let layer = unsafe { Layer::_with_c_layer(c_layer) };
         self.layers.push(layer);
-        return self.layers.last().unwrap();
+        self.layers.last().unwrap()
     }
 
     /// Get layer number `idx`.

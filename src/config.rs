@@ -20,7 +20,7 @@
 //! assert_eq!(get_config_option("GDAL_CACHEMAX", "XXX").unwrap(), "XXX");
 //! ```
 //!
-//! Refer to [GDAL ConfigOptions](https://trac.osgeo.org/gdal/wiki/ConfigOptions) for
+//! Refer to [GDAL `ConfigOptions`](https://trac.osgeo.org/gdal/wiki/ConfigOptions) for
 //! a full list of options.
 
 use std::ffi::CString;
@@ -30,7 +30,7 @@ use errors::*;
 
 /// Set a GDAL library configuration option
 ///
-/// Refer to [GDAL ConfigOptions](https://trac.osgeo.org/gdal/wiki/ConfigOptions) for
+/// Refer to [GDAL `ConfigOptions`](https://trac.osgeo.org/gdal/wiki/ConfigOptions) for
 /// a full list of options.
 ///
 pub fn set_config_option(key: &str, value: &str) -> Result<()> {
@@ -44,7 +44,7 @@ pub fn set_config_option(key: &str, value: &str) -> Result<()> {
 ///
 /// If the config option specified by `key` is not found, the value passed in the `default` paramter is returned.
 ///
-/// Refer to [GDAL ConfigOptions](https://trac.osgeo.org/gdal/wiki/ConfigOptions) for
+/// Refer to [GDAL `ConfigOptions`](https://trac.osgeo.org/gdal/wiki/ConfigOptions) for
 /// a full list of options.
 pub fn get_config_option(key: &str, default: &str) -> Result<String> {
     let c_key = CString::new(key.as_bytes())?;
@@ -55,7 +55,7 @@ pub fn get_config_option(key: &str, default: &str) -> Result<String> {
 
 /// Clear the value of a GDAL library configuration option
 ///
-/// Refer to [GDAL ConfigOptions](https://trac.osgeo.org/gdal/wiki/ConfigOptions) for
+/// Refer to [GDAL `ConfigOptions`](https://trac.osgeo.org/gdal/wiki/ConfigOptions) for
 /// a full list of options.
 pub fn clear_config_option(key: &str) -> Result<()> {
     let c_key = CString::new(key.as_bytes())?;

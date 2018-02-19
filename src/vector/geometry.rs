@@ -30,7 +30,6 @@ pub enum WkbType {
 impl WkbType {
     pub fn from_ogr_type(ogr_type: OGRwkbGeometryType::Type) -> WkbType {
         match ogr_type {
-            OGRwkbGeometryType::wkbUnknown => WkbType::WkbUnknown,
             OGRwkbGeometryType::wkbPoint => WkbType::WkbPoint,
             OGRwkbGeometryType::wkbLineString => WkbType::WkbLinestring,
             OGRwkbGeometryType::wkbPolygon => WkbType::WkbPolygon,
@@ -144,7 +143,7 @@ impl Geometry {
     pub unsafe fn into_c_geometry(mut self) -> OGRGeometryH {
         assert!(self.owned);
         self.owned = false;
-        return self.c_geometry();
+        self.c_geometry()
     }
 
     pub fn set_point_2d(&mut self, i: usize, p: (f64, f64)) {
@@ -162,7 +161,7 @@ impl Geometry {
         let mut y: c_double = 0.;
         let mut z: c_double = 0.;
         unsafe { gdal_sys::OGR_G_GetPoint(self.c_geometry(), i, &mut x, &mut y, &mut z) };
-        return (x as f64, y as f64, z as f64);
+        (x as f64, y as f64, z as f64)
     }
 
     pub fn get_point_vec(&self) -> Vec<(f64, f64, f64)> {
@@ -193,7 +192,7 @@ impl Geometry {
         // get the n-th sub-geometry as a non-owned Geometry; don't keep this
         // object for long.
         let c_geom = gdal_sys::OGR_G_GetGeometryRef(self.c_geometry(), n as c_int);
-        return Geometry::with_c_geometry(c_geom, false);
+        Geometry::with_c_geometry(c_geom, false)
     }
 
     pub fn add_geometry(&mut self, mut sub: Geometry) -> Result<()> {
