@@ -55,7 +55,6 @@ fn main() {
 
     let bindings = builder
         .header("wrapper.h")
-        .prepend_enum_name(false)
         .constified_enum_module(".*")
         .ctypes_prefix("libc")
         .whitelist_function("CPL.*")
