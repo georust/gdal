@@ -1,9 +1,8 @@
 use libc::c_int;
 use utils::{_last_null_pointer_err, _string};
 use vector::layer::Layer;
-use vector::geometry::WkbType;
 use spatial_ref::SpatialRef;
-use gdal_sys::{self, OGRFeatureDefnH, OGRFieldDefnH, OGRFieldType, OGRGeomFieldDefnH};
+use gdal_sys::{self, OGRFeatureDefnH, OGRFieldDefnH, OGRFieldType, OGRwkbGeometryType, OGRGeomFieldDefnH};
 
 use errors::*;
 
@@ -141,9 +140,8 @@ impl<'a> GeomField<'a> {
         _string(rv)
     }
 
-    pub fn field_type(&'a self) -> WkbType {
-        let ogr_type = unsafe { gdal_sys::OGR_GFld_GetType(self.c_field_defn) };
-        WkbType::from_ogr_type(ogr_type)
+    pub fn field_type(&'a self) -> OGRwkbGeometryType::Type {
+        unsafe { gdal_sys::OGR_GFld_GetType(self.c_field_defn) }
     }
 
     pub fn spatial_ref(&'a self) -> Result<SpatialRef> {

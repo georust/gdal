@@ -14,35 +14,6 @@ pub struct Geometry {
     owned: bool,
 }
 
-#[derive(Clone,PartialEq,Debug)]
-pub enum WkbType {
-    WkbUnknown = OGRwkbGeometryType::wkbUnknown as isize,
-    WkbPoint = OGRwkbGeometryType::wkbPoint as isize,
-    WkbLinestring = OGRwkbGeometryType::wkbLineString as isize,
-    WkbPolygon = OGRwkbGeometryType::wkbPolygon as isize,
-    WkbMultipoint = OGRwkbGeometryType::wkbMultiPoint as isize,
-    WkbMultilinestring = OGRwkbGeometryType::wkbMultiLineString as isize,
-    WkbMultipolygon = OGRwkbGeometryType::wkbMultiPolygon as isize,
-    WkbGeometrycollection = OGRwkbGeometryType::wkbGeometryCollection as isize,
-    WkbLinearring = OGRwkbGeometryType::wkbLinearRing as isize,
-}
-
-impl WkbType {
-    pub fn from_ogr_type(ogr_type: OGRwkbGeometryType::Type) -> WkbType {
-        match ogr_type {
-            OGRwkbGeometryType::wkbPoint => WkbType::WkbPoint,
-            OGRwkbGeometryType::wkbLineString => WkbType::WkbLinestring,
-            OGRwkbGeometryType::wkbPolygon => WkbType::WkbPolygon,
-            OGRwkbGeometryType::wkbMultiPoint => WkbType::WkbMultipoint,
-            OGRwkbGeometryType::wkbMultiLineString => WkbType::WkbMultilinestring,
-            OGRwkbGeometryType::wkbMultiPolygon => WkbType::WkbMultipolygon,
-            OGRwkbGeometryType::wkbGeometryCollection => WkbType::WkbGeometrycollection,
-            OGRwkbGeometryType::wkbLinearRing => WkbType::WkbLinearring,
-            _ => WkbType::WkbUnknown
-        }
-    }
-}
-
 impl Geometry {
     pub unsafe fn lazy_feature_geometry() -> Geometry {
         // Geometry objects created with this method map to a Feature's
@@ -178,9 +149,8 @@ impl Geometry {
         Ok(unsafe { Geometry::with_c_geometry(c_geom, true) })
     }
 
-    pub fn geometry_type(&self) -> WkbType {
-        let ogr_type = unsafe { gdal_sys::OGR_G_GetGeometryType(self.c_geometry()) };
-        WkbType::from_ogr_type(ogr_type)
+    pub fn geometry_type(&self) -> OGRwkbGeometryType::Type {
+        unsafe { gdal_sys::OGR_G_GetGeometryType(self.c_geometry()) }
     }
 
     pub fn geometry_count(&self) -> usize {

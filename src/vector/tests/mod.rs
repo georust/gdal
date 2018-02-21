@@ -1,5 +1,5 @@
 use std::path::Path;
-use super::{Driver, Dataset, Feature, FeatureIterator, FieldValue, Geometry, OGRFieldType, WkbType};
+use super::{Driver, Dataset, Feature, FeatureIterator, FieldValue, Geometry, OGRFieldType, OGRwkbGeometryType};
 use spatial_ref::SpatialRef;
 use assert_almost_eq;
 
@@ -109,18 +109,18 @@ fn test_missing_field() {
 fn test_geom_accessors() {
     with_first_feature("roads.geojson", |feature| {
         let geom = feature.geometry();
-        assert_eq!(geom.geometry_type(), WkbType::WkbLinestring);
+        assert_eq!(geom.geometry_type(), OGRwkbGeometryType::wkbLineString);
         let coords = geom.get_point_vec();
         assert_eq!(coords, [(26.1019276, 44.4302748, 0.0), (26.1019382, 44.4303191, 0.0), (26.1020002, 44.4304202, 0.0)]);
         assert_eq!(geom.geometry_count(), 0);
 
         let geom = feature.geometry_by_index(0).unwrap();
-        assert_eq!(geom.geometry_type(), WkbType::WkbLinestring);
+        assert_eq!(geom.geometry_type(), OGRwkbGeometryType::wkbLineString);
         assert!(feature.geometry_by_index(1).is_err());
         let geom = feature.geometry_by_name("");
         assert!(!geom.is_err());
         let geom = feature.geometry_by_name("").unwrap();
-        assert_eq!(geom.geometry_type(), WkbType::WkbLinestring);
+        assert_eq!(geom.geometry_type(), OGRwkbGeometryType::wkbLineString);
         assert!(feature.geometry_by_name("FOO").is_err());
     });
 }
@@ -186,7 +186,7 @@ fn test_geom_fields() {
         .map(|f| (f.name(), f.field_type()))
         .collect::<Vec<_>>();
     let ok_names_types = vec!(
-        ("", WkbType::WkbLinestring))
+        ("", OGRwkbGeometryType::wkbLineString))
         .iter().map(|s| (s.0.to_string(), s.1.clone())).collect::<Vec<_>>();
     assert_eq!(name_list, ok_names_types);
 
