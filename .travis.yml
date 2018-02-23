@@ -19,6 +19,7 @@ rust:
 
 script:
   - cargo test
+  - cargo test --features bindgen
   - cargo doc
 
 after_success: |
