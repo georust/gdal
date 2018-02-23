@@ -2,13 +2,18 @@
 
 fn main() {
 
-    let link_type = "dylib";
     let lib_name = "gdal";
+    let link_type = if env::var_os("GDAL_LIB_STATIC").is_some() {
+        "static"
+    } else {
+        "dylib"
+    };
+    println!("cargo:rerun-if-env-changed=GDAL_LIB_STATIC");
+    println!("cargo:rerun-if-env-changed=GDAL_HOME");
 
     #[cfg(windows)]
     {
         use std::path::Path;
-        use std::env;
 
         // get the path to GDAL_HOME
         let home_path = env::var("GDAL_HOME").expect("Environment variable $GDAL_HOME not found!");
@@ -46,6 +51,9 @@ fn main() {
 
     #[cfg(unix)]
     {
+        if let Ok(home) = env::var("GDAL_HOME") {
+            println!("cargo:rustc-link-search={}", home);
+        }
         println!("cargo:rustc-link-lib={}={}", link_type, lib_name);
     }
 }
