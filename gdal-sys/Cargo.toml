@@ -6,9 +6,12 @@ version = "0.1.1"
 repository = "https://github.com/georust/rust-gdal"
 authors = ["Johannes Drönner <droenner@informatik.uni-marburg.de>"]
 
+[features]
+default = []
+
 [dependencies]
 libc = "0.2"
 
 [build-dependencies]
-bindgen = "0.33.0"
+bindgen = { version = "0.33.0", optional = true }
 pkg-config = "0.3"
