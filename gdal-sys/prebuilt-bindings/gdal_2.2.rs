@@ -579,11 +579,19 @@ fn bindgen_test_layout_tm() {
         )
     );
 }
+/// Int32 type
 pub type GInt32 = libc::c_int;
+/// Unsigned int32 type
 pub type GUInt32 = libc::c_uint;
+/// Int16 type
 pub type GInt16 = libc::c_short;
+/// Unsigned byte type
 pub type GByte = libc::c_uchar;
+/// Large signed integer type (generally 64-bit integer type).
+/// Use GInt64 when exactly 64 bit is needed
 pub type GIntBig = libc::c_longlong;
+/// Large unsigned integer type (generally 64-bit unsigned integer type).
+/// Use GUInt64 when exactly 64 bit is needed
 pub type GUIntBig = libc::c_ulonglong;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -768,6 +776,7 @@ fn bindgen_test_layout_stat() {
     );
 }
 extern "C" {
+    /// @cond Doxygen_Suppress
     pub fn VSIFOpen(arg1: *const libc::c_char, arg2: *const libc::c_char) -> *mut FILE;
 }
 extern "C" {
@@ -817,11 +826,14 @@ extern "C" {
 extern "C" {
     pub fn VSIFEof(arg1: *mut FILE) -> libc::c_int;
 }
+/// @cond Doxygen_Suppress
 pub type VSIStatBuf = stat;
 extern "C" {
     pub fn VSIStat(arg1: *const libc::c_char, arg2: *mut VSIStatBuf) -> libc::c_int;
 }
+/// Type for a file offset
 pub type vsi_l_offset = GUIntBig;
+/// Opaque type for a FILE that implements the VSIVirtualHandle API
 pub type VSILFILE = FILE;
 extern "C" {
     pub fn VSIFOpenL(arg1: *const libc::c_char, arg2: *const libc::c_char) -> *mut VSILFILE;
@@ -886,9 +898,13 @@ extern "C" {
     pub fn VSIFPutcL(arg1: libc::c_int, arg2: *mut VSILFILE) -> libc::c_int;
 }
 pub mod VSIRangeStatus {
+    /// Range status
     pub type Type = u32;
+    /// < Unknown
     pub const VSI_RANGE_STATUS_UNKNOWN: Type = 0;
+    /// < Data present
     pub const VSI_RANGE_STATUS_DATA: Type = 1;
+    /// < Hole
     pub const VSI_RANGE_STATUS_HOLE: Type = 2;
 }
 extern "C" {
@@ -912,6 +928,7 @@ extern "C" {
 pub struct stat64 {
     _unused: [u8; 0],
 }
+/// Type for VSIStatL()
 pub type VSIStatBufL = stat64;
 extern "C" {
     pub fn VSIStatL(arg1: *const libc::c_char, arg2: *mut VSIStatBufL) -> libc::c_int;
@@ -964,12 +981,23 @@ extern "C" {
     ) -> *mut libc::c_void;
 }
 extern "C" {
+    /// VSIMalloc2 allocates (nSize1 * nSize2) bytes.
+    /// In case of overflow of the multiplication, or if memory allocation fails, a
+    /// NULL pointer is returned and a CE_Failure error is raised with CPLError().
+    /// If nSize1 == 0 || nSize2 == 0, a NULL pointer will also be returned.
+    /// CPLFree() or VSIFree() can be used to free memory allocated by this function.
     pub fn VSIMalloc2(nSize1: usize, nSize2: usize) -> *mut libc::c_void;
 }
 extern "C" {
+    /// VSIMalloc3 allocates (nSize1 * nSize2 * nSize3) bytes.
+    /// In case of overflow of the multiplication, or if memory allocation fails, a
+    /// NULL pointer is returned and a CE_Failure error is raised with CPLError().
+    /// If nSize1 == 0 || nSize2 == 0 || nSize3 == 0, a NULL pointer will also be returned.
+    /// CPLFree() or VSIFree() can be used to free memory allocated by this function.
     pub fn VSIMalloc3(nSize1: usize, nSize2: usize, nSize3: usize) -> *mut libc::c_void;
 }
 extern "C" {
+    /// VSIMallocVerbose
     pub fn VSIMallocVerbose(
         nSize: usize,
         pszFile: *const libc::c_char,
@@ -977,6 +1005,7 @@ extern "C" {
     ) -> *mut libc::c_void;
 }
 extern "C" {
+    /// VSIMalloc2Verbose
     pub fn VSIMalloc2Verbose(
         nSize1: usize,
         nSize2: usize,
@@ -985,6 +1014,7 @@ extern "C" {
     ) -> *mut libc::c_void;
 }
 extern "C" {
+    /// VSIMalloc3Verbose
     pub fn VSIMalloc3Verbose(
         nSize1: usize,
         nSize2: usize,
@@ -994,6 +1024,7 @@ extern "C" {
     ) -> *mut libc::c_void;
 }
 extern "C" {
+    /// VSICallocVerbose
     pub fn VSICallocVerbose(
         nCount: usize,
         nSize: usize,
@@ -1002,6 +1033,7 @@ extern "C" {
     ) -> *mut libc::c_void;
 }
 extern "C" {
+    /// VSIReallocVerbose
     pub fn VSIReallocVerbose(
         pOldPtr: *mut libc::c_void,
         nNewSize: usize,
@@ -1010,6 +1042,7 @@ extern "C" {
     ) -> *mut libc::c_void;
 }
 extern "C" {
+    /// VSIStrdupVerbose
     pub fn VSIStrdupVerbose(
         pszStr: *const libc::c_char,
         pszFile: *const libc::c_char,
@@ -1056,9 +1089,11 @@ extern "C" {
     pub fn VSIInstallMemFileHandler();
 }
 extern "C" {
+    /// @cond Doxygen_Suppress
     pub fn VSIInstallLargeFileHandler();
 }
 extern "C" {
+    /// @endcond
     pub fn VSIInstallSubFileHandler();
 }
 extern "C" {
@@ -1107,9 +1142,11 @@ extern "C" {
     pub fn VSISetCryptKey(pabyKey: *const GByte, nKeySize: libc::c_int);
 }
 extern "C" {
+    /// @cond Doxygen_Suppress
     pub fn VSICleanupFileManager();
 }
 extern "C" {
+    /// @endcond
     pub fn VSIFileFromMemBuffer(
         pszFilename: *const libc::c_char,
         pabyData: *mut GByte,
@@ -1124,6 +1161,7 @@ extern "C" {
         bUnlinkAndSeize: libc::c_int,
     ) -> *mut GByte;
 }
+/// Callback used by VSIStdoutSetRedirection()
 pub type VSIWriteFunction = ::std::option::Option<
     unsafe extern "C" fn(ptr: *const libc::c_void, size: usize, nmemb: usize, stream: *mut FILE)
         -> usize,
@@ -1132,6 +1170,7 @@ extern "C" {
     pub fn VSIStdoutSetRedirection(pFct: VSIWriteFunction, stream: *mut FILE);
 }
 extern "C" {
+    /// @cond Doxygen_Suppress
     pub fn VSITime(arg1: *mut libc::c_ulong) -> libc::c_ulong;
 }
 extern "C" {
@@ -1144,6 +1183,7 @@ extern "C" {
     pub fn VSILocalTime(pnTime: *const time_t, poBrokenTime: *mut tm) -> *mut tm;
 }
 pub mod CPLErr {
+    /// Error category
     pub type Type = u32;
     pub const CE_None: Type = 0;
     pub const CE_Debug: Type = 1;
@@ -1151,6 +1191,7 @@ pub mod CPLErr {
     pub const CE_Failure: Type = 3;
     pub const CE_Fatal: Type = 4;
 }
+/// Error number
 pub type CPLErrorNum = libc::c_int;
 extern "C" {
     pub fn CPLError(eErrClass: CPLErr::Type, err_no: CPLErrorNum, fmt: *const libc::c_char, ...);
@@ -1189,8 +1230,10 @@ extern "C" {
     );
 }
 extern "C" {
+    /// @cond Doxygen_Suppress
     pub fn CPLCleanupErrorMutex();
 }
+/// Callback for a custom error handler
 pub type CPLErrorHandler = ::std::option::Option<
     unsafe extern "C" fn(arg1: CPLErr::Type, arg2: CPLErrorNum, arg3: *const libc::c_char),
 >;
@@ -1228,9 +1271,11 @@ extern "C" {
     pub fn CPLDebug(arg1: *const libc::c_char, arg2: *const libc::c_char, ...);
 }
 extern "C" {
+    /// @cond Doxygen_Suppress
     pub fn CPLVerifyConfiguration();
 }
 extern "C" {
+    /// @endcond
     pub fn CPLGetConfigOption(
         arg1: *const libc::c_char,
         arg2: *const libc::c_char,
@@ -1252,9 +1297,11 @@ extern "C" {
     );
 }
 extern "C" {
+    /// @cond Doxygen_Suppress
     pub fn CPLFreeConfig();
 }
 extern "C" {
+    /// @endcond
     pub fn CPLGetConfigOptions() -> *mut *mut libc::c_char;
 }
 extern "C" {
@@ -1493,6 +1540,7 @@ extern "C" {
 extern "C" {
     pub fn CPLExpandTilde(pszFilename: *const libc::c_char) -> *const libc::c_char;
 }
+/// Callback for CPLPushFileFinder
 pub type CPLFileFinder = ::std::option::Option<
     unsafe extern "C" fn(arg1: *const libc::c_char, arg2: *const libc::c_char)
         -> *const libc::c_char,
@@ -1527,13 +1575,19 @@ extern "C" {
 extern "C" {
     pub fn CPLStat(arg1: *const libc::c_char, arg2: *mut VSIStatBuf) -> libc::c_int;
 }
+/// Information on a shared file
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct CPLSharedFileInfo {
+    /// < File pointer
     pub fp: *mut FILE,
+    /// < Reference counter
     pub nRefCount: libc::c_int,
+    /// < Whether fp must be interpreted as VSIFILE*
     pub bLarge: libc::c_int,
+    /// < Filename
     pub pszFilename: *mut libc::c_char,
+    /// < Access mode
     pub pszAccess: *mut libc::c_char,
 }
 #[test]
@@ -1616,9 +1670,11 @@ extern "C" {
     pub fn CPLDumpSharedList(arg1: *mut FILE);
 }
 extern "C" {
+    /// @cond Doxygen_Suppress
     pub fn CPLCleanupSharedFileMutex();
 }
 extern "C" {
+    /// @endcond
     pub fn CPLDMSToDec(is: *const libc::c_char) -> f64;
 }
 extern "C" {
@@ -1666,6 +1722,7 @@ extern "C" {
     ) -> libc::c_int;
 }
 extern "C" {
+    /// @endcond
     pub fn CPLCreateZip(
         pszZipFilename: *const libc::c_char,
         papszOptions: *mut *mut libc::c_char,
@@ -1721,6 +1778,7 @@ extern "C" {
     pub fn CPLsetlocale(category: libc::c_int, locale: *const libc::c_char) -> *mut libc::c_char;
 }
 extern "C" {
+    /// @cond Doxygen_Suppress
     pub fn CPLCleanupSetlocaleMutex();
 }
 pub type GDALProgressFunc = ::std::option::Option<
@@ -1767,6 +1825,15 @@ extern "C" {
 pub struct CPLVirtualMem {
     _unused: [u8; 0],
 }
+/// Callback triggered when a still unmapped page of virtual memory is accessed.
+/// The callback has the responsibility of filling the page with relevant values
+///
+/// @param ctxt virtual memory handle.
+/// @param nOffset offset of the page in the memory mapping.
+/// @param pPageToFill address of the page to fill. Note that the address might
+/// be a temporary location, and not at CPLVirtualMemGetAddr() + nOffset.
+/// @param nToFill number of bytes of the page.
+/// @param pUserData user data that was passed to CPLVirtualMemNew().
 pub type CPLVirtualMemCachePageCbk = ::std::option::Option<
     unsafe extern "C" fn(
         ctxt: *mut CPLVirtualMem,
@@ -1776,6 +1843,15 @@ pub type CPLVirtualMemCachePageCbk = ::std::option::Option<
         pUserData: *mut libc::c_void,
     ),
 >;
+/// Callback triggered when a dirty mapped page is going to be freed.
+/// (saturation of cache, or termination of the virtual memory mapping).
+///
+/// @param ctxt virtual memory handle.
+/// @param nOffset offset of the page in the memory mapping.
+/// @param pPageToBeEvicted address of the page that will be flushed. Note that the address might
+/// be a temporary location, and not at CPLVirtualMemGetAddr() + nOffset.
+/// @param nToBeEvicted number of bytes of the page.
+/// @param pUserData user data that was passed to CPLVirtualMemNew().
 pub type CPLVirtualMemUnCachePageCbk = ::std::option::Option<
     unsafe extern "C" fn(
         ctxt: *mut CPLVirtualMem,
@@ -1785,18 +1861,74 @@ pub type CPLVirtualMemUnCachePageCbk = ::std::option::Option<
         pUserData: *mut libc::c_void,
     ),
 >;
+/// Callback triggered when a virtual memory mapping is destroyed.
+/// @param pUserData user data that was passed to CPLVirtualMemNew().
 pub type CPLVirtualMemFreeUserData =
     ::std::option::Option<unsafe extern "C" fn(pUserData: *mut libc::c_void)>;
 pub mod CPLVirtualMemAccessMode {
+    /// Access mode of a virtual memory mapping.
     pub type Type = u32;
+    /// The mapping is meant at being read-only, but writes will not be prevented.
+    /// Note that any content written will be lost.
     pub const VIRTUALMEM_READONLY: Type = 0;
+    /// The mapping is meant at being read-only, and this will be enforced
+    /// through the operating system page protection mechanism.
     pub const VIRTUALMEM_READONLY_ENFORCED: Type = 1;
+    /// The mapping is meant at being read-write, and modified pages can be saved
+    /// thanks to the pfnUnCachePage callback
     pub const VIRTUALMEM_READWRITE: Type = 2;
 }
 extern "C" {
+    /// Return the size of a page of virtual memory.
+    ///
+    /// @return the page size.
+    ///
+    /// @since GDAL 1.11
     pub fn CPLGetPageSize() -> usize;
 }
 extern "C" {
+    /// Create a new virtual memory mapping.
+    ///
+    /// This will reserve an area of virtual memory of size nSize, whose size
+    /// might be potentially much larger than the physical memory available. Initially,
+    /// no physical memory will be allocated. As soon as memory pages will be accessed,
+    /// they will be allocated transparently and filled with the pfnCachePage callback.
+    /// When the allowed cache size is reached, the least recently used pages will
+    /// be unallocated.
+    ///
+    /// On Linux AMD64 platforms, the maximum value for nSize is 128 TB.
+    /// On Linux x86 platforms, the maximum value for nSize is 2 GB.
+    ///
+    /// Only supported on Linux for now.
+    ///
+    /// Note that on Linux, this function will install a SIGSEGV handler. The
+    /// original handler will be restored by CPLVirtualMemManagerTerminate().
+    ///
+    /// @param nSize size in bytes of the virtual memory mapping.
+    /// @param nCacheSize   size in bytes of the maximum memory that will be really
+    /// allocated (must ideally fit into RAM).
+    /// @param nPageSizeHint hint for the page size. Must be a multiple of the
+    /// system page size, returned by CPLGetPageSize().
+    /// Minimum value is generally 4096. Might be set to 0 to
+    /// let the function determine a default page size.
+    /// @param bSingleThreadUsage set to TRUE if there will be no concurrent threads
+    /// that will access the virtual memory mapping. This can
+    /// optimize performance a bit.
+    /// @param eAccessMode permission to use for the virtual memory mapping.
+    /// @param pfnCachePage callback triggered when a still unmapped page of virtual
+    /// memory is accessed. The callback has the responsibility
+    /// of filling the page with relevant values.
+    /// @param pfnUnCachePage callback triggered when a dirty mapped page is going to
+    /// be freed (saturation of cache, or termination of the
+    /// virtual memory mapping). Might be NULL.
+    /// @param pfnFreeUserData callback that can be used to free pCbkUserData. Might be
+    /// NULL
+    /// @param pCbkUserData user data passed to pfnCachePage and pfnUnCachePage.
+    ///
+    /// @return a virtual memory object that must be freed by CPLVirtualMemFree(),
+    /// or NULL in case of failure.
+    ///
+    /// @since GDAL 1.11
     pub fn CPLVirtualMemNew(
         nSize: usize,
         nCacheSize: usize,
@@ -1810,9 +1942,38 @@ extern "C" {
     ) -> *mut CPLVirtualMem;
 }
 extern "C" {
+    /// Return if virtual memory mapping of a file is available.
+    ///
+    /// @return TRUE if virtual memory mapping of a file is available.
+    /// @since GDAL 1.11
     pub fn CPLIsVirtualMemFileMapAvailable() -> libc::c_int;
 }
 extern "C" {
+    /// Create a new virtual memory mapping from a file.
+    ///
+    /// The file must be a "real" file recognized by the operating system, and not
+    /// a VSI extended virtual file.
+    ///
+    /// In VIRTUALMEM_READWRITE mode, updates to the memory mapping will be written
+    /// in the file.
+    ///
+    /// On Linux AMD64 platforms, the maximum value for nLength is 128 TB.
+    /// On Linux x86 platforms, the maximum value for nLength is 2 GB.
+    ///
+    /// Supported on Linux only in GDAL <= 2.0, and all POSIX systems supporting
+    /// mmap() in GDAL >= 2.1
+    ///
+    /// @param  fp       Virtual file handle.
+    /// @param  nOffset  Offset in the file to start the mapping from.
+    /// @param  nLength  Length of the portion of the file to map into memory.
+    /// @param eAccessMode Permission to use for the virtual memory mapping. This must
+    /// be consistent with how the file has been opened.
+    /// @param pfnFreeUserData callback that is called when the object is destroyed.
+    /// @param pCbkUserData user data passed to pfnFreeUserData.
+    /// @return a virtual memory object that must be freed by CPLVirtualMemFree(),
+    /// or NULL in case of failure.
+    ///
+    /// @since GDAL 1.11
     pub fn CPLVirtualMemFileMapNew(
         fp: *mut VSILFILE,
         nOffset: vsi_l_offset,
@@ -1823,6 +1984,24 @@ extern "C" {
     ) -> *mut CPLVirtualMem;
 }
 extern "C" {
+    /// Create a new virtual memory mapping derived from an other virtual memory
+    /// mapping.
+    ///
+    /// This may be useful in case of creating mapping for pixel interleaved data.
+    ///
+    /// The new mapping takes a reference on the base mapping.
+    ///
+    /// @param pVMemBase Base virtual memory mapping
+    /// @param nOffset   Offset in the base virtual memory mapping from which to start
+    /// the new mapping.
+    /// @param nSize     Size of the base virtual memory mapping to expose in the
+    /// the new mapping.
+    /// @param pfnFreeUserData callback that is called when the object is destroyed.
+    /// @param pCbkUserData user data passed to pfnFreeUserData.
+    /// @return a virtual memory object that must be freed by CPLVirtualMemFree(),
+    /// or NULL in case of failure.
+    ///
+    /// @since GDAL 1.11
     pub fn CPLVirtualMemDerivedNew(
         pVMemBase: *mut CPLVirtualMem,
         nOffset: vsi_l_offset,
@@ -1832,33 +2011,138 @@ extern "C" {
     ) -> *mut CPLVirtualMem;
 }
 extern "C" {
+    /// Free a virtual memory mapping.
+    ///
+    /// The pointer returned by CPLVirtualMemGetAddr() will no longer be valid.
+    /// If the virtual memory mapping was created with read/write permissions and that
+    /// they are dirty (i.e. modified) pages, they will be flushed through the
+    /// pfnUnCachePage callback before being freed.
+    ///
+    /// @param ctxt context returned by CPLVirtualMemNew().
+    ///
+    /// @since GDAL 1.11
     pub fn CPLVirtualMemFree(ctxt: *mut CPLVirtualMem);
 }
 extern "C" {
+    /// Return the pointer to the start of a virtual memory mapping.
+    ///
+    /// The bytes in the range [p:p+CPLVirtualMemGetSize()-1] where p is the pointer
+    /// returned by this function will be valid, until CPLVirtualMemFree() is called.
+    ///
+    /// Note that if a range of bytes used as an argument of a system call
+    /// (such as read() or write()) contains pages that have not been "realized", the
+    /// system call will fail with EFAULT. CPLVirtualMemPin() can be used to work
+    /// around this issue.
+    ///
+    /// @param ctxt context returned by CPLVirtualMemNew().
+    /// @return the pointer to the start of a virtual memory mapping.
+    ///
+    /// @since GDAL 1.11
     pub fn CPLVirtualMemGetAddr(ctxt: *mut CPLVirtualMem) -> *mut libc::c_void;
 }
 extern "C" {
+    /// Return the size of the virtual memory mapping.
+    ///
+    /// @param ctxt context returned by CPLVirtualMemNew().
+    /// @return the size of the virtual memory mapping.
+    ///
+    /// @since GDAL 1.11
     pub fn CPLVirtualMemGetSize(ctxt: *mut CPLVirtualMem) -> usize;
 }
 extern "C" {
+    /// Return if the virtual memory mapping is a direct file mapping.
+    ///
+    /// @param ctxt context returned by CPLVirtualMemNew().
+    /// @return TRUE if the virtual memory mapping is a direct file mapping.
+    ///
+    /// @since GDAL 1.11
     pub fn CPLVirtualMemIsFileMapping(ctxt: *mut CPLVirtualMem) -> libc::c_int;
 }
 extern "C" {
+    /// Return the access mode of the virtual memory mapping.
+    ///
+    /// @param ctxt context returned by CPLVirtualMemNew().
+    /// @return the access mode of the virtual memory mapping.
+    ///
+    /// @since GDAL 1.11
     pub fn CPLVirtualMemGetAccessMode(ctxt: *mut CPLVirtualMem) -> CPLVirtualMemAccessMode::Type;
 }
 extern "C" {
+    /// Return the page size associated to a virtual memory mapping.
+    ///
+    /// The value returned will be at least CPLGetPageSize(), but potentially
+    /// larger.
+    ///
+    /// @param ctxt context returned by CPLVirtualMemNew().
+    /// @return the page size
+    ///
+    /// @since GDAL 1.11
     pub fn CPLVirtualMemGetPageSize(ctxt: *mut CPLVirtualMem) -> usize;
 }
 extern "C" {
+    /// Return TRUE if this memory mapping can be accessed safely from concurrent
+    /// threads.
+    ///
+    /// The situation that can cause problems is when several threads try to access
+    /// a page of the mapping that is not yet mapped.
+    ///
+    /// The return value of this function depends on whether bSingleThreadUsage has
+    /// been set of not in CPLVirtualMemNew() and/or the implementation.
+    ///
+    /// On Linux, this will always return TRUE if bSingleThreadUsage = FALSE.
+    ///
+    /// @param ctxt context returned by CPLVirtualMemNew().
+    /// @return TRUE if this memory mapping can be accessed safely from concurrent
+    /// threads.
+    ///
+    /// @since GDAL 1.11
     pub fn CPLVirtualMemIsAccessThreadSafe(ctxt: *mut CPLVirtualMem) -> libc::c_int;
 }
 extern "C" {
+    /// Declare that a thread will access a virtual memory mapping.
+    ///
+    /// This function must be called by a thread that wants to access the
+    /// content of a virtual memory mapping, except if the virtual memory mapping has
+    /// been created with bSingleThreadUsage = TRUE.
+    ///
+    /// This function must be paired with CPLVirtualMemUnDeclareThread().
+    ///
+    /// @param ctxt context returned by CPLVirtualMemNew().
+    ///
+    /// @since GDAL 1.11
     pub fn CPLVirtualMemDeclareThread(ctxt: *mut CPLVirtualMem);
 }
 extern "C" {
+    /// Declare that a thread will stop accessing a virtual memory mapping.
+    ///
+    /// This function must be called by a thread that will no longer access the
+    /// content of a virtual memory mapping, except if the virtual memory mapping has
+    /// been created with bSingleThreadUsage = TRUE.
+    ///
+    /// This function must be paired with CPLVirtualMemDeclareThread().
+    ///
+    /// @param ctxt context returned by CPLVirtualMemNew().
+    ///
+    /// @since GDAL 1.11
     pub fn CPLVirtualMemUnDeclareThread(ctxt: *mut CPLVirtualMem);
 }
 extern "C" {
+    /// Make sure that a region of virtual memory will be realized.
+    ///
+    /// Calling this function is not required, but might be useful when debugging
+    /// a process with tools like gdb or valgrind that do not naturally like
+    /// segmentation fault signals.
+    ///
+    /// It is also needed when wanting to provide part of virtual memory mapping
+    /// to a system call such as read() or write(). If read() or write() is called
+    /// on a memory region not yet realized, the call will fail with EFAULT.
+    ///
+    /// @param ctxt context returned by CPLVirtualMemNew().
+    /// @param pAddr the memory region to pin.
+    /// @param nSize the size of the memory region.
+    /// @param bWriteOp set to TRUE if the memory are will be accessed in write mode.
+    ///
+    /// @since GDAL 1.11
     pub fn CPLVirtualMemPin(
         ctxt: *mut CPLVirtualMem,
         pAddr: *mut libc::c_void,
@@ -1867,22 +2151,79 @@ extern "C" {
     );
 }
 extern "C" {
+    /// Cleanup any resource and handlers related to virtual memory.
+    ///
+    /// This function must be called after the last CPLVirtualMem object has
+    /// been freed.
+    ///
+    /// @since GDAL 2.0
     pub fn CPLVirtualMemManagerTerminate();
 }
 pub mod CPLXMLNodeType {
+    /// XML node type
     pub type Type = u32;
+    /// Node is an element
     pub const CXT_Element: Type = 0;
+    /// Node is a raw text value
     pub const CXT_Text: Type = 1;
+    /// Node is attribute
     pub const CXT_Attribute: Type = 2;
+    /// Node is an XML comment.
     pub const CXT_Comment: Type = 3;
+    /// Node is a special literal
     pub const CXT_Literal: Type = 4;
 }
+/// Document node structure.
+///
+/// This C structure is used to hold a single text fragment representing a
+/// component of the document when parsed.   It should be allocated with the
+/// appropriate CPL function, and freed with CPLDestroyXMLNode().  The structure
+/// contents should not normally be altered by application code, but may be
+/// freely examined by application code.
+///
+/// Using the psChild and psNext pointers, a hierarchical tree structure
+/// for a document can be represented as a tree of CPLXMLNode structures.
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct CPLXMLNode {
+    /// \brief Node type
+    ///
+    /// One of CXT_Element, CXT_Text, CXT_Attribute, CXT_Comment,
+    /// or CXT_Literal.
     pub eType: CPLXMLNodeType::Type,
+    /// \brief Node value
+    ///
+    /// For CXT_Element this is the name of the element, without the angle
+    /// brackets.  Note there is a single CXT_Element even when the document
+    /// contains a start and end element tag.  The node represents the pair.
+    /// All text or other elements between the start and end tag will appear
+    /// as children nodes of this CXT_Element node.
+    ///
+    /// For CXT_Attribute the pszValue is the attribute name.  The value of
+    /// the attribute will be a CXT_Text child.
+    ///
+    /// For CXT_Text this is the text itself (value of an attribute, or a
+    /// text fragment between an element start and end tags.
+    ///
+    /// For CXT_Literal it is all the literal text.  Currently this is just
+    /// used for !DOCTYPE lines, and the value would be the entire line.
+    ///
+    /// For CXT_Comment the value is all the literal text within the comment,
+    /// but not including the comment start/end indicators ("<--" and "-->").
     pub pszValue: *mut libc::c_char,
+    /// \brief Next sibling.
+    ///
+    /// Pointer to next sibling, that is the next node appearing after this
+    /// one that has the same parent as this node.  NULL if this node is the
+    /// last child of the parent element.
     pub psNext: *mut CPLXMLNode,
+    /// \brief Child node.
+    ///
+    /// Pointer to first child node, if any.  Only CXT_Element and CXT_Attribute
+    /// nodes should have children.  For CXT_Attribute it should be a single
+    /// CXT_Text value node, while CXT_Element can have any kind of child.
+    /// The full list of children for a node are identified by walking the
+    /// psNext's starting with the psChild node.
     pub psChild: *mut CPLXMLNode,
 }
 #[test]
@@ -2167,6 +2508,7 @@ fn bindgen_test_layout_OGREnvelope3D() {
     );
 }
 extern "C" {
+    /// @cond Doxygen_Suppress
     pub fn OGRMalloc(arg1: usize) -> *mut libc::c_void;
 }
 extern "C" {
@@ -2182,90 +2524,184 @@ extern "C" {
     pub fn OGRFree(arg1: *mut libc::c_void);
 }
 pub mod OGRErr {
+    /// Type for a OGR error
     pub type Type = u32;
+    /// < Success
     pub const OGRERR_NONE: Type = 0;
+    /// < Not enough data to deserialize
     pub const OGRERR_NOT_ENOUGH_DATA: Type = 1;
+    /// < Not enough memory
     pub const OGRERR_NOT_ENOUGH_MEMORY: Type = 2;
+    /// < Unsupported geometry type
     pub const OGRERR_UNSUPPORTED_GEOMETRY_TYPE: Type = 3;
+    /// < Unsupported operation
     pub const OGRERR_UNSUPPORTED_OPERATION: Type = 4;
+    /// < Corrupt data
     pub const OGRERR_CORRUPT_DATA: Type = 5;
+    /// < Failure
     pub const OGRERR_FAILURE: Type = 6;
+    /// < Unsupported SRS
     pub const OGRERR_UNSUPPORTED_SRS: Type = 7;
+    /// < Invalid handle
     pub const OGRERR_INVALID_HANDLE: Type = 8;
+    /// < Non existing feature. Added in GDAL 2.0
     pub const OGRERR_NON_EXISTING_FEATURE: Type = 9;
 }
 pub mod OGRwkbGeometryType {
+    /// List of well known binary geometry types.  These are used within the BLOBs
+    /// but are also returned from OGRGeometry::getGeometryType() to identify the
+    /// type of a geometry object.
     pub type Type = u32;
+    /// < unknown type, non-standard
     pub const wkbUnknown: Type = 0;
+    /// < 0-dimensional geometric object, standard WKB
     pub const wkbPoint: Type = 1;
+    /// < 1-dimensional geometric object with linear
+    /// interpolation between Points, standard WKB
     pub const wkbLineString: Type = 2;
+    /// < planar 2-dimensional geometric object defined
+    /// by 1 exterior boundary and 0 or more interior
+    /// boundaries, standard WKB
     pub const wkbPolygon: Type = 3;
+    /// < GeometryCollection of Points, standard WKB
     pub const wkbMultiPoint: Type = 4;
+    /// < GeometryCollection of LineStrings, standard WKB
     pub const wkbMultiLineString: Type = 5;
+    /// < GeometryCollection of Polygons, standard WKB
     pub const wkbMultiPolygon: Type = 6;
+    /// < geometric object that is a collection of 1
+    /// or more geometric objects, standard WKB
     pub const wkbGeometryCollection: Type = 7;
+    /// < one or more circular arc segments connected end to end,
+    /// ISO SQL/MM Part 3. GDAL &gt;= 2.0
     pub const wkbCircularString: Type = 8;
+    /// < sequence of contiguous curves, ISO SQL/MM Part 3. GDAL &gt;= 2.0
     pub const wkbCompoundCurve: Type = 9;
+    /// < planar surface, defined by 1 exterior boundary
+    /// and zero or more interior boundaries, that are curves.
+    /// ISO SQL/MM Part 3. GDAL &gt;= 2.0
     pub const wkbCurvePolygon: Type = 10;
+    /// < GeometryCollection of Curves, ISO SQL/MM Part 3. GDAL &gt;= 2.0
     pub const wkbMultiCurve: Type = 11;
+    /// < GeometryCollection of Surfaces, ISO SQL/MM Part 3. GDAL &gt;= 2.0
     pub const wkbMultiSurface: Type = 12;
+    /// < Curve (abstract type). ISO SQL/MM Part 3. GDAL &gt;= 2.1
     pub const wkbCurve: Type = 13;
+    /// < Surface (abstract type). ISO SQL/MM Part 3. GDAL &gt;= 2.1
     pub const wkbSurface: Type = 14;
+    /// < a contiguous collection of polygons, which share common boundary segments,
+    /// ISO SQL/MM Part 3. Reserved in GDAL &gt;= 2.1 but not yet implemented
     pub const wkbPolyhedralSurface: Type = 15;
+    /// < a PolyhedralSurface consisting only of Triangle patches
+    /// ISO SQL/MM Part 3. Reserved in GDAL &gt;= 2.1 but not yet implemented
     pub const wkbTIN: Type = 16;
+    /// < a Triangle. ISO SQL/MM Part 3. Reserved in GDAL &gt;= 2.1 but not yet implemented
     pub const wkbTriangle: Type = 17;
+    /// < non-standard, for pure attribute records
     pub const wkbNone: Type = 100;
+    /// < non-standard, just for createGeometry()
     pub const wkbLinearRing: Type = 101;
+    /// < wkbCircularString with Z component. ISO SQL/MM Part 3. GDAL &gt;= 2.0
     pub const wkbCircularStringZ: Type = 1008;
+    /// < wkbCompoundCurve with Z component. ISO SQL/MM Part 3. GDAL &gt;= 2.0
     pub const wkbCompoundCurveZ: Type = 1009;
+    /// < wkbCurvePolygon with Z component. ISO SQL/MM Part 3. GDAL &gt;= 2.0
     pub const wkbCurvePolygonZ: Type = 1010;
+    /// < wkbMultiCurve with Z component. ISO SQL/MM Part 3. GDAL &gt;= 2.0
     pub const wkbMultiCurveZ: Type = 1011;
+    /// < wkbMultiSurface with Z component. ISO SQL/MM Part 3. GDAL &gt;= 2.0
     pub const wkbMultiSurfaceZ: Type = 1012;
+    /// < wkbCurve with Z component. ISO SQL/MM Part 3. GDAL &gt;= 2.1
     pub const wkbCurveZ: Type = 1013;
+    /// < wkbSurface with Z component. ISO SQL/MM Part 3. GDAL &gt;= 2.1
     pub const wkbSurfaceZ: Type = 1014;
+    /// < ISO SQL/MM Part 3. Reserved in GDAL &gt;= 2.1 but not yet implemented
     pub const wkbPolyhedralSurfaceZ: Type = 1015;
+    /// < ISO SQL/MM Part 3. Reserved in GDAL &gt;= 2.1 but not yet implemented
     pub const wkbTINZ: Type = 1016;
+    /// < ISO SQL/MM Part 3. Reserved in GDAL &gt;= 2.1 but not yet implemented
     pub const wkbTriangleZ: Type = 1017;
+    /// < ISO SQL/MM Part 3. GDAL &gt;= 2.1
     pub const wkbPointM: Type = 2001;
+    /// < ISO SQL/MM Part 3. GDAL &gt;= 2.1
     pub const wkbLineStringM: Type = 2002;
+    /// < ISO SQL/MM Part 3. GDAL &gt;= 2.1
     pub const wkbPolygonM: Type = 2003;
+    /// < ISO SQL/MM Part 3. GDAL &gt;= 2.1
     pub const wkbMultiPointM: Type = 2004;
+    /// < ISO SQL/MM Part 3. GDAL &gt;= 2.1
     pub const wkbMultiLineStringM: Type = 2005;
+    /// < ISO SQL/MM Part 3. GDAL &gt;= 2.1
     pub const wkbMultiPolygonM: Type = 2006;
+    /// < ISO SQL/MM Part 3. GDAL &gt;= 2.1
     pub const wkbGeometryCollectionM: Type = 2007;
+    /// < ISO SQL/MM Part 3. GDAL &gt;= 2.1
     pub const wkbCircularStringM: Type = 2008;
+    /// < ISO SQL/MM Part 3. GDAL &gt;= 2.1
     pub const wkbCompoundCurveM: Type = 2009;
+    /// < ISO SQL/MM Part 3. GDAL &gt;= 2.1
     pub const wkbCurvePolygonM: Type = 2010;
+    /// < ISO SQL/MM Part 3. GDAL &gt;= 2.1
     pub const wkbMultiCurveM: Type = 2011;
+    /// < ISO SQL/MM Part 3. GDAL &gt;= 2.1
     pub const wkbMultiSurfaceM: Type = 2012;
+    /// < ISO SQL/MM Part 3. GDAL &gt;= 2.1
     pub const wkbCurveM: Type = 2013;
+    /// < ISO SQL/MM Part 3. GDAL &gt;= 2.1
     pub const wkbSurfaceM: Type = 2014;
+    /// < ISO SQL/MM Part 3. Reserved in GDAL &gt;= 2.1 but not yet implemented
     pub const wkbPolyhedralSurfaceM: Type = 2015;
+    /// < ISO SQL/MM Part 3. Reserved in GDAL &gt;= 2.1 but not yet implemented
     pub const wkbTINM: Type = 2016;
+    /// < ISO SQL/MM Part 3. Reserved in GDAL &gt;= 2.1 but not yet implemented
     pub const wkbTriangleM: Type = 2017;
+    /// < ISO SQL/MM Part 3. GDAL &gt;= 2.1
     pub const wkbPointZM: Type = 3001;
+    /// < ISO SQL/MM Part 3. GDAL &gt;= 2.1
     pub const wkbLineStringZM: Type = 3002;
+    /// < ISO SQL/MM Part 3. GDAL &gt;= 2.1
     pub const wkbPolygonZM: Type = 3003;
+    /// < ISO SQL/MM Part 3. GDAL &gt;= 2.1
     pub const wkbMultiPointZM: Type = 3004;
+    /// < ISO SQL/MM Part 3. GDAL &gt;= 2.1
     pub const wkbMultiLineStringZM: Type = 3005;
+    /// < ISO SQL/MM Part 3. GDAL &gt;= 2.1
     pub const wkbMultiPolygonZM: Type = 3006;
+    /// < ISO SQL/MM Part 3. GDAL &gt;= 2.1
     pub const wkbGeometryCollectionZM: Type = 3007;
+    /// < ISO SQL/MM Part 3. GDAL &gt;= 2.1
     pub const wkbCircularStringZM: Type = 3008;
+    /// < ISO SQL/MM Part 3. GDAL &gt;= 2.1
     pub const wkbCompoundCurveZM: Type = 3009;
+    /// < ISO SQL/MM Part 3. GDAL &gt;= 2.1
     pub const wkbCurvePolygonZM: Type = 3010;
+    /// < ISO SQL/MM Part 3. GDAL &gt;= 2.1
     pub const wkbMultiCurveZM: Type = 3011;
+    /// < ISO SQL/MM Part 3. GDAL &gt;= 2.1
     pub const wkbMultiSurfaceZM: Type = 3012;
+    /// < ISO SQL/MM Part 3. GDAL &gt;= 2.1
     pub const wkbCurveZM: Type = 3013;
+    /// < ISO SQL/MM Part 3. GDAL &gt;= 2.1
     pub const wkbSurfaceZM: Type = 3014;
+    /// < ISO SQL/MM Part 3. Reserved in GDAL &gt;= 2.1 but not yet implemented
     pub const wkbPolyhedralSurfaceZM: Type = 3015;
+    /// < ISO SQL/MM Part 3. Reserved in GDAL &gt;= 2.1 but not yet implemented
     pub const wkbTINZM: Type = 3016;
+    /// < ISO SQL/MM Part 3. Reserved in GDAL &gt;= 2.1 but not yet implemented
     pub const wkbTriangleZM: Type = 3017;
+    /// < 2.5D extension as per 99-402
     pub const wkbPoint25D: Type = 2147483649;
+    /// < 2.5D extension as per 99-402
     pub const wkbLineString25D: Type = 2147483650;
+    /// < 2.5D extension as per 99-402
     pub const wkbPolygon25D: Type = 2147483651;
+    /// < 2.5D extension as per 99-402
     pub const wkbMultiPoint25D: Type = 2147483652;
+    /// < 2.5D extension as per 99-402
     pub const wkbMultiLineString25D: Type = 2147483653;
+    /// < 2.5D extension as per 99-402
     pub const wkbMultiPolygon25D: Type = 2147483654;
+    /// < 2.5D extension as per 99-402
     pub const wkbGeometryCollection25D: Type = 2147483655;
 }
 extern "C" {
@@ -2331,45 +2767,81 @@ extern "C" {
     pub fn OGR_GT_GetLinear(eType: OGRwkbGeometryType::Type) -> OGRwkbGeometryType::Type;
 }
 pub mod OGRwkbByteOrder {
+    /// Enumeration to describe byte order
     pub type Type = u32;
+    /// < MSB/Sun/Motoroloa: Most Significant Byte First
     pub const wkbXDR: Type = 0;
+    /// < LSB/Intel/Vax: Least Significant Byte First
     pub const wkbNDR: Type = 1;
 }
 pub mod OGRFieldType {
+    /// List of feature field types.  This list is likely to be extended in the
+    /// future ... avoid coding applications based on the assumption that all
+    /// field types can be known.
     pub type Type = u32;
+    /// Simple 32bit integer
     pub const OFTInteger: Type = 0;
+    /// List of 32bit integers
     pub const OFTIntegerList: Type = 1;
+    /// Double Precision floating point
     pub const OFTReal: Type = 2;
+    /// List of doubles
     pub const OFTRealList: Type = 3;
+    /// String of ASCII chars
     pub const OFTString: Type = 4;
+    /// Array of strings
     pub const OFTStringList: Type = 5;
+    /// deprecated
     pub const OFTWideString: Type = 6;
+    /// deprecated
     pub const OFTWideStringList: Type = 7;
+    /// Raw Binary data
     pub const OFTBinary: Type = 8;
+    /// Date
     pub const OFTDate: Type = 9;
+    /// Time
     pub const OFTTime: Type = 10;
+    /// Date and Time
     pub const OFTDateTime: Type = 11;
+    /// Single 64bit integer
     pub const OFTInteger64: Type = 12;
+    /// List of 64bit integers
     pub const OFTInteger64List: Type = 13;
+    /// List of 64bit integers
     pub const OFTMaxType: Type = 13;
 }
 pub mod OGRFieldSubType {
+    /// List of field subtypes. A subtype represents a hint, a restriction of the
+    /// main type, that is not strictly necessary to consult.
+    /// This list is likely to be extended in the
+    /// future ... avoid coding applications based on the assumption that all
+    /// field types can be known.
+    /// Most subtypes only make sense for a restricted set of main types.
+    /// @since GDAL 2.0
     pub type Type = u32;
+    /// No subtype. This is the default value
     pub const OFSTNone: Type = 0;
+    /// Boolean integer. Only valid for OFTInteger and OFTIntegerList.
     pub const OFSTBoolean: Type = 1;
+    /// Signed 16-bit integer. Only valid for OFTInteger and OFTIntegerList.
     pub const OFSTInt16: Type = 2;
+    /// Single precision (32 bit) floating point. Only valid for OFTReal and OFTRealList.
     pub const OFSTFloat32: Type = 3;
+    /// Single precision (32 bit) floating point. Only valid for OFTReal and OFTRealList.
     pub const OFSTMaxSubType: Type = 3;
 }
 pub mod OGRJustification {
+    /// Display justification for field values.
     pub type Type = u32;
     pub const OJUndefined: Type = 0;
     pub const OJLeft: Type = 1;
     pub const OJRight: Type = 2;
 }
+/// OGRFeature field attribute value union.
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub union OGRField {
+    /// @cond Doxygen_Suppress
     pub Integer: libc::c_int,
     pub Integer64: GIntBig,
     pub Real: f64,
@@ -2864,22 +3336,36 @@ extern "C" {
     ) -> libc::c_int;
 }
 pub mod ogr_style_tool_class_id {
+    /// OGRStyleTool derived class types (returned by GetType()).
     pub type Type = u32;
+    /// < None
     pub const OGRSTCNone: Type = 0;
+    /// < Pen
     pub const OGRSTCPen: Type = 1;
+    /// < Brush
     pub const OGRSTCBrush: Type = 2;
+    /// < Symbol
     pub const OGRSTCSymbol: Type = 3;
+    /// < Label
     pub const OGRSTCLabel: Type = 4;
+    /// < Vector
     pub const OGRSTCVector: Type = 5;
 }
 pub use self::ogr_style_tool_class_id::Type as OGRSTClassId;
 pub mod ogr_style_tool_units_id {
+    /// List of units supported by OGRStyleTools.
     pub type Type = u32;
+    /// < Ground unit
     pub const OGRSTUGround: Type = 0;
+    /// < Pixel
     pub const OGRSTUPixel: Type = 1;
+    /// < Points
     pub const OGRSTUPoints: Type = 2;
+    /// < Millimeter
     pub const OGRSTUMM: Type = 3;
+    /// < Centimeter
     pub const OGRSTUCM: Type = 4;
+    /// < Inch
     pub const OGRSTUInches: Type = 5;
 }
 pub use self::ogr_style_tool_units_id::Type as OGRSTUnitId;
@@ -2887,14 +3373,27 @@ extern "C" {
     pub fn GDALVersionInfo(arg1: *const libc::c_char) -> *const libc::c_char;
 }
 extern "C" {
+    /// Return TRUE if GDAL library version at runtime matches nVersionMajor.nVersionMinor.
+    ///
+    /// The purpose of this method is to ensure that calling code will run with the GDAL
+    /// version it is compiled for. It is primarily indented for external plugins.
+    ///
+    /// @param nVersionMajor Major version to be tested against
+    /// @param nVersionMinor Minor version to be tested against
+    /// @param pszCallingComponentName If not NULL, in case of version mismatch, the method
+    /// will issue a failure mentioning the name of
+    /// the calling component.
     pub fn GDALCheckVersion(
         nVersionMajor: libc::c_int,
         nVersionMinor: libc::c_int,
         pszCallingComponentName: *const libc::c_char,
     ) -> libc::c_int;
 }
+/// Opaque type for a geometyr
 pub type OGRGeometryH = *mut libc::c_void;
+/// Opaque type for a spatial reference system
 pub type OGRSpatialReferenceH = *mut libc::c_void;
+/// Opaque type for a coordinate transformation object
 pub type OGRCoordinateTransformationH = *mut libc::c_void;
 extern "C" {
     pub fn OGR_G_CreateFromWkb(
@@ -3079,6 +3578,7 @@ extern "C" {
     ) -> *mut libc::c_char;
 }
 extern "C" {
+    /// Create a OGR geometry from a GeoJSON geometry object
     pub fn OGR_G_CreateGeometryFromJson(arg1: *const libc::c_char) -> OGRGeometryH;
 }
 extern "C" {
@@ -3197,6 +3697,7 @@ extern "C" {
     pub fn OGR_G_Polygonize(arg1: OGRGeometryH) -> OGRGeometryH;
 }
 extern "C" {
+    /// @cond Doxygen_Suppress
     pub fn OGR_G_Intersect(arg1: OGRGeometryH, arg2: OGRGeometryH) -> libc::c_int;
 }
 extern "C" {
@@ -3212,6 +3713,7 @@ extern "C" {
     pub fn OGR_G_GetBoundary(arg1: OGRGeometryH) -> OGRGeometryH;
 }
 extern "C" {
+    /// @endcond
     pub fn OGR_G_GetPointCount(arg1: OGRGeometryH) -> libc::c_int;
 }
 extern "C" {
@@ -3383,6 +3885,7 @@ extern "C" {
     ) -> OGRGeometryH;
 }
 extern "C" {
+    /// @cond Doxygen_Suppress
     pub fn OGRSetGenerate_DB2_V72_BYTE_ORDER(
         bGenerate_DB2_V72_BYTE_ORDER: libc::c_int,
     ) -> OGRErr::Type;
@@ -3391,20 +3894,26 @@ extern "C" {
     pub fn OGRGetGenerate_DB2_V72_BYTE_ORDER() -> libc::c_int;
 }
 extern "C" {
+    /// @endcond
     pub fn OGRSetNonLinearGeometriesEnabledFlag(bFlag: libc::c_int);
 }
 extern "C" {
     pub fn OGRGetNonLinearGeometriesEnabledFlag() -> libc::c_int;
 }
+/// Opaque type for a field definition (OGRFieldDefn)
 pub type OGRFieldDefnH = *mut libc::c_void;
+/// Opaque type for a feature definition (OGRFeatureDefn)
 pub type OGRFeatureDefnH = *mut libc::c_void;
+/// Opaque type for a feature (OGRFeature)
 pub type OGRFeatureH = *mut libc::c_void;
+/// Opaque type for a style table (OGRStyleTable)
 pub type OGRStyleTableH = *mut libc::c_void;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct OGRGeomFieldDefnHS {
     _unused: [u8; 0],
 }
+/// Opaque type for a geometry field definition (OGRGeomFieldDefn)
 pub type OGRGeomFieldDefnH = *mut OGRGeomFieldDefnHS;
 extern "C" {
     pub fn OGR_Fld_Create(arg1: *const libc::c_char, arg2: OGRFieldType::Type) -> OGRFieldDefnH;
@@ -3889,12 +4398,15 @@ extern "C" {
     pub fn OGR_F_SetStyleStringDirectly(arg1: OGRFeatureH, arg2: *mut libc::c_char);
 }
 extern "C" {
+    /// Return style table
     pub fn OGR_F_GetStyleTable(arg1: OGRFeatureH) -> OGRStyleTableH;
 }
 extern "C" {
+    /// Set style table and take ownership
     pub fn OGR_F_SetStyleTableDirectly(arg1: OGRFeatureH, arg2: OGRStyleTableH);
 }
 extern "C" {
+    /// Set style table
     pub fn OGR_F_SetStyleTable(arg1: OGRFeatureH, arg2: OGRStyleTableH);
 }
 extern "C" {
@@ -3923,8 +4435,11 @@ extern "C" {
         bEmitError: libc::c_int,
     ) -> libc::c_int;
 }
+/// Opaque type for a layer (OGRLayer)
 pub type OGRLayerH = *mut libc::c_void;
+/// Opaque type for a OGR datasource (OGRDataSource)
 pub type OGRDataSourceH = *mut libc::c_void;
+/// Opaque type for a OGR driver (OGRSFDriver)
 pub type OGRSFDriverH = *mut libc::c_void;
 extern "C" {
     pub fn OGR_L_GetName(arg1: OGRLayerH) -> *const libc::c_char;
@@ -4057,6 +4572,7 @@ extern "C" {
     pub fn OGR_L_RollbackTransaction(arg1: OGRLayerH) -> OGRErr::Type;
 }
 extern "C" {
+    /// @cond Doxygen_Suppress
     pub fn OGR_L_Reference(arg1: OGRLayerH) -> libc::c_int;
 }
 extern "C" {
@@ -4066,24 +4582,30 @@ extern "C" {
     pub fn OGR_L_GetRefCount(arg1: OGRLayerH) -> libc::c_int;
 }
 extern "C" {
+    /// @endcond
     pub fn OGR_L_SyncToDisk(arg1: OGRLayerH) -> OGRErr::Type;
 }
 extern "C" {
+    /// @cond Doxygen_Suppress
     pub fn OGR_L_GetFeaturesRead(arg1: OGRLayerH) -> GIntBig;
 }
 extern "C" {
+    /// @endcond
     pub fn OGR_L_GetFIDColumn(arg1: OGRLayerH) -> *const libc::c_char;
 }
 extern "C" {
     pub fn OGR_L_GetGeometryColumn(arg1: OGRLayerH) -> *const libc::c_char;
 }
 extern "C" {
+    /// Get style table
     pub fn OGR_L_GetStyleTable(arg1: OGRLayerH) -> OGRStyleTableH;
 }
 extern "C" {
+    /// Set style table (and take ownership)
     pub fn OGR_L_SetStyleTableDirectly(arg1: OGRLayerH, arg2: OGRStyleTableH);
 }
 extern "C" {
+    /// Set style table
     pub fn OGR_L_SetStyleTable(arg1: OGRLayerH, arg2: OGRStyleTableH);
 }
 extern "C" {
@@ -4212,6 +4734,7 @@ extern "C" {
     pub fn OGR_DS_ReleaseResultSet(arg1: OGRDataSourceH, arg2: OGRLayerH);
 }
 extern "C" {
+    /// @cond Doxygen_Suppress
     pub fn OGR_DS_Reference(arg1: OGRDataSourceH) -> libc::c_int;
 }
 extern "C" {
@@ -4224,15 +4747,20 @@ extern "C" {
     pub fn OGR_DS_GetSummaryRefCount(arg1: OGRDataSourceH) -> libc::c_int;
 }
 extern "C" {
+    /// @endcond */
+    /// /** Flush pending changes to disk. See GDALDataset::FlushCache()
     pub fn OGR_DS_SyncToDisk(arg1: OGRDataSourceH) -> OGRErr::Type;
 }
 extern "C" {
+    /// Get style table
     pub fn OGR_DS_GetStyleTable(arg1: OGRDataSourceH) -> OGRStyleTableH;
 }
 extern "C" {
+    /// Set style table (and take ownership)
     pub fn OGR_DS_SetStyleTableDirectly(arg1: OGRDataSourceH, arg2: OGRStyleTableH);
 }
 extern "C" {
+    /// Set style table
     pub fn OGR_DS_SetStyleTable(arg1: OGRDataSourceH, arg2: OGRStyleTableH);
 }
 extern "C" {
@@ -4284,12 +4812,14 @@ extern "C" {
     pub fn OGRReleaseDataSource(arg1: OGRDataSourceH) -> OGRErr::Type;
 }
 extern "C" {
+    /// @cond Doxygen_Suppress
     pub fn OGRRegisterDriver(arg1: OGRSFDriverH);
 }
 extern "C" {
     pub fn OGRDeregisterDriver(arg1: OGRSFDriverH);
 }
 extern "C" {
+    /// @endcond
     pub fn OGRGetDriverCount() -> libc::c_int;
 }
 extern "C" {
@@ -4299,18 +4829,24 @@ extern "C" {
     pub fn OGRGetDriverByName(arg1: *const libc::c_char) -> OGRSFDriverH;
 }
 extern "C" {
+    /// @cond Doxygen_Suppress
     pub fn OGRGetOpenDSCount() -> libc::c_int;
 }
 extern "C" {
     pub fn OGRGetOpenDS(iDS: libc::c_int) -> OGRDataSourceH;
 }
 extern "C" {
+    /// @endcond
     pub fn OGRRegisterAll();
 }
 extern "C" {
+    /// Clean-up all drivers (including raster ones starting with GDAL 2.0.
+    /// See GDALDestroyDriverManager()
     pub fn OGRCleanupAll();
 }
+/// Style manager opaque type
 pub type OGRStyleMgrH = *mut libc::c_void;
+/// Style tool opaque type
 pub type OGRStyleToolH = *mut libc::c_void;
 extern "C" {
     pub fn OGR_SM_Create(hStyleTable: OGRStyleTableH) -> OGRStyleMgrH;
@@ -4453,19 +4989,33 @@ extern "C" {
     pub fn OGR_STBL_GetLastStyleName(hStyleTable: OGRStyleTableH) -> *const libc::c_char;
 }
 pub mod GDALDataType {
+    /// Pixel data types
     pub type Type = u32;
+    /// Unknown or unspecified type
     pub const GDT_Unknown: Type = 0;
+    /// Eight bit unsigned integer
     pub const GDT_Byte: Type = 1;
+    /// Sixteen bit unsigned integer
     pub const GDT_UInt16: Type = 2;
+    /// Sixteen bit signed integer
     pub const GDT_Int16: Type = 3;
+    /// Thirty two bit unsigned integer
     pub const GDT_UInt32: Type = 4;
+    /// Thirty two bit signed integer
     pub const GDT_Int32: Type = 5;
+    /// Thirty two bit floating point
     pub const GDT_Float32: Type = 6;
+    /// Sixty four bit floating point
     pub const GDT_Float64: Type = 7;
+    /// Complex Int16
     pub const GDT_CInt16: Type = 8;
+    /// Complex Int32
     pub const GDT_CInt32: Type = 9;
+    /// Complex Float32
     pub const GDT_CFloat32: Type = 10;
+    /// Complex Float64
     pub const GDT_CFloat64: Type = 11;
+    /// Complex Float64
     pub const GDT_TypeCount: Type = 12;
 }
 extern "C" {
@@ -4504,6 +5054,7 @@ extern "C" {
     pub fn GDALGetNonComplexDataType(arg1: GDALDataType::Type) -> GDALDataType::Type;
 }
 pub mod GDALAsyncStatusType {
+    /// status of the asynchronous stream
     pub type Type = u32;
     pub const GARIO_PENDING: Type = 0;
     pub const GARIO_UPDATE: Type = 1;
@@ -4518,37 +5069,67 @@ extern "C" {
     pub fn GDALGetAsyncStatusTypeByName(arg1: *const libc::c_char) -> GDALAsyncStatusType::Type;
 }
 pub mod GDALAccess {
+    /// Flag indicating read/write, or read-only access to data.
     pub type Type = u32;
+    /// Read only (no update) access
     pub const GA_ReadOnly: Type = 0;
+    /// Read/write access.
     pub const GA_Update: Type = 1;
 }
 pub mod GDALRWFlag {
+    /// Read/Write flag for RasterIO() method
     pub type Type = u32;
+    /// Read data
     pub const GF_Read: Type = 0;
+    /// Write data
     pub const GF_Write: Type = 1;
 }
 pub mod GDALRIOResampleAlg {
+    /// RasterIO() resampling method.
+    /// @since GDAL 2.0
     pub type Type = u32;
+    /// Nearest neighbour
     pub const GRIORA_NearestNeighbour: Type = 0;
+    /// Bilinear (2x2 kernel)
     pub const GRIORA_Bilinear: Type = 1;
+    /// Cubic Convolution Approximation (4x4 kernel)
     pub const GRIORA_Cubic: Type = 2;
+    /// Cubic B-Spline Approximation (4x4 kernel)
     pub const GRIORA_CubicSpline: Type = 3;
+    /// Lanczos windowed sinc interpolation (6x6 kernel)
     pub const GRIORA_Lanczos: Type = 4;
+    /// Average
     pub const GRIORA_Average: Type = 5;
+    /// Mode (selects the value which appears most often of all the sampled points)
     pub const GRIORA_Mode: Type = 6;
+    /// Gauss blurring
     pub const GRIORA_Gauss: Type = 7;
 }
+/// Structure to pass extra arguments to RasterIO() method
+/// @since GDAL 2.0
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct GDALRasterIOExtraArg {
+    /// Version of structure (to allow future extensions of the structure)
     pub nVersion: libc::c_int,
+    /// Resampling algorithm
     pub eResampleAlg: GDALRIOResampleAlg::Type,
+    /// Progress callback
     pub pfnProgress: GDALProgressFunc,
+    /// Progress callback user data
     pub pProgressData: *mut libc::c_void,
+    /// Indicate if dfXOff, dfYOff, dfXSize and dfYSize are set.
+    /// Mostly reserved from the VRT driver to communicate a more precise
+    /// source window. Must be such that dfXOff - nXOff < 1.0 and
+    /// dfYOff - nYOff < 1.0 and nXSize - dfXSize < 1.0 and nYSize - dfYSize < 1.0
     pub bFloatingPointWindowValidity: libc::c_int,
+    /// Pixel offset to the top left corner. Only valid if bFloatingPointWindowValidity = TRUE
     pub dfXOff: f64,
+    /// Line offset to the top left corner. Only valid if bFloatingPointWindowValidity = TRUE
     pub dfYOff: f64,
+    /// Width in pixels of the area of interest. Only valid if bFloatingPointWindowValidity = TRUE
     pub dfXSize: f64,
+    /// Height in pixels of the area of interest. Only valid if bFloatingPointWindowValidity = TRUE
     pub dfYSize: f64,
 }
 #[test]
@@ -4664,24 +5245,42 @@ fn bindgen_test_layout_GDALRasterIOExtraArg() {
     );
 }
 pub mod GDALColorInterp {
+    /// Types of color interpretation for raster bands.
     pub type Type = u32;
     pub const GCI_Undefined: Type = 0;
+    /// Greyscale
     pub const GCI_GrayIndex: Type = 1;
+    /// Paletted (see associated color table)
     pub const GCI_PaletteIndex: Type = 2;
+    /// Red band of RGBA image
     pub const GCI_RedBand: Type = 3;
+    /// Green band of RGBA image
     pub const GCI_GreenBand: Type = 4;
+    /// Blue band of RGBA image
     pub const GCI_BlueBand: Type = 5;
+    /// Alpha (0=transparent, 255=opaque)
     pub const GCI_AlphaBand: Type = 6;
+    /// Hue band of HLS image
     pub const GCI_HueBand: Type = 7;
+    /// Saturation band of HLS image
     pub const GCI_SaturationBand: Type = 8;
+    /// Lightness band of HLS image
     pub const GCI_LightnessBand: Type = 9;
+    /// Cyan band of CMYK image
     pub const GCI_CyanBand: Type = 10;
+    /// Magenta band of CMYK image
     pub const GCI_MagentaBand: Type = 11;
+    /// Yellow band of CMYK image
     pub const GCI_YellowBand: Type = 12;
+    /// Black band of CMLY image
     pub const GCI_BlackBand: Type = 13;
+    /// Y Luminance
     pub const GCI_YCbCr_YBand: Type = 14;
+    /// Cb Chroma
     pub const GCI_YCbCr_CbBand: Type = 15;
+    /// Cr Chroma
     pub const GCI_YCbCr_CrBand: Type = 16;
+    /// Max current value
     pub const GCI_Max: Type = 16;
 }
 extern "C" {
@@ -4691,22 +5290,35 @@ extern "C" {
     pub fn GDALGetColorInterpretationByName(pszName: *const libc::c_char) -> GDALColorInterp::Type;
 }
 pub mod GDALPaletteInterp {
+    /// Types of color interpretations for a GDALColorTable.
     pub type Type = u32;
+    /// Grayscale (in GDALColorEntry.c1)
     pub const GPI_Gray: Type = 0;
+    /// Red, Green, Blue and Alpha in (in c1, c2, c3 and c4)
     pub const GPI_RGB: Type = 1;
+    /// Cyan, Magenta, Yellow and Black (in c1, c2, c3 and c4)
     pub const GPI_CMYK: Type = 2;
+    /// Hue, Lightness and Saturation (in c1, c2, and c3)
     pub const GPI_HLS: Type = 3;
 }
 extern "C" {
     pub fn GDALGetPaletteInterpretationName(arg1: GDALPaletteInterp::Type) -> *const libc::c_char;
 }
+/// Opaque type used for the C bindings of the C++ GDALMajorObject class
 pub type GDALMajorObjectH = *mut libc::c_void;
+/// Opaque type used for the C bindings of the C++ GDALDataset class
 pub type GDALDatasetH = *mut libc::c_void;
+/// Opaque type used for the C bindings of the C++ GDALRasterBand class
 pub type GDALRasterBandH = *mut libc::c_void;
+/// Opaque type used for the C bindings of the C++ GDALDriver class
 pub type GDALDriverH = *mut libc::c_void;
+/// Opaque type used for the C bindings of the C++ GDALColorTable class
 pub type GDALColorTableH = *mut libc::c_void;
+/// Opaque type used for the C bindings of the C++ GDALRasterAttributeTable class
 pub type GDALRasterAttributeTableH = *mut libc::c_void;
+/// Opaque type used for the C bindings of the C++ GDALAsyncReader class
 pub type GDALAsyncReaderH = *mut libc::c_void;
+/// Type to express pixel, line or band spacing. Signed 64 bit integer.
 pub type GSpacing = GIntBig;
 extern "C" {
     pub fn GDALAllRegister();
@@ -4827,15 +5439,23 @@ extern "C" {
 extern "C" {
     pub fn GDALGetDriverCreationOptionList(arg1: GDALDriverH) -> *const libc::c_char;
 }
+/// Ground Control Point
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct GDAL_GCP {
+    /// Unique identifier, often numeric
     pub pszId: *mut libc::c_char,
+    /// Informational message or ""
     pub pszInfo: *mut libc::c_char,
+    /// Pixel (x) location of GCP on raster
     pub dfGCPPixel: f64,
+    /// Line (y) location of GCP on raster
     pub dfGCPLine: f64,
+    /// X position of GCP in georeferenced space
     pub dfGCPX: f64,
+    /// Y position of GCP in georeferenced space
     pub dfGCPY: f64,
+    /// Elevation of GCP, or zero if not known
     pub dfGCPZ: f64,
 }
 #[test]
@@ -5270,6 +5890,8 @@ extern "C" {
 extern "C" {
     pub fn GDALDatasetRollbackTransaction(hDS: GDALDatasetH) -> OGRErr::Type;
 }
+/// Type of functions to pass to GDALAddDerivedBandPixelFunc.
+/// @since GDAL 2.2
 pub type GDALDerivedPixelFunc = ::std::option::Option<
     unsafe extern "C" fn(
         papoSources: *mut *mut libc::c_void,
@@ -5761,26 +6383,46 @@ extern "C" {
 extern "C" {
     pub fn GDALDecToPackedDMS(arg1: f64) -> f64;
 }
+/// Strucutre to store Rational Polynomial Coefficients / Rigorous Projection
+/// Model. See http://geotiff.maptools.org/rpc_prop.html
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct GDALRPCInfo {
+    /// < Line offset
     pub dfLINE_OFF: f64,
+    /// < Sample/Pixel offset
     pub dfSAMP_OFF: f64,
+    /// < Latitude offset
     pub dfLAT_OFF: f64,
+    /// < Longitude offset
     pub dfLONG_OFF: f64,
+    /// < Height offset
     pub dfHEIGHT_OFF: f64,
+    /// < Line scale
     pub dfLINE_SCALE: f64,
+    /// < Sample/Pixel scale
     pub dfSAMP_SCALE: f64,
+    /// < Latitude scale
     pub dfLAT_SCALE: f64,
+    /// < Longitude scale
     pub dfLONG_SCALE: f64,
+    /// < Height scale
     pub dfHEIGHT_SCALE: f64,
+    /// < Line Numerator Coefficients
     pub adfLINE_NUM_COEFF: [f64; 20usize],
+    /// < Line Denominator Coefficients
     pub adfLINE_DEN_COEFF: [f64; 20usize],
+    /// < Sample/Pixel Numerator Coefficients
     pub adfSAMP_NUM_COEFF: [f64; 20usize],
+    /// < Sample/Pixel Denominator Coefficients
     pub adfSAMP_DEN_COEFF: [f64; 20usize],
+    /// < Minimum longitude
     pub dfMIN_LONG: f64,
+    /// < Minimum latitude
     pub dfMIN_LAT: f64,
+    /// < Maximum longitude
     pub dfMAX_LONG: f64,
+    /// < Maximum latitude
     pub dfMAX_LAT: f64,
 }
 #[test]
@@ -5979,12 +6621,17 @@ fn bindgen_test_layout_GDALRPCInfo() {
 extern "C" {
     pub fn GDALExtractRPCInfo(arg1: *mut *mut libc::c_char, arg2: *mut GDALRPCInfo) -> libc::c_int;
 }
+/// Color tuple
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct GDALColorEntry {
+    /// gray, red, cyan or hue
     pub c1: libc::c_short,
+    /// green, magenta, or lightness
     pub c2: libc::c_short,
+    /// blue, yellow, or saturation
     pub c3: libc::c_short,
+    /// alpha or blackband
     pub c4: libc::c_short,
 }
 #[test]
@@ -6078,31 +6725,55 @@ extern "C" {
     );
 }
 pub mod GDALRATFieldType {
+    /// Field type of raster attribute table
     pub type Type = u32;
+    /// Integer field
     pub const GFT_Integer: Type = 0;
+    /// Floating point (double) field
     pub const GFT_Real: Type = 1;
+    /// String field
     pub const GFT_String: Type = 2;
 }
 pub mod GDALRATFieldUsage {
+    /// Field usage of raster attribute table
     pub type Type = u32;
+    /// General purpose field.
     pub const GFU_Generic: Type = 0;
+    /// Histogram pixel count
     pub const GFU_PixelCount: Type = 1;
+    /// Class name
     pub const GFU_Name: Type = 2;
+    /// Class range minimum
     pub const GFU_Min: Type = 3;
+    /// Class range maximum
     pub const GFU_Max: Type = 4;
+    /// Class value (min=max)
     pub const GFU_MinMax: Type = 5;
+    /// Red class color (0-255)
     pub const GFU_Red: Type = 6;
+    /// Green class color (0-255)
     pub const GFU_Green: Type = 7;
+    /// Blue class color (0-255)
     pub const GFU_Blue: Type = 8;
+    /// Alpha (0=transparent,255=opaque)
     pub const GFU_Alpha: Type = 9;
+    /// Color Range Red Minimum
     pub const GFU_RedMin: Type = 10;
+    /// Color Range Green Minimum
     pub const GFU_GreenMin: Type = 11;
+    /// Color Range Blue Minimum
     pub const GFU_BlueMin: Type = 12;
+    /// Color Range Alpha Minimum
     pub const GFU_AlphaMin: Type = 13;
+    /// Color Range Red Maximum
     pub const GFU_RedMax: Type = 14;
+    /// Color Range Green Maximum
     pub const GFU_GreenMax: Type = 15;
+    /// Color Range Blue Maximum
     pub const GFU_BlueMax: Type = 16;
+    /// Color Range Alpha Maximum
     pub const GFU_AlphaMax: Type = 17;
+    /// Maximum GFU value
     pub const GFU_MaxCount: Type = 18;
 }
 extern "C" {
@@ -6340,9 +7011,13 @@ extern "C" {
     ) -> *mut CPLVirtualMem;
 }
 pub mod GDALTileOrganization {
+    /// Enumeration to describe the tile organization
     pub type Type = u32;
+    /// Tile Interleaved by Pixel: tile (0,0) with internal band interleaved by pixel organization, tile (1, 0), ...
     pub const GTO_TIP: Type = 0;
+    /// Band Interleaved by Tile : tile (0,0) of first band, tile (0,0) of second band, ... tile (1,0) of first band, tile (1,0) of second band, ...
     pub const GTO_BIT: Type = 1;
+    /// Band SeQuential : all the tiles of first band, all the tiles of following band...
     pub const GTO_BSQ: Type = 2;
 }
 extern "C" {
@@ -6496,6 +7171,7 @@ pub type GDALTransformerFunc = ::std::option::Option<
     ) -> libc::c_int,
 >;
 extern "C" {
+    /// @cond Doxygen_Suppress
     pub fn GDALDestroyTransformer(pTransformerArg: *mut libc::c_void);
 }
 extern "C" {
@@ -6517,6 +7193,7 @@ extern "C" {
     ) -> *mut libc::c_void;
 }
 extern "C" {
+    /// @endcond
     pub fn GDALCreateGenImgProjTransformer(
         hSrcDS: GDALDatasetH,
         pszSrcWKT: *const libc::c_char,
@@ -6639,6 +7316,7 @@ extern "C" {
     ) -> libc::c_int;
 }
 extern "C" {
+    /// @endcond
     pub fn GDALCreateRPCTransformer(
         psRPC: *mut GDALRPCInfo,
         bReversed: libc::c_int,
@@ -6744,6 +7422,7 @@ extern "C" {
     ) -> CPLErr::Type;
 }
 extern "C" {
+    /// @cond Doxygen_Suppress
     pub fn GDALSerializeTransformer(
         pfnFunc: GDALTransformerFunc,
         pTransformArg: *mut libc::c_void,
@@ -6757,6 +7436,7 @@ extern "C" {
     ) -> CPLErr::Type;
 }
 extern "C" {
+    /// @endcond
     pub fn GDALTransformGeolocations(
         hXBand: GDALRasterBandH,
         hYBand: GDALRasterBandH,
@@ -6768,6 +7448,7 @@ extern "C" {
         papszOptions: *mut *mut libc::c_char,
     ) -> CPLErr::Type;
 }
+/// Contour writer callback type
 pub type GDALContourWriter = ::std::option::Option<
     unsafe extern "C" fn(
         dfLevel: f64,
@@ -6777,6 +7458,7 @@ pub type GDALContourWriter = ::std::option::Option<
         arg1: *mut libc::c_void,
     ) -> CPLErr::Type,
 >;
+/// Contour generator opaque type
 pub type GDALContourGeneratorH = *mut libc::c_void;
 extern "C" {
     pub fn GDAL_CG_Create(
@@ -6806,6 +7488,7 @@ extern "C" {
     ) -> CPLErr::Type;
 }
 extern "C" {
+    /// @endcond
     pub fn GDALContourGenerate(
         hBand: GDALRasterBandH,
         dfContourInterval: f64,
@@ -6822,6 +7505,7 @@ extern "C" {
     ) -> CPLErr::Type;
 }
 extern "C" {
+
     pub fn GDALRasterizeGeometries(
         hDS: GDALDatasetH,
         nBandCount: libc::c_int,
@@ -6872,17 +7556,29 @@ extern "C" {
     ) -> CPLErr::Type;
 }
 pub mod GDALGridAlgorithm {
+    /// Gridding Algorithms
     pub type Type = u32;
+    /// Inverse distance to a power
     pub const GGA_InverseDistanceToAPower: Type = 1;
+    /// Moving Average
     pub const GGA_MovingAverage: Type = 2;
+    /// Nearest Neighbor
     pub const GGA_NearestNeighbor: Type = 3;
+    /// Minimum Value (Data Metric)
     pub const GGA_MetricMinimum: Type = 4;
+    /// Maximum Value (Data Metric)
     pub const GGA_MetricMaximum: Type = 5;
+    /// Data Range (Data Metric)
     pub const GGA_MetricRange: Type = 6;
+    /// Number of Points (Data Metric)
     pub const GGA_MetricCount: Type = 7;
+    /// Average Distance (Data Metric)
     pub const GGA_MetricAverageDistance: Type = 8;
+    /// Average Distance Between Data Points (Data Metric)
     pub const GGA_MetricAverageDistancePts: Type = 9;
+    /// Linear interpolation (from Delaunay triangulation. Since GDAL 2.1
     pub const GGA_Linear: Type = 10;
+    /// Inverse distance to a power with nearest neighbor search for max points
     pub const GGA_InverseDistanceToAPowerNearestNeighbor: Type = 11;
 }
 extern "C" {
@@ -6947,10 +7643,13 @@ extern "C" {
         pnGCPCount: *mut libc::c_int,
     ) -> *mut GDAL_GCP;
 }
+/// Triangle fact
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct GDALTriFacet {
+    /// < index to the padfX/padfY arrays
     pub anVertexIdx: [libc::c_int; 3usize],
+    /// < index to GDALDelaunayTriangulation.pasFacets, or -1
     pub anNeighborIdx: [libc::c_int; 3usize],
 }
 #[test]
@@ -6986,14 +7685,26 @@ fn bindgen_test_layout_GDALTriFacet() {
         )
     );
 }
+/// Triangle barycentric coefficients.
+///
+/// Conversion from cartesian (x,y) to barycentric (l1,l2,l3) with :
+/// l1 = dfMul1X * (x - dfCxtX) + dfMul1Y * (y - dfCstY)
+/// l2 = dfMul2X * (x - dfCxtX) + dfMul2Y * (y - dfCstY)
+/// l3 = 1 - l1 - l2
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct GDALTriBarycentricCoefficients {
+    /// < dfMul1X
     pub dfMul1X: f64,
+    /// < dfMul1Y
     pub dfMul1Y: f64,
+    /// < dfMul2X
     pub dfMul2X: f64,
+    /// < dfMul2Y
     pub dfMul2Y: f64,
+    /// < dfCstX
     pub dfCstX: f64,
+    /// < dfCstY
     pub dfCstY: f64,
 }
 #[test]
@@ -7081,11 +7792,15 @@ fn bindgen_test_layout_GDALTriBarycentricCoefficients() {
         )
     );
 }
+/// Triangulation structure
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct GDALTriangulation {
+    /// < number of facets
     pub nFacets: libc::c_int,
+    /// < array of nFacets facets
     pub pasFacets: *mut GDALTriFacet,
+    /// < arra of nFacets barycentric coefficients
     pub pasFacetCoefficients: *mut GDALTriBarycentricCoefficients,
 }
 #[test]
@@ -7182,9 +7897,11 @@ extern "C" {
     pub fn GDALTriangulationFree(psDT: *mut GDALTriangulation);
 }
 extern "C" {
+    /// @cond Doxygen_Suppress
     pub fn GDALTriangulationTerminate();
 }
 extern "C" {
+    /// @endcond
     pub fn GDALOpenVerticalShiftGrid(
         pszProj4Geoidgrids: *const libc::c_char,
         pbError: *mut libc::c_int,
@@ -7254,6 +7971,7 @@ extern "C" {
     pub fn CPLDestroyCond(hCond: *mut libc::c_void);
 }
 extern "C" {
+    /// Contrary to what its name suggests, CPLGetPID() actually returns the thread id
     pub fn CPLGetPID() -> GIntBig;
 }
 extern "C" {
@@ -7343,20 +8061,34 @@ extern "C" {
     pub fn CPLCleanupTLS();
 }
 pub mod GDALResampleAlg {
+    /// Warp Resampling Algorithm
     pub type Type = u32;
+    /// Nearest neighbour (select on one input pixel)
     pub const GRA_NearestNeighbour: Type = 0;
+    /// Bilinear (2x2 kernel)
     pub const GRA_Bilinear: Type = 1;
+    /// Cubic Convolution Approximation (4x4 kernel)
     pub const GRA_Cubic: Type = 2;
+    /// Cubic B-Spline Approximation (4x4 kernel)
     pub const GRA_CubicSpline: Type = 3;
+    /// Lanczos windowed sinc interpolation (6x6 kernel)
     pub const GRA_Lanczos: Type = 4;
+    /// Average (computes the average of all non-NODATA contributing pixels)
     pub const GRA_Average: Type = 5;
+    /// Mode (selects the value which appears most often of all the sampled points)
     pub const GRA_Mode: Type = 6;
+    /// Max (selects maximum of all non-NODATA contributing pixels)
     pub const GRA_Max: Type = 8;
+    /// Min (selects minimum of all non-NODATA contributing pixels)
     pub const GRA_Min: Type = 9;
+    /// Med (selects median of all non-NODATA contributing pixels)
     pub const GRA_Med: Type = 10;
+    /// Q1 (selects first quartile of all non-NODATA contributing pixels)
     pub const GRA_Q1: Type = 11;
+    /// Q3 (selects third quartile of all non-NODATA contributing pixels)
     pub const GRA_Q3: Type = 12;
 }
+/// @cond Doxygen_Suppress
 pub type GDALMaskFunc = ::std::option::Option<
     unsafe extern "C" fn(
         pMaskFuncArg: *mut libc::c_void,
@@ -7443,47 +8175,86 @@ extern "C" {
         pValidityMask: *mut libc::c_void,
     ) -> CPLErr::Type;
 }
+/// Warp control options for use with GDALWarpOperation::Initialize()
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct GDALWarpOptions {
     pub papszWarpOptions: *mut *mut libc::c_char,
+    /// In bytes, 0.0 for internal default
     pub dfWarpMemoryLimit: f64,
+    /// Resampling algorithm to use
     pub eResampleAlg: GDALResampleAlg::Type,
+    /// data type to use during warp operation, GDT_Unknown lets the algorithm
+    /// select the type
     pub eWorkingDataType: GDALDataType::Type,
+    /// Source image dataset.
     pub hSrcDS: GDALDatasetH,
+    /// Destination image dataset - may be NULL if only using GDALWarpOperation::WarpRegionToBuffer().
     pub hDstDS: GDALDatasetH,
+    /// Number of bands to process, may be 0 to select all bands.
     pub nBandCount: libc::c_int,
+    /// The band numbers for the source bands to process (1 based)
     pub panSrcBands: *mut libc::c_int,
+    /// The band numbers for the destination bands to process (1 based)
     pub panDstBands: *mut libc::c_int,
+    /// The source band so use as an alpha (transparency) value, 0=disabled
     pub nSrcAlphaBand: libc::c_int,
+    /// The dest. band so use as an alpha (transparency) value, 0=disabled
     pub nDstAlphaBand: libc::c_int,
+    /// The "nodata" value real component for each input band, if NULL there isn't one
     pub padfSrcNoDataReal: *mut f64,
+    /// The "nodata" value imaginary component - may be NULL even if real
+    /// component is provided.
     pub padfSrcNoDataImag: *mut f64,
+    /// The "nodata" value real component for each output band, if NULL there isn't one
     pub padfDstNoDataReal: *mut f64,
+    /// The "nodata" value imaginary component - may be NULL even if real
+    /// component is provided.
     pub padfDstNoDataImag: *mut f64,
+    /// GDALProgressFunc() compatible progress reporting function, or NULL
+    /// if there isn't one.
     pub pfnProgress: GDALProgressFunc,
+    /// Callback argument to be passed to pfnProgress.
     pub pProgressArg: *mut libc::c_void,
+    /// Type of spatial point transformer function
     pub pfnTransformer: GDALTransformerFunc,
+    /// Handle to image transformer setup structure
     pub pTransformerArg: *mut libc::c_void,
+    /// Unused. Must be NULL
     pub papfnSrcPerBandValidityMaskFunc: *mut GDALMaskFunc,
+    /// Unused. Must be NULL
     pub papSrcPerBandValidityMaskFuncArg: *mut *mut libc::c_void,
+    /// Unused. Must be NULL
     pub pfnSrcValidityMaskFunc: GDALMaskFunc,
+    /// Unused. Must be NULL
     pub pSrcValidityMaskFuncArg: *mut libc::c_void,
+    /// Unused. Must be NULL
     pub pfnSrcDensityMaskFunc: GDALMaskFunc,
+    /// Unused. Must be NULL
     pub pSrcDensityMaskFuncArg: *mut libc::c_void,
+    /// Unused. Must be NULL
     pub pfnDstDensityMaskFunc: GDALMaskFunc,
+    /// Unused. Must be NULL
     pub pDstDensityMaskFuncArg: *mut libc::c_void,
+    /// Unused. Must be NULL
     pub pfnDstValidityMaskFunc: GDALMaskFunc,
+    /// Unused. Must be NULL
     pub pDstValidityMaskFuncArg: *mut libc::c_void,
+    /// Unused. Must be NULL
     pub pfnPreWarpChunkProcessor: ::std::option::Option<
         unsafe extern "C" fn(pKern: *mut libc::c_void, pArg: *mut libc::c_void) -> CPLErr::Type,
     >,
+    /// Unused. Must be NULL
     pub pPreWarpProcessorArg: *mut libc::c_void,
+    /// Unused. Must be NULL
     pub pfnPostWarpChunkProcessor: ::std::option::Option<
         unsafe extern "C" fn(pKern: *mut libc::c_void, pArg: *mut libc::c_void) -> CPLErr::Type,
     >,
+    /// Unused. Must be NULL
     pub pPostWarpProcessorArg: *mut libc::c_void,
+    /// Optional OGRPolygonH for a masking cutline.
     pub hCutline: *mut libc::c_void,
+    /// Optional blending distance to apply across cutline in pixels, default is zero.
     pub dfCutlineBlendDist: f64,
 }
 #[test]
@@ -7907,12 +8678,14 @@ extern "C" {
     pub fn GDALCloneWarpOptions(arg1: *const GDALWarpOptions) -> *mut GDALWarpOptions;
 }
 extern "C" {
+    /// @cond Doxygen_Suppress
     pub fn GDALSerializeWarpOptions(arg1: *const GDALWarpOptions) -> *mut CPLXMLNode;
 }
 extern "C" {
     pub fn GDALDeserializeWarpOptions(arg1: *mut CPLXMLNode) -> *mut GDALWarpOptions;
 }
 extern "C" {
+
     pub fn GDALReprojectImage(
         hSrcDS: GDALDatasetH,
         pszSrcWKT: *const libc::c_char,
@@ -7943,6 +8716,7 @@ extern "C" {
     ) -> CPLErr::Type;
 }
 extern "C" {
+
     pub fn GDALAutoCreateWarpedVRT(
         hSrcDS: GDALDatasetH,
         pszSrcWKT: *const libc::c_char,
@@ -7964,6 +8738,7 @@ extern "C" {
 extern "C" {
     pub fn GDALInitializeWarpedVRT(hDS: GDALDatasetH, psWO: *mut GDALWarpOptions) -> CPLErr::Type;
 }
+/// Opaque type representing a GDALWarpOperation object
 pub type GDALWarpOperationH = *mut libc::c_void;
 extern "C" {
     pub fn GDALCreateWarpOperation(arg1: *const GDALWarpOptions) -> GDALWarpOperationH;
@@ -8018,13 +8793,21 @@ extern "C" {
     ) -> CPLErr::Type;
 }
 pub mod OGRAxisOrientation {
+    /// Axis orientations (corresponds to CS_AxisOrientationEnum).
     pub type Type = u32;
+    /// < Other
     pub const OAO_Other: Type = 0;
+    /// < North
     pub const OAO_North: Type = 1;
+    /// < South
     pub const OAO_South: Type = 2;
+    /// < East
     pub const OAO_East: Type = 3;
+    /// < West
     pub const OAO_West: Type = 4;
+    /// < Up (to space)
     pub const OAO_Up: Type = 5;
+    /// < Down (to Earth center)
     pub const OAO_Down: Type = 6;
 }
 extern "C" {
@@ -8495,6 +9278,7 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
+    /// Albers Conic Equal Area
     pub fn OSRSetACEA(
         hSRS: OGRSpatialReferenceH,
         dfStdP1: f64,
@@ -8506,6 +9290,7 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
+    /// Azimuthal Equidistant
     pub fn OSRSetAE(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -8515,6 +9300,7 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
+    /// Bonne
     pub fn OSRSetBonne(
         hSRS: OGRSpatialReferenceH,
         dfStandardParallel: f64,
@@ -8524,6 +9310,7 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
+    /// Cylindrical Equal Area
     pub fn OSRSetCEA(
         hSRS: OGRSpatialReferenceH,
         dfStdP1: f64,
@@ -8533,6 +9320,7 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
+    /// Cassini-Soldner
     pub fn OSRSetCS(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -8542,6 +9330,7 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
+    /// Equidistant Conic
     pub fn OSRSetEC(
         hSRS: OGRSpatialReferenceH,
         dfStdP1: f64,
@@ -8553,6 +9342,7 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
+    /// Eckert I-VI
     pub fn OSRSetEckert(
         hSRS: OGRSpatialReferenceH,
         nVariation: libc::c_int,
@@ -8562,6 +9352,7 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
+    /// Eckert IV
     pub fn OSRSetEckertIV(
         hSRS: OGRSpatialReferenceH,
         dfCentralMeridian: f64,
@@ -8570,6 +9361,7 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
+    /// Eckert VI
     pub fn OSRSetEckertVI(
         hSRS: OGRSpatialReferenceH,
         dfCentralMeridian: f64,
@@ -8578,6 +9370,7 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
+    /// Equirectangular
     pub fn OSRSetEquirectangular(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -8587,6 +9380,7 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
+    /// Equirectangular generalized form
     pub fn OSRSetEquirectangular2(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -8597,6 +9391,7 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
+    /// Gall Stereograpic
     pub fn OSRSetGS(
         hSRS: OGRSpatialReferenceH,
         dfCentralMeridian: f64,
@@ -8605,6 +9400,7 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
+    /// Goode Homolosine
     pub fn OSRSetGH(
         hSRS: OGRSpatialReferenceH,
         dfCentralMeridian: f64,
@@ -8613,9 +9409,11 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
+    /// Interrupted Goode Homolosine
     pub fn OSRSetIGH(hSRS: OGRSpatialReferenceH) -> OGRErr::Type;
 }
 extern "C" {
+    /// GEOS - Geostationary Satellite View
     pub fn OSRSetGEOS(
         hSRS: OGRSpatialReferenceH,
         dfCentralMeridian: f64,
@@ -8625,6 +9423,7 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
+    /// Gauss Schreiber Transverse Mercator
     pub fn OSRSetGaussSchreiberTMercator(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -8635,6 +9434,7 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
+    /// Gnomonic
     pub fn OSRSetGnomonic(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -8644,6 +9444,7 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
+    /// Oblique Mercator (aka HOM (variant B)
     pub fn OSRSetOM(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -8656,6 +9457,7 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
+    /// Hotine Oblique Mercator using azimuth angle
     pub fn OSRSetHOM(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -8680,6 +9482,7 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
+    /// Hotine Oblique Mercator using two points on centerline
     pub fn OSRSetHOM2PNO(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -8693,6 +9496,7 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
+    /// International Map of the World Polyconic
     pub fn OSRSetIWMPolyconic(
         hSRS: OGRSpatialReferenceH,
         dfLat1: f64,
@@ -8703,6 +9507,7 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
+    /// Krovak Oblique Conic Conformal
     pub fn OSRSetKrovak(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -8715,6 +9520,7 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
+    /// Lambert Azimuthal Equal-Area
     pub fn OSRSetLAEA(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -8724,6 +9530,7 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
+    /// Lambert Conformal Conic
     pub fn OSRSetLCC(
         hSRS: OGRSpatialReferenceH,
         dfStdP1: f64,
@@ -8735,6 +9542,7 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
+    /// Lambert Conformal Conic 1SP
     pub fn OSRSetLCC1SP(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -8745,6 +9553,7 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
+    /// Lambert Conformal Conic (Belgium)
     pub fn OSRSetLCCB(
         hSRS: OGRSpatialReferenceH,
         dfStdP1: f64,
@@ -8756,6 +9565,7 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
+    /// Miller Cylindrical
     pub fn OSRSetMC(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -8765,6 +9575,7 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
+    /// Mercator
     pub fn OSRSetMercator(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -8775,6 +9586,7 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
+    /// Mercator 2SP
     pub fn OSRSetMercator2SP(
         hSRS: OGRSpatialReferenceH,
         dfStdP1: f64,
@@ -8785,6 +9597,7 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
+    /// Mollweide
     pub fn OSRSetMollweide(
         hSRS: OGRSpatialReferenceH,
         dfCentralMeridian: f64,
@@ -8793,6 +9606,7 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
+    /// New Zealand Map Grid
     pub fn OSRSetNZMG(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -8802,6 +9616,7 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
+    /// Oblique Stereographic
     pub fn OSRSetOS(
         hSRS: OGRSpatialReferenceH,
         dfOriginLat: f64,
@@ -8812,6 +9627,7 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
+    /// Orthographic
     pub fn OSRSetOrthographic(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -8821,6 +9637,7 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
+    /// Polyconic
     pub fn OSRSetPolyconic(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -8830,6 +9647,7 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
+    /// Polar Stereographic
     pub fn OSRSetPS(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -8840,6 +9658,7 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
+    /// Robinson
     pub fn OSRSetRobinson(
         hSRS: OGRSpatialReferenceH,
         dfCenterLong: f64,
@@ -8848,6 +9667,7 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
+    /// Sinusoidal
     pub fn OSRSetSinusoidal(
         hSRS: OGRSpatialReferenceH,
         dfCenterLong: f64,
@@ -8856,6 +9676,7 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
+    /// Stereographic
     pub fn OSRSetStereographic(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -8866,6 +9687,7 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
+    /// Swiss Oblique Cylindrical
     pub fn OSRSetSOC(
         hSRS: OGRSpatialReferenceH,
         dfLatitudeOfOrigin: f64,
@@ -8875,6 +9697,10 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
+    /// Transverse Mercator
+    ///
+    /// Special processing available for Transverse Mercator with GDAL &gt;= 1.10 and PROJ &gt;= 4.8 :
+    /// see OGRSpatialReference::exportToProj4().
     pub fn OSRSetTM(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -8885,6 +9711,7 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
+    /// Transverse Mercator variant
     pub fn OSRSetTMVariant(
         hSRS: OGRSpatialReferenceH,
         pszVariantName: *const libc::c_char,
@@ -8896,6 +9723,7 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
+    /// Tunesia Mining Grid
     pub fn OSRSetTMG(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -8905,6 +9733,7 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
+    /// Transverse Mercator (South Oriented)
     pub fn OSRSetTMSO(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -8915,6 +9744,7 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
+    /// TPED (Two Point Equi Distant)
     pub fn OSRSetTPED(
         hSRS: OGRSpatialReferenceH,
         dfLat1: f64,
@@ -8926,6 +9756,7 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
+    /// VanDerGrinten
     pub fn OSRSetVDG(
         hSRS: OGRSpatialReferenceH,
         dfCenterLong: f64,
@@ -8934,6 +9765,7 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
+    /// Wagner I -- VII
     pub fn OSRSetWagner(
         hSRS: OGRSpatialReferenceH,
         nVariation: libc::c_int,
@@ -8943,6 +9775,7 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
+    /// Quadrilateralized Spherical Cube
     pub fn OSRSetQSC(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -8950,6 +9783,7 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
+    /// Spherical, Cross-track, Height
     pub fn OSRSetSCH(
         hSRS: OGRSpatialReferenceH,
         dfPegLat: f64,
@@ -8996,6 +9830,7 @@ extern "C" {
     ) -> libc::c_int;
 }
 extern "C" {
+    /// @cond Doxygen_Suppress
     pub fn OCTProj4Normalize(pszProj4Src: *const libc::c_char) -> *mut libc::c_char;
 }
 extern "C" {
