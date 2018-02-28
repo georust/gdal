@@ -1,7 +1,7 @@
 use libc::c_double;
 use std::ptr::{null, null_mut};
 use raster::{Dataset};
-use gdal_sys::{self, CPLErr, GDALRIOResampleAlg};
+use gdal_sys::{self, CPLErr, GDALResampleAlg};
 use utils::_last_cpl_err;
 
 use errors::*;
@@ -13,7 +13,7 @@ pub fn reproject(src: &Dataset, dst: &Dataset) -> Result<()> {
                 null(),
                 dst._c_ptr(),
                 null(),
-                GDALRIOResampleAlg::GRIORA_Bilinear,
+                GDALResampleAlg::GRA_Bilinear,
                 0.0,
                 0.0 as c_double,
                 None,
