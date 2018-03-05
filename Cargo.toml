@@ -17,9 +17,9 @@ min_gdal_version_2_2 = ["gdal-sys/min_gdal_version_2_2"]
 [dependencies]
 error-chain = "0.11"
 libc = "0.2"
-geo = "0.6"
+geo = "0.7"
 gdal-sys = { path = "gdal-sys", version = "0.1"}
-num-traits = "0.1"
+num-traits = "0.2"
 
 [workspace]
 members = ["gdal-sys"]

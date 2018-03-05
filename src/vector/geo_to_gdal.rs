@@ -33,6 +33,15 @@ fn geometry_with_points<T>(wkb_type: OGRwkbGeometryType::Type, points: &geo::Lin
     Ok(geom)
 }
 
+impl <T> ToGdal for geo::Line<T> where T: Float {
+    fn to_gdal(&self) -> Result<Geometry> {
+        let mut geom = Geometry::empty(OGRwkbGeometryType::wkbLineString)?;
+        geom.set_point_2d(0, (self.start.x().to_f64().ok_or("can't cast to f64")?, self.start.y().to_f64().ok_or("can't cast to f64")?));
+        geom.set_point_2d(1, (self.end.x().to_f64().ok_or("can't cast to f64")?, self.end.y().to_f64().ok_or("can't cast to f64")?));
+        Ok(geom)
+    }
+}
+
 impl <T> ToGdal for geo::LineString<T> where T: Float {
     fn to_gdal(&self) -> Result<Geometry> {
         geometry_with_points(OGRwkbGeometryType::wkbLineString, self)
@@ -88,10 +97,11 @@ impl <T> ToGdal for geo::Geometry<T> where T: Float {
     fn to_gdal(&self) -> Result<Geometry> {
         match *self {
             geo::Geometry::Point(ref c) => c.to_gdal(),
-            geo::Geometry::MultiPoint(ref c) => c.to_gdal(),
+            geo::Geometry::Line(ref c) => c.to_gdal(),
             geo::Geometry::LineString(ref c) => c.to_gdal(),
-            geo::Geometry::MultiLineString(ref c) => c.to_gdal(),
             geo::Geometry::Polygon(ref c) => c.to_gdal(),
+            geo::Geometry::MultiPoint(ref c) => c.to_gdal(),
+            geo::Geometry::MultiLineString(ref c) => c.to_gdal(),
             geo::Geometry::MultiPolygon(ref c) => c.to_gdal(),
             geo::Geometry::GeometryCollection(ref c) => c.to_gdal(),
         }
