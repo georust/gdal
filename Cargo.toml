@@ -9,6 +9,10 @@ documentation = "https://georust.github.io/rust-gdal/"
 
 [features]
 bindgen = ["gdal-sys/bindgen"]
+min_gdal_version_1_11 = ["gdal-sys/min_gdal_version_1_11"]
+min_gdal_version_2_0 = ["gdal-sys/min_gdal_version_2_0"]
+min_gdal_version_2_1 = ["gdal-sys/min_gdal_version_2_1"]
+min_gdal_version_2_2 = ["gdal-sys/min_gdal_version_2_2"]
 
 [dependencies]
 error-chain = "0.11"

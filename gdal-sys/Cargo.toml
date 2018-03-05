@@ -7,7 +7,11 @@ repository = "https://github.com/georust/rust-gdal"
 authors = ["Johannes Drönner <droenner@informatik.uni-marburg.de>"]
 
 [features]
-default = []
+default = ["min_gdal_version_1_11"]
+min_gdal_version_1_11 = []
+min_gdal_version_2_0 = []
+min_gdal_version_2_1 = []
+min_gdal_version_2_2 = []
 
 [dependencies]
 libc = "0.2"

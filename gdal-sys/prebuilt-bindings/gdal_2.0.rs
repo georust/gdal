@@ -579,19 +579,11 @@ fn bindgen_test_layout_tm() {
         )
     );
 }
-/// Int32 type
 pub type GInt32 = libc::c_int;
-/// Unsigned int32 type
 pub type GUInt32 = libc::c_uint;
-/// Int16 type
 pub type GInt16 = libc::c_short;
-/// Unsigned byte type
 pub type GByte = libc::c_uchar;
-/// Large signed integer type (generally 64-bit integer type).
-/// Use GInt64 when exactly 64 bit is needed
 pub type GIntBig = libc::c_longlong;
-/// Large unsigned integer type (generally 64-bit unsigned integer type).
-/// Use GUInt64 when exactly 64 bit is needed
 pub type GUIntBig = libc::c_ulonglong;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -776,7 +768,6 @@ fn bindgen_test_layout_stat() {
     );
 }
 extern "C" {
-    /// @cond Doxygen_Suppress
     pub fn VSIFOpen(arg1: *const libc::c_char, arg2: *const libc::c_char) -> *mut FILE;
 }
 extern "C" {
@@ -826,24 +817,14 @@ extern "C" {
 extern "C" {
     pub fn VSIFEof(arg1: *mut FILE) -> libc::c_int;
 }
-/// @cond Doxygen_Suppress
 pub type VSIStatBuf = stat;
 extern "C" {
     pub fn VSIStat(arg1: *const libc::c_char, arg2: *mut VSIStatBuf) -> libc::c_int;
 }
-/// Type for a file offset
 pub type vsi_l_offset = GUIntBig;
-/// Opaque type for a FILE that implements the VSIVirtualHandle API
 pub type VSILFILE = FILE;
 extern "C" {
     pub fn VSIFOpenL(arg1: *const libc::c_char, arg2: *const libc::c_char) -> *mut VSILFILE;
-}
-extern "C" {
-    pub fn VSIFOpenExL(
-        arg1: *const libc::c_char,
-        arg2: *const libc::c_char,
-        arg3: libc::c_int,
-    ) -> *mut VSILFILE;
 }
 extern "C" {
     pub fn VSIFCloseL(arg1: *mut VSILFILE) -> libc::c_int;
@@ -897,23 +878,6 @@ extern "C" {
 extern "C" {
     pub fn VSIFPutcL(arg1: libc::c_int, arg2: *mut VSILFILE) -> libc::c_int;
 }
-pub mod VSIRangeStatus {
-    /// Range status
-    pub type Type = u32;
-    /// < Unknown
-    pub const VSI_RANGE_STATUS_UNKNOWN: Type = 0;
-    /// < Data present
-    pub const VSI_RANGE_STATUS_DATA: Type = 1;
-    /// < Hole
-    pub const VSI_RANGE_STATUS_HOLE: Type = 2;
-}
-extern "C" {
-    pub fn VSIFGetRangeStatusL(
-        fp: *mut VSILFILE,
-        nStart: vsi_l_offset,
-        nLength: vsi_l_offset,
-    ) -> VSIRangeStatus::Type;
-}
 extern "C" {
     pub fn VSIIngestFile(
         fp: *mut VSILFILE,
@@ -928,7 +892,6 @@ extern "C" {
 pub struct stat64 {
     _unused: [u8; 0],
 }
-/// Type for VSIStatL()
 pub type VSIStatBufL = stat64;
 extern "C" {
     pub fn VSIStatL(arg1: *const libc::c_char, arg2: *mut VSIStatBufL) -> libc::c_int;
@@ -942,9 +905,6 @@ extern "C" {
 }
 extern "C" {
     pub fn VSIIsCaseSensitiveFS(pszFilename: *const libc::c_char) -> libc::c_int;
-}
-extern "C" {
-    pub fn VSISupportsSparseFiles(pszPath: *const libc::c_char) -> libc::c_int;
 }
 extern "C" {
     pub fn VSIFGetNativeFileDescriptorL(arg1: *mut VSILFILE) -> *mut libc::c_void;
@@ -965,22 +925,6 @@ extern "C" {
     pub fn VSIStrdup(arg1: *const libc::c_char) -> *mut libc::c_char;
 }
 extern "C" {
-    pub fn VSIMallocAligned(nAlignment: usize, nSize: usize) -> *mut libc::c_void;
-}
-extern "C" {
-    pub fn VSIMallocAlignedAuto(nSize: usize) -> *mut libc::c_void;
-}
-extern "C" {
-    pub fn VSIFreeAligned(ptr: *mut libc::c_void);
-}
-extern "C" {
-    pub fn VSIMallocAlignedAutoVerbose(
-        nSize: usize,
-        pszFile: *const libc::c_char,
-        nLine: libc::c_int,
-    ) -> *mut libc::c_void;
-}
-extern "C" {
     /// VSIMalloc2 allocates (nSize1 * nSize2) bytes.
     /// In case of overflow of the multiplication, or if memory allocation fails, a
     /// NULL pointer is returned and a CE_Failure error is raised with CPLError().
@@ -997,59 +941,6 @@ extern "C" {
     pub fn VSIMalloc3(nSize1: usize, nSize2: usize, nSize3: usize) -> *mut libc::c_void;
 }
 extern "C" {
-    /// VSIMallocVerbose
-    pub fn VSIMallocVerbose(
-        nSize: usize,
-        pszFile: *const libc::c_char,
-        nLine: libc::c_int,
-    ) -> *mut libc::c_void;
-}
-extern "C" {
-    /// VSIMalloc2Verbose
-    pub fn VSIMalloc2Verbose(
-        nSize1: usize,
-        nSize2: usize,
-        pszFile: *const libc::c_char,
-        nLine: libc::c_int,
-    ) -> *mut libc::c_void;
-}
-extern "C" {
-    /// VSIMalloc3Verbose
-    pub fn VSIMalloc3Verbose(
-        nSize1: usize,
-        nSize2: usize,
-        nSize3: usize,
-        pszFile: *const libc::c_char,
-        nLine: libc::c_int,
-    ) -> *mut libc::c_void;
-}
-extern "C" {
-    /// VSICallocVerbose
-    pub fn VSICallocVerbose(
-        nCount: usize,
-        nSize: usize,
-        pszFile: *const libc::c_char,
-        nLine: libc::c_int,
-    ) -> *mut libc::c_void;
-}
-extern "C" {
-    /// VSIReallocVerbose
-    pub fn VSIReallocVerbose(
-        pOldPtr: *mut libc::c_void,
-        nNewSize: usize,
-        pszFile: *const libc::c_char,
-        nLine: libc::c_int,
-    ) -> *mut libc::c_void;
-}
-extern "C" {
-    /// VSIStrdupVerbose
-    pub fn VSIStrdupVerbose(
-        pszStr: *const libc::c_char,
-        pszFile: *const libc::c_char,
-        nLine: libc::c_int,
-    ) -> *mut libc::c_char;
-}
-extern "C" {
     pub fn CPLGetPhysicalRAM() -> GIntBig;
 }
 extern "C" {
@@ -1060,12 +951,6 @@ extern "C" {
 }
 extern "C" {
     pub fn VSIReadDirRecursive(pszPath: *const libc::c_char) -> *mut *mut libc::c_char;
-}
-extern "C" {
-    pub fn VSIReadDirEx(
-        pszPath: *const libc::c_char,
-        nMaxFiles: libc::c_int,
-    ) -> *mut *mut libc::c_char;
 }
 extern "C" {
     pub fn VSIMkdir(pathname: *const libc::c_char, mode: libc::c_long) -> libc::c_int;
@@ -1083,39 +968,19 @@ extern "C" {
     pub fn VSIStrerror(arg1: libc::c_int) -> *mut libc::c_char;
 }
 extern "C" {
-    pub fn VSIGetDiskFreeSpace(pszDirname: *const libc::c_char) -> GIntBig;
-}
-extern "C" {
     pub fn VSIInstallMemFileHandler();
 }
 extern "C" {
-    /// @cond Doxygen_Suppress
     pub fn VSIInstallLargeFileHandler();
 }
 extern "C" {
-    /// @endcond
     pub fn VSIInstallSubFileHandler();
 }
 extern "C" {
     pub fn VSIInstallCurlFileHandler();
 }
 extern "C" {
-    pub fn VSICurlClearCache();
-}
-extern "C" {
     pub fn VSIInstallCurlStreamingFileHandler();
-}
-extern "C" {
-    pub fn VSIInstallS3FileHandler();
-}
-extern "C" {
-    pub fn VSIInstallS3StreamingFileHandler();
-}
-extern "C" {
-    pub fn VSIInstallGSFileHandler();
-}
-extern "C" {
-    pub fn VSIInstallGSStreamingFileHandler();
 }
 extern "C" {
     pub fn VSIInstallGZipFileHandler();
@@ -1136,17 +1001,9 @@ extern "C" {
     pub fn VSIInstallTarFileHandler();
 }
 extern "C" {
-    pub fn VSIInstallCryptFileHandler();
-}
-extern "C" {
-    pub fn VSISetCryptKey(pabyKey: *const GByte, nKeySize: libc::c_int);
-}
-extern "C" {
-    /// @cond Doxygen_Suppress
     pub fn VSICleanupFileManager();
 }
 extern "C" {
-    /// @endcond
     pub fn VSIFileFromMemBuffer(
         pszFilename: *const libc::c_char,
         pabyData: *mut GByte,
@@ -1161,7 +1018,6 @@ extern "C" {
         bUnlinkAndSeize: libc::c_int,
     ) -> *mut GByte;
 }
-/// Callback used by VSIStdoutSetRedirection()
 pub type VSIWriteFunction = ::std::option::Option<
     unsafe extern "C" fn(ptr: *const libc::c_void, size: usize, nmemb: usize, stream: *mut FILE)
         -> usize,
@@ -1170,7 +1026,6 @@ extern "C" {
     pub fn VSIStdoutSetRedirection(pFct: VSIWriteFunction, stream: *mut FILE);
 }
 extern "C" {
-    /// @cond Doxygen_Suppress
     pub fn VSITime(arg1: *mut libc::c_ulong) -> libc::c_ulong;
 }
 extern "C" {
@@ -1183,7 +1038,9 @@ extern "C" {
     pub fn VSILocalTime(pnTime: *const time_t, poBrokenTime: *mut tm) -> *mut tm;
 }
 pub mod CPLErr {
-    /// Error category
+    /// \file cpl_error.h
+    ///
+    /// CPL error handling services.
     pub type Type = u32;
     pub const CE_None: Type = 0;
     pub const CE_Debug: Type = 1;
@@ -1191,15 +1048,13 @@ pub mod CPLErr {
     pub const CE_Failure: Type = 3;
     pub const CE_Fatal: Type = 4;
 }
-/// Error number
-pub type CPLErrorNum = libc::c_int;
 extern "C" {
-    pub fn CPLError(eErrClass: CPLErr::Type, err_no: CPLErrorNum, fmt: *const libc::c_char, ...);
+    pub fn CPLError(eErrClass: CPLErr::Type, err_no: libc::c_int, fmt: *const libc::c_char, ...);
 }
 extern "C" {
     pub fn CPLErrorV(
         arg1: CPLErr::Type,
-        arg2: CPLErrorNum,
+        arg2: libc::c_int,
         arg3: *const libc::c_char,
         arg4: *mut __va_list_tag,
     );
@@ -1211,7 +1066,7 @@ extern "C" {
     pub fn CPLErrorReset();
 }
 extern "C" {
-    pub fn CPLGetLastErrorNo() -> CPLErrorNum;
+    pub fn CPLGetLastErrorNo() -> libc::c_int;
 }
 extern "C" {
     pub fn CPLGetLastErrorType() -> CPLErr::Type;
@@ -1225,26 +1080,24 @@ extern "C" {
 extern "C" {
     pub fn CPLErrorSetState(
         eErrClass: CPLErr::Type,
-        err_no: CPLErrorNum,
+        err_no: libc::c_int,
         pszMsg: *const libc::c_char,
     );
 }
 extern "C" {
-    /// @cond Doxygen_Suppress
     pub fn CPLCleanupErrorMutex();
 }
-/// Callback for a custom error handler
 pub type CPLErrorHandler = ::std::option::Option<
-    unsafe extern "C" fn(arg1: CPLErr::Type, arg2: CPLErrorNum, arg3: *const libc::c_char),
+    unsafe extern "C" fn(arg1: CPLErr::Type, arg2: libc::c_int, arg3: *const libc::c_char),
 >;
 extern "C" {
-    pub fn CPLLoggingErrorHandler(arg1: CPLErr::Type, arg2: CPLErrorNum, arg3: *const libc::c_char);
+    pub fn CPLLoggingErrorHandler(arg1: CPLErr::Type, arg2: libc::c_int, arg3: *const libc::c_char);
 }
 extern "C" {
-    pub fn CPLDefaultErrorHandler(arg1: CPLErr::Type, arg2: CPLErrorNum, arg3: *const libc::c_char);
+    pub fn CPLDefaultErrorHandler(arg1: CPLErr::Type, arg2: libc::c_int, arg3: *const libc::c_char);
 }
 extern "C" {
-    pub fn CPLQuietErrorHandler(arg1: CPLErr::Type, arg2: CPLErrorNum, arg3: *const libc::c_char);
+    pub fn CPLQuietErrorHandler(arg1: CPLErr::Type, arg2: libc::c_int, arg3: *const libc::c_char);
 }
 extern "C" {
     pub fn CPLTurnFailureIntoWarning(bOn: libc::c_int);
@@ -1262,27 +1115,20 @@ extern "C" {
     pub fn CPLPushErrorHandlerEx(arg1: CPLErrorHandler, arg2: *mut libc::c_void);
 }
 extern "C" {
-    pub fn CPLSetCurrentErrorHandlerCatchDebug(bCatchDebug: libc::c_int);
-}
-extern "C" {
     pub fn CPLPopErrorHandler();
 }
 extern "C" {
     pub fn CPLDebug(arg1: *const libc::c_char, arg2: *const libc::c_char, ...);
 }
 extern "C" {
-    /// @cond Doxygen_Suppress
+    /// \file cpl_conv.h
+    ///
+    /// Various convenience functions for CPL.
+    ///
     pub fn CPLVerifyConfiguration();
 }
 extern "C" {
-    /// @endcond
     pub fn CPLGetConfigOption(
-        arg1: *const libc::c_char,
-        arg2: *const libc::c_char,
-    ) -> *const libc::c_char;
-}
-extern "C" {
-    pub fn CPLGetThreadLocalConfigOption(
         arg1: *const libc::c_char,
         arg2: *const libc::c_char,
     ) -> *const libc::c_char;
@@ -1297,21 +1143,7 @@ extern "C" {
     );
 }
 extern "C" {
-    /// @cond Doxygen_Suppress
     pub fn CPLFreeConfig();
-}
-extern "C" {
-    /// @endcond
-    pub fn CPLGetConfigOptions() -> *mut *mut libc::c_char;
-}
-extern "C" {
-    pub fn CPLSetConfigOptions(papszConfigOptions: *const *const libc::c_char);
-}
-extern "C" {
-    pub fn CPLGetThreadLocalConfigOptions() -> *mut *mut libc::c_char;
-}
-extern "C" {
-    pub fn CPLSetThreadLocalConfigOptions(papszConfigOptions: *const *const libc::c_char);
 }
 extern "C" {
     pub fn CPLMalloc(arg1: usize) -> *mut libc::c_void;
@@ -1537,10 +1369,6 @@ extern "C" {
 extern "C" {
     pub fn CPLGenerateTempFilename(pszStem: *const libc::c_char) -> *const libc::c_char;
 }
-extern "C" {
-    pub fn CPLExpandTilde(pszFilename: *const libc::c_char) -> *const libc::c_char;
-}
-/// Callback for CPLPushFileFinder
 pub type CPLFileFinder = ::std::option::Option<
     unsafe extern "C" fn(arg1: *const libc::c_char, arg2: *const libc::c_char)
         -> *const libc::c_char,
@@ -1575,19 +1403,13 @@ extern "C" {
 extern "C" {
     pub fn CPLStat(arg1: *const libc::c_char, arg2: *mut VSIStatBuf) -> libc::c_int;
 }
-/// Information on a shared file
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct CPLSharedFileInfo {
-    /// < File pointer
     pub fp: *mut FILE,
-    /// < Reference counter
     pub nRefCount: libc::c_int,
-    /// < Whether fp must be interpreted as VSIFILE*
     pub bLarge: libc::c_int,
-    /// < Filename
     pub pszFilename: *mut libc::c_char,
-    /// < Access mode
     pub pszAccess: *mut libc::c_char,
 }
 #[test]
@@ -1670,11 +1492,9 @@ extern "C" {
     pub fn CPLDumpSharedList(arg1: *mut FILE);
 }
 extern "C" {
-    /// @cond Doxygen_Suppress
     pub fn CPLCleanupSharedFileMutex();
 }
 extern "C" {
-    /// @endcond
     pub fn CPLDMSToDec(is: *const libc::c_char) -> f64;
 }
 extern "C" {
@@ -1715,14 +1535,6 @@ extern "C" {
     ) -> libc::c_int;
 }
 extern "C" {
-    pub fn CPLSymlink(
-        pszOldPath: *const libc::c_char,
-        pszNewPath: *const libc::c_char,
-        papszOptions: *mut *mut libc::c_char,
-    ) -> libc::c_int;
-}
-extern "C" {
-    /// @endcond
     pub fn CPLCreateZip(
         pszZipFilename: *const libc::c_char,
         papszOptions: *mut *mut libc::c_char,
@@ -1778,7 +1590,6 @@ extern "C" {
     pub fn CPLsetlocale(category: libc::c_int, locale: *const libc::c_char) -> *mut libc::c_char;
 }
 extern "C" {
-    /// @cond Doxygen_Suppress
     pub fn CPLCleanupSetlocaleMutex();
 }
 pub type GDALProgressFunc = ::std::option::Option<
@@ -1960,8 +1771,7 @@ extern "C" {
     /// On Linux AMD64 platforms, the maximum value for nLength is 128 TB.
     /// On Linux x86 platforms, the maximum value for nLength is 2 GB.
     ///
-    /// Supported on Linux only in GDAL <= 2.0, and all POSIX systems supporting
-    /// mmap() in GDAL >= 2.1
+    /// Only supported on Linux for now.
     ///
     /// @param  fp       Virtual file handle.
     /// @param  nOffset  Offset in the file to start the mapping from.
@@ -2050,10 +1860,10 @@ extern "C" {
     pub fn CPLVirtualMemGetSize(ctxt: *mut CPLVirtualMem) -> usize;
 }
 extern "C" {
-    /// Return if the virtual memory mapping is a direct file mapping.
+    /// Return if the virtal memory mapping is a direct file mapping.
     ///
     /// @param ctxt context returned by CPLVirtualMemNew().
-    /// @return TRUE if the virtual memory mapping is a direct file mapping.
+    /// @return TRUE if the virtal memory mapping is a direct file mapping.
     ///
     /// @since GDAL 1.11
     pub fn CPLVirtualMemIsFileMapping(ctxt: *mut CPLVirtualMem) -> libc::c_int;
@@ -2160,7 +1970,9 @@ extern "C" {
     pub fn CPLVirtualMemManagerTerminate();
 }
 pub mod CPLXMLNodeType {
-    /// XML node type
+    /// \file cpl_minixml.h
+    ///
+    /// Definitions for CPL mini XML Parser/Serializer.
     pub type Type = u32;
     /// Node is an element
     pub const CXT_Element: Type = 0;
@@ -2181,7 +1993,7 @@ pub mod CPLXMLNodeType {
 /// contents should not normally be altered by application code, but may be
 /// freely examined by application code.
 ///
-/// Using the psChild and psNext pointers, a hierarchical tree structure
+/// Using the psChild and psNext pointers, a heirarchical tree structure
 /// for a document can be represented as a tree of CPLXMLNode structures.
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -2508,7 +2320,6 @@ fn bindgen_test_layout_OGREnvelope3D() {
     );
 }
 extern "C" {
-    /// @cond Doxygen_Suppress
     pub fn OGRMalloc(arg1: usize) -> *mut libc::c_void;
 }
 extern "C" {
@@ -2561,18 +2372,6 @@ pub mod OGRwkbGeometryType {
     pub const wkbMultiCurve: Type = 11;
     /// < GeometryCollection of Surfaces, ISO SQL/MM Part 3. GDAL &gt;= 2.0
     pub const wkbMultiSurface: Type = 12;
-    /// < Curve (abstract type). ISO SQL/MM Part 3. GDAL &gt;= 2.1
-    pub const wkbCurve: Type = 13;
-    /// < Surface (abstract type). ISO SQL/MM Part 3. GDAL &gt;= 2.1
-    pub const wkbSurface: Type = 14;
-    /// < a contiguous collection of polygons, which share common boundary segments,
-    /// ISO SQL/MM Part 3. Reserved in GDAL &gt;= 2.1 but not yet implemented
-    pub const wkbPolyhedralSurface: Type = 15;
-    /// < a PolyhedralSurface consisting only of Triangle patches
-    /// ISO SQL/MM Part 3. Reserved in GDAL &gt;= 2.1 but not yet implemented
-    pub const wkbTIN: Type = 16;
-    /// < a Triangle. ISO SQL/MM Part 3. Reserved in GDAL &gt;= 2.1 but not yet implemented
-    pub const wkbTriangle: Type = 17;
     /// < non-standard, for pure attribute records
     pub const wkbNone: Type = 100;
     /// < non-standard, just for createGeometry()
@@ -2587,84 +2386,6 @@ pub mod OGRwkbGeometryType {
     pub const wkbMultiCurveZ: Type = 1011;
     /// < wkbMultiSurface with Z component. ISO SQL/MM Part 3. GDAL &gt;= 2.0
     pub const wkbMultiSurfaceZ: Type = 1012;
-    /// < wkbCurve with Z component. ISO SQL/MM Part 3. GDAL &gt;= 2.1
-    pub const wkbCurveZ: Type = 1013;
-    /// < wkbSurface with Z component. ISO SQL/MM Part 3. GDAL &gt;= 2.1
-    pub const wkbSurfaceZ: Type = 1014;
-    /// < ISO SQL/MM Part 3. Reserved in GDAL &gt;= 2.1 but not yet implemented
-    pub const wkbPolyhedralSurfaceZ: Type = 1015;
-    /// < ISO SQL/MM Part 3. Reserved in GDAL &gt;= 2.1 but not yet implemented
-    pub const wkbTINZ: Type = 1016;
-    /// < ISO SQL/MM Part 3. Reserved in GDAL &gt;= 2.1 but not yet implemented
-    pub const wkbTriangleZ: Type = 1017;
-    /// < ISO SQL/MM Part 3. GDAL &gt;= 2.1
-    pub const wkbPointM: Type = 2001;
-    /// < ISO SQL/MM Part 3. GDAL &gt;= 2.1
-    pub const wkbLineStringM: Type = 2002;
-    /// < ISO SQL/MM Part 3. GDAL &gt;= 2.1
-    pub const wkbPolygonM: Type = 2003;
-    /// < ISO SQL/MM Part 3. GDAL &gt;= 2.1
-    pub const wkbMultiPointM: Type = 2004;
-    /// < ISO SQL/MM Part 3. GDAL &gt;= 2.1
-    pub const wkbMultiLineStringM: Type = 2005;
-    /// < ISO SQL/MM Part 3. GDAL &gt;= 2.1
-    pub const wkbMultiPolygonM: Type = 2006;
-    /// < ISO SQL/MM Part 3. GDAL &gt;= 2.1
-    pub const wkbGeometryCollectionM: Type = 2007;
-    /// < ISO SQL/MM Part 3. GDAL &gt;= 2.1
-    pub const wkbCircularStringM: Type = 2008;
-    /// < ISO SQL/MM Part 3. GDAL &gt;= 2.1
-    pub const wkbCompoundCurveM: Type = 2009;
-    /// < ISO SQL/MM Part 3. GDAL &gt;= 2.1
-    pub const wkbCurvePolygonM: Type = 2010;
-    /// < ISO SQL/MM Part 3. GDAL &gt;= 2.1
-    pub const wkbMultiCurveM: Type = 2011;
-    /// < ISO SQL/MM Part 3. GDAL &gt;= 2.1
-    pub const wkbMultiSurfaceM: Type = 2012;
-    /// < ISO SQL/MM Part 3. GDAL &gt;= 2.1
-    pub const wkbCurveM: Type = 2013;
-    /// < ISO SQL/MM Part 3. GDAL &gt;= 2.1
-    pub const wkbSurfaceM: Type = 2014;
-    /// < ISO SQL/MM Part 3. Reserved in GDAL &gt;= 2.1 but not yet implemented
-    pub const wkbPolyhedralSurfaceM: Type = 2015;
-    /// < ISO SQL/MM Part 3. Reserved in GDAL &gt;= 2.1 but not yet implemented
-    pub const wkbTINM: Type = 2016;
-    /// < ISO SQL/MM Part 3. Reserved in GDAL &gt;= 2.1 but not yet implemented
-    pub const wkbTriangleM: Type = 2017;
-    /// < ISO SQL/MM Part 3. GDAL &gt;= 2.1
-    pub const wkbPointZM: Type = 3001;
-    /// < ISO SQL/MM Part 3. GDAL &gt;= 2.1
-    pub const wkbLineStringZM: Type = 3002;
-    /// < ISO SQL/MM Part 3. GDAL &gt;= 2.1
-    pub const wkbPolygonZM: Type = 3003;
-    /// < ISO SQL/MM Part 3. GDAL &gt;= 2.1
-    pub const wkbMultiPointZM: Type = 3004;
-    /// < ISO SQL/MM Part 3. GDAL &gt;= 2.1
-    pub const wkbMultiLineStringZM: Type = 3005;
-    /// < ISO SQL/MM Part 3. GDAL &gt;= 2.1
-    pub const wkbMultiPolygonZM: Type = 3006;
-    /// < ISO SQL/MM Part 3. GDAL &gt;= 2.1
-    pub const wkbGeometryCollectionZM: Type = 3007;
-    /// < ISO SQL/MM Part 3. GDAL &gt;= 2.1
-    pub const wkbCircularStringZM: Type = 3008;
-    /// < ISO SQL/MM Part 3. GDAL &gt;= 2.1
-    pub const wkbCompoundCurveZM: Type = 3009;
-    /// < ISO SQL/MM Part 3. GDAL &gt;= 2.1
-    pub const wkbCurvePolygonZM: Type = 3010;
-    /// < ISO SQL/MM Part 3. GDAL &gt;= 2.1
-    pub const wkbMultiCurveZM: Type = 3011;
-    /// < ISO SQL/MM Part 3. GDAL &gt;= 2.1
-    pub const wkbMultiSurfaceZM: Type = 3012;
-    /// < ISO SQL/MM Part 3. GDAL &gt;= 2.1
-    pub const wkbCurveZM: Type = 3013;
-    /// < ISO SQL/MM Part 3. GDAL &gt;= 2.1
-    pub const wkbSurfaceZM: Type = 3014;
-    /// < ISO SQL/MM Part 3. Reserved in GDAL &gt;= 2.1 but not yet implemented
-    pub const wkbPolyhedralSurfaceZM: Type = 3015;
-    /// < ISO SQL/MM Part 3. Reserved in GDAL &gt;= 2.1 but not yet implemented
-    pub const wkbTINZM: Type = 3016;
-    /// < ISO SQL/MM Part 3. Reserved in GDAL &gt;= 2.1 but not yet implemented
-    pub const wkbTriangleZM: Type = 3017;
     /// < 2.5D extension as per 99-402
     pub const wkbPoint25D: Type = 2147483649;
     /// < 2.5D extension as per 99-402
@@ -2703,9 +2424,6 @@ extern "C" {
     pub fn OGR_GT_SetZ(eType: OGRwkbGeometryType::Type) -> OGRwkbGeometryType::Type;
 }
 extern "C" {
-    pub fn OGR_GT_SetM(eType: OGRwkbGeometryType::Type) -> OGRwkbGeometryType::Type;
-}
-extern "C" {
     pub fn OGR_GT_SetModifier(
         eType: OGRwkbGeometryType::Type,
         bSetZ: libc::c_int,
@@ -2714,9 +2432,6 @@ extern "C" {
 }
 extern "C" {
     pub fn OGR_GT_HasZ(eType: OGRwkbGeometryType::Type) -> libc::c_int;
-}
-extern "C" {
-    pub fn OGR_GT_HasM(eType: OGRwkbGeometryType::Type) -> libc::c_int;
 }
 extern "C" {
     pub fn OGR_GT_IsSubClassOf(
@@ -2743,11 +2458,8 @@ extern "C" {
     pub fn OGR_GT_GetLinear(eType: OGRwkbGeometryType::Type) -> OGRwkbGeometryType::Type;
 }
 pub mod OGRwkbByteOrder {
-    /// Enumeration to describe byte order
     pub type Type = u32;
-    /// < MSB/Sun/Motoroloa: Most Significant Byte First
     pub const wkbXDR: Type = 0;
-    /// < LSB/Intel/Vax: Least Significant Byte First
     pub const wkbNDR: Type = 1;
 }
 pub mod OGRFieldType {
@@ -2801,9 +2513,9 @@ pub mod OGRFieldSubType {
     pub const OFSTBoolean: Type = 1;
     /// Signed 16-bit integer. Only valid for OFTInteger and OFTIntegerList.
     pub const OFSTInt16: Type = 2;
-    /// Single precision (32 bit) floating point. Only valid for OFTReal and OFTRealList.
+    /// Single precision (32 bit) floatint point. Only valid for OFTReal and OFTRealList.
     pub const OFSTFloat32: Type = 3;
-    /// Single precision (32 bit) floating point. Only valid for OFTReal and OFTRealList.
+    /// Single precision (32 bit) floatint point. Only valid for OFTReal and OFTRealList.
     pub const OFSTMaxSubType: Type = 3;
 }
 pub mod OGRJustification {
@@ -2817,7 +2529,6 @@ pub mod OGRJustification {
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub union OGRField {
-    /// @cond Doxygen_Suppress
     pub Integer: libc::c_int,
     pub Integer64: GIntBig,
     pub Real: f64,
@@ -3031,13 +2742,12 @@ fn bindgen_test_layout_OGRField__bindgen_ty_5() {
 pub struct OGRField__bindgen_ty_6 {
     pub nMarker1: libc::c_int,
     pub nMarker2: libc::c_int,
-    pub nMarker3: libc::c_int,
 }
 #[test]
 fn bindgen_test_layout_OGRField__bindgen_ty_6() {
     assert_eq!(
         ::std::mem::size_of::<OGRField__bindgen_ty_6>(),
-        12usize,
+        8usize,
         concat!("Size of: ", stringify!(OGRField__bindgen_ty_6))
     );
     assert_eq!(
@@ -3063,16 +2773,6 @@ fn bindgen_test_layout_OGRField__bindgen_ty_6() {
             stringify!(OGRField__bindgen_ty_6),
             "::",
             stringify!(nMarker2)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<OGRField__bindgen_ty_6>())).nMarker3 as *const _ as usize },
-        8usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(OGRField__bindgen_ty_6),
-            "::",
-            stringify!(nMarker3)
         )
     );
 }
@@ -3314,34 +3014,22 @@ extern "C" {
 pub mod ogr_style_tool_class_id {
     /// OGRStyleTool derived class types (returned by GetType()).
     pub type Type = u32;
-    /// < None
     pub const OGRSTCNone: Type = 0;
-    /// < Pen
     pub const OGRSTCPen: Type = 1;
-    /// < Brush
     pub const OGRSTCBrush: Type = 2;
-    /// < Symbol
     pub const OGRSTCSymbol: Type = 3;
-    /// < Label
     pub const OGRSTCLabel: Type = 4;
-    /// < Vector
     pub const OGRSTCVector: Type = 5;
 }
 pub use self::ogr_style_tool_class_id::Type as OGRSTClassId;
 pub mod ogr_style_tool_units_id {
     /// List of units supported by OGRStyleTools.
     pub type Type = u32;
-    /// < Ground unit
     pub const OGRSTUGround: Type = 0;
-    /// < Pixel
     pub const OGRSTUPixel: Type = 1;
-    /// < Points
     pub const OGRSTUPoints: Type = 2;
-    /// < Millimeter
     pub const OGRSTUMM: Type = 3;
-    /// < Centimeter
     pub const OGRSTUCM: Type = 4;
-    /// < Inch
     pub const OGRSTUInches: Type = 5;
 }
 pub use self::ogr_style_tool_units_id::Type as OGRSTUnitId;
@@ -3352,12 +3040,12 @@ extern "C" {
     /// Return TRUE if GDAL library version at runtime matches nVersionMajor.nVersionMinor.
     ///
     /// The purpose of this method is to ensure that calling code will run with the GDAL
-    /// version it is compiled for. It is primarily indented for external plugins.
+    /// version it is compiled for. It is primarly intented for external plugins.
     ///
     /// @param nVersionMajor Major version to be tested against
     /// @param nVersionMinor Minor version to be tested against
     /// @param pszCallingComponentName If not NULL, in case of version mismatch, the method
-    /// will issue a failure mentioning the name of
+    /// will issue a failure mentionning the name of
     /// the calling component.
     pub fn GDALCheckVersion(
         nVersionMajor: libc::c_int,
@@ -3365,11 +3053,8 @@ extern "C" {
         pszCallingComponentName: *const libc::c_char,
     ) -> libc::c_int;
 }
-/// Opaque type for a geometyr
 pub type OGRGeometryH = *mut libc::c_void;
-/// Opaque type for a spatial reference system
 pub type OGRSpatialReferenceH = *mut libc::c_void;
-/// Opaque type for a coordinate transformation object
 pub type OGRCoordinateTransformationH = *mut libc::c_void;
 extern "C" {
     pub fn OGR_G_CreateFromWkb(
@@ -3443,22 +3128,7 @@ extern "C" {
     pub fn OGR_G_GetCoordinateDimension(arg1: OGRGeometryH) -> libc::c_int;
 }
 extern "C" {
-    pub fn OGR_G_CoordinateDimension(arg1: OGRGeometryH) -> libc::c_int;
-}
-extern "C" {
     pub fn OGR_G_SetCoordinateDimension(arg1: OGRGeometryH, arg2: libc::c_int);
-}
-extern "C" {
-    pub fn OGR_G_Is3D(arg1: OGRGeometryH) -> libc::c_int;
-}
-extern "C" {
-    pub fn OGR_G_IsMeasured(arg1: OGRGeometryH) -> libc::c_int;
-}
-extern "C" {
-    pub fn OGR_G_Set3D(arg1: OGRGeometryH, arg2: libc::c_int);
-}
-extern "C" {
-    pub fn OGR_G_SetMeasured(arg1: OGRGeometryH, arg2: libc::c_int);
 }
 extern "C" {
     pub fn OGR_G_Clone(arg1: OGRGeometryH) -> OGRGeometryH;
@@ -3554,7 +3224,6 @@ extern "C" {
     ) -> *mut libc::c_char;
 }
 extern "C" {
-    /// Create a OGR geometry from a GeoJSON geometry object
     pub fn OGR_G_CreateGeometryFromJson(arg1: *const libc::c_char) -> OGRGeometryH;
 }
 extern "C" {
@@ -3574,13 +3243,6 @@ extern "C" {
 }
 extern "C" {
     pub fn OGR_G_SimplifyPreserveTopology(hThis: OGRGeometryH, tolerance: f64) -> OGRGeometryH;
-}
-extern "C" {
-    pub fn OGR_G_DelaunayTriangulation(
-        hThis: OGRGeometryH,
-        dfTolerance: f64,
-        bOnlyEdges: libc::c_int,
-    ) -> OGRGeometryH;
 }
 extern "C" {
     pub fn OGR_G_Segmentize(hGeom: OGRGeometryH, dfMaxLength: f64);
@@ -3640,9 +3302,6 @@ extern "C" {
     pub fn OGR_G_Distance(arg1: OGRGeometryH, arg2: OGRGeometryH) -> f64;
 }
 extern "C" {
-    pub fn OGR_G_Distance3D(arg1: OGRGeometryH, arg2: OGRGeometryH) -> f64;
-}
-extern "C" {
     pub fn OGR_G_Length(arg1: OGRGeometryH) -> f64;
 }
 extern "C" {
@@ -3673,7 +3332,6 @@ extern "C" {
     pub fn OGR_G_Polygonize(arg1: OGRGeometryH) -> OGRGeometryH;
 }
 extern "C" {
-    /// @cond Doxygen_Suppress
     pub fn OGR_G_Intersect(arg1: OGRGeometryH, arg2: OGRGeometryH) -> libc::c_int;
 }
 extern "C" {
@@ -3689,7 +3347,6 @@ extern "C" {
     pub fn OGR_G_GetBoundary(arg1: OGRGeometryH) -> OGRGeometryH;
 }
 extern "C" {
-    /// @endcond
     pub fn OGR_G_GetPointCount(arg1: OGRGeometryH) -> libc::c_int;
 }
 extern "C" {
@@ -3704,19 +3361,6 @@ extern "C" {
     ) -> libc::c_int;
 }
 extern "C" {
-    pub fn OGR_G_GetPointsZM(
-        hGeom: OGRGeometryH,
-        pabyX: *mut libc::c_void,
-        nXStride: libc::c_int,
-        pabyY: *mut libc::c_void,
-        nYStride: libc::c_int,
-        pabyZ: *mut libc::c_void,
-        nZStride: libc::c_int,
-        pabyM: *mut libc::c_void,
-        nMStride: libc::c_int,
-    ) -> libc::c_int;
-}
-extern "C" {
     pub fn OGR_G_GetX(arg1: OGRGeometryH, arg2: libc::c_int) -> f64;
 }
 extern "C" {
@@ -3726,25 +3370,12 @@ extern "C" {
     pub fn OGR_G_GetZ(arg1: OGRGeometryH, arg2: libc::c_int) -> f64;
 }
 extern "C" {
-    pub fn OGR_G_GetM(arg1: OGRGeometryH, arg2: libc::c_int) -> f64;
-}
-extern "C" {
     pub fn OGR_G_GetPoint(
         arg1: OGRGeometryH,
         iPoint: libc::c_int,
         arg2: *mut f64,
         arg3: *mut f64,
         arg4: *mut f64,
-    );
-}
-extern "C" {
-    pub fn OGR_G_GetPointZM(
-        arg1: OGRGeometryH,
-        iPoint: libc::c_int,
-        arg2: *mut f64,
-        arg3: *mut f64,
-        arg4: *mut f64,
-        arg5: *mut f64,
     );
 }
 extern "C" {
@@ -3757,35 +3388,10 @@ extern "C" {
     pub fn OGR_G_SetPoint_2D(arg1: OGRGeometryH, iPoint: libc::c_int, arg2: f64, arg3: f64);
 }
 extern "C" {
-    pub fn OGR_G_SetPointM(
-        arg1: OGRGeometryH,
-        iPoint: libc::c_int,
-        arg2: f64,
-        arg3: f64,
-        arg4: f64,
-    );
-}
-extern "C" {
-    pub fn OGR_G_SetPointZM(
-        arg1: OGRGeometryH,
-        iPoint: libc::c_int,
-        arg2: f64,
-        arg3: f64,
-        arg4: f64,
-        arg5: f64,
-    );
-}
-extern "C" {
     pub fn OGR_G_AddPoint(arg1: OGRGeometryH, arg2: f64, arg3: f64, arg4: f64);
 }
 extern "C" {
     pub fn OGR_G_AddPoint_2D(arg1: OGRGeometryH, arg2: f64, arg3: f64);
-}
-extern "C" {
-    pub fn OGR_G_AddPointM(arg1: OGRGeometryH, arg2: f64, arg3: f64, arg4: f64);
-}
-extern "C" {
-    pub fn OGR_G_AddPointZM(arg1: OGRGeometryH, arg2: f64, arg3: f64, arg4: f64, arg5: f64);
 }
 extern "C" {
     pub fn OGR_G_SetPoints(
@@ -3797,20 +3403,6 @@ extern "C" {
         nYStride: libc::c_int,
         pabyZ: *mut libc::c_void,
         nZStride: libc::c_int,
-    );
-}
-extern "C" {
-    pub fn OGR_G_SetPointsZM(
-        hGeom: OGRGeometryH,
-        nPointsIn: libc::c_int,
-        pabyX: *mut libc::c_void,
-        nXStride: libc::c_int,
-        pabyY: *mut libc::c_void,
-        nYStride: libc::c_int,
-        pabyZ: *mut libc::c_void,
-        nZStride: libc::c_int,
-        pabyM: *mut libc::c_void,
-        nMStride: libc::c_int,
     );
 }
 extern "C" {
@@ -3861,7 +3453,6 @@ extern "C" {
     ) -> OGRGeometryH;
 }
 extern "C" {
-    /// @cond Doxygen_Suppress
     pub fn OGRSetGenerate_DB2_V72_BYTE_ORDER(
         bGenerate_DB2_V72_BYTE_ORDER: libc::c_int,
     ) -> OGRErr::Type;
@@ -3870,26 +3461,20 @@ extern "C" {
     pub fn OGRGetGenerate_DB2_V72_BYTE_ORDER() -> libc::c_int;
 }
 extern "C" {
-    /// @endcond
     pub fn OGRSetNonLinearGeometriesEnabledFlag(bFlag: libc::c_int);
 }
 extern "C" {
     pub fn OGRGetNonLinearGeometriesEnabledFlag() -> libc::c_int;
 }
-/// Opaque type for a field definition (OGRFieldDefn)
 pub type OGRFieldDefnH = *mut libc::c_void;
-/// Opaque type for a feature definition (OGRFeatureDefn)
 pub type OGRFeatureDefnH = *mut libc::c_void;
-/// Opaque type for a feature (OGRFeature)
 pub type OGRFeatureH = *mut libc::c_void;
-/// Opaque type for a style table (OGRStyleTable)
 pub type OGRStyleTableH = *mut libc::c_void;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct OGRGeomFieldDefnHS {
     _unused: [u8; 0],
 }
-/// Opaque type for a geometry field definition (OGRGeomFieldDefn)
 pub type OGRGeomFieldDefnH = *mut OGRGeomFieldDefnHS;
 extern "C" {
     pub fn OGR_Fld_Create(arg1: *const libc::c_char, arg2: OGRFieldType::Type) -> OGRFieldDefnH;
@@ -4142,28 +3727,7 @@ extern "C" {
     pub fn OGR_F_UnsetField(arg1: OGRFeatureH, arg2: libc::c_int);
 }
 extern "C" {
-    pub fn OGR_F_IsFieldNull(arg1: OGRFeatureH, arg2: libc::c_int) -> libc::c_int;
-}
-extern "C" {
-    pub fn OGR_F_IsFieldSetAndNotNull(arg1: OGRFeatureH, arg2: libc::c_int) -> libc::c_int;
-}
-extern "C" {
-    pub fn OGR_F_SetFieldNull(arg1: OGRFeatureH, arg2: libc::c_int);
-}
-extern "C" {
     pub fn OGR_F_GetRawFieldRef(arg1: OGRFeatureH, arg2: libc::c_int) -> *mut OGRField;
-}
-extern "C" {
-    pub fn OGR_RawField_IsUnset(arg1: *const OGRField) -> libc::c_int;
-}
-extern "C" {
-    pub fn OGR_RawField_IsNull(arg1: *const OGRField) -> libc::c_int;
-}
-extern "C" {
-    pub fn OGR_RawField_SetUnset(arg1: *mut OGRField);
-}
-extern "C" {
-    pub fn OGR_RawField_SetNull(arg1: *mut OGRField);
 }
 extern "C" {
     pub fn OGR_F_GetFieldAsInteger(arg1: OGRFeatureH, arg2: libc::c_int) -> libc::c_int;
@@ -4374,28 +3938,13 @@ extern "C" {
     pub fn OGR_F_SetStyleStringDirectly(arg1: OGRFeatureH, arg2: *mut libc::c_char);
 }
 extern "C" {
-    /// Return style table
     pub fn OGR_F_GetStyleTable(arg1: OGRFeatureH) -> OGRStyleTableH;
 }
 extern "C" {
-    /// Set style table and take ownership
     pub fn OGR_F_SetStyleTableDirectly(arg1: OGRFeatureH, arg2: OGRStyleTableH);
 }
 extern "C" {
-    /// Set style table
     pub fn OGR_F_SetStyleTable(arg1: OGRFeatureH, arg2: OGRStyleTableH);
-}
-extern "C" {
-    pub fn OGR_F_GetNativeData(arg1: OGRFeatureH) -> *const libc::c_char;
-}
-extern "C" {
-    pub fn OGR_F_SetNativeData(arg1: OGRFeatureH, arg2: *const libc::c_char);
-}
-extern "C" {
-    pub fn OGR_F_GetNativeMediaType(arg1: OGRFeatureH) -> *const libc::c_char;
-}
-extern "C" {
-    pub fn OGR_F_SetNativeMediaType(arg1: OGRFeatureH, arg2: *const libc::c_char);
 }
 extern "C" {
     pub fn OGR_F_FillUnsetWithDefault(
@@ -4411,11 +3960,8 @@ extern "C" {
         bEmitError: libc::c_int,
     ) -> libc::c_int;
 }
-/// Opaque type for a layer (OGRLayer)
 pub type OGRLayerH = *mut libc::c_void;
-/// Opaque type for a OGR datasource (OGRDataSource)
 pub type OGRDataSourceH = *mut libc::c_void;
-/// Opaque type for a OGR driver (OGRSFDriver)
 pub type OGRSFDriverH = *mut libc::c_void;
 extern "C" {
     pub fn OGR_L_GetName(arg1: OGRLayerH) -> *const libc::c_char;
@@ -4548,7 +4094,6 @@ extern "C" {
     pub fn OGR_L_RollbackTransaction(arg1: OGRLayerH) -> OGRErr::Type;
 }
 extern "C" {
-    /// @cond Doxygen_Suppress
     pub fn OGR_L_Reference(arg1: OGRLayerH) -> libc::c_int;
 }
 extern "C" {
@@ -4558,30 +4103,24 @@ extern "C" {
     pub fn OGR_L_GetRefCount(arg1: OGRLayerH) -> libc::c_int;
 }
 extern "C" {
-    /// @endcond
     pub fn OGR_L_SyncToDisk(arg1: OGRLayerH) -> OGRErr::Type;
 }
 extern "C" {
-    /// @cond Doxygen_Suppress
     pub fn OGR_L_GetFeaturesRead(arg1: OGRLayerH) -> GIntBig;
 }
 extern "C" {
-    /// @endcond
     pub fn OGR_L_GetFIDColumn(arg1: OGRLayerH) -> *const libc::c_char;
 }
 extern "C" {
     pub fn OGR_L_GetGeometryColumn(arg1: OGRLayerH) -> *const libc::c_char;
 }
 extern "C" {
-    /// Get style table
     pub fn OGR_L_GetStyleTable(arg1: OGRLayerH) -> OGRStyleTableH;
 }
 extern "C" {
-    /// Set style table (and take ownership)
     pub fn OGR_L_SetStyleTableDirectly(arg1: OGRLayerH, arg2: OGRStyleTableH);
 }
 extern "C" {
-    /// Set style table
     pub fn OGR_L_SetStyleTable(arg1: OGRLayerH, arg2: OGRStyleTableH);
 }
 extern "C" {
@@ -4710,7 +4249,6 @@ extern "C" {
     pub fn OGR_DS_ReleaseResultSet(arg1: OGRDataSourceH, arg2: OGRLayerH);
 }
 extern "C" {
-    /// @cond Doxygen_Suppress
     pub fn OGR_DS_Reference(arg1: OGRDataSourceH) -> libc::c_int;
 }
 extern "C" {
@@ -4723,20 +4261,15 @@ extern "C" {
     pub fn OGR_DS_GetSummaryRefCount(arg1: OGRDataSourceH) -> libc::c_int;
 }
 extern "C" {
-    /// @endcond */
-    /// /** Flush pending changes to disk. See GDALDataset::FlushCache()
     pub fn OGR_DS_SyncToDisk(arg1: OGRDataSourceH) -> OGRErr::Type;
 }
 extern "C" {
-    /// Get style table
     pub fn OGR_DS_GetStyleTable(arg1: OGRDataSourceH) -> OGRStyleTableH;
 }
 extern "C" {
-    /// Set style table (and take ownership)
     pub fn OGR_DS_SetStyleTableDirectly(arg1: OGRDataSourceH, arg2: OGRStyleTableH);
 }
 extern "C" {
-    /// Set style table
     pub fn OGR_DS_SetStyleTable(arg1: OGRDataSourceH, arg2: OGRStyleTableH);
 }
 extern "C" {
@@ -4788,14 +4321,12 @@ extern "C" {
     pub fn OGRReleaseDataSource(arg1: OGRDataSourceH) -> OGRErr::Type;
 }
 extern "C" {
-    /// @cond Doxygen_Suppress
     pub fn OGRRegisterDriver(arg1: OGRSFDriverH);
 }
 extern "C" {
     pub fn OGRDeregisterDriver(arg1: OGRSFDriverH);
 }
 extern "C" {
-    /// @endcond
     pub fn OGRGetDriverCount() -> libc::c_int;
 }
 extern "C" {
@@ -4805,24 +4336,18 @@ extern "C" {
     pub fn OGRGetDriverByName(arg1: *const libc::c_char) -> OGRSFDriverH;
 }
 extern "C" {
-    /// @cond Doxygen_Suppress
     pub fn OGRGetOpenDSCount() -> libc::c_int;
 }
 extern "C" {
     pub fn OGRGetOpenDS(iDS: libc::c_int) -> OGRDataSourceH;
 }
 extern "C" {
-    /// @endcond
     pub fn OGRRegisterAll();
 }
 extern "C" {
-    /// Clean-up all drivers (including raster ones starting with GDAL 2.0.
-    /// See GDALDestroyDriverManager()
     pub fn OGRCleanupAll();
 }
-/// Style manager opaque type
 pub type OGRStyleMgrH = *mut libc::c_void;
-/// Style tool opaque type
 pub type OGRStyleToolH = *mut libc::c_void;
 extern "C" {
     pub fn OGR_SM_Create(hStyleTable: OGRStyleTableH) -> OGRStyleMgrH;
@@ -4998,12 +4523,6 @@ extern "C" {
     pub fn GDALGetDataTypeSize(arg1: GDALDataType::Type) -> libc::c_int;
 }
 extern "C" {
-    pub fn GDALGetDataTypeSizeBits(eDataType: GDALDataType::Type) -> libc::c_int;
-}
-extern "C" {
-    pub fn GDALGetDataTypeSizeBytes(arg1: GDALDataType::Type) -> libc::c_int;
-}
-extern "C" {
     pub fn GDALDataTypeIsComplex(arg1: GDALDataType::Type) -> libc::c_int;
 }
 extern "C" {
@@ -5017,17 +4536,6 @@ extern "C" {
         arg1: GDALDataType::Type,
         arg2: GDALDataType::Type,
     ) -> GDALDataType::Type;
-}
-extern "C" {
-    pub fn GDALAdjustValueToDataType(
-        eDT: GDALDataType::Type,
-        dfValue: f64,
-        pbClamped: *mut libc::c_int,
-        pbRounded: *mut libc::c_int,
-    ) -> f64;
-}
-extern "C" {
-    pub fn GDALGetNonComplexDataType(arg1: GDALDataType::Type) -> GDALDataType::Type;
 }
 pub mod GDALAsyncStatusType {
     /// status of the asynchronous stream
@@ -5328,14 +4836,6 @@ extern "C" {
     ) -> GDALDriverH;
 }
 extern "C" {
-    pub fn GDALIdentifyDriverEx(
-        pszFilename: *const libc::c_char,
-        nIdentifyFlags: libc::c_uint,
-        papszAllowedDrivers: *const *const libc::c_char,
-        papszFileList: *const *const libc::c_char,
-    ) -> GDALDriverH;
-}
-extern "C" {
     pub fn GDALOpen(pszFilename: *const libc::c_char, eAccess: GDALAccess::Type) -> GDALDatasetH;
 }
 extern "C" {
@@ -5361,9 +4861,6 @@ extern "C" {
 }
 extern "C" {
     pub fn GDALGetDriver(arg1: libc::c_int) -> GDALDriverH;
-}
-extern "C" {
-    pub fn GDALCreateDriver() -> GDALDriverH;
 }
 extern "C" {
     pub fn GDALDestroyDriver(arg1: GDALDriverH);
@@ -5739,9 +5236,6 @@ extern "C" {
     pub fn GDALDereferenceDataset(arg1: GDALDatasetH) -> libc::c_int;
 }
 extern "C" {
-    pub fn GDALReleaseDataset(arg1: GDALDatasetH) -> libc::c_int;
-}
-extern "C" {
     pub fn GDALBuildOverviews(
         arg1: GDALDatasetH,
         arg2: *const libc::c_char,
@@ -5778,7 +5272,7 @@ extern "C" {
     pub fn GDALRasterBandCopyWholeRaster(
         hSrcBand: GDALRasterBandH,
         hDstBand: GDALRasterBandH,
-        constpapszOptions: *const *const libc::c_char,
+        papszOptions: *mut *mut libc::c_char,
         pfnProgress: GDALProgressFunc,
         pProgressData: *mut libc::c_void,
     ) -> CPLErr::Type;
@@ -5823,18 +5317,6 @@ extern "C" {
     ) -> OGRLayerH;
 }
 extern "C" {
-    pub fn GDALDatasetResetReading(arg1: GDALDatasetH);
-}
-extern "C" {
-    pub fn GDALDatasetGetNextFeature(
-        hDS: GDALDatasetH,
-        phBelongingLayer: *mut OGRLayerH,
-        pdfProgressPct: *mut f64,
-        pfnProgress: GDALProgressFunc,
-        pProgressData: *mut libc::c_void,
-    ) -> OGRFeatureH;
-}
-extern "C" {
     pub fn GDALDatasetTestCapability(arg1: GDALDatasetH, arg2: *const libc::c_char) -> libc::c_int;
 }
 extern "C" {
@@ -5866,8 +5348,6 @@ extern "C" {
 extern "C" {
     pub fn GDALDatasetRollbackTransaction(hDS: GDALDatasetH) -> OGRErr::Type;
 }
-/// Type of functions to pass to GDALAddDerivedBandPixelFunc.
-/// @since GDAL 2.2
 pub type GDALDerivedPixelFunc = ::std::option::Option<
     unsafe extern "C" fn(
         papoSources: *mut *mut libc::c_void,
@@ -5890,15 +5370,6 @@ extern "C" {
         pnXSize: *mut libc::c_int,
         pnYSize: *mut libc::c_int,
     );
-}
-extern "C" {
-    pub fn GDALGetActualBlockSize(
-        arg1: GDALRasterBandH,
-        nXBlockOff: libc::c_int,
-        nYBlockOff: libc::c_int,
-        pnXValid: *mut libc::c_int,
-        pnYValid: *mut libc::c_int,
-    ) -> CPLErr::Type;
 }
 extern "C" {
     pub fn GDALRasterAdviseRead(
@@ -6006,9 +5477,6 @@ extern "C" {
 }
 extern "C" {
     pub fn GDALSetRasterNoDataValue(arg1: GDALRasterBandH, arg2: f64) -> CPLErr::Type;
-}
-extern "C" {
-    pub fn GDALDeleteRasterNoDataValue(arg1: GDALRasterBandH) -> CPLErr::Type;
 }
 extern "C" {
     pub fn GDALGetRasterCategoryNames(arg1: GDALRasterBandH) -> *mut *mut libc::c_char;
@@ -6221,17 +5689,6 @@ extern "C" {
     pub fn GDALCreateMaskBand(hBand: GDALRasterBandH, nFlags: libc::c_int) -> CPLErr::Type;
 }
 extern "C" {
-    pub fn GDALGetDataCoverageStatus(
-        hBand: GDALRasterBandH,
-        nXOff: libc::c_int,
-        nYOff: libc::c_int,
-        nXSize: libc::c_int,
-        nYSize: libc::c_int,
-        nMaskFlagStop: libc::c_int,
-        pdfDataPct: *mut f64,
-    ) -> libc::c_int;
-}
-extern "C" {
     pub fn GDALARGetNextUpdatedRegion(
         hARIO: GDALAsyncReaderH,
         dfTimeout: f64,
@@ -6263,16 +5720,8 @@ extern "C" {
     );
 }
 extern "C" {
-    pub fn GDALSwapWordsEx(
-        pData: *mut libc::c_void,
-        nWordSize: libc::c_int,
-        nWordCount: usize,
-        nWordSkip: libc::c_int,
-    );
-}
-extern "C" {
     pub fn GDALCopyWords(
-        pSrcData: *const libc::c_void,
+        pSrcData: *mut libc::c_void,
         eSrcType: GDALDataType::Type,
         nSrcPixelOffset: libc::c_int,
         pDstData: *mut libc::c_void,
@@ -6359,46 +5808,26 @@ extern "C" {
 extern "C" {
     pub fn GDALDecToPackedDMS(arg1: f64) -> f64;
 }
-/// Strucutre to store Rational Polynomial Coefficients / Rigorous Projection
-/// Model. See http://geotiff.maptools.org/rpc_prop.html
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct GDALRPCInfo {
-    /// < Line offset
     pub dfLINE_OFF: f64,
-    /// < Sample/Pixel offset
     pub dfSAMP_OFF: f64,
-    /// < Latitude offset
     pub dfLAT_OFF: f64,
-    /// < Longitude offset
     pub dfLONG_OFF: f64,
-    /// < Height offset
     pub dfHEIGHT_OFF: f64,
-    /// < Line scale
     pub dfLINE_SCALE: f64,
-    /// < Sample/Pixel scale
     pub dfSAMP_SCALE: f64,
-    /// < Latitude scale
     pub dfLAT_SCALE: f64,
-    /// < Longitude scale
     pub dfLONG_SCALE: f64,
-    /// < Height scale
     pub dfHEIGHT_SCALE: f64,
-    /// < Line Numerator Coefficients
     pub adfLINE_NUM_COEFF: [f64; 20usize],
-    /// < Line Denominator Coefficients
     pub adfLINE_DEN_COEFF: [f64; 20usize],
-    /// < Sample/Pixel Numerator Coefficients
     pub adfSAMP_NUM_COEFF: [f64; 20usize],
-    /// < Sample/Pixel Denominator Coefficients
     pub adfSAMP_DEN_COEFF: [f64; 20usize],
-    /// < Minimum longitude
     pub dfMIN_LONG: f64,
-    /// < Minimum latitude
     pub dfMIN_LAT: f64,
-    /// < Maximum longitude
     pub dfMAX_LONG: f64,
-    /// < Maximum latitude
     pub dfMAX_LAT: f64,
 }
 #[test]
@@ -6987,11 +6416,10 @@ extern "C" {
     ) -> *mut CPLVirtualMem;
 }
 pub mod GDALTileOrganization {
-    /// Enumeration to describe the tile organization
     pub type Type = u32;
     /// Tile Interleaved by Pixel: tile (0,0) with internal band interleaved by pixel organization, tile (1, 0), ...
     pub const GTO_TIP: Type = 0;
-    /// Band Interleaved by Tile : tile (0,0) of first band, tile (0,0) of second band, ... tile (1,0) of first band, tile (1,0) of second band, ...
+    /// Band Interleaved by Tile : tile (0,0) of first band, tile (0,0) of second band, ... tile (1,0) of fisrt band, tile (1,0) of second band, ...
     pub const GTO_BIT: Type = 1;
     /// Band SeQuential : all the tiles of first band, all the tiles of following band...
     pub const GTO_BSQ: Type = 2;
@@ -7030,14 +6458,6 @@ extern "C" {
         bSingleThreadUsage: libc::c_int,
         papszOptions: *mut *mut libc::c_char,
     ) -> *mut CPLVirtualMem;
-}
-extern "C" {
-    pub fn GDALCreatePansharpenedVRT(
-        pszXML: *const libc::c_char,
-        hPanchroBand: GDALRasterBandH,
-        nInputSpectralBands: libc::c_int,
-        pahInputSpectralBands: *mut GDALRasterBandH,
-    ) -> GDALDatasetH;
 }
 extern "C" {
     pub fn GDALGetJPEG2000Structure(
@@ -7147,12 +6567,11 @@ pub type GDALTransformerFunc = ::std::option::Option<
     ) -> libc::c_int,
 >;
 extern "C" {
-    /// @cond Doxygen_Suppress
     pub fn GDALDestroyTransformer(pTransformerArg: *mut libc::c_void);
 }
 extern "C" {
     pub fn GDALUseTransformer(
-        pTransformerArg: *mut libc::c_void,
+        pTranformerArg: *mut libc::c_void,
         bDstToSrc: libc::c_int,
         nPointCount: libc::c_int,
         x: *mut f64,
@@ -7169,7 +6588,6 @@ extern "C" {
     ) -> *mut libc::c_void;
 }
 extern "C" {
-    /// @endcond
     pub fn GDALCreateGenImgProjTransformer(
         hSrcDS: GDALDatasetH,
         pszSrcWKT: *const libc::c_char,
@@ -7214,9 +6632,6 @@ extern "C" {
 }
 extern "C" {
     pub fn GDALSetTransformerDstGeoTransform(arg1: *mut libc::c_void, arg2: *const f64);
-}
-extern "C" {
-    pub fn GDALGetTransformerDstGeoTransform(arg1: *mut libc::c_void, arg2: *mut f64);
 }
 extern "C" {
     pub fn GDALCreateReprojectionTransformer(
@@ -7292,7 +6707,6 @@ extern "C" {
     ) -> libc::c_int;
 }
 extern "C" {
-    /// @endcond
     pub fn GDALCreateRPCTransformer(
         psRPC: *mut GDALRPCInfo,
         bReversed: libc::c_int,
@@ -7398,7 +6812,6 @@ extern "C" {
     ) -> CPLErr::Type;
 }
 extern "C" {
-    /// @cond Doxygen_Suppress
     pub fn GDALSerializeTransformer(
         pfnFunc: GDALTransformerFunc,
         pTransformArg: *mut libc::c_void,
@@ -7412,7 +6825,6 @@ extern "C" {
     ) -> CPLErr::Type;
 }
 extern "C" {
-    /// @endcond
     pub fn GDALTransformGeolocations(
         hXBand: GDALRasterBandH,
         hYBand: GDALRasterBandH,
@@ -7424,7 +6836,6 @@ extern "C" {
         papszOptions: *mut *mut libc::c_char,
     ) -> CPLErr::Type;
 }
-/// Contour writer callback type
 pub type GDALContourWriter = ::std::option::Option<
     unsafe extern "C" fn(
         dfLevel: f64,
@@ -7434,7 +6845,6 @@ pub type GDALContourWriter = ::std::option::Option<
         arg1: *mut libc::c_void,
     ) -> CPLErr::Type,
 >;
-/// Contour generator opaque type
 pub type GDALContourGeneratorH = *mut libc::c_void;
 extern "C" {
     pub fn GDAL_CG_Create(
@@ -7464,7 +6874,6 @@ extern "C" {
     ) -> CPLErr::Type;
 }
 extern "C" {
-    /// @endcond
     pub fn GDALContourGenerate(
         hBand: GDALRasterBandH,
         dfContourInterval: f64,
@@ -7552,10 +6961,6 @@ pub mod GDALGridAlgorithm {
     pub const GGA_MetricAverageDistance: Type = 8;
     /// Average Distance Between Data Points (Data Metric)
     pub const GGA_MetricAverageDistancePts: Type = 9;
-    /// Linear interpolation (from Delaunay triangulation. Since GDAL 2.1
-    pub const GGA_Linear: Type = 10;
-    /// Inverse distance to a power with nearest neighbor search for max points
-    pub const GGA_InverseDistanceToAPowerNearestNeighbor: Type = 11;
 }
 extern "C" {
     pub fn GDALGridCreate(
@@ -7577,40 +6982,6 @@ extern "C" {
         arg16: *mut libc::c_void,
     ) -> CPLErr::Type;
 }
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct GDALGridContext {
-    _unused: [u8; 0],
-}
-extern "C" {
-    pub fn GDALGridContextCreate(
-        eAlgorithm: GDALGridAlgorithm::Type,
-        poOptions: *const libc::c_void,
-        nPoints: GUInt32,
-        padfX: *const f64,
-        padfY: *const f64,
-        padfZ: *const f64,
-        bCallerWillKeepPointArraysAlive: libc::c_int,
-    ) -> *mut GDALGridContext;
-}
-extern "C" {
-    pub fn GDALGridContextFree(psContext: *mut GDALGridContext);
-}
-extern "C" {
-    pub fn GDALGridContextProcess(
-        psContext: *mut GDALGridContext,
-        dfXMin: f64,
-        dfXMax: f64,
-        dfYMin: f64,
-        dfYMax: f64,
-        nXSize: GUInt32,
-        nYSize: GUInt32,
-        eType: GDALDataType::Type,
-        pData: *mut libc::c_void,
-        pfnProgress: GDALProgressFunc,
-        pProgressArg: *mut libc::c_void,
-    ) -> CPLErr::Type;
-}
 extern "C" {
     pub fn GDALComputeMatchingPoints(
         hFirstImage: GDALDatasetH,
@@ -7618,280 +6989,6 @@ extern "C" {
         papszOptions: *mut *mut libc::c_char,
         pnGCPCount: *mut libc::c_int,
     ) -> *mut GDAL_GCP;
-}
-/// Triangle fact
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct GDALTriFacet {
-    /// < index to the padfX/padfY arrays
-    pub anVertexIdx: [libc::c_int; 3usize],
-    /// < index to GDALDelaunayTriangulation.pasFacets, or -1
-    pub anNeighborIdx: [libc::c_int; 3usize],
-}
-#[test]
-fn bindgen_test_layout_GDALTriFacet() {
-    assert_eq!(
-        ::std::mem::size_of::<GDALTriFacet>(),
-        24usize,
-        concat!("Size of: ", stringify!(GDALTriFacet))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<GDALTriFacet>(),
-        4usize,
-        concat!("Alignment of ", stringify!(GDALTriFacet))
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<GDALTriFacet>())).anVertexIdx as *const _ as usize },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(GDALTriFacet),
-            "::",
-            stringify!(anVertexIdx)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<GDALTriFacet>())).anNeighborIdx as *const _ as usize },
-        12usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(GDALTriFacet),
-            "::",
-            stringify!(anNeighborIdx)
-        )
-    );
-}
-/// Triangle barycentric coefficients.
-///
-/// Conversion from cartesian (x,y) to barycentric (l1,l2,l3) with :
-/// l1 = dfMul1X * (x - dfCxtX) + dfMul1Y * (y - dfCstY)
-/// l2 = dfMul2X * (x - dfCxtX) + dfMul2Y * (y - dfCstY)
-/// l3 = 1 - l1 - l2
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct GDALTriBarycentricCoefficients {
-    /// < dfMul1X
-    pub dfMul1X: f64,
-    /// < dfMul1Y
-    pub dfMul1Y: f64,
-    /// < dfMul2X
-    pub dfMul2X: f64,
-    /// < dfMul2Y
-    pub dfMul2Y: f64,
-    /// < dfCstX
-    pub dfCstX: f64,
-    /// < dfCstY
-    pub dfCstY: f64,
-}
-#[test]
-fn bindgen_test_layout_GDALTriBarycentricCoefficients() {
-    assert_eq!(
-        ::std::mem::size_of::<GDALTriBarycentricCoefficients>(),
-        48usize,
-        concat!("Size of: ", stringify!(GDALTriBarycentricCoefficients))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<GDALTriBarycentricCoefficients>(),
-        8usize,
-        concat!("Alignment of ", stringify!(GDALTriBarycentricCoefficients))
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<GDALTriBarycentricCoefficients>())).dfMul1X as *const _ as usize
-        },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(GDALTriBarycentricCoefficients),
-            "::",
-            stringify!(dfMul1X)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<GDALTriBarycentricCoefficients>())).dfMul1Y as *const _ as usize
-        },
-        8usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(GDALTriBarycentricCoefficients),
-            "::",
-            stringify!(dfMul1Y)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<GDALTriBarycentricCoefficients>())).dfMul2X as *const _ as usize
-        },
-        16usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(GDALTriBarycentricCoefficients),
-            "::",
-            stringify!(dfMul2X)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<GDALTriBarycentricCoefficients>())).dfMul2Y as *const _ as usize
-        },
-        24usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(GDALTriBarycentricCoefficients),
-            "::",
-            stringify!(dfMul2Y)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<GDALTriBarycentricCoefficients>())).dfCstX as *const _ as usize
-        },
-        32usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(GDALTriBarycentricCoefficients),
-            "::",
-            stringify!(dfCstX)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<GDALTriBarycentricCoefficients>())).dfCstY as *const _ as usize
-        },
-        40usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(GDALTriBarycentricCoefficients),
-            "::",
-            stringify!(dfCstY)
-        )
-    );
-}
-/// Triangulation structure
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct GDALTriangulation {
-    /// < number of facets
-    pub nFacets: libc::c_int,
-    /// < array of nFacets facets
-    pub pasFacets: *mut GDALTriFacet,
-    /// < arra of nFacets barycentric coefficients
-    pub pasFacetCoefficients: *mut GDALTriBarycentricCoefficients,
-}
-#[test]
-fn bindgen_test_layout_GDALTriangulation() {
-    assert_eq!(
-        ::std::mem::size_of::<GDALTriangulation>(),
-        24usize,
-        concat!("Size of: ", stringify!(GDALTriangulation))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<GDALTriangulation>(),
-        8usize,
-        concat!("Alignment of ", stringify!(GDALTriangulation))
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<GDALTriangulation>())).nFacets as *const _ as usize },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(GDALTriangulation),
-            "::",
-            stringify!(nFacets)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<GDALTriangulation>())).pasFacets as *const _ as usize },
-        8usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(GDALTriangulation),
-            "::",
-            stringify!(pasFacets)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<GDALTriangulation>())).pasFacetCoefficients as *const _ as usize
-        },
-        16usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(GDALTriangulation),
-            "::",
-            stringify!(pasFacetCoefficients)
-        )
-    );
-}
-extern "C" {
-    pub fn GDALHasTriangulation() -> libc::c_int;
-}
-extern "C" {
-    pub fn GDALTriangulationCreateDelaunay(
-        nPoints: libc::c_int,
-        padfX: *const f64,
-        padfY: *const f64,
-    ) -> *mut GDALTriangulation;
-}
-extern "C" {
-    pub fn GDALTriangulationComputeBarycentricCoefficients(
-        psDT: *mut GDALTriangulation,
-        padfX: *const f64,
-        padfY: *const f64,
-    ) -> libc::c_int;
-}
-extern "C" {
-    pub fn GDALTriangulationComputeBarycentricCoordinates(
-        psDT: *const GDALTriangulation,
-        nFacetIdx: libc::c_int,
-        dfX: f64,
-        dfY: f64,
-        pdfL1: *mut f64,
-        pdfL2: *mut f64,
-        pdfL3: *mut f64,
-    ) -> libc::c_int;
-}
-extern "C" {
-    pub fn GDALTriangulationFindFacetBruteForce(
-        psDT: *const GDALTriangulation,
-        dfX: f64,
-        dfY: f64,
-        panOutputFacetIdx: *mut libc::c_int,
-    ) -> libc::c_int;
-}
-extern "C" {
-    pub fn GDALTriangulationFindFacetDirected(
-        psDT: *const GDALTriangulation,
-        nFacetIdx: libc::c_int,
-        dfX: f64,
-        dfY: f64,
-        panOutputFacetIdx: *mut libc::c_int,
-    ) -> libc::c_int;
-}
-extern "C" {
-    pub fn GDALTriangulationFree(psDT: *mut GDALTriangulation);
-}
-extern "C" {
-    /// @cond Doxygen_Suppress
-    pub fn GDALTriangulationTerminate();
-}
-extern "C" {
-    /// @endcond
-    pub fn GDALOpenVerticalShiftGrid(
-        pszProj4Geoidgrids: *const libc::c_char,
-        pbError: *mut libc::c_int,
-    ) -> GDALDatasetH;
-}
-extern "C" {
-    pub fn GDALApplyVerticalShiftGrid(
-        hSrcDataset: GDALDatasetH,
-        hGridDataset: GDALDatasetH,
-        bInverse: libc::c_int,
-        dfSrcUnitToMeter: f64,
-        dfDstUnitToMeter: f64,
-        papszOptions: *const *const libc::c_char,
-    ) -> GDALDatasetH;
 }
 pub type CPLThreadFunc = ::std::option::Option<unsafe extern "C" fn(arg1: *mut libc::c_void)>;
 extern "C" {
@@ -7947,11 +7044,7 @@ extern "C" {
     pub fn CPLDestroyCond(hCond: *mut libc::c_void);
 }
 extern "C" {
-    /// Contrary to what its name suggests, CPLGetPID() actually returns the thread id
     pub fn CPLGetPID() -> GIntBig;
-}
-extern "C" {
-    pub fn CPLGetCurrentProcessID() -> libc::c_int;
 }
 extern "C" {
     pub fn CPLCreateThread(pfnMain: CPLThreadFunc, pArg: *mut libc::c_void) -> libc::c_int;
@@ -8009,12 +7102,6 @@ extern "C" {
     pub fn CPLGetTLS(nIndex: libc::c_int) -> *mut libc::c_void;
 }
 extern "C" {
-    pub fn CPLGetTLSEx(
-        nIndex: libc::c_int,
-        pbMemoryErrorOccurred: *mut libc::c_int,
-    ) -> *mut libc::c_void;
-}
-extern "C" {
     pub fn CPLSetTLS(nIndex: libc::c_int, pData: *mut libc::c_void, bFreeOnExit: libc::c_int);
 }
 pub type CPLTLSFreeFunc = ::std::option::Option<unsafe extern "C" fn(pData: *mut libc::c_void)>;
@@ -8023,14 +7110,6 @@ extern "C" {
         nIndex: libc::c_int,
         pData: *mut libc::c_void,
         pfnFree: CPLTLSFreeFunc,
-    );
-}
-extern "C" {
-    pub fn CPLSetTLSWithFreeFuncEx(
-        nIndex: libc::c_int,
-        pData: *mut libc::c_void,
-        pfnFree: CPLTLSFreeFunc,
-        pbMemoryErrorOccurred: *mut libc::c_int,
     );
 }
 extern "C" {
@@ -8064,7 +7143,6 @@ pub mod GDALResampleAlg {
     /// Q3 (selects third quartile of all non-NODATA contributing pixels)
     pub const GRA_Q3: Type = 12;
 }
-/// @cond Doxygen_Suppress
 pub type GDALMaskFunc = ::std::option::Option<
     unsafe extern "C" fn(
         pMaskFuncArg: *mut libc::c_void,
@@ -8196,37 +7274,23 @@ pub struct GDALWarpOptions {
     pub pfnTransformer: GDALTransformerFunc,
     /// Handle to image transformer setup structure
     pub pTransformerArg: *mut libc::c_void,
-    /// Unused. Must be NULL
     pub papfnSrcPerBandValidityMaskFunc: *mut GDALMaskFunc,
-    /// Unused. Must be NULL
     pub papSrcPerBandValidityMaskFuncArg: *mut *mut libc::c_void,
-    /// Unused. Must be NULL
     pub pfnSrcValidityMaskFunc: GDALMaskFunc,
-    /// Unused. Must be NULL
     pub pSrcValidityMaskFuncArg: *mut libc::c_void,
-    /// Unused. Must be NULL
     pub pfnSrcDensityMaskFunc: GDALMaskFunc,
-    /// Unused. Must be NULL
     pub pSrcDensityMaskFuncArg: *mut libc::c_void,
-    /// Unused. Must be NULL
     pub pfnDstDensityMaskFunc: GDALMaskFunc,
-    /// Unused. Must be NULL
     pub pDstDensityMaskFuncArg: *mut libc::c_void,
-    /// Unused. Must be NULL
     pub pfnDstValidityMaskFunc: GDALMaskFunc,
-    /// Unused. Must be NULL
     pub pDstValidityMaskFuncArg: *mut libc::c_void,
-    /// Unused. Must be NULL
     pub pfnPreWarpChunkProcessor: ::std::option::Option<
         unsafe extern "C" fn(pKern: *mut libc::c_void, pArg: *mut libc::c_void) -> CPLErr::Type,
     >,
-    /// Unused. Must be NULL
     pub pPreWarpProcessorArg: *mut libc::c_void,
-    /// Unused. Must be NULL
     pub pfnPostWarpChunkProcessor: ::std::option::Option<
         unsafe extern "C" fn(pKern: *mut libc::c_void, pArg: *mut libc::c_void) -> CPLErr::Type,
     >,
-    /// Unused. Must be NULL
     pub pPostWarpProcessorArg: *mut libc::c_void,
     /// Optional OGRPolygonH for a masking cutline.
     pub hCutline: *mut libc::c_void,
@@ -8654,7 +7718,6 @@ extern "C" {
     pub fn GDALCloneWarpOptions(arg1: *const GDALWarpOptions) -> *mut GDALWarpOptions;
 }
 extern "C" {
-    /// @cond Doxygen_Suppress
     pub fn GDALSerializeWarpOptions(arg1: *const GDALWarpOptions) -> *mut CPLXMLNode;
 }
 extern "C" {
@@ -8714,7 +7777,6 @@ extern "C" {
 extern "C" {
     pub fn GDALInitializeWarpedVRT(hDS: GDALDatasetH, psWO: *mut GDALWarpOptions) -> CPLErr::Type;
 }
-/// Opaque type representing a GDALWarpOperation object
 pub type GDALWarpOperationH = *mut libc::c_void;
 extern "C" {
     pub fn GDALCreateWarpOperation(arg1: *const GDALWarpOptions) -> GDALWarpOperationH;
@@ -8769,21 +7831,18 @@ extern "C" {
     ) -> CPLErr::Type;
 }
 pub mod OGRAxisOrientation {
-    /// Axis orientations (corresponds to CS_AxisOrientationEnum).
+    /// \file ogr_srs_api.h
+    ///
+    /// C spatial reference system services and defines.
+    ///
+    /// See also: ogr_spatialref.h
     pub type Type = u32;
-    /// < Other
     pub const OAO_Other: Type = 0;
-    /// < North
     pub const OAO_North: Type = 1;
-    /// < South
     pub const OAO_South: Type = 2;
-    /// < East
     pub const OAO_East: Type = 3;
-    /// < West
     pub const OAO_West: Type = 4;
-    /// < Up (to space)
     pub const OAO_Up: Type = 5;
-    /// < Down (to Earth center)
     pub const OAO_Down: Type = 6;
 }
 extern "C" {
@@ -9562,7 +8621,6 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
-    /// Mercator 2SP
     pub fn OSRSetMercator2SP(
         hSRS: OGRSpatialReferenceH,
         dfStdP1: f64,
@@ -9720,7 +8778,6 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
-    /// TPED (Two Point Equi Distant)
     pub fn OSRSetTPED(
         hSRS: OGRSpatialReferenceH,
         dfLat1: f64,
@@ -9756,16 +8813,6 @@ extern "C" {
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
         dfCenterLong: f64,
-    ) -> OGRErr::Type;
-}
-extern "C" {
-    /// Spherical, Cross-track, Height
-    pub fn OSRSetSCH(
-        hSRS: OGRSpatialReferenceH,
-        dfPegLat: f64,
-        dfPegLong: f64,
-        dfPegHeading: f64,
-        dfPegHgt: f64,
     ) -> OGRErr::Type;
 }
 extern "C" {
@@ -9806,7 +8853,6 @@ extern "C" {
     ) -> libc::c_int;
 }
 extern "C" {
-    /// @cond Doxygen_Suppress
     pub fn OCTProj4Normalize(pszProj4Src: *const libc::c_char) -> *mut libc::c_char;
 }
 extern "C" {

@@ -94,7 +94,16 @@ fn main() {
     {
         find_gdal();
 
-        let prebuilt_paths = &["prebuilt-bindings/gdal_2.2.rs"];
+        let prebuilt_paths = &[
+            #[cfg(feature = "min_gdal_version_1_11")]
+            "prebuilt-bindings/gdal_1.11.rs",
+            #[cfg(feature = "min_gdal_version_2_0")]
+            "prebuilt-bindings/gdal_2.0.rs",
+            #[cfg(feature = "min_gdal_version_2_1")]
+            "prebuilt-bindings/gdal_2.1.rs",
+            #[cfg(feature = "min_gdal_version_2_2")]
+            "prebuilt-bindings/gdal_2.2.rs",
+        ];
         std::fs::copy(&prebuilt_paths[prebuilt_paths.len() - 1], &out_path)
             .expect("Can't copy bindings to output directory");
     }
