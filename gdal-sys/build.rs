@@ -2,73 +2,15 @@
 extern crate bindgen;
 extern crate pkg_config;
 
-use pkg_config::{Config, Library};
+use pkg_config::Config;
 use std::env;
-use std::path::PathBuf;
-
-fn find_gdal() -> Option<Library> {
-    Config::new().probe("gdal").ok()
-}
+use std::fs;
+use std::io;
+use std::path::{Path, PathBuf};
 
 #[cfg(feature = "bindgen")]
-pub fn build(gdal: Option<Library>, out_path: &std::path::Path) {
-    #[cfg(windows)]
-    {
-        // get the path to GDAL_HOME
-        let home_path = env::var("GDAL_HOME").expect("Environment variable $GDAL_HOME not found!");
-
-        // detect the path to gdal_i.lib (works for MSVC and GNU)
-        let lib_suffix = "_i";
-        let lib_search_path = Path::new(&home_path).join("lib");
-        let lib_path = lib_search_path.join(&format!("{}{}.lib", lib_name, lib_suffix));
-
-        if lib_search_path.exists() && lib_path.exists() {
-            println!(
-                "cargo:rustc-link-search={}",
-                lib_search_path.to_string_lossy()
-            );
-            println!(
-                "cargo:rustc-link-lib={}={}",
-                link_type,
-                format!("{}{}", lib_name, lib_suffix)
-            );
-        } else {
-            #[cfg(target_env = "msvc")]
-            {
-                panic!("windows-msvc requires gdal_i.lib to be found in $GDAL_HOME\\lib.");
-            }
-
-            #[cfg(target_env = "gnu")]
-            {
-                // detect if a gdal{version}.dll is available
-                let versions = [201, 200, 111, 110];
-                let bin_path = Path::new(&home_path).join("bin");
-                if let Some(version) = versions
-                    .iter()
-                    .find(|v| bin_path.join(&format!("{}{}.dll", lib_name, v)).exists())
-                {
-                    println!("cargo:rustc-link-search={}", bin_path.to_string_lossy());
-                    println!(
-                        "cargo:rustc-link-lib={}={}",
-                        link_type,
-                        format!("{}{}", lib_name, version)
-                    );
-                } else {
-                    panic!("windows-gnu requires either gdal_i.lib in $GDAL_HOME\\lib OR gdal{version}.dll in $GDAL_HOME\\bin.");
-                }
-            }
-        }
-    }
-
-    let mut builder = bindgen::Builder::default();
-    if let Some(gdal) = gdal {
-        for path in &gdal.include_paths {
-            builder = builder.clang_arg("-I");
-            builder = builder.clang_arg(path.to_str().unwrap());
-        }
-    }
-
-    builder
+pub fn write_bindings(include_paths: Vec<String>, out_path: &Path) {
+    let mut builder = bindgen::Builder::default()
         .header("wrapper.h")
         .constified_enum_module(".*")
         .ctypes_prefix("libc")
@@ -77,23 +19,160 @@ pub fn build(gdal: Option<Library>, out_path: &std::path::Path) {
         .whitelist_function("OGR.*")
         .whitelist_function("OSR.*")
         .whitelist_function("OCT.*")
-        .whitelist_function("VSI.*")
+        .whitelist_function("VSI.*");
+
+    for path in include_paths {
+        builder = builder.clang_arg("-I");
+        builder = builder.clang_arg(path);
+    }
+
+    builder
         .generate()
         .expect("Unable to generate bindings")
         .write_to_file(out_path)
         .expect("Unable to write bindings to file");
 }
 
+fn env_dir(var: &str) -> Option<PathBuf> {
+    let dir = env::var_os(var).map(PathBuf::from);
+
+    if let Some(ref dir) = dir {
+        if !dir.exists() {
+            panic!("{} was set to {}, which doesn't exist.", var, dir.display());
+        }
+    }
+
+    dir
+}
+
+fn find_gdal_dll(lib_dir: &Path) -> io::Result<Option<String>> {
+    for e in fs::read_dir(&lib_dir)? {
+        let e = e?;
+        let name = e.file_name();
+        let name = name.to_str().unwrap();
+        if name.starts_with("gdal") && name.ends_with(".dll") {
+            return Ok(Some(String::from(name)));
+        }
+    }
+    Ok(None)
+}
+
 fn main() {
+    println!("cargo:rerun-if-env-changed=GDAL_STATIC");
+    println!("cargo:rerun-if-env-changed=GDAL_INCLUDE_DIR");
+    println!("cargo:rerun-if-env-changed=GDAL_LIB_DIR");
+    println!("cargo:rerun-if-env-changed=GDAL_HOME");
+
+    let mut need_metadata = true;
+    let mut lib_name = String::from("gdal");
+
+    let mut prefer_static =
+        env::var_os("GDAL_STATIC").is_some() && env::var_os("GDAL_DYNAMIC").is_none();
+
+    let mut include_dir = env_dir("GDAL_INCLUDE_DIR");
+    let mut lib_dir = env_dir("GDAL_LIB_DIR");
+    let home_dir = env_dir("GDAL_HOME");
+
+    let mut found = false;
+    if cfg!(windows) {
+        // first, look for a static library in $GDAL_LIB_DIR or $GDAL_HOME/lib
+        // works in windows-msvc and windows-gnu
+        if let Some(ref lib_dir) = lib_dir {
+            let lib_path = lib_dir.join("gdal_i.lib");
+            if lib_path.exists() {
+                prefer_static = true;
+                lib_name = String::from("gdal_i");
+                found = true;
+            }
+        }
+        if !found {
+            if let Some(ref home_dir) = home_dir {
+                let home_lib_dir = home_dir.join("lib");
+                let lib_path = home_lib_dir.join("gdal_i.lib");
+                if lib_path.exists() {
+                    prefer_static = true;
+                    lib_name = String::from("gdal_i");
+                    lib_dir = Some(home_lib_dir);
+                    found = true;
+                }
+            }
+        }
+        if !found {
+            if cfg!(target_env = "msvc") {
+                panic!("windows-gnu requires gdal_i.lib to be present in either $GDAL_LIB_DIR or $GDAL_HOME\\lib.");
+            }
+
+            // otherwise, look for a gdalxxx.dll in $GDAL_HOME/bin
+            // works in windows-gnu
+            if let Some(ref home_dir) = home_dir {
+                let bin_dir = home_dir.join("bin");
+                if bin_dir.exists() {
+                    if let Some(name) = find_gdal_dll(&bin_dir).unwrap() {
+                        prefer_static = false;
+                        lib_dir = Some(bin_dir);
+                        lib_name = name;
+                    }
+                }
+            }
+        }
+    }
+
+    if let Some(ref home_dir) = home_dir {
+        if include_dir.is_none() {
+            let dir = home_dir.join("include");
+            if cfg!(feature = "bindgen") && !dir.exists() {
+                panic!(
+                    "bindgen was enabled, but GDAL_INCLUDE_DIR was not set and {} doesn't exist.",
+                    dir.display()
+                );
+            }
+            include_dir = Some(dir);
+        }
+
+        if lib_dir.is_none() {
+            let dir = home_dir.join("lib");
+            if !dir.exists() {
+                panic!(
+                    "GDAL_LIB_DIR was not set and {} doesn't exist.",
+                    dir.display()
+                );
+            }
+            lib_dir = Some(dir);
+        }
+    }
+
+    if let Some(lib_dir) = lib_dir {
+        let link_type = if prefer_static { "static" } else { "dylib" };
+
+        println!("cargo:rustc-link-lib={}={}", link_type, lib_name);
+        println!("cargo:rustc-link-search={}", lib_dir.to_str().unwrap());
+
+        need_metadata = false;
+    }
+
     let out_path = PathBuf::from(env::var("OUT_DIR").unwrap()).join("bindings.rs");
 
+    let mut include_paths = Vec::new();
+    if let Some(ref dir) = include_dir {
+        include_paths.push(dir.as_path().to_str().unwrap().to_string());
+    }
+
+    let gdal = Config::new()
+        .statik(prefer_static)
+        .cargo_metadata(need_metadata)
+        .probe("gdal");
+
+    if let Ok(gdal) = gdal {
+        for dir in gdal.include_paths {
+            include_paths.push(dir.to_str().unwrap().to_string());
+        }
+    }
+
     #[cfg(feature = "bindgen")]
-    build(find_gdal(), &out_path);
+    write_bindings(include_paths, &out_path);
 
     #[cfg(not(feature = "bindgen"))]
     {
-        find_gdal();
-
         let prebuilt_paths = &[
             #[cfg(feature = "min_gdal_version_1_11")]
             "prebuilt-bindings/gdal_1.11.rs",
