@@ -1,5 +1,5 @@
 use std::path::Path;
-use super::{Driver, Dataset, Feature, FeatureIterator, FieldValue, Geometry, OGRFieldType, WkbType};
+use super::{Driver, Dataset, Feature, FeatureIterator, FieldValue, Geometry, OGRFieldType, OGRwkbGeometryType};
 use spatial_ref::SpatialRef;
 use assert_almost_eq;
 
@@ -58,8 +58,7 @@ fn with_first_feature<F>(name: &str, f: F) where F: Fn(Feature) {
 #[test]
 fn test_iterate_features() {
     with_features("roads.geojson", |features| {
-        let feature_vec: Vec<Feature> = features.collect();
-        assert_eq!(feature_vec.len(), 21);
+        assert_eq!(features.count(), 21);
     });
 }
 
@@ -70,13 +69,13 @@ fn test_string_field() {
         let feature = features.next().unwrap();
         assert_eq!(feature.field("highway")
                           .unwrap()
-                          .to_string(),
+                          .into_string(),
                    Some("footway".to_string()));
         assert_eq!(
             features.filter(|field| {
                 let highway = field.field("highway")
                                    .unwrap()
-                                   .to_string();
+                                   .into_string();
                 highway == Some("residential".to_string()) })
                 .count(),
             2);
@@ -90,7 +89,7 @@ fn test_float_field() {
         assert_almost_eq(
             feature.field("sort_key")
                    .unwrap()
-                   .to_real()
+                   .into_real()
                    .unwrap(),
             -9.0
         );
@@ -110,18 +109,18 @@ fn test_missing_field() {
 fn test_geom_accessors() {
     with_first_feature("roads.geojson", |feature| {
         let geom = feature.geometry();
-        assert_eq!(geom.geometry_type(), WkbType::WkbLinestring);
+        assert_eq!(geom.geometry_type(), OGRwkbGeometryType::wkbLineString);
         let coords = geom.get_point_vec();
         assert_eq!(coords, [(26.1019276, 44.4302748, 0.0), (26.1019382, 44.4303191, 0.0), (26.1020002, 44.4304202, 0.0)]);
         assert_eq!(geom.geometry_count(), 0);
 
         let geom = feature.geometry_by_index(0).unwrap();
-        assert_eq!(geom.geometry_type(), WkbType::WkbLinestring);
+        assert_eq!(geom.geometry_type(), OGRwkbGeometryType::wkbLineString);
         assert!(feature.geometry_by_index(1).is_err());
         let geom = feature.geometry_by_name("");
         assert!(!geom.is_err());
         let geom = feature.geometry_by_name("").unwrap();
-        assert_eq!(geom.geometry_type(), WkbType::WkbLinestring);
+        assert_eq!(geom.geometry_type(), OGRwkbGeometryType::wkbLineString);
         assert!(feature.geometry_by_name("FOO").is_err());
     });
 }
@@ -134,7 +133,7 @@ fn test_wkt() {
         let wkt_ok = format!("{}{}",
             "LINESTRING (26.1019276 44.4302748,",
             "26.1019382 44.4303191,26.1020002 44.4304202)"
-            ).to_string();
+            );
         assert_eq!(wkt, wkt_ok);
     });
 }
@@ -149,7 +148,7 @@ fn test_json() {
             "[ 26.1019276, 44.4302748 ], ",
             "[ 26.1019382, 44.4303191 ], ",
             "[ 26.1020002, 44.4304202 ] ] }"
-            ).to_string();
+            );
         assert_eq!(json.unwrap(), json_ok);
     });
 }
@@ -161,11 +160,11 @@ fn test_schema() {
     let layer = ds.layer(0).unwrap();
     // The layer name is "roads" in GDAL 2.2
     assert!(layer.name() == "OGRGeoJSON" || layer.name() == "roads");
-    let name_list: Vec<(String, OGRFieldType)> = layer
+    let name_list = layer
         .defn().fields()
         .map(|f| (f.name(), f.field_type()))
-        .collect();
-    let ok_names_types: Vec<(String, OGRFieldType)> = vec!(
+        .collect::<Vec<_>>();
+    let ok_names_types = vec!(
         ("id", OGRFieldType::OFTString),
         ("kind", OGRFieldType::OFTString),
         ("sort_key",  OGRFieldType::OFTReal),
@@ -174,7 +173,7 @@ fn test_schema() {
         ("is_bridge", OGRFieldType::OFTString),
         ("railway", OGRFieldType::OFTString),
         ("highway", OGRFieldType::OFTString))
-        .iter().map(|s| (s.0.to_string(), s.1)).collect();
+        .iter().map(|s| (s.0.to_string(), s.1)).collect::<Vec<_>>();
     assert_eq!(name_list, ok_names_types);
 }
 
@@ -182,13 +181,13 @@ fn test_schema() {
 fn test_geom_fields() {
     let mut ds = Dataset::open(fixture!("roads.geojson")).unwrap();
     let layer = ds.layer(0).unwrap();
-    let name_list: Vec<(String, WkbType)> = layer
+    let name_list = layer
         .defn().geom_fields()
         .map(|f| (f.name(), f.field_type()))
-        .collect();
-    let ok_names_types: Vec<(String, WkbType)> = vec!(
-        ("", WkbType::WkbLinestring))
-        .iter().map(|s| (s.0.to_string(), s.1.clone())).collect();
+        .collect::<Vec<_>>();
+    let ok_names_types = vec!(
+        ("", OGRwkbGeometryType::wkbLineString))
+        .iter().map(|s| (s.0.to_string(), s.1.clone())).collect::<Vec<_>>();
     assert_eq!(name_list, ok_names_types);
 
     let geom_field = layer.defn().geom_fields().next().unwrap();
@@ -218,20 +217,14 @@ fn test_create_bbox() {
 fn test_spatial_filter() {
     let mut ds = Dataset::open(fixture!("roads.geojson")).unwrap();
     let layer = ds.layer(0).unwrap();
-
-    let all_features: Vec<Feature> = layer.features().collect();
-    assert_eq!(all_features.len(), 21);
+    assert_eq!(layer.features().count(), 21);
 
     let bbox = Geometry::bbox(26.1017, 44.4297, 26.1025, 44.4303).unwrap();
     layer.set_spatial_filter(&bbox);
-
-    let some_features: Vec<Feature> = layer.features().collect();
-    assert_eq!(some_features.len(), 7);
+    assert_eq!(layer.features().count(), 7);
 
     layer.clear_spatial_filter();
-
-    let again_all_features: Vec<Feature> = layer.features().collect();
-    assert_eq!(again_all_features.len(), 21);
+    assert_eq!(layer.features().count(), 21);
 }
 
 #[test]
@@ -262,7 +255,7 @@ fn test_write_features() {
     let layer = ds.layer(0).unwrap();
     let ft = layer.features().next().unwrap();
     assert_eq!(ft.geometry().wkt().unwrap(), "POINT (1 2)");
-    assert_eq!(ft.field("Name").unwrap().to_string(), Some("Feature 1".to_string()));
-    assert_eq!(ft.field("Value").unwrap().to_real(), Some(45.78));
-    assert_eq!(ft.field("Int_value").unwrap().to_int(), Some(1));
+    assert_eq!(ft.field("Name").unwrap().into_string(), Some("Feature 1".to_string()));
+    assert_eq!(ft.field("Value").unwrap().into_real(), Some(45.78));
+    assert_eq!(ft.field("Int_value").unwrap().into_int(), Some(1));
 }

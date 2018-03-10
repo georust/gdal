@@ -1,11 +1,8 @@
-use libc::{c_int, c_void};
+use libc::c_int;
 use utils::{_last_null_pointer_err, _string};
-use gdal_sys::ogr;
 use vector::layer::Layer;
-use vector::geometry::WkbType;
 use spatial_ref::SpatialRef;
-use gdal_major_object::MajorObject;
-use gdal_sys::ogr_enums::OGRFieldType;
+use gdal_sys::{self, OGRFeatureDefnH, OGRFieldDefnH, OGRFieldType, OGRwkbGeometryType, OGRGeomFieldDefnH};
 
 use errors::*;
 
@@ -13,47 +10,47 @@ use errors::*;
 ///
 /// Defines the fields available for features in a layer.
 pub struct Defn {
-    c_defn: *const c_void,
+    c_defn: OGRFeatureDefnH,
 }
 
 impl Defn {
-    pub unsafe fn _with_c_defn(c_defn: *const c_void) -> Defn {
-        Defn{c_defn: c_defn}
+    pub unsafe fn _with_c_defn(c_defn: OGRFeatureDefnH) -> Defn {
+        Defn { c_defn: c_defn }
     }
 
-    pub unsafe fn c_defn(&self) -> *const c_void { self.c_defn }
+    pub unsafe fn c_defn(&self) -> OGRFeatureDefnH { self.c_defn }
 
     /// Iterate over the field schema of this layer.
     pub fn fields(&self) -> FieldIterator {
-        let total = unsafe { ogr::OGR_FD_GetFieldCount(self.c_defn) } as isize;
-        return FieldIterator{
+        let total = unsafe { gdal_sys::OGR_FD_GetFieldCount(self.c_defn) } as isize;
+        FieldIterator{
             defn: self,
             c_feature_defn: self.c_defn,
             next_id: 0,
             total: total
-        };
+        }
     }
 
     /// Iterate over the geometry field schema of this layer.
     pub fn geom_fields(&self) -> GeomFieldIterator {
-        let total = unsafe { ogr::OGR_FD_GetGeomFieldCount(self.c_defn) } as isize;
-        return GeomFieldIterator{
+        let total = unsafe { gdal_sys::OGR_FD_GetGeomFieldCount(self.c_defn) } as isize;
+        GeomFieldIterator {
             defn: self,
             c_feature_defn: self.c_defn,
             next_id: 0,
             total: total
-        };
+        }
     }
 
     pub fn from_layer(lyr: &Layer) -> Defn {
-        let c_defn = unsafe { ogr::OGR_L_GetLayerDefn(lyr.gdal_object_ptr())};
-            Defn {c_defn: c_defn}
+        let c_defn = unsafe { gdal_sys::OGR_L_GetLayerDefn(lyr.c_layer())};
+            Defn { c_defn: c_defn }
         }
 }
 
 pub struct FieldIterator<'a> {
     defn: &'a Defn,
-    c_feature_defn: *const c_void,
+    c_feature_defn: OGRFeatureDefnH,
     next_id: isize,
     total: isize,
 }
@@ -68,44 +65,44 @@ impl<'a> Iterator for FieldIterator<'a> {
         }
         let field = Field{
             _defn: self.defn,
-            c_field_defn: unsafe { ogr::OGR_FD_GetFieldDefn(
+            c_field_defn: unsafe { gdal_sys::OGR_FD_GetFieldDefn(
                 self.c_feature_defn,
                 self.next_id as c_int
             ) }
         };
         self.next_id += 1;
-        return Some(field);
+        Some(field)
     }
 }
 
 pub struct Field<'a> {
     _defn: &'a Defn,
-    c_field_defn: *const c_void,
+    c_field_defn: OGRFieldDefnH,
 }
 
 impl<'a> Field<'a> {
     /// Get the name of this field.
     pub fn name(&'a self) -> String {
-        let rv = unsafe { ogr::OGR_Fld_GetNameRef(self.c_field_defn) };
-        return _string(rv);
+        let rv = unsafe { gdal_sys::OGR_Fld_GetNameRef(self.c_field_defn) };
+        _string(rv)
     }
 
-    pub fn field_type(&'a self) -> OGRFieldType {
-        unsafe { ogr::OGR_Fld_GetType(self.c_field_defn) }
+    pub fn field_type(&'a self) -> OGRFieldType::Type {
+        unsafe { gdal_sys::OGR_Fld_GetType(self.c_field_defn) }
     }
 
     pub fn width(&'a self) -> i32 {
-        unsafe { ogr::OGR_Fld_GetWidth(self.c_field_defn) }
+        unsafe { gdal_sys::OGR_Fld_GetWidth(self.c_field_defn) }
     }
 
     pub fn precision(&'a self) -> i32 {
-        unsafe { ogr::OGR_Fld_GetPrecision(self.c_field_defn) }
+        unsafe { gdal_sys::OGR_Fld_GetPrecision(self.c_field_defn) }
     }
 }
 
 pub struct GeomFieldIterator<'a> {
     defn: &'a Defn,
-    c_feature_defn: *const c_void,
+    c_feature_defn: OGRFeatureDefnH,
     next_id: isize,
     total: isize,
 }
@@ -120,36 +117,35 @@ impl<'a> Iterator for GeomFieldIterator<'a> {
         }
         let field = GeomField{
             _defn: self.defn,
-            c_field_defn: unsafe { ogr::OGR_FD_GetGeomFieldDefn(
+            c_field_defn: unsafe { gdal_sys::OGR_FD_GetGeomFieldDefn(
                 self.c_feature_defn,
                 self.next_id as c_int
             ) }
         };
         self.next_id += 1;
-        return Some(field);
+        Some(field)
     }
 }
 
 // http://gdal.org/classOGRGeomFieldDefn.html
 pub struct GeomField<'a> {
     _defn: &'a Defn,
-    c_field_defn: *const c_void,
+    c_field_defn: OGRGeomFieldDefnH,
 }
 
 impl<'a> GeomField<'a> {
     /// Get the name of this field.
     pub fn name(&'a self) -> String {
-        let rv = unsafe { ogr::OGR_GFld_GetNameRef(self.c_field_defn) };
-        return _string(rv);
+        let rv = unsafe { gdal_sys::OGR_GFld_GetNameRef(self.c_field_defn) };
+        _string(rv)
     }
 
-    pub fn field_type(&'a self) -> WkbType {
-        let ogr_type = unsafe { ogr::OGR_GFld_GetType(self.c_field_defn) };
-        WkbType::from_ogr_type(ogr_type)
+    pub fn field_type(&'a self) -> OGRwkbGeometryType::Type {
+        unsafe { gdal_sys::OGR_GFld_GetType(self.c_field_defn) }
     }
 
     pub fn spatial_ref(&'a self) -> Result<SpatialRef> {
-        let c_obj = unsafe { ogr::OGR_GFld_GetSpatialRef(self.c_field_defn) };
+        let c_obj = unsafe { gdal_sys::OGR_GFld_GetSpatialRef(self.c_field_defn) };
         if c_obj.is_null() {
             return Err(_last_null_pointer_err("OGR_GFld_GetSpatialRef").into());
         }

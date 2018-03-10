@@ -1,6 +1,6 @@
 use std::path::Path;
 use super::{ByteBuffer, Driver, Dataset};
-use super::gdal_enums::{GDALDataType};
+use gdal_sys::GDALDataType;
 use metadata::Metadata;
 
 

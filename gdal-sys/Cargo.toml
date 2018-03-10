@@ -2,10 +2,20 @@
 name = "gdal-sys"
 description = "Low level GDAL bindings for Rust"
 license = "MIT"
-version = "0.1.1"
+version = "0.2.0"
 repository = "https://github.com/georust/rust-gdal"
 authors = ["Johannes Drönner <droenner@informatik.uni-marburg.de>"]
-build="build.rs"
+
+[features]
+default = ["min_gdal_version_1_11"]
+min_gdal_version_1_11 = []
+min_gdal_version_2_0 = []
+min_gdal_version_2_1 = []
+min_gdal_version_2_2 = []
 
 [dependencies]
 libc = "0.2"
+
+[build-dependencies]
+bindgen = { git = "https://github.com/rust-lang-nursery/rust-bindgen", rev="f36f4e3", optional = true }
+pkg-config = "0.3"

@@ -13,7 +13,7 @@
 //! for feature in layer.features() {
 //!     let highway_field = feature.field("highway").unwrap();
 //!     let geometry = feature.geometry();
-//!     println!("{} {}", highway_field.to_string().unwrap(), geometry.wkt().unwrap());
+//!     println!("{} {}", highway_field.into_string().unwrap(), geometry.wkt().unwrap());
 //! }
 //! ```
 

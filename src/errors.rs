@@ -1,6 +1,5 @@
 use libc::{c_int};
-use gdal_sys::cpl_error::CPLErr;
-use gdal_sys::ogr_enums::{OGRErr, OGRFieldType};
+use gdal_sys::{CPLErr, OGRErr, OGRFieldType};
 
 // Create the Error, ErrorKind, ResultExt, and Result types
 error_chain! {
@@ -10,7 +9,7 @@ error_chain! {
     }
 
     errors {
-        CplError(class: CPLErr, number: c_int, msg: String) {
+        CplError(class: CPLErr::Type, number: c_int, msg: String) {
             description("GDAL internal error")
             display("CPL error class: '{:?}', error number: '{}', error msg: '{}'", class, number, msg)
         }
@@ -18,11 +17,11 @@ error_chain! {
             description("GDAL method returned a NULL pointer.")
             display("GDAL method '{}' returned a NULL pointer. Error msg: '{}'", method_name, msg)
         }
-        OgrError(err: OGRErr, method_name: &'static str) {
+        OgrError(err: OGRErr::Type, method_name: &'static str) {
             description("OGR error")
             display("OGR method '{}' returned error: '{:?}'", method_name, err)
         }
-        UnhandledFieldType(field_type: OGRFieldType, method_name: &'static str){
+        UnhandledFieldType(field_type: OGRFieldType::Type, method_name: &'static str){
             description("Unhandled field type")
             display("Unhandled type {:?} on OGR method {}", field_type, method_name)
         }

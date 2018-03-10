@@ -1,5 +1,8 @@
 # Changes
 
+## 0.4.0
+* [Use `bindgen` to generate the low-level bindings](https://github.com/georust/rust-gdal/pull/55)
+
 ## 0.3.0
 
 * [Add support for creating a SpatialRef from a esri "wkt" definition](https://github.com/georust/rust-gdal/pull/37)

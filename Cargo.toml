@@ -2,17 +2,20 @@
 name = "gdal"
 description = "GDAL bindings for Rust"
 license = "MIT"
-version = "0.3.1"
+version = "0.4.0"
 authors = ["Alex Morega <alex@grep.ro>"]
 repository = "https://github.com/georust/rust-gdal"
 documentation = "https://georust.github.io/rust-gdal/"
 
+[features]
+bindgen = ["gdal-sys/bindgen"]
+
 [dependencies]
 error-chain = "0.11"
 libc = "0.2"
-geo = "0.6"
-gdal-sys = { path = "gdal-sys", version = "0.1"}
-num-traits = "0.1"
+geo = "0.7"
+gdal-sys = { path = "gdal-sys", version = "0.2"}
+num-traits = "0.2"
 
 [workspace]
 members = ["gdal-sys"]
