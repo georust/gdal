@@ -117,7 +117,7 @@ fn failing_transformation() {
     let r = trafo.transform_coords(&mut x, &mut y, &mut z);
 
     assert_eq!(r.is_err(), true);
-    if let &ErrorKind::InvalidCoordinateRange(_, _, ref msg) = r.unwrap_err().kind() {
+    if let &ErrorKind::InvalidCoordinateRange{ref msg, ..} = r.unwrap_err().kind_ref() {
         assert_eq!(msg, &Some("latitude or longitude exceeded limits".into()));
     } else {
         panic!("Wrong error type");

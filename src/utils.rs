@@ -16,11 +16,18 @@ pub fn _last_cpl_err(cpl_err_class: CPLErr::Type) -> ErrorKind {
     let last_err_no = unsafe { gdal_sys::CPLGetLastErrorNo() };
     let last_err_msg = _string( unsafe { gdal_sys::CPLGetLastErrorMsg() } );
     unsafe { gdal_sys::CPLErrorReset() };
-    ErrorKind::CplError(cpl_err_class, last_err_no, last_err_msg)
+    ErrorKind::CplError{
+        class: cpl_err_class,
+        number: last_err_no,
+        msg: last_err_msg
+    }
 }
 
 pub fn _last_null_pointer_err(method_name: &'static str) -> ErrorKind {
     let last_err_msg = _string( unsafe { gdal_sys::CPLGetLastErrorMsg() } );
     unsafe { gdal_sys::CPLErrorReset() };
-    ErrorKind::NullPointer(method_name, last_err_msg)
+    ErrorKind::NullPointer{
+        method_name,
+        msg: last_err_msg
+    }
 }

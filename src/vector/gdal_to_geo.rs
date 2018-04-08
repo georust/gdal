@@ -17,7 +17,7 @@ impl geo::ToGeo<f64> for Geometry {
         match geometry_type {
             OGRwkbGeometryType::wkbPoint => {
                 let (x, y, _) = self.get_point(0);
-                geo::Geometry::Point(geo::Point(geo::Coordinate{x: x, y: y}))
+                geo::Geometry::Point(geo::Point(geo::Coordinate{x, y}))
             },
             OGRwkbGeometryType::wkbMultiPoint => {
                 let point_count = unsafe { gdal_sys::OGR_G_GetGeometryCount(self.c_geometry()) } as usize;
@@ -33,7 +33,7 @@ impl geo::ToGeo<f64> for Geometry {
             },
             OGRwkbGeometryType::wkbLineString => {
                 let coords = self.get_point_vec().iter()
-                    .map(|&(x, y, _)| geo::Point(geo::Coordinate{x: x, y: y}))
+                    .map(|&(x, y, _)| geo::Point(geo::Coordinate{x, y}))
                     .collect();
                 geo::Geometry::LineString(geo::LineString(coords))
             },

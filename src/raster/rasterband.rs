@@ -19,7 +19,7 @@ impl <'a> RasterBand<'a> {
     }
 
     pub unsafe fn _with_c_ptr(c_rasterband: GDALRasterBandH, owning_dataset: &'a Dataset) -> Self {
-        RasterBand { c_rasterband: c_rasterband, owning_dataset: owning_dataset }
+        RasterBand { c_rasterband, owning_dataset }
     }
 
     /// Read a 'Buffer<T>' from a 'Dataset'. T implements 'GdalType'
@@ -55,17 +55,14 @@ impl <'a> RasterBand<'a> {
             )
         };
         if rv != CPLErr::CE_None {
-            return Err(_last_cpl_err(rv).into());
+            Err(_last_cpl_err(rv))?;
         }
 
         unsafe {
             data.set_len(pixels);
         };
 
-        Ok(Buffer{
-            size: size,
-            data: data,
-        })
+        Ok(Buffer{size, data})
     }
 
     /// Read a full 'Dataset' as 'Buffer<T>'.
@@ -92,7 +89,7 @@ impl <'a> RasterBand<'a> {
         &self,
         window: (isize, isize),
         window_size: (usize, usize),
-        buffer: Buffer<T>
+        buffer: &Buffer<T>
     ) -> Result<()> {
         assert_eq!(buffer.data.len(), buffer.size.0 * buffer.size.1);
         let rv = unsafe { gdal_sys::GDALRasterIO(
@@ -110,7 +107,7 @@ impl <'a> RasterBand<'a> {
             0
             )};
         if rv != CPLErr::CE_None {
-            return Err(_last_cpl_err(rv).into());
+            Err(_last_cpl_err(rv))?;
         }
         Ok(())
     }
