@@ -10,7 +10,7 @@ pub trait Metadata: MajorObject {
     fn description(&self) -> Result<String>{
         let c_res = unsafe { gdal_sys::GDALGetDescription(self.gdal_object_ptr())};
         if c_res.is_null() {
-            return Err(_last_null_pointer_err("GDALGetDescription").into());
+            Err(_last_null_pointer_err("GDALGetDescription"))?;
         }
         Ok(_string(c_res))
     }
@@ -34,7 +34,7 @@ pub trait Metadata: MajorObject {
 
         let c_res = unsafe { gdal_sys::GDALSetMetadataItem(self.gdal_object_ptr(), c_key.as_ptr(), c_value.as_ptr(), c_domain.as_ptr())};
         if c_res != CPLErr::CE_None {
-            return Err(_last_cpl_err(c_res).into());
+            Err(_last_cpl_err(c_res))?;
         }
         Ok(())
     }

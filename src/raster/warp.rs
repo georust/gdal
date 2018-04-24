@@ -22,7 +22,7 @@ pub fn reproject(src: &Dataset, dst: &Dataset) -> Result<()> {
             )
     };
     if rv != CPLErr::CE_None {
-        return Err(_last_cpl_err(rv).into());
+        Err(_last_cpl_err(rv))?;
     }
     Ok(())
 }

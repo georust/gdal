@@ -37,7 +37,7 @@ impl Metadata for Dataset {}
 
 impl Dataset {
     pub unsafe fn _with_c_dataset(c_dataset: OGRDataSourceH) -> Dataset {
-        Dataset{c_dataset: c_dataset, layers: vec!()}
+        Dataset{c_dataset, layers: vec!()}
     }
 
     /// Open the dataset at `path`.
@@ -47,9 +47,9 @@ impl Dataset {
         let c_filename = CString::new(filename.as_ref())?;
         let c_dataset = unsafe { gdal_sys::OGROpen(c_filename.as_ptr(), 0, null_mut()) };
         if c_dataset.is_null() {
-           return Err(_last_null_pointer_err("OGROpen").into());
+           Err(_last_null_pointer_err("OGROpen"))?;
         };
-        Ok(Dataset{c_dataset: c_dataset, layers: vec!()})
+        Ok(Dataset{c_dataset, layers: vec!()})
     }
 
     /// Get number of layers.
@@ -67,7 +67,7 @@ impl Dataset {
     pub fn layer(&mut self, idx: isize) -> Result<&Layer> {
         let c_layer = unsafe { gdal_sys::OGR_DS_GetLayer(self.c_dataset, idx as c_int) };
         if c_layer.is_null() {
-            return Err(_last_null_pointer_err("OGR_DS_GetLayer").into());
+            Err(_last_null_pointer_err("OGR_DS_GetLayer"))?;
         }
         Ok(self._child_layer(c_layer))
     }
@@ -77,7 +77,7 @@ impl Dataset {
         let c_name = CString::new(name)?;
         let c_layer = unsafe { gdal_sys::OGR_DS_GetLayerByName(self.c_dataset, c_name.as_ptr()) };
         if c_layer.is_null() {
-            return Err(_last_null_pointer_err("OGR_DS_GetLayerByName").into());
+            Err(_last_null_pointer_err("OGR_DS_GetLayerByName"))?;
         }
         Ok(self._child_layer(c_layer))
     }
@@ -93,7 +93,7 @@ impl Dataset {
             null_mut(),
         ) };
         if c_layer.is_null() {
-            return Err(_last_null_pointer_err("OGR_DS_CreateLayer").into());
+            Err(_last_null_pointer_err("OGR_DS_CreateLayer"))?;
         };
         self._child_layer(c_layer);
         Ok(self.layers.last_mut().unwrap()) // TODO: is this safe?

@@ -40,13 +40,13 @@ impl Dataset {
         let c_filename = CString::new(filename.as_ref())?;
         let c_dataset = unsafe { gdal_sys::GDALOpen(c_filename.as_ptr(), GDALAccess::GA_ReadOnly) };
         if c_dataset.is_null() {
-            return Err(_last_null_pointer_err("GDALOpen").into());
+            Err(_last_null_pointer_err("GDALOpen"))?;
         }
-        Ok(Dataset{c_dataset: c_dataset})
+        Ok(Dataset{c_dataset})
     }
 
     pub unsafe fn _with_c_ptr(c_dataset: GDALDatasetH) -> Dataset {
-        Dataset { c_dataset: c_dataset }
+        Dataset { c_dataset }
     }
 
     pub unsafe fn _c_ptr(&self) -> GDALDatasetH {
@@ -57,7 +57,7 @@ impl Dataset {
         unsafe {
             let c_band = gdal_sys::GDALGetRasterBand(self.c_dataset, band_index as c_int);
             if c_band.is_null() {
-                return Err(_last_null_pointer_err("GDALGetRasterBand").into());
+                Err(_last_null_pointer_err("GDALGetRasterBand"))?;
             }
             Ok(RasterBand::_with_c_ptr(c_band, self))
         }
@@ -97,7 +97,7 @@ impl Dataset {
             gdal_sys::GDALSetGeoTransform(self.c_dataset, tr.as_ptr() as *mut f64)
         };
         if rv != CPLErr::CE_None {
-            return Err(_last_cpl_err(rv).into());
+            Err(_last_cpl_err(rv))?;
         }
         Ok(())
     }
@@ -113,14 +113,14 @@ impl Dataset {
 
         // check if the dataset has a GeoTransform
         if rv != CPLErr::CE_None {
-            return Err(_last_cpl_err(rv).into());
+            Err(_last_cpl_err(rv))?;
         }
         Ok(tr)
     }
 
     pub fn create_copy(
         &self,
-        driver: Driver,
+        driver: &Driver,
         filename: &str
     ) -> Result<Dataset> {
         let c_filename = CString::new(filename)?;
@@ -134,9 +134,9 @@ impl Dataset {
                 null_mut()
             ) };
         if c_dataset.is_null() {
-            return Err(_last_null_pointer_err("GDALCreateCopy").into());
+            Err(_last_null_pointer_err("GDALCreateCopy"))?;
         }
-        Ok(Dataset{c_dataset: c_dataset})
+        Ok(Dataset{c_dataset})
     }
 
     pub fn band_type(&self, band_index: isize) -> Result<GDALDataType::Type> {
@@ -202,7 +202,7 @@ impl Dataset {
         band_index: isize,
         window: (isize, isize),
         window_size: (usize, usize),
-        buffer: Buffer<T>
+        buffer: &Buffer<T>
     ) -> Result<()> {
         self.rasterband(band_index)?.write(window, window_size, buffer)
     }
@@ -216,7 +216,7 @@ pub struct Buffer<T: GdalType> {
 
 impl<T: GdalType> Buffer<T> {
     pub fn new(size: (usize, usize), data: Vec<T>) -> Buffer<T> {
-        Buffer{size: size, data: data}
+        Buffer{size, data}
     }
 }
 

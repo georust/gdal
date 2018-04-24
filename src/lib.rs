@@ -20,13 +20,12 @@
 #![crate_name="gdal"]
 #![crate_type="lib"]
 
+extern crate failure;
+#[macro_use] extern crate failure_derive;
 extern crate libc;
 extern crate geo;
 extern crate gdal_sys;
 extern crate num_traits;
-
-#[macro_use]
-extern crate error_chain;
 
 pub use version::version_info;
 

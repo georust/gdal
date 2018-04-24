@@ -15,7 +15,7 @@ pub struct Defn {
 
 impl Defn {
     pub unsafe fn _with_c_defn(c_defn: OGRFeatureDefnH) -> Defn {
-        Defn { c_defn: c_defn }
+        Defn { c_defn }
     }
 
     pub unsafe fn c_defn(&self) -> OGRFeatureDefnH { self.c_defn }
@@ -27,7 +27,7 @@ impl Defn {
             defn: self,
             c_feature_defn: self.c_defn,
             next_id: 0,
-            total: total
+            total
         }
     }
 
@@ -38,13 +38,13 @@ impl Defn {
             defn: self,
             c_feature_defn: self.c_defn,
             next_id: 0,
-            total: total
+            total
         }
     }
 
     pub fn from_layer(lyr: &Layer) -> Defn {
         let c_defn = unsafe { gdal_sys::OGR_L_GetLayerDefn(lyr.c_layer())};
-            Defn { c_defn: c_defn }
+            Defn { c_defn }
         }
 }
 
@@ -147,7 +147,7 @@ impl<'a> GeomField<'a> {
     pub fn spatial_ref(&'a self) -> Result<SpatialRef> {
         let c_obj = unsafe { gdal_sys::OGR_GFld_GetSpatialRef(self.c_field_defn) };
         if c_obj.is_null() {
-            return Err(_last_null_pointer_err("OGR_GFld_GetSpatialRef").into());
+            Err(_last_null_pointer_err("OGR_GFld_GetSpatialRef"))?;
         }
         SpatialRef::from_c_obj(c_obj)
     }

@@ -29,9 +29,9 @@ impl Driver {
         let c_name = CString::new(name)?;
         let c_driver = unsafe { gdal_sys::OGRGetDriverByName(c_name.as_ptr()) };
        if c_driver.is_null() {
-            Err(_last_null_pointer_err("OGRGetDriverByName").into())
+            Err(_last_null_pointer_err("OGRGetDriverByName"))?
         } else {
-            Ok(Driver{c_driver: c_driver})
+            Ok(Driver{c_driver})
         }
     }
 
@@ -44,7 +44,7 @@ impl Driver {
             null_mut(),
         ) };
         if c_dataset.is_null() {
-            Err(_last_null_pointer_err("OGR_Dr_CreateDataSource").into())
+            Err(_last_null_pointer_err("OGR_Dr_CreateDataSource"))?
         } else {
             Ok( unsafe { Dataset::_with_c_dataset(c_dataset) } )
         }

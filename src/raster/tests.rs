@@ -83,7 +83,7 @@ fn test_write_raster() {
         1,
         (0, 0),
         (20, 10),
-        raster
+        &raster
     );
     assert!(res.is_ok());
 
@@ -174,7 +174,7 @@ fn test_create_with_band_type() {
 fn test_create_copy() {
     let driver = Driver::get("MEM").unwrap();
     let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
-    let copy = dataset.create_copy(driver, "").unwrap();
+    let copy = dataset.create_copy(&driver, "").unwrap();
     assert_eq!(copy.size(), (100, 50));
     assert_eq!(copy.count(), 3);
 }

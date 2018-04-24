@@ -8,7 +8,7 @@ impl <T> ToGdal for geo::Point<T> where T: Float {
     fn to_gdal(&self) -> Result<Geometry> {
         let mut geom = Geometry::empty(OGRwkbGeometryType::wkbPoint)?;
         let &geo::Point(coordinate) = self;
-        geom.set_point_2d(0, (coordinate.x.to_f64().ok_or("can't cast to f64")?, coordinate.y.to_f64().ok_or("can't cast to f64")?));
+        geom.set_point_2d(0, (coordinate.x.to_f64().ok_or(ErrorKind::CastToF64Error)?, coordinate.y.to_f64().ok_or(ErrorKind::CastToF64Error)?));
         Ok(geom)
     }
 }
@@ -28,7 +28,7 @@ fn geometry_with_points<T>(wkb_type: OGRwkbGeometryType::Type, points: &geo::Lin
     let mut geom = Geometry::empty(wkb_type)?;
     let &geo::LineString(ref linestring) = points;
     for (i, &geo::Point(coordinate)) in linestring.iter().enumerate() {
-        geom.set_point_2d(i, (coordinate.x.to_f64().ok_or("can't cast to f64")?, coordinate.y.to_f64().ok_or("can't cast to f64")?));
+        geom.set_point_2d(i, (coordinate.x.to_f64().ok_or(ErrorKind::CastToF64Error)?, coordinate.y.to_f64().ok_or(ErrorKind::CastToF64Error)?));
     }
     Ok(geom)
 }
@@ -36,8 +36,8 @@ fn geometry_with_points<T>(wkb_type: OGRwkbGeometryType::Type, points: &geo::Lin
 impl <T> ToGdal for geo::Line<T> where T: Float {
     fn to_gdal(&self) -> Result<Geometry> {
         let mut geom = Geometry::empty(OGRwkbGeometryType::wkbLineString)?;
-        geom.set_point_2d(0, (self.start.x().to_f64().ok_or("can't cast to f64")?, self.start.y().to_f64().ok_or("can't cast to f64")?));
-        geom.set_point_2d(1, (self.end.x().to_f64().ok_or("can't cast to f64")?, self.end.y().to_f64().ok_or("can't cast to f64")?));
+        geom.set_point_2d(0, (self.start.x().to_f64().ok_or(ErrorKind::CastToF64Error)?, self.start.y().to_f64().ok_or(ErrorKind::CastToF64Error)?));
+        geom.set_point_2d(1, (self.end.x().to_f64().ok_or(ErrorKind::CastToF64Error)?, self.end.y().to_f64().ok_or(ErrorKind::CastToF64Error)?));
         Ok(geom)
     }
 }
