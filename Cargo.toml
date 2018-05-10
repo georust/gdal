@@ -17,7 +17,8 @@ bindgen = ["gdal-sys/bindgen"]
 failure = "0.1"
 failure_derive = "0.1"
 libc = "0.2"
-geo = "0.7"
+geo = "0.8"
+geo-types = "0.1"
 gdal-sys = { path = "gdal-sys", version = "0.2"}
 num-traits = "0.2"
 
