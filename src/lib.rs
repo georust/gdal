@@ -17,27 +17,28 @@
 //! }
 //! ```
 
-#![crate_name="gdal"]
-#![crate_type="lib"]
+#![crate_name = "gdal"]
+#![crate_type = "lib"]
 
 extern crate failure;
-#[macro_use] extern crate failure_derive;
-extern crate libc;
-extern crate geo;
+#[macro_use]
+extern crate failure_derive;
 extern crate gdal_sys;
+extern crate geo_types;
+extern crate libc;
 extern crate num_traits;
 
 pub use version::version_info;
 
-mod utils;
+pub mod config;
+pub mod errors;
 mod gdal_major_object;
 pub mod metadata;
-pub mod version;
 pub mod raster;
-pub mod vector;
 pub mod spatial_ref;
-pub mod errors;
-pub mod config;
+mod utils;
+pub mod vector;
+pub mod version;
 
 #[cfg(test)]
 fn assert_almost_eq(a: f64, b: f64) {
