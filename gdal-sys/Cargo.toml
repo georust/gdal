@@ -17,5 +17,5 @@ min_gdal_version_2_2 = []
 libc = "0.2"
 
 [build-dependencies]
-bindgen = { git = "https://github.com/rust-lang-nursery/rust-bindgen", rev="f36f4e3", optional = true }
+bindgen = { version = "0.37", optional = true }
 pkg-config = "0.3"

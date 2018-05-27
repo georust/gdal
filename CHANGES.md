@@ -1,6 +1,8 @@
 # Changes
 
 ## 0.4.0
+* [Migrate to the `geo-types` crate](https://github.com/georust/rust-gdal/pull/60)
+* [Replace `error-chain` with `failure`](https://github.com/georust/rust-gdal/pull/58)
 * [Use `bindgen` to generate the low-level bindings](https://github.com/georust/rust-gdal/pull/55)
 
 ## 0.3.0
