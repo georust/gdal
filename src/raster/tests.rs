@@ -255,6 +255,16 @@ fn test_get_no_data_value() {
 }
 
 #[test]
+fn test_set_no_data_value() {
+    let driver = Driver::get("MEM").unwrap();
+    let dataset = driver.create("", 20, 10, 1).unwrap();
+    let rasterband = dataset.rasterband(1).unwrap();
+    assert_eq!(rasterband.no_data_value(), None);
+    assert!(rasterband.set_no_data_value(3.14).is_ok());
+    assert_eq!(rasterband.no_data_value(), Some(3.14));
+}
+
+#[test]
 fn test_get_scale() {
     let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
     let rasterband = dataset.rasterband(1).unwrap();

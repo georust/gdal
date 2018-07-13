@@ -125,6 +125,14 @@ impl <'a> RasterBand<'a> {
         None
     }
 
+    pub fn set_no_data_value(&self, no_data: f64) -> Result<()> {
+        let rv = unsafe { gdal_sys::GDALSetRasterNoDataValue(self.c_rasterband, no_data) };
+        if rv != CPLErr::CE_None {
+            Err(_last_cpl_err(rv))?;
+        }
+        Ok(())
+    }
+
     pub fn scale(&self) ->Option<f64> {
         let mut pb_success = 1;
         let scale = unsafe { gdal_sys::GDALGetRasterScale(self.c_rasterband, &mut pb_success) };
