@@ -1,6 +1,6 @@
 # gdal-sys
 
-[![Build Status](https://travis-ci.org/georust/rust-gdal.png?branch=master)](https://travis-ci.org/georust/rust-gdal)
+[![Build Status](https://travis-ci.org/georust/gdal.png?branch=master)](https://travis-ci.org/georust/gdal)
 
 Low level [GDAL](http://gdal.org/) bindings for [Rust](http://www.rust-lang.org/).
 

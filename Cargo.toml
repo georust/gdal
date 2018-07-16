@@ -7,8 +7,8 @@ authors = [
     "Alex Morega <alex@grep.ro>",
     "Johannes Drönner <droenner@informatik.uni-marburg.de>"
     ]
-repository = "https://github.com/georust/rust-gdal"
-documentation = "https://georust.github.io/rust-gdal/"
+repository = "https://github.com/georust/gdal"
+documentation = "https://georust.github.io/gdal/"
 
 [features]
 bindgen = ["gdal-sys/bindgen"]
