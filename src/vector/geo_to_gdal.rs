@@ -27,7 +27,7 @@ impl <T> ToGdal for geo_types::MultiPoint<T> where T: Float {
 fn geometry_with_points<T>(wkb_type: OGRwkbGeometryType::Type, points: &geo_types::LineString<T>) -> Result<Geometry> where T: Float {
     let mut geom = Geometry::empty(wkb_type)?;
     let &geo_types::LineString(ref linestring) = points;
-    for (i, &geo_types::Point(coordinate)) in linestring.iter().enumerate() {
+    for (i, &coordinate) in linestring.iter().enumerate() {
         geom.set_point_2d(i, (coordinate.x.to_f64().ok_or(ErrorKind::CastToF64Error)?, coordinate.y.to_f64().ok_or(ErrorKind::CastToF64Error)?));
     }
     Ok(geom)
@@ -36,8 +36,8 @@ fn geometry_with_points<T>(wkb_type: OGRwkbGeometryType::Type, points: &geo_type
 impl <T> ToGdal for geo_types::Line<T> where T: Float {
     fn to_gdal(&self) -> Result<Geometry> {
         let mut geom = Geometry::empty(OGRwkbGeometryType::wkbLineString)?;
-        geom.set_point_2d(0, (self.start.x().to_f64().ok_or(ErrorKind::CastToF64Error)?, self.start.y().to_f64().ok_or(ErrorKind::CastToF64Error)?));
-        geom.set_point_2d(1, (self.end.x().to_f64().ok_or(ErrorKind::CastToF64Error)?, self.end.y().to_f64().ok_or(ErrorKind::CastToF64Error)?));
+        geom.set_point_2d(0, (self.start.x.to_f64().ok_or(ErrorKind::CastToF64Error)?, self.start.y.to_f64().ok_or(ErrorKind::CastToF64Error)?));
+        geom.set_point_2d(1, (self.end.x.to_f64().ok_or(ErrorKind::CastToF64Error)?, self.end.y.to_f64().ok_or(ErrorKind::CastToF64Error)?));
         Ok(geom)
     }
 }
