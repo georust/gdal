@@ -5,7 +5,7 @@ pub use raster::driver::Driver;
 pub use raster::warp::reproject;
 pub use raster::rasterband::{RasterBand};
 
-mod types;
+pub mod types;
 pub mod dataset;
 pub mod driver;
 pub mod warp;
