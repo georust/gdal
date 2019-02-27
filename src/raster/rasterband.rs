@@ -150,6 +150,35 @@ impl <'a> RasterBand<'a> {
         }
         None
     }
+
+    pub fn block_size(&self) -> (usize, usize) {
+        let mut block_size_x = 0;
+        let mut block_size_y = 0;
+        unsafe { gdal_sys::GDALGetBlockSize(
+            self.c_rasterband,
+            &mut block_size_x,
+            &mut block_size_y,
+        )}
+        (block_size_x as usize, block_size_y as usize)
+    }
+
+    #[cfg(feature = "gdal_2_2")]
+    pub fn actual_block_size(&self, offset: (isize, isize))
+                             -> Result<(usize, usize)>{
+        let mut block_size_x = 0;
+        let mut block_size_y = 0;
+        let rv = unsafe { gdal_sys::GDALGetActualBlockSize(
+            self.c_rasterband,
+            offset.0 as libc::c_int,
+            offset.1 as libc::c_int,
+            &mut block_size_x,
+            &mut block_size_y,
+        )};
+        if rv != CPLErr::CE_None {
+            Err(_last_cpl_err(rv))?;
+        }
+        Ok((block_size_x as usize, block_size_y as usize))
+    }
 }
 
 impl<'a> MajorObject for RasterBand<'a> {

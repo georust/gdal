@@ -12,6 +12,7 @@ documentation = "https://georust.github.io/gdal/"
 
 [features]
 bindgen = ["gdal-sys/bindgen"]
+gdal_2_2 = ["gdal-sys/min_gdal_version_2_2"]
 
 [dependencies]
 failure = "0.1"
