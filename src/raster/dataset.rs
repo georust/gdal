@@ -9,6 +9,7 @@ use raster::types::GdalType;
 use gdal_major_object::MajorObject;
 use metadata::Metadata;
 use gdal_sys::{self, CPLErr, GDALAccess, GDALDatasetH, GDALDataType, GDALMajorObjectH};
+use ndarray::Array2;
 
 use errors::*;
 
@@ -31,7 +32,6 @@ impl Drop for Dataset {
         unsafe { gdal_sys::GDALClose(self.c_dataset); }
     }
 }
-
 
 impl Dataset {
     pub fn open(path: &Path) -> Result<Dataset> {
@@ -68,6 +68,16 @@ impl Dataset {
         let size_y = unsafe { gdal_sys::GDALGetRasterYSize(self.c_dataset) } as usize;
         (size_x, size_y)
     }
+
+    /// Get block size from a 'Dataset'.
+    /// # Arguments
+    /// * band_index - the band_index
+    /*
+    pub fn size_block(&self, band_index: isize) -> (usize, usize) {
+        let band = self.rasterband(band_index)?;
+        band.size_block()
+    }
+    */
 
     pub fn driver(&self) -> Driver {
         unsafe {
@@ -190,6 +200,23 @@ impl Dataset {
     ) -> Result<Buffer<T>>
     {
         self.rasterband(band_index)?.read_as(window, window_size, size)
+    }
+
+    /// Read a 'Array2<T>' from a 'Dataset'. T implements 'GdalType'.
+    /// # Arguments
+    /// * band_index - the band_index
+    /// * window - the window position from top left
+    /// * window_size - the window size (GDAL will interpolate data if window_size != array_size)
+    /// * array_size - the desired size of the 'Array'
+    pub fn read_as_array<T: Copy + GdalType>(
+        &self,
+        band_index: isize,
+        window: (isize, isize),
+        window_size: (usize, usize),
+        array_size: (usize, usize),
+    ) -> Result<Array2<T>>
+    {
+        self.rasterband(band_index)?.read_as_array(window, window_size, array_size)
     }
 
     /// Write a 'Buffer<T>' into a 'Dataset'.

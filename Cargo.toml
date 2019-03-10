@@ -21,6 +21,7 @@ geo-types = "0.3"
 # gdal-sys = { path = "gdal-sys", version = "0.2"}
 gdal-sys = "0.2"
 num-traits = "0.2"
+ndarray = "0.12.1"
 
 [workspace]
 members = ["gdal-sys"]
