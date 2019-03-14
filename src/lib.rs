@@ -27,6 +27,8 @@ extern crate gdal_sys;
 extern crate geo_types;
 extern crate libc;
 extern crate num_traits;
+
+#[cfg(feature = "ndarray")]
 extern crate ndarray;
 
 pub use version::version_info;

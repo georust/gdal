@@ -9,6 +9,8 @@ use raster::types::GdalType;
 use gdal_major_object::MajorObject;
 use metadata::Metadata;
 use gdal_sys::{self, CPLErr, GDALAccess, GDALDatasetH, GDALDataType, GDALMajorObjectH};
+
+#[cfg(feature = "ndarray")]
 use ndarray::Array2;
 
 use errors::*;
@@ -101,10 +103,23 @@ impl Dataset {
         Ok(())
     }
 
-    pub fn set_geo_transform(&self, tr: &GeoTransform) -> Result<()> {
-        assert_eq!(tr.len(), 6);
+    /// Affine transformation called geotransformation.
+    ///
+    /// This is like a linear transformation preserves points, straight lines and planes.
+    /// Also, sets of parallel lines remain parallel after an affine transformation.
+    /// # Arguments
+    /// * transformation - coeficients of transformations
+    ///
+    /// x-coordinate of the top-left corner pixel (x-offset)
+    /// width of a pixel (x-resolution)
+    /// row rotation (typically zero)
+    /// y-coordinate of the top-left corner pixel
+    /// column rotation (typically zero)
+    /// height of a pixel (y-resolution, typically negative)
+    pub fn set_geo_transform(&self, transformation: &GeoTransform) -> Result<()> {
+        assert_eq!(transformation.len(), 6);
         let rv = unsafe {
-            gdal_sys::GDALSetGeoTransform(self.c_dataset, tr.as_ptr() as *mut f64)
+            gdal_sys::GDALSetGeoTransform(self.c_dataset, transformation.as_ptr() as *mut f64)
         };
         if rv != CPLErr::CE_None {
             Err(_last_cpl_err(rv))?;
@@ -112,12 +127,20 @@ impl Dataset {
         Ok(())
     }
 
+    /// Get affine transformation coefficients.
+    ///
+    /// x-coordinate of the top-left corner pixel (x-offset)
+    /// width of a pixel (x-resolution)
+    /// row rotation (typically zero)
+    /// y-coordinate of the top-left corner pixel
+    /// column rotation (typically zero)
+    /// height of a pixel (y-resolution, typically negative)
     pub fn geo_transform(&self) -> Result<GeoTransform> {
-        let mut tr = GeoTransform::default();
+        let mut transformation = GeoTransform::default();
         let rv = unsafe {
             gdal_sys::GDALGetGeoTransform(
                 self.c_dataset,
-                tr.as_mut_ptr()
+                transformation.as_mut_ptr()
             )
         };
 
@@ -125,7 +148,7 @@ impl Dataset {
         if rv != CPLErr::CE_None {
             Err(_last_cpl_err(rv))?;
         }
-        Ok(tr)
+        Ok(transformation)
     }
 
     pub fn create_copy(
@@ -202,6 +225,7 @@ impl Dataset {
         self.rasterband(band_index)?.read_as(window, window_size, size)
     }
 
+    #[cfg(feature = "ndarray")]
     /// Read a 'Array2<T>' from a 'Dataset'. T implements 'GdalType'.
     /// # Arguments
     /// * band_index - the band_index

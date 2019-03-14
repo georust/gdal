@@ -18,6 +18,7 @@ pub enum ErrorKind {
     FfiNulError(#[cause] std::ffi::NulError),
     #[fail(display = "StrUtf8Error")]
     StrUtf8Error(#[cause] std::str::Utf8Error),
+    #[cfg(feature = "ndarray")]
     #[fail(display = "NdarrayShapeError")]
     NdarrayShapeError(#[cause] ndarray::ShapeError),
     #[fail(display = "CPL error class: '{:?}', error number: '{}', error msg: '{}'", class, number, msg)]
@@ -112,6 +113,7 @@ impl From<std::str::Utf8Error> for Error {
     }
 }
 
+#[cfg(feature = "ndarray")]
 impl From<ndarray::ShapeError> for Error {
     fn from(err: ndarray::ShapeError) -> Error {
         Error { inner: Context::new(ErrorKind::NdarrayShapeError(err)) }

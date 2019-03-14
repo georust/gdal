@@ -4,8 +4,10 @@ use raster::types::GdalType;
 use gdal_major_object::MajorObject;
 use metadata::Metadata;
 use gdal_sys::{self, CPLErr, GDALDataType, GDALMajorObjectH, GDALRasterBandH, GDALRWFlag};
-use ndarray::{Array2};
 use utils::_last_cpl_err;
+
+#[cfg(feature = "ndarray")]
+use ndarray::{Array2};
 
 use errors::*;
 
@@ -83,6 +85,7 @@ impl <'a> RasterBand<'a> {
         Ok(Buffer{size, data})
     }
 
+    #[cfg(feature = "ndarray")]
     /// Read a 'Array2<T>' from a 'Dataset'. T implements 'GdalType'.
     /// # Arguments
     /// * window - the window position from top left
@@ -143,6 +146,7 @@ impl <'a> RasterBand<'a> {
         )
     }
 
+    #[cfg(feature = "ndarray")]
     /// Read a 'Array2<T>' from a 'Dataset' block. T implements 'GdalType'
     /// # Arguments
     /// * block_index - the block index

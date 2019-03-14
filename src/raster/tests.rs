@@ -1,7 +1,9 @@
 use std::path::Path;
-use super::{ByteBuffer, Driver, Dataset};
+use super::{ByteBuffer, Driver, Dataset, warp};
 use gdal_sys::GDALDataType;
 use metadata::Metadata;
+
+#[cfg(feature = "ndarray")]
 use ndarray::arr2;
 
 
@@ -228,6 +230,7 @@ fn test_read_raster_as() {
 }
 
 #[test]
+#[cfg(feature = "ndarray")]
 fn test_read_raster_as_array() {
     let band_index = 1;
     let (left, top) = (19, 5);
@@ -259,6 +262,7 @@ fn test_read_full_raster_as() {
 }
 
 #[test]
+#[cfg(feature = "ndarray")]
 fn test_read_block_as_array() {
     let band_index = 1;
     let block_index = (0, 0);
@@ -269,6 +273,7 @@ fn test_read_block_as_array() {
 }
 
 #[test]
+#[cfg(feature = "ndarray")]
 fn test_read_block_dimension() {
     let band_index = 1;
     let block = (0, 0);
@@ -280,6 +285,7 @@ fn test_read_block_dimension() {
 }
 
 #[test]
+#[cfg(feature = "ndarray")]
 fn test_read_block_last_dimension() {
     let band_index = 1;
     let block = (0, 49);
@@ -291,6 +297,7 @@ fn test_read_block_last_dimension() {
 }
 
 #[test]
+#[cfg(feature = "ndarray")]
 fn test_read_block_data() {
     let band_index = 1;
     let block = (0, 0);
@@ -357,4 +364,28 @@ fn test_get_offset() {
     let rasterband = dataset.rasterband(1).unwrap();
     let offset = rasterband.offset();
     assert_eq!(offset, Some(0.0));
+}
+
+#[test]
+fn test_reproject() {
+    let driver = Driver::get("MEM").unwrap();
+    let size_x = 100;
+    let size_y = 50;
+    let bands = 3;
+    let filename = ""; // Don't need concrete filename because is a file in memory
+    let destiny = driver.create(filename, size_x, size_y, bands).unwrap();
+    let source = Dataset::open(fixture!("tinybluemarble.tif")).unwrap();
+
+    println!("{:?}", source.geo_transform().expect("Geotransform vector."));
+
+    // c = x-coordinate of the upper-left corner of the upper-left pixel
+    // a = width of a pixel
+    // b = row rotation (typically zero)
+    // f = y-coordinate of the of the upper-left corner of the upper-left pixel
+    // d = column rotation (typically zero)
+    // e = height of a pixel (typically negative)
+    let transform = [0.0, 10.0, 0.0, 0.0, 0.0, -10.0];
+    assert!(destiny.set_geo_transform(&transform).is_ok());
+    assert!(warp::reproject(&source, &destiny).is_ok());
+    println!("{:?}", destiny.geo_transform().expect("Geotransform vector."));
 }
