@@ -1,7 +1,10 @@
 use std::path::Path;
-use super::{ByteBuffer, Driver, Dataset};
+use super::{ByteBuffer, Driver, Dataset, warp};
 use gdal_sys::GDALDataType;
 use metadata::Metadata;
+
+#[cfg(feature = "ndarray")]
+use ndarray::arr2;
 
 
 macro_rules! fixture {
@@ -34,6 +37,15 @@ fn test_get_raster_size() {
     assert_eq!(size_y, 50);
 }
 
+#[test]
+fn test_get_raster_block_size() {
+    let band_index = 1;
+    let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
+    let rasterband = dataset.rasterband(band_index).unwrap();
+    let (size_x, size_y) = rasterband.block_size();
+    assert_eq!(size_x, 100);
+    assert_eq!(size_y, 1);
+}
 
 #[test]
 fn test_get_raster_count() {
@@ -189,7 +201,6 @@ fn test_geo_transform() {
     assert_eq!(dataset.geo_transform().unwrap(), transform);
 }
 
-
 #[test]
 fn test_get_driver_by_name() {
     let missing_driver = Driver::get("wtf");
@@ -201,6 +212,7 @@ fn test_get_driver_by_name() {
     assert_eq!(driver.short_name(), "GTiff");
     assert_eq!(driver.long_name(), "GeoTIFF");
 }
+
 
 #[test]
 fn test_read_raster_as() {
@@ -218,12 +230,86 @@ fn test_read_raster_as() {
 }
 
 #[test]
+#[cfg(feature = "ndarray")]
+fn test_read_raster_as_array() {
+    let band_index = 1;
+    let (left, top) = (19, 5);
+    let (window_size_x, window_size_y) = (3, 4);
+    let (array_size_x, array_size_y) = (3, 4);
+    let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
+    let values = dataset.read_as_array::<u8>(
+        band_index,
+        (left, top),
+        (window_size_x, window_size_y),
+        (array_size_x, array_size_y)
+    ).unwrap();
+
+    let data = arr2(&[[226, 225, 157],
+                      [215, 222, 225],
+                      [213, 231, 229],
+                      [171, 189, 192]]);
+
+    assert_eq!(values, data);
+    assert_eq!(dataset.band_type(band_index).unwrap(), GDALDataType::GDT_Byte);
+}
+
+#[test]
 fn test_read_full_raster_as() {
     let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
     let rv = dataset.read_full_raster_as::<u8>(1).unwrap();
     assert_eq!(rv.size.0, 100);
     assert_eq!(rv.size.1, 50);
 }
+
+#[test]
+#[cfg(feature = "ndarray")]
+fn test_read_block_as_array() {
+    let band_index = 1;
+    let block_index = (0, 0);
+    let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
+    let rasterband = dataset.rasterband(band_index).unwrap();
+    let result = rasterband.read_block::<u8>(block_index);
+    assert!(result.is_ok());
+}
+
+#[test]
+#[cfg(feature = "ndarray")]
+fn test_read_block_dimension() {
+    let band_index = 1;
+    let block = (0, 0);
+    let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
+    let rasterband = dataset.rasterband(band_index).unwrap();
+    let array = rasterband.read_block::<u8>(block).unwrap();
+    let dimension = (1, 100);
+    assert_eq!(array.dim(), dimension);
+}
+
+#[test]
+#[cfg(feature = "ndarray")]
+fn test_read_block_last_dimension() {
+    let band_index = 1;
+    let block = (0, 49);
+    let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
+    let rasterband = dataset.rasterband(band_index).unwrap();
+    let array = rasterband.read_block::<u8>(block).unwrap();
+    let dimension = (1, 100);
+    assert_eq!(array.dim(), dimension);
+}
+
+#[test]
+#[cfg(feature = "ndarray")]
+fn test_read_block_data() {
+    let band_index = 1;
+    let block = (0, 0);
+    let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
+    let rasterband = dataset.rasterband(band_index).unwrap();
+    let array = rasterband.read_block::<u8>(block).unwrap();
+    assert_eq!(array[[0, 0]], 0);
+    assert_eq!(array[[0, 1]], 9);
+    assert_eq!(array[[0, 98]], 24);
+    assert_eq!(array[[0, 99]], 51);
+}
+
 
 #[test]
 fn test_get_band_type() {
