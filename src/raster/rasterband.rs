@@ -26,8 +26,6 @@ impl <'a> RasterBand<'a> {
     }
 
     /// Get block size from a 'Dataset'.
-    /// # Arguments
-    /// * band_index - the band_index
     pub fn block_size(&self) -> (usize, usize) {
         let mut size_x = 0;
         let mut size_y = 0;
@@ -40,6 +38,31 @@ impl <'a> RasterBand<'a> {
             )
         };
         (size_x as usize, size_y as usize)
+    }
+
+    /// Get x-size of the band
+    pub fn x_size(&self) -> usize {
+        let out;
+        unsafe {
+            out = gdal_sys::GDALGetRasterBandXSize(self.c_rasterband);
+        }
+        out as usize
+    }
+
+    /// Get y-size of the band
+    pub fn y_size(&self) -> usize {
+        let out;
+        unsafe {
+            out = gdal_sys::GDALGetRasterBandYSize(self.c_rasterband)
+        }
+        out as usize
+    }
+
+    /// Get dimensions of the band.
+    /// Note that this may not be the same as `size` on the
+    /// `owning_dataset` due to scale.
+    pub fn size(&self) -> (usize, usize) {
+        (self.x_size(), self.y_size())
     }
 
     /// Read a 'Buffer<T>' from a 'Dataset'. T implements 'GdalType'
@@ -252,17 +275,8 @@ impl <'a> RasterBand<'a> {
         None
     }
 
-    pub fn block_size(&self) -> (usize, usize) {
-        let mut block_size_x = 0;
-        let mut block_size_y = 0;
-        unsafe { gdal_sys::GDALGetBlockSize(
-            self.c_rasterband,
-            &mut block_size_x,
-            &mut block_size_y,
-        )}
-        (block_size_x as usize, block_size_y as usize)
-    }
-
+    /// Get actual block size (at the edges) when block size
+    /// does not divide band size.
     #[cfg(feature = "gdal_2_2")]
     pub fn actual_block_size(&self, offset: (isize, isize))
                              -> Result<(usize, usize)>{
