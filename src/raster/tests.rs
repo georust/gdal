@@ -365,3 +365,29 @@ fn test_get_offset() {
     let offset = rasterband.offset();
     assert_eq!(offset, Some(0.0));
 }
+
+
+#[test]
+fn test_get_rasterband_size() {
+    let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
+    let rasterband = dataset.rasterband(1).unwrap();
+    let size = rasterband.size();
+    assert_eq!(size, (100, 50));
+}
+
+#[test]
+fn test_get_rasterband_block_size() {
+    let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
+    let rasterband = dataset.rasterband(1).unwrap();
+    let size = rasterband.block_size();
+    assert_eq!(size, (100, 1));
+}
+
+#[test]
+#[cfg(feature = "gdal_2_2")]
+fn test_get_rasterband_actual_block_size() {
+    let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
+    let rasterband = dataset.rasterband(1).unwrap();
+    let size = rasterband.actual_block_size((0,40));
+    assert_eq!(size.unwrap(), (100, 1));
+}

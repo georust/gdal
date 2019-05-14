@@ -8,7 +8,7 @@ use gdal_major_object::MajorObject;
 use metadata::Metadata;
 use gdal_sys::{self, GDALMajorObjectH, OGRDataSourceH, OGRLayerH, OGRwkbGeometryType};
 use utils::_last_null_pointer_err;
-
+use spatial_ref::SpatialRef;
 
 use errors::*;
 
@@ -97,6 +97,34 @@ impl Dataset {
         };
         self._child_layer(c_layer);
         Ok(self.layers.last_mut().unwrap()) // TODO: is this safe?
+    }
+
+    /// Create a new layer with name, spatial ref. and type.
+    pub fn create_layer_ext(
+        &mut self,
+        name: &str,
+        srs: Option<&SpatialRef>,
+        ty: OGRwkbGeometryType::Type,
+    ) -> Result<&mut Layer> {
+        let c_name = CString::new(name)?;
+        let c_srs = match srs {
+            Some(srs) => srs.to_c_hsrs(),
+            None => null_mut(),
+        };
+
+        let c_layer = unsafe { gdal_sys::OGR_DS_CreateLayer(
+            self.c_dataset,
+            c_name.as_ptr(),
+            c_srs,
+            ty,
+            null_mut(),
+        ) };
+        if c_layer.is_null() {
+            Err(_last_null_pointer_err("OGR_DS_CreateLayer"))?;
+        };
+        self._child_layer(c_layer);
+        Ok(self.layers.last_mut().unwrap()) // TODO: is this safe?
+
     }
 }
 
