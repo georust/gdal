@@ -21,6 +21,8 @@ pub struct Dataset {
     c_dataset: GDALDatasetH,
 }
 
+unsafe impl Send for Dataset {}
+
 impl MajorObject for Dataset {
     unsafe fn gdal_object_ptr(&self) -> GDALMajorObjectH {
         self.c_dataset
@@ -71,7 +73,7 @@ impl Dataset {
         (size_x, size_y)
     }
 
-    /// Get block size from a 'Dataset'.
+    /// Get block size from a `Dataset`.
     /// # Arguments
     /// * band_index - the band_index
     /*
@@ -176,12 +178,12 @@ impl Dataset {
         self.rasterband(band_index).map(|band| band.band_type())
     }
 
-    /// Read a 'Buffer<u8>' from a 'Dataset'.
+    /// Read a `Buffer<u8>` from a `Dataset`.
     /// # Arguments
     /// * band_index - the band_index
     /// * window - the window position from top left
     /// * window_size - the window size (GDAL will interpolate data if window_size != buffer_size)
-    /// * buffer_size - the desired size of the 'Buffer'
+    /// * buffer_size - the desired size of the `Buffer`
     pub fn read_raster(&self,
         band_index: isize,
         window: (isize, isize),
@@ -197,7 +199,7 @@ impl Dataset {
         )
     }
 
-    /// Read a full 'Dataset' as 'Buffer<T>'.
+    /// Read a full `Dataset` as `Buffer<T>`.
     /// # Arguments
     /// * band_index - the band_index
     pub fn read_full_raster_as<T: Copy + GdalType>(
@@ -208,12 +210,12 @@ impl Dataset {
         self.rasterband(band_index)?.read_band_as()
     }
 
-    /// Read a 'Buffer<T>' from a 'Dataset'. T implements 'GdalType'
+    /// Read a `Buffer<T>` from a `Dataset`. T implements `GdalType`
     /// # Arguments
     /// * band_index - the band_index
     /// * window - the window position from top left
     /// * window_size - the window size (GDAL will interpolate data if window_size != buffer_size)
-    /// * buffer_size - the desired size of the 'Buffer'
+    /// * buffer_size - the desired size of the `Buffer`
     pub fn read_raster_as<T: Copy + GdalType>(
         &self,
         band_index: isize,
@@ -226,12 +228,12 @@ impl Dataset {
     }
 
     #[cfg(feature = "ndarray")]
-    /// Read a 'Array2<T>' from a 'Dataset'. T implements 'GdalType'.
+    /// Read a `Array2<T>` from a `Dataset`. T implements `GdalType`.
     /// # Arguments
     /// * band_index - the band_index
     /// * window - the window position from top left
     /// * window_size - the window size (GDAL will interpolate data if window_size != array_size)
-    /// * array_size - the desired size of the 'Array'
+    /// * array_size - the desired size of the `Array`
     pub fn read_as_array<T: Copy + GdalType>(
         &self,
         band_index: isize,
@@ -243,7 +245,7 @@ impl Dataset {
         self.rasterband(band_index)?.read_as_array(window, window_size, array_size)
     }
 
-    /// Write a 'Buffer<T>' into a 'Dataset'.
+    /// Write a `Buffer<T>` into a `Dataset`.
     /// # Arguments
     /// * band_index - the band_index
     /// * window - the window position from top left

@@ -25,7 +25,7 @@ impl <'a> RasterBand<'a> {
         RasterBand { c_rasterband, owning_dataset }
     }
 
-    /// Get block size from a 'Dataset'.
+    /// Get block size from a `Dataset`.
     pub fn block_size(&self) -> (usize, usize) {
         let mut size_x = 0;
         let mut size_y = 0;
@@ -65,12 +65,12 @@ impl <'a> RasterBand<'a> {
         (self.x_size(), self.y_size())
     }
 
-    /// Read a 'Buffer<T>' from a 'Dataset'. T implements 'GdalType'
+    /// Read a `Buffer<T>` from a `Dataset`. T implements `GdalType`
     /// # Arguments
     /// * band_index - the band_index
     /// * window - the window position from top left
     /// * window_size - the window size (GDAL will interpolate data if window_size != buffer_size)
-    /// * buffer_size - the desired size of the 'Buffer'
+    /// * buffer_size - the desired size of the `Buffer`
     pub fn read_as<T: Copy + GdalType>(
         &self,
         window: (isize, isize),
@@ -108,12 +108,55 @@ impl <'a> RasterBand<'a> {
         Ok(Buffer{size, data})
     }
 
+    /// Read into a slice `[T]` from a `Dataset`. T implements `GdalType`
+    /// # Arguments
+    /// * band_index - the band_index
+    /// * window - the window position from top left
+    /// * window_size - the window size (GDAL will interpolate data if window_size != buffer_size)
+    /// * buffer_size - the desired size of the `Buffer`
+    /// * buffer - the slice to copy into (length is checked with `assert`)
+
+    pub fn read_into_slice<T: Copy + GdalType>(
+        &self,
+        window: (isize, isize),
+        window_size: (usize, usize),
+        size: (usize, usize),
+        buffer: &mut [T],
+    ) -> Result<()>
+    {
+        let pixels = (size.0 * size.1) as usize;
+        assert_eq!(buffer.len(), pixels);
+
+        //let no_data:
+        let rv = unsafe {
+            gdal_sys::GDALRasterIO(
+                self.c_rasterband,
+                GDALRWFlag::GF_Read,
+                window.0 as c_int,
+                window.1 as c_int,
+                window_size.0 as c_int,
+                window_size.1 as c_int,
+                buffer as *mut [T] as *mut T as GDALRasterBandH,
+                size.0 as c_int,
+                size.1 as c_int,
+                T::gdal_type(),
+                0,
+                0
+            )
+        };
+        if rv != CPLErr::CE_None {
+            Err(_last_cpl_err(rv))?;
+        }
+
+        Ok(())
+    }
+
     #[cfg(feature = "ndarray")]
-    /// Read a 'Array2<T>' from a 'Dataset'. T implements 'GdalType'.
+    /// Read a `Array2<T>` from a `Dataset`. T implements `GdalType`.
     /// # Arguments
     /// * window - the window position from top left
     /// * window_size - the window size (GDAL will interpolate data if window_size != array_size)
-    /// * array_size - the desired size of the 'Array'
+    /// * array_size - the desired size of the `Array`
     /// # Docs
     /// The Matrix shape is (rows, cols) and raster shape is (cols in x-axis, rows in y-axis).
     pub fn read_as_array<T: Copy + GdalType>(
@@ -154,7 +197,7 @@ impl <'a> RasterBand<'a> {
         Array2::from_shape_vec((array_size.1, array_size.0) , data).map_err(Into::into)
     }
 
-    /// Read a full 'Dataset' as 'Buffer<T>'.
+    /// Read a full `Dataset` as `Buffer<T>`.
     /// # Arguments
     /// * band_index - the band_index
     pub fn read_band_as<T: Copy + GdalType>(
@@ -170,7 +213,7 @@ impl <'a> RasterBand<'a> {
     }
 
     #[cfg(feature = "ndarray")]
-    /// Read a 'Array2<T>' from a 'Dataset' block. T implements 'GdalType'
+    /// Read a `Array2<T>` from a `Dataset` block. T implements `GdalType`
     /// # Arguments
     /// * block_index - the block index
     /// # Docs

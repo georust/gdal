@@ -34,6 +34,7 @@ impl MajorObject for Dataset {
 
 impl Metadata for Dataset {}
 
+unsafe impl Send for Dataset {}
 
 impl Dataset {
     pub unsafe fn _with_c_dataset(c_dataset: OGRDataSourceH) -> Dataset {
