@@ -4,7 +4,7 @@ use vector::Geometry;
 
 impl From<Geometry> for geo_types::Geometry<f64> {
     fn from(geo: Geometry) -> geo_types::Geometry<f64> {
-        let geometry_type = unsafe { gdal_sys::OGR_G_GetGeometryType(geo.c_geometry()) };
+        let geometry_type = geo.geometry_type();
 
         let ring = |n: usize| {
             let ring = unsafe { geo._get_geometry(n) };

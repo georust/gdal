@@ -19,11 +19,11 @@ array = ["ndarray"]
 failure = "0.1"
 failure_derive = "0.1"
 libc = "0.2"
-geo-types = "0.3"
+geo-types = "0.4"
 # gdal-sys = { path = "gdal-sys", version = "0.2"}
 gdal-sys = "0.2"
 num-traits = "0.2"
-ndarray = {version = "0.12.1", optional = true }
+ndarray = { version = "0.12.1", optional = true }
 
 [workspace]
 members = ["gdal-sys"]

@@ -62,7 +62,8 @@ impl <T> ToGdal for geo_types::MultiLineString<T> where T: Float {
 impl <T> ToGdal for geo_types::Polygon<T> where T: Float {
     fn to_gdal(&self) -> Result<Geometry> {
         let mut geom = Geometry::empty(OGRwkbGeometryType::wkbPolygon)?;
-        let &geo_types::Polygon{ref exterior, ref interiors} = self;
+        let exterior = self.exterior();
+        let interiors = self.interiors();
         geom.add_geometry(geometry_with_points(OGRwkbGeometryType::wkbLinearRing, exterior)?)?;
         for ring in interiors.iter() {
             geom.add_geometry(geometry_with_points(OGRwkbGeometryType::wkbLinearRing, ring)?)?;
