@@ -15,11 +15,11 @@ impl From<Geometry> for geo_types::Geometry<f64> {
         };
 
         match geometry_type {
-            OGRwkbGeometryType::wkbPoint => {
+            OGRwkbGeometryType::wkbPoint | OGRwkbGeometryType::wkbPoint25D => {
                 let (x, y, _) = geo.get_point(0);
                 geo_types::Geometry::Point(geo_types::Point(geo_types::Coordinate { x, y }))
             }
-            OGRwkbGeometryType::wkbMultiPoint => {
+            OGRwkbGeometryType::wkbMultiPoint | OGRwkbGeometryType::wkbMultiPoint25D => {
                 let point_count =
                     unsafe { gdal_sys::OGR_G_GetGeometryCount(geo.c_geometry()) } as usize;
                 let coords = (0..point_count)
@@ -30,14 +30,14 @@ impl From<Geometry> for geo_types::Geometry<f64> {
                     .collect();
                 geo_types::Geometry::MultiPoint(geo_types::MultiPoint(coords))
             }
-            OGRwkbGeometryType::wkbLineString => {
+            OGRwkbGeometryType::wkbLineString | OGRwkbGeometryType::wkbLineString25D => {
                 let coords = geo.get_point_vec()
                     .iter()
                     .map(|&(x, y, _)| geo_types::Coordinate { x, y })
                     .collect();
                 geo_types::Geometry::LineString(geo_types::LineString(coords))
             }
-            OGRwkbGeometryType::wkbMultiLineString => {
+            OGRwkbGeometryType::wkbMultiLineString | OGRwkbGeometryType::wkbMultiLineString25D => {
                 let string_count =
                     unsafe { gdal_sys::OGR_G_GetGeometryCount(geo.c_geometry()) } as usize;
                 let strings = (0..string_count)
@@ -48,14 +48,14 @@ impl From<Geometry> for geo_types::Geometry<f64> {
                     .collect();
                 geo_types::Geometry::MultiLineString(geo_types::MultiLineString(strings))
             }
-            OGRwkbGeometryType::wkbPolygon => {
+            OGRwkbGeometryType::wkbPolygon | OGRwkbGeometryType::wkbPolygon25D => {
                 let ring_count =
                     unsafe { gdal_sys::OGR_G_GetGeometryCount(geo.c_geometry()) } as usize;
                 let outer = ring(0);
                 let holes = (1..ring_count).map(ring).collect();
                 geo_types::Geometry::Polygon(geo_types::Polygon::new(outer, holes))
             }
-            OGRwkbGeometryType::wkbMultiPolygon => {
+            OGRwkbGeometryType::wkbMultiPolygon | OGRwkbGeometryType::wkbMultiPolygon25D => {
                 let string_count =
                     unsafe { gdal_sys::OGR_G_GetGeometryCount(geo.c_geometry()) } as usize;
                 let strings = (0..string_count)
@@ -66,7 +66,7 @@ impl From<Geometry> for geo_types::Geometry<f64> {
                     .collect();
                 geo_types::Geometry::MultiPolygon(geo_types::MultiPolygon(strings))
             }
-            OGRwkbGeometryType::wkbGeometryCollection => {
+            OGRwkbGeometryType::wkbGeometryCollection | OGRwkbGeometryType::wkbGeometryCollection25D => {
                 let item_count =
                     unsafe { gdal_sys::OGR_G_GetGeometryCount(geo.c_geometry()) } as usize;
                 let geometry_list = (0..item_count)
