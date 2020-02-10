@@ -24,6 +24,7 @@ geo-types = "0.4"
 gdal-sys = "0.2"
 num-traits = "0.2"
 ndarray = {version = "0.12.1", optional = true }
+chrono = "0.4"
 
 [workspace]
 members = ["gdal-sys"]

@@ -5,6 +5,7 @@ use utils::{_string, _last_null_pointer_err};
 use gdal_sys::{self, OGRErr, OGRFeatureH, OGRFieldType};
 use vector::geometry::Geometry;
 use vector::layer::Layer;
+use chrono::{Date, FixedOffset, DateTime, TimeZone, Datelike, Timelike};
 
 use errors::*;
 
@@ -65,8 +66,45 @@ impl<'a> Feature<'a> {
                 let rv = unsafe { gdal_sys::OGR_F_GetFieldAsInteger(self.c_feature, field_id) };
                 Ok(FieldValue::IntegerValue(rv as i32))
             },
+            OGRFieldType::OFTDateTime => {
+                Ok(FieldValue::DateTimeValue(self.get_field_datetime(field_id)?))
+            },
+            OGRFieldType::OFTDate => {
+                Ok(FieldValue::DateValue(self.get_field_datetime(field_id)?.date()))
+            },
             _ => Err(ErrorKind::UnhandledFieldType{field_type, method_name: "OGR_Fld_GetType"})?
         }
+    }
+
+    fn get_field_datetime(&self, field_id: c_int) -> Result<DateTime<FixedOffset>> {
+        let mut year: c_int = 0;
+        let mut month: c_int = 0;
+        let mut day: c_int = 0;
+        let mut hour: c_int = 0;
+        let mut minute: c_int = 0;
+        let mut second: c_int = 0;
+        let mut tzflag: c_int = 0;
+
+        let success = unsafe {
+            gdal_sys::OGR_F_GetFieldAsDateTime(
+                self.c_feature, field_id,
+                &mut year, &mut month, &mut day, &mut hour, &mut minute, &mut second, &mut tzflag
+            )
+        };
+        if success == 0 {
+            Err(ErrorKind::OgrError { err: OGRErr::OGRERR_FAILURE, method_name: "OGR_F_GetFieldAsDateTime" })?;
+        }
+
+        // from https://github.com/OSGeo/gdal/blob/33a8a0edc764253b582e194d330eec3b83072863/gdal/ogr/ogrutils.cpp#L1309
+        let tzoffset_secs = if tzflag == 0 || tzflag == 100 {
+            0
+        } else {
+            (tzflag as i32 - 100) * 15 * 60
+        };
+        let rv = FixedOffset::east(tzoffset_secs)
+            .ymd(year as i32, month as u32, day as u32)
+            .and_hms(hour as u32, minute as u32, second as u32);
+        Ok(rv)
     }
 
     /// Get the field's geometry.
@@ -141,11 +179,36 @@ impl<'a> Feature<'a> {
         Ok(())
     }
 
+    pub fn set_field_datetime(&self, field_name: &str, value: DateTime<FixedOffset>) -> Result<()> {
+        let c_str_field_name = CString::new(field_name)?;
+        let idx = unsafe { gdal_sys::OGR_F_GetFieldIndex(self.c_feature, c_str_field_name.as_ptr())};
+        if idx == -1 {
+            Err(ErrorKind::InvalidFieldName{field_name: field_name.to_string(), method_name: "OGR_F_GetFieldIndex"})?;
+        }
+
+        let year = value.year() as c_int;
+        let month = value.month() as c_int;
+        let day = value.day() as c_int;
+        let hour= value.hour() as c_int;
+        let minute = value.minute() as c_int;
+        let second = value.second() as c_int;
+        let tzflag: c_int = if value.offset().local_minus_utc() == 0 {
+            0
+        } else {
+            100 + (value.offset().local_minus_utc() / (15 * 60))
+        };
+
+        unsafe { gdal_sys::OGR_F_SetFieldDateTime(self.c_feature, idx, year, month, day, hour, minute, second, tzflag) };
+        Ok(())
+    }
+
     pub fn set_field(&self, field_name: &str,  value: &FieldValue) -> Result<()> {
           match *value {
              FieldValue::RealValue(value) => self.set_field_double(field_name, value),
              FieldValue::StringValue(ref value) => self.set_field_string(field_name, value.as_str()),
-             FieldValue::IntegerValue(value) => self.set_field_integer(field_name, value)
+             FieldValue::IntegerValue(value) => self.set_field_integer(field_name, value),
+             FieldValue::DateTimeValue(value) => self.set_field_datetime(field_name, value),
+             FieldValue::DateValue(value) => self.set_field_datetime(field_name, value.and_hms(0, 0, 0)),
          }
      }
 
@@ -170,6 +233,8 @@ pub enum FieldValue {
     IntegerValue(i32),
     StringValue(String),
     RealValue(f64),
+    DateValue(Date<FixedOffset>),
+    DateTimeValue(DateTime<FixedOffset>),
 }
 
 
@@ -194,6 +259,23 @@ impl FieldValue {
     pub fn into_int(self) -> Option<i32> {
         match self {
             FieldValue::IntegerValue(rv) => Some(rv),
+            _ => None
+        }
+    }
+
+    /// Interpret the value as `Date`.
+    pub fn into_date(self) -> Option<Date<FixedOffset>> {
+        match self {
+            FieldValue::DateValue(rv) => Some(rv),
+            FieldValue::DateTimeValue(rv) => Some(rv.date()),
+            _ => None
+        }
+    }
+
+    /// Interpret the value as `DateTime`.
+    pub fn into_datetime(self) -> Option<DateTime<FixedOffset>> {
+        match self {
+            FieldValue::DateTimeValue(rv) => Some(rv),
             _ => None
         }
     }

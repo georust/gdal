@@ -30,6 +30,7 @@ extern crate num_traits;
 
 #[cfg(feature = "ndarray")]
 extern crate ndarray;
+extern crate chrono;
 
 pub use version::version_info;
 
