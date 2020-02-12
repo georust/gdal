@@ -1,14 +1,20 @@
+
 extern crate gdal;
+#[cfg(feature = "datetime")]
 extern crate chrono;
 
 use std::path::Path;
 use gdal::errors::Error;
 use gdal::vector::*;
 use std::fs;
+#[cfg(feature = "datetime")]
 use chrono::Duration;
 use std::ops::Add;
 
+#[cfg(feature = "datetime")]
 fn run() -> Result<(), Error> {
+    println!("gdal crate was build with datetime support");
+
     let mut dataset_a = Dataset::open(Path::new("fixtures/points_with_datetime.json"))?;
     let layer_a = dataset_a.layer(0)?;
 
@@ -54,6 +60,13 @@ fn run() -> Result<(), Error> {
     }
     Ok(())
 }
+
+#[cfg(not(feature = "datetime"))]
+fn run() -> Result<(), Error> {
+    println!("gdal crate was build without datetime support");
+    Ok(())
+}
+
 
 fn main() {
     run().unwrap();
