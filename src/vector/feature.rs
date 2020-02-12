@@ -5,6 +5,8 @@ use utils::{_string, _last_null_pointer_err};
 use gdal_sys::{self, OGRErr, OGRFeatureH, OGRFieldType};
 use vector::geometry::Geometry;
 use vector::layer::Layer;
+
+#[cfg(feature = "datetime")]
 use chrono::{Date, FixedOffset, DateTime, TimeZone, Datelike, Timelike};
 
 use errors::*;
@@ -66,9 +68,11 @@ impl<'a> Feature<'a> {
                 let rv = unsafe { gdal_sys::OGR_F_GetFieldAsInteger(self.c_feature, field_id) };
                 Ok(FieldValue::IntegerValue(rv as i32))
             },
+            #[cfg(feature = "datetime")]
             OGRFieldType::OFTDateTime => {
                 Ok(FieldValue::DateTimeValue(self.get_field_datetime(field_id)?))
             },
+            #[cfg(feature = "datetime")]
             OGRFieldType::OFTDate => {
                 Ok(FieldValue::DateValue(self.get_field_datetime(field_id)?.date()))
             },
@@ -76,6 +80,7 @@ impl<'a> Feature<'a> {
         }
     }
 
+    #[cfg(feature = "datetime")]
     fn get_field_datetime(&self, field_id: c_int) -> Result<DateTime<FixedOffset>> {
         let mut year: c_int = 0;
         let mut month: c_int = 0;
@@ -179,6 +184,7 @@ impl<'a> Feature<'a> {
         Ok(())
     }
 
+    #[cfg(feature = "datetime")]
     pub fn set_field_datetime(&self, field_name: &str, value: DateTime<FixedOffset>) -> Result<()> {
         let c_str_field_name = CString::new(field_name)?;
         let idx = unsafe { gdal_sys::OGR_F_GetFieldIndex(self.c_feature, c_str_field_name.as_ptr())};
@@ -207,7 +213,11 @@ impl<'a> Feature<'a> {
              FieldValue::RealValue(value) => self.set_field_double(field_name, value),
              FieldValue::StringValue(ref value) => self.set_field_string(field_name, value.as_str()),
              FieldValue::IntegerValue(value) => self.set_field_integer(field_name, value),
+
+             #[cfg(feature = "datetime")]
              FieldValue::DateTimeValue(value) => self.set_field_datetime(field_name, value),
+
+              #[cfg(feature = "datetime")]
              FieldValue::DateValue(value) => self.set_field_datetime(field_name, value.and_hms(0, 0, 0)),
          }
      }
@@ -233,7 +243,12 @@ pub enum FieldValue {
     IntegerValue(i32),
     StringValue(String),
     RealValue(f64),
+
+    #[cfg(feature = "datetime")]
     DateValue(Date<FixedOffset>),
+
+
+    #[cfg(feature = "datetime")]
     DateTimeValue(DateTime<FixedOffset>),
 }
 
@@ -264,6 +279,7 @@ impl FieldValue {
     }
 
     /// Interpret the value as `Date`.
+    #[cfg(feature = "datetime")]
     pub fn into_date(self) -> Option<Date<FixedOffset>> {
         match self {
             FieldValue::DateValue(rv) => Some(rv),
@@ -273,6 +289,7 @@ impl FieldValue {
     }
 
     /// Interpret the value as `DateTime`.
+    #[cfg(feature = "datetime")]
     pub fn into_datetime(self) -> Option<DateTime<FixedOffset>> {
         match self {
             FieldValue::DateTimeValue(rv) => Some(rv),
