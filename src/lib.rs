@@ -31,6 +31,9 @@ extern crate num_traits;
 #[cfg(feature = "ndarray")]
 extern crate ndarray;
 
+#[cfg(feature = "datetime")]
+extern crate chrono;
+
 pub use version::version_info;
 
 pub mod config;
