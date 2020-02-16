@@ -43,7 +43,7 @@ impl Geometry {
         *(self.c_geometry_ref.borrow_mut()) = Some(c_geometry);
     }
 
-    unsafe fn with_c_geometry(c_geom: OGRGeometryH, owned: bool) -> Geometry {
+    pub(crate) unsafe fn with_c_geometry(c_geom: OGRGeometryH, owned: bool) -> Geometry {
         Geometry {
             c_geometry_ref: RefCell::new(Some(c_geom)),
             owned,
