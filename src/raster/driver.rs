@@ -62,13 +62,15 @@ impl Driver {
         filename: &str,
         size_x: isize,
         size_y: isize,
-        bands: isize
+        bands: isize,
+        options: Option<Vec<&str>>,
     ) -> Result<Dataset> {
         self.create_with_band_type::<u8>(
             filename,
             size_x,
             size_y,
             bands,
+            options,
         )
     }
 
@@ -78,8 +80,18 @@ impl Driver {
         size_x: isize,
         size_y: isize,
         bands: isize,
+        options: Option<Vec<&str>>,
     ) -> Result<Dataset> {
         let c_filename = CString::new(filename)?;
+        let mut c_options = Vec::new();
+        match options {
+            Some(options) => {
+                for option in options {
+                    c_options.push(CString::new(option)?.into_raw());
+                }
+            },
+            None => c_options.push(null_mut()),
+        }
         let c_dataset = unsafe { gdal_sys::GDALCreate(
                 self.c_driver,
                 c_filename.as_ptr(),
@@ -87,7 +99,7 @@ impl Driver {
                 size_y as c_int,
                 bands as c_int,
                 T::gdal_type(),
-                null_mut()
+                c_options.as_mut_ptr()
             ) };
         if c_dataset.is_null() {
             Err(_last_null_pointer_err("GDALCreate"))?;
