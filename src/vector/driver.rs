@@ -1,15 +1,14 @@
-use std::ffi::CString;
-use std::ptr::null_mut;
-use std::sync::{Once, ONCE_INIT};
-use std::path::Path;
-use vector::{Dataset};
+use crate::utils::_last_null_pointer_err;
+use crate::vector::Dataset;
 use gdal_sys::{self, OGRSFDriverH};
-use utils::{_last_null_pointer_err};
+use std::ffi::CString;
+use std::path::Path;
+use std::ptr::null_mut;
+use std::sync::Once;
 
-use errors::*;
+use crate::errors::*;
 
-
-static START: Once = ONCE_INIT;
+static START: Once = Once::new();
 
 pub fn _register_drivers() {
     unsafe {
@@ -28,25 +27,23 @@ impl Driver {
         _register_drivers();
         let c_name = CString::new(name)?;
         let c_driver = unsafe { gdal_sys::OGRGetDriverByName(c_name.as_ptr()) };
-       if c_driver.is_null() {
+        if c_driver.is_null() {
             Err(_last_null_pointer_err("OGRGetDriverByName"))?
         } else {
-            Ok(Driver{c_driver})
+            Ok(Driver { c_driver })
         }
     }
 
     pub fn create(&self, path: &Path) -> Result<Dataset> {
         let filename = path.to_string_lossy();
         let c_filename = CString::new(filename.as_ref())?;
-        let c_dataset = unsafe { gdal_sys::OGR_Dr_CreateDataSource(
-            self.c_driver,
-            c_filename.as_ptr(),
-            null_mut(),
-        ) };
+        let c_dataset = unsafe {
+            gdal_sys::OGR_Dr_CreateDataSource(self.c_driver, c_filename.as_ptr(), null_mut())
+        };
         if c_dataset.is_null() {
             Err(_last_null_pointer_err("OGR_Dr_CreateDataSource"))?
         } else {
-            Ok( unsafe { Dataset::_with_c_dataset(c_dataset) } )
+            Ok(unsafe { Dataset::_with_c_dataset(c_dataset) })
         }
     }
 }

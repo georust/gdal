@@ -9,6 +9,7 @@ authors = [
     ]
 repository = "https://github.com/georust/gdal"
 documentation = "https://georust.github.io/gdal/"
+edition = "2018"
 
 [features]
 bindgen = ["gdal-sys/bindgen"]

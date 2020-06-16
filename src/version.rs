@@ -1,6 +1,6 @@
-use std::ffi::CString;
-use utils::_string;
+use crate::utils::_string;
 use gdal_sys;
+use std::ffi::CString;
 
 pub fn version_info(key: &str) -> String {
     let c_key = CString::new(key.as_bytes()).unwrap();

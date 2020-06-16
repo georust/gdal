@@ -1,5 +1,5 @@
+use crate::vector::{Geometry, ToGdal};
 use geo_types;
-use vector::{Geometry, ToGdal};
 
 #[test]
 fn test_import_export_point() {

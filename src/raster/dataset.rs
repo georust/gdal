@@ -1,19 +1,19 @@
-use libc::{c_int, c_double};
-use std::ffi::{CString};
+use crate::gdal_major_object::MajorObject;
+use crate::metadata::Metadata;
+use crate::raster::driver::_register_drivers;
+use crate::raster::types::GdalType;
+use crate::raster::{Driver, RasterBand};
+use crate::utils::{_last_cpl_err, _last_null_pointer_err, _string};
+use gdal_sys::{self, CPLErr, GDALAccess, GDALDataType, GDALDatasetH, GDALMajorObjectH};
+use libc::{c_double, c_int};
+use std::ffi::CString;
 use std::path::Path;
 use std::ptr::null_mut;
-use utils::{_string, _last_cpl_err, _last_null_pointer_err};
-use raster::{Driver, RasterBand};
-use raster::driver::_register_drivers;
-use raster::types::GdalType;
-use gdal_major_object::MajorObject;
-use metadata::Metadata;
-use gdal_sys::{self, CPLErr, GDALAccess, GDALDatasetH, GDALDataType, GDALMajorObjectH};
 
 #[cfg(feature = "ndarray")]
 use ndarray::Array2;
 
-use errors::*;
+use crate::errors::*;
 
 pub type GeoTransform = [c_double; 6];
 
@@ -31,7 +31,9 @@ impl Metadata for Dataset {}
 
 impl Drop for Dataset {
     fn drop(&mut self) {
-        unsafe { gdal_sys::GDALClose(self.c_dataset); }
+        unsafe {
+            gdal_sys::GDALClose(self.c_dataset);
+        }
     }
 }
 
@@ -44,7 +46,7 @@ impl Dataset {
         if c_dataset.is_null() {
             Err(_last_null_pointer_err("GDALOpen"))?;
         }
-        Ok(Dataset{c_dataset})
+        Ok(Dataset { c_dataset })
     }
 
     pub unsafe fn _with_c_ptr(c_dataset: GDALDatasetH) -> Dataset {
@@ -97,7 +99,7 @@ impl Dataset {
         _string(rv)
     }
 
-    pub fn set_projection(&self, projection: &str) -> Result<()>{
+    pub fn set_projection(&self, projection: &str) -> Result<()> {
         let c_projection = CString::new(projection)?;
         unsafe { gdal_sys::GDALSetProjection(self.c_dataset, c_projection.as_ptr()) };
         Ok(())
@@ -137,12 +139,8 @@ impl Dataset {
     /// height of a pixel (y-resolution, typically negative)
     pub fn geo_transform(&self) -> Result<GeoTransform> {
         let mut transformation = GeoTransform::default();
-        let rv = unsafe {
-            gdal_sys::GDALGetGeoTransform(
-                self.c_dataset,
-                transformation.as_mut_ptr()
-            )
-        };
+        let rv =
+            unsafe { gdal_sys::GDALGetGeoTransform(self.c_dataset, transformation.as_mut_ptr()) };
 
         // check if the dataset has a GeoTransform
         if rv != CPLErr::CE_None {
@@ -151,25 +149,23 @@ impl Dataset {
         Ok(transformation)
     }
 
-    pub fn create_copy(
-        &self,
-        driver: &Driver,
-        filename: &str
-    ) -> Result<Dataset> {
+    pub fn create_copy(&self, driver: &Driver, filename: &str) -> Result<Dataset> {
         let c_filename = CString::new(filename)?;
-        let c_dataset = unsafe { gdal_sys::GDALCreateCopy(
+        let c_dataset = unsafe {
+            gdal_sys::GDALCreateCopy(
                 driver._c_ptr(),
                 c_filename.as_ptr(),
                 self.c_dataset,
                 0,
                 null_mut(),
                 None,
-                null_mut()
-            ) };
+                null_mut(),
+            )
+        };
         if c_dataset.is_null() {
             Err(_last_null_pointer_err("GDALCreateCopy"))?;
         }
-        Ok(Dataset{c_dataset})
+        Ok(Dataset { c_dataset })
     }
 
     pub fn band_type(&self, band_index: isize) -> Result<GDALDataType::Type> {
@@ -182,29 +178,20 @@ impl Dataset {
     /// * window - the window position from top left
     /// * window_size - the window size (GDAL will interpolate data if window_size != buffer_size)
     /// * buffer_size - the desired size of the 'Buffer'
-    pub fn read_raster(&self,
+    pub fn read_raster(
+        &self,
         band_index: isize,
         window: (isize, isize),
         window_size: (usize, usize),
-        size: (usize, usize)
-    ) -> Result<ByteBuffer>
-    {
-        self.read_raster_as::<u8>(
-            band_index,
-            window,
-            window_size,
-            size
-        )
+        size: (usize, usize),
+    ) -> Result<ByteBuffer> {
+        self.read_raster_as::<u8>(band_index, window, window_size, size)
     }
 
     /// Read a full 'Dataset' as 'Buffer<T>'.
     /// # Arguments
     /// * band_index - the band_index
-    pub fn read_full_raster_as<T: Copy + GdalType>(
-        &self,
-        band_index: isize,
-    ) -> Result<Buffer<T>>
-    {
+    pub fn read_full_raster_as<T: Copy + GdalType>(&self, band_index: isize) -> Result<Buffer<T>> {
         self.rasterband(band_index)?.read_band_as()
     }
 
@@ -220,9 +207,9 @@ impl Dataset {
         window: (isize, isize),
         window_size: (usize, usize),
         size: (usize, usize),
-    ) -> Result<Buffer<T>>
-    {
-        self.rasterband(band_index)?.read_as(window, window_size, size)
+    ) -> Result<Buffer<T>> {
+        self.rasterband(band_index)?
+            .read_as(window, window_size, size)
     }
 
     #[cfg(feature = "ndarray")]
@@ -238,9 +225,9 @@ impl Dataset {
         window: (isize, isize),
         window_size: (usize, usize),
         array_size: (usize, usize),
-    ) -> Result<Array2<T>>
-    {
-        self.rasterband(band_index)?.read_as_array(window, window_size, array_size)
+    ) -> Result<Array2<T>> {
+        self.rasterband(band_index)?
+            .read_as_array(window, window_size, array_size)
     }
 
     /// Write a 'Buffer<T>' into a 'Dataset'.
@@ -248,16 +235,16 @@ impl Dataset {
     /// * band_index - the band_index
     /// * window - the window position from top left
     /// * window_size - the window size (GDAL will interpolate data if window_size != Buffer.size)
-    pub fn write_raster<T: GdalType+Copy>(
+    pub fn write_raster<T: GdalType + Copy>(
         &self,
         band_index: isize,
         window: (isize, isize),
         window_size: (usize, usize),
-        buffer: &Buffer<T>
+        buffer: &Buffer<T>,
     ) -> Result<()> {
-        self.rasterband(band_index)?.write(window, window_size, buffer)
+        self.rasterband(band_index)?
+            .write(window, window_size, buffer)
     }
-
 }
 
 pub struct Buffer<T: GdalType> {
@@ -267,7 +254,7 @@ pub struct Buffer<T: GdalType> {
 
 impl<T: GdalType> Buffer<T> {
     pub fn new(size: (usize, usize), data: Vec<T>) -> Buffer<T> {
-        Buffer{size, data}
+        Buffer { size, data }
     }
 }
 

@@ -1,10 +1,12 @@
+use crate::spatial_ref::SpatialRef;
+use crate::utils::{_last_null_pointer_err, _string};
+use crate::vector::layer::Layer;
+use gdal_sys::{
+    self, OGRFeatureDefnH, OGRFieldDefnH, OGRFieldType, OGRGeomFieldDefnH, OGRwkbGeometryType,
+};
 use libc::c_int;
-use utils::{_last_null_pointer_err, _string};
-use vector::layer::Layer;
-use spatial_ref::SpatialRef;
-use gdal_sys::{self, OGRFeatureDefnH, OGRFieldDefnH, OGRFieldType, OGRwkbGeometryType, OGRGeomFieldDefnH};
 
-use errors::*;
+use crate::errors::*;
 
 /// Layer definition
 ///
@@ -18,16 +20,18 @@ impl Defn {
         Defn { c_defn }
     }
 
-    pub unsafe fn c_defn(&self) -> OGRFeatureDefnH { self.c_defn }
+    pub unsafe fn c_defn(&self) -> OGRFeatureDefnH {
+        self.c_defn
+    }
 
     /// Iterate over the field schema of this layer.
     pub fn fields(&self) -> FieldIterator {
         let total = unsafe { gdal_sys::OGR_FD_GetFieldCount(self.c_defn) } as isize;
-        FieldIterator{
+        FieldIterator {
             defn: self,
             c_feature_defn: self.c_defn,
             next_id: 0,
-            total
+            total,
         }
     }
 
@@ -38,14 +42,14 @@ impl Defn {
             defn: self,
             c_feature_defn: self.c_defn,
             next_id: 0,
-            total
+            total,
         }
     }
 
     pub fn from_layer(lyr: &Layer) -> Defn {
-        let c_defn = unsafe { gdal_sys::OGR_L_GetLayerDefn(lyr.c_layer())};
-            Defn { c_defn }
-        }
+        let c_defn = unsafe { gdal_sys::OGR_L_GetLayerDefn(lyr.c_layer()) };
+        Defn { c_defn }
+    }
 }
 
 pub struct FieldIterator<'a> {
@@ -63,12 +67,11 @@ impl<'a> Iterator for FieldIterator<'a> {
         if self.next_id == self.total {
             return None;
         }
-        let field = Field{
+        let field = Field {
             _defn: self.defn,
-            c_field_defn: unsafe { gdal_sys::OGR_FD_GetFieldDefn(
-                self.c_feature_defn,
-                self.next_id as c_int
-            ) }
+            c_field_defn: unsafe {
+                gdal_sys::OGR_FD_GetFieldDefn(self.c_feature_defn, self.next_id as c_int)
+            },
         };
         self.next_id += 1;
         Some(field)
@@ -115,12 +118,11 @@ impl<'a> Iterator for GeomFieldIterator<'a> {
         if self.next_id == self.total {
             return None;
         }
-        let field = GeomField{
+        let field = GeomField {
             _defn: self.defn,
-            c_field_defn: unsafe { gdal_sys::OGR_FD_GetGeomFieldDefn(
-                self.c_feature_defn,
-                self.next_id as c_int
-            ) }
+            c_field_defn: unsafe {
+                gdal_sys::OGR_FD_GetGeomFieldDefn(self.c_feature_defn, self.next_id as c_int)
+            },
         };
         self.next_id += 1;
         Some(field)

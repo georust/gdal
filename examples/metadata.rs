@@ -1,9 +1,9 @@
 extern crate gdal;
 
 fn main() {
-    use std::path::Path;
-    use gdal::raster::dataset::Dataset;
     use gdal::metadata::Metadata;
+    use gdal::raster::dataset::Dataset;
+    use std::path::Path;
 
     let driver = gdal::raster::driver::Driver::get("mem").unwrap();
     println!("driver description: {:?}", driver.description());
@@ -16,5 +16,4 @@ fn main() {
     let domain = "IMAGE_STRUCTURE";
     let meta = dataset.metadata_item(key, domain);
     println!("domain: {:?} key: {:?} -> value: {:?}", domain, key, meta);
-
 }

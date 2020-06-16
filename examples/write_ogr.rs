@@ -1,9 +1,9 @@
 extern crate gdal;
 
-use std::path::Path;
-use std::fs;
 use gdal::errors::Error;
 use gdal::vector::{Defn, Driver, Feature, FieldDefn, FieldValue, Geometry, OGRFieldType};
+use std::fs;
+use std::path::Path;
 
 /// Example 1, the detailed way:
 fn example_1() -> Result<(), Error> {

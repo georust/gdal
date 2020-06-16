@@ -1,13 +1,13 @@
+use crate::utils::{_last_cpl_err, _last_null_pointer_err, _string};
+use gdal_sys::{self, CPLErr, OGRCoordinateTransformationH, OGRErr, OGRSpatialReferenceH};
 use libc::c_int;
-use std::ffi::{CString, CStr};
+use std::ffi::{CStr, CString};
 use std::ptr;
 use std::str::FromStr;
-use utils::{_string, _last_null_pointer_err, _last_cpl_err};
-use gdal_sys::{self, CPLErr, OGRCoordinateTransformationH, OGRErr, OGRSpatialReferenceH};
 
-use errors::*;
+use crate::errors::*;
 
-pub struct CoordTransform{
+pub struct CoordTransform {
     inner: OGRCoordinateTransformationH,
     from: String,
     to: String,
@@ -26,10 +26,10 @@ impl CoordTransform {
         if c_obj.is_null() {
             Err(_last_null_pointer_err("OCTNewCoordinateTransformation"))?;
         }
-        Ok(CoordTransform{
+        Ok(CoordTransform {
             inner: c_obj,
             from: sp_ref1.authority().or_else(|_| sp_ref1.to_proj4())?,
-            to: sp_ref2.authority().or_else(|_| sp_ref2.to_proj4())?
+            to: sp_ref2.authority().or_else(|_| sp_ref2.to_proj4())?,
         })
     }
 
@@ -50,7 +50,7 @@ impl CoordTransform {
             Ok(())
         } else {
             let err = _last_cpl_err(CPLErr::CE_Failure);
-            let msg = if let ErrorKind::CplError{msg, ..} = err {
+            let msg = if let ErrorKind::CplError { msg, .. } = err {
                 if msg.trim().is_empty() {
                     None
                 } else {
@@ -59,13 +59,18 @@ impl CoordTransform {
             } else {
                 Err(err)?
             };
-            Err(ErrorKind::InvalidCoordinateRange{from: self.from.clone(), to: self.to.clone(), msg})?
+            Err(ErrorKind::InvalidCoordinateRange {
+                from: self.from.clone(),
+                to: self.to.clone(),
+                msg,
+            })?
         }
     }
 
     #[deprecated(since = "0.3.1", note = "use `transform_coords` instead")]
-    pub fn transform_coord(&self, x: &mut [f64], y: &mut [f64], z: &mut [f64]){
-        self.transform_coords(x, y, z).expect("Coordinate transform failed")
+    pub fn transform_coord(&self, x: &mut [f64], y: &mut [f64], z: &mut [f64]) {
+        self.transform_coords(x, y, z)
+            .expect("Coordinate transform failed")
     }
 
     pub fn to_c_hct(&self) -> OGRCoordinateTransformationH {
@@ -77,15 +82,15 @@ impl CoordTransform {
 pub struct SpatialRef(OGRSpatialReferenceH);
 
 impl Drop for SpatialRef {
-    fn drop(&mut self){
-        unsafe { gdal_sys::OSRRelease(self.0)};
+    fn drop(&mut self) {
+        unsafe { gdal_sys::OSRRelease(self.0) };
         self.0 = ptr::null_mut();
     }
 }
 
 impl Clone for SpatialRef {
     fn clone(&self) -> SpatialRef {
-        let n_obj = unsafe { gdal_sys::OSRClone(self.0)};
+        let n_obj = unsafe { gdal_sys::OSRClone(self.0) };
         SpatialRef(n_obj)
     }
 }
@@ -110,9 +115,13 @@ impl SpatialRef {
         if c_obj.is_null() {
             Err(_last_null_pointer_err("OSRNewSpatialReference"))?;
         }
-        let rv = unsafe { gdal_sys::OSRSetFromUserInput(c_obj, CString::new(definition)?.as_ptr()) };
+        let rv =
+            unsafe { gdal_sys::OSRSetFromUserInput(c_obj, CString::new(definition)?.as_ptr()) };
         if rv != OGRErr::OGRERR_NONE {
-            Err(ErrorKind::OgrError{err: rv, method_name: "OSRSetFromUserInput"})?;
+            Err(ErrorKind::OgrError {
+                err: rv,
+                method_name: "OSRSetFromUserInput",
+            })?;
         }
         Ok(SpatialRef(c_obj))
     }
@@ -131,7 +140,10 @@ impl SpatialRef {
         let c_obj = unsafe { gdal_sys::OSRNewSpatialReference(null_ptr) };
         let rv = unsafe { gdal_sys::OSRImportFromEPSG(c_obj, epsg_code as c_int) };
         if rv != OGRErr::OGRERR_NONE {
-            Err(ErrorKind::OgrError{err: rv, method_name: "OSRImportFromEPSG"})?
+            Err(ErrorKind::OgrError {
+                err: rv,
+                method_name: "OSRImportFromEPSG",
+            })?
         } else {
             Ok(SpatialRef(c_obj))
         }
@@ -143,7 +155,10 @@ impl SpatialRef {
         let c_obj = unsafe { gdal_sys::OSRNewSpatialReference(null_ptr) };
         let rv = unsafe { gdal_sys::OSRImportFromProj4(c_obj, c_str.as_ptr()) };
         if rv != OGRErr::OGRERR_NONE {
-            Err(ErrorKind::OgrError{err: rv, method_name: "OSRImportFromProj4"})?
+            Err(ErrorKind::OgrError {
+                err: rv,
+                method_name: "OSRImportFromProj4",
+            })?
         } else {
             Ok(SpatialRef(c_obj))
         }
@@ -156,7 +171,10 @@ impl SpatialRef {
         let c_obj = unsafe { gdal_sys::OSRNewSpatialReference(null_ptr) };
         let rv = unsafe { gdal_sys::OSRImportFromESRI(c_obj, ptrs.as_mut_ptr()) };
         if rv != OGRErr::OGRERR_NONE {
-            Err(ErrorKind::OgrError{err: rv, method_name: "OSRImportFromESRI"})?
+            Err(ErrorKind::OgrError {
+                err: rv,
+                method_name: "OSRImportFromESRI",
+            })?
         } else {
             Ok(SpatialRef(c_obj))
         }
@@ -165,7 +183,7 @@ impl SpatialRef {
     pub fn from_c_obj(c_obj: OGRSpatialReferenceH) -> Result<SpatialRef> {
         let mut_c_obj = unsafe { gdal_sys::OSRClone(c_obj) };
         if mut_c_obj.is_null() {
-           Err(_last_null_pointer_err("OSRClone"))?
+            Err(_last_null_pointer_err("OSRClone"))?
         } else {
             Ok(SpatialRef(mut_c_obj))
         }
@@ -175,7 +193,10 @@ impl SpatialRef {
         let mut c_wkt = ptr::null_mut();
         let rv = unsafe { gdal_sys::OSRExportToWkt(self.0, &mut c_wkt) };
         if rv != OGRErr::OGRERR_NONE {
-            Err(ErrorKind::OgrError{err: rv, method_name: "OSRExportToWkt"})?
+            Err(ErrorKind::OgrError {
+                err: rv,
+                method_name: "OSRExportToWkt",
+            })?
         } else {
             Ok(_string(c_wkt))
         }
@@ -184,7 +205,10 @@ impl SpatialRef {
     pub fn morph_to_esri(&self) -> Result<()> {
         let rv = unsafe { gdal_sys::OSRMorphToESRI(self.0) };
         if rv != OGRErr::OGRERR_NONE {
-            Err(ErrorKind::OgrError{err: rv, method_name: "OSRMorphToESRI"})?;
+            Err(ErrorKind::OgrError {
+                err: rv,
+                method_name: "OSRMorphToESRI",
+            })?;
         }
         Ok(())
     }
@@ -193,7 +217,10 @@ impl SpatialRef {
         let mut c_wkt = ptr::null_mut();
         let rv = unsafe { gdal_sys::OSRExportToPrettyWkt(self.0, &mut c_wkt, false as c_int) };
         if rv != OGRErr::OGRERR_NONE {
-            Err(ErrorKind::OgrError{err: rv, method_name: "OSRExportToPrettyWkt"})?
+            Err(ErrorKind::OgrError {
+                err: rv,
+                method_name: "OSRExportToPrettyWkt",
+            })?
         } else {
             Ok(_string(c_wkt))
         }
@@ -203,7 +230,10 @@ impl SpatialRef {
         let mut c_raw_xml = ptr::null_mut();
         let rv = unsafe { gdal_sys::OSRExportToXML(self.0, &mut c_raw_xml, ptr::null()) };
         if rv != OGRErr::OGRERR_NONE {
-            Err(ErrorKind::OgrError{err: rv, method_name: "OSRExportToXML"})?
+            Err(ErrorKind::OgrError {
+                err: rv,
+                method_name: "OSRExportToXML",
+            })?
         } else {
             Ok(_string(c_raw_xml))
         }
@@ -213,7 +243,11 @@ impl SpatialRef {
         let mut c_proj4str = ptr::null_mut();
         let rv = unsafe { gdal_sys::OSRExportToProj4(self.0, &mut c_proj4str) };
         if rv != OGRErr::OGRERR_NONE {
-            Err(ErrorKind::OgrError{err: rv, method_name: "OSRExportToProj4"}.into())
+            Err(ErrorKind::OgrError {
+                err: rv,
+                method_name: "OSRExportToProj4",
+            }
+            .into())
         } else {
             Ok(_string(c_proj4str))
         }
@@ -237,7 +271,10 @@ impl SpatialRef {
         let epsg = i32::from_str(c_str.to_str()?);
         match epsg {
             Ok(n) => Ok(n),
-            Err(_) => Err(ErrorKind::OgrError{err: OGRErr::OGRERR_UNSUPPORTED_SRS, method_name: "OSRGetAuthorityCode"})?
+            Err(_) => Err(ErrorKind::OgrError {
+                err: OGRErr::OGRERR_UNSUPPORTED_SRS,
+                method_name: "OSRGetAuthorityCode",
+            })?,
         }
     }
 
@@ -258,7 +295,10 @@ impl SpatialRef {
     pub fn auto_identify_epsg(&mut self) -> Result<()> {
         let rv = unsafe { gdal_sys::OSRAutoIdentifyEPSG(self.0) };
         if rv != OGRErr::OGRERR_NONE {
-            Err(ErrorKind::OgrError{err: rv, method_name: "OSRAutoIdentifyEPSG"})?
+            Err(ErrorKind::OgrError {
+                err: rv,
+                method_name: "OSRAutoIdentifyEPSG",
+            })?
         } else {
             Ok(())
         }

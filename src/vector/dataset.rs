@@ -1,16 +1,16 @@
+use crate::gdal_major_object::MajorObject;
+use crate::metadata::Metadata;
+use crate::spatial_ref::SpatialRef;
+use crate::utils::_last_null_pointer_err;
+use crate::vector::driver::_register_drivers;
+use crate::vector::Layer;
+use gdal_sys::{self, GDALMajorObjectH, OGRDataSourceH, OGRLayerH, OGRwkbGeometryType};
+use libc::c_int;
 use std::ffi::CString;
 use std::path::Path;
 use std::ptr::null_mut;
-use libc::c_int;
-use vector::Layer;
-use vector::driver::_register_drivers;
-use gdal_major_object::MajorObject;
-use metadata::Metadata;
-use gdal_sys::{self, GDALMajorObjectH, OGRDataSourceH, OGRLayerH, OGRwkbGeometryType};
-use utils::_last_null_pointer_err;
-use spatial_ref::SpatialRef;
 
-use errors::*;
+use crate::errors::*;
 
 /// Vector dataset
 ///
@@ -34,10 +34,12 @@ impl MajorObject for Dataset {
 
 impl Metadata for Dataset {}
 
-
 impl Dataset {
     pub unsafe fn _with_c_dataset(c_dataset: OGRDataSourceH) -> Dataset {
-        Dataset{c_dataset, layers: vec!()}
+        Dataset {
+            c_dataset,
+            layers: vec![],
+        }
     }
 
     /// Open the dataset at `path`.
@@ -47,9 +49,12 @@ impl Dataset {
         let c_filename = CString::new(filename.as_ref())?;
         let c_dataset = unsafe { gdal_sys::OGROpen(c_filename.as_ptr(), 0, null_mut()) };
         if c_dataset.is_null() {
-           Err(_last_null_pointer_err("OGROpen"))?;
+            Err(_last_null_pointer_err("OGROpen"))?;
         };
-        Ok(Dataset{c_dataset, layers: vec!()})
+        Ok(Dataset {
+            c_dataset,
+            layers: vec![],
+        })
     }
 
     /// Get number of layers.
@@ -85,13 +90,15 @@ impl Dataset {
     /// Create a new layer with a blank definition.
     pub fn create_layer(&mut self) -> Result<&mut Layer> {
         let c_name = CString::new("")?;
-        let c_layer = unsafe { gdal_sys::OGR_DS_CreateLayer(
-            self.c_dataset,
-            c_name.as_ptr(),
-            null_mut(),
-            OGRwkbGeometryType::wkbUnknown,
-            null_mut(),
-        ) };
+        let c_layer = unsafe {
+            gdal_sys::OGR_DS_CreateLayer(
+                self.c_dataset,
+                c_name.as_ptr(),
+                null_mut(),
+                OGRwkbGeometryType::wkbUnknown,
+                null_mut(),
+            )
+        };
         if c_layer.is_null() {
             Err(_last_null_pointer_err("OGR_DS_CreateLayer"))?;
         };
@@ -112,25 +119,21 @@ impl Dataset {
             None => null_mut(),
         };
 
-        let c_layer = unsafe { gdal_sys::OGR_DS_CreateLayer(
-            self.c_dataset,
-            c_name.as_ptr(),
-            c_srs,
-            ty,
-            null_mut(),
-        ) };
+        let c_layer = unsafe {
+            gdal_sys::OGR_DS_CreateLayer(self.c_dataset, c_name.as_ptr(), c_srs, ty, null_mut())
+        };
         if c_layer.is_null() {
             Err(_last_null_pointer_err("OGR_DS_CreateLayer"))?;
         };
         self._child_layer(c_layer);
         Ok(self.layers.last_mut().unwrap()) // TODO: is this safe?
-
     }
 }
 
-
 impl Drop for Dataset {
     fn drop(&mut self) {
-        unsafe { gdal_sys::OGR_DS_Destroy(self.c_dataset); }
+        unsafe {
+            gdal_sys::OGR_DS_Destroy(self.c_dataset);
+        }
     }
 }
