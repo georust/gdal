@@ -15,6 +15,7 @@ min_gdal_version_2_1 = []
 min_gdal_version_2_2 = []
 min_gdal_version_2_3 = []
 min_gdal_version_2_4 = []
+min_gdal_version_3_0 = []
 
 [dependencies]
 libc = "0.2"

@@ -186,6 +186,8 @@ fn main() {
             "prebuilt-bindings/gdal_2.3.rs",
             #[cfg(feature = "min_gdal_version_2_4")]
             "prebuilt-bindings/gdal_2.4.rs",
+            #[cfg(feature = "min_gdal_version_3_0")]
+            "prebuilt-bindings/gdal_3.0.rs",
         ];
         std::fs::copy(&prebuilt_paths[prebuilt_paths.len() - 1], &out_path)
             .expect("Can't copy bindings to output directory");
