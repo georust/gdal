@@ -1,6 +1,9 @@
 #[cfg(feature = "datetime")]
 use chrono::Duration;
 use gdal::errors::Error;
+use gdal::vector::*;
+use std::path::Path;
+use std::ops::Add;
 
 #[cfg(feature = "datetime")]
 fn run() -> Result<(), Error> {
@@ -10,7 +13,7 @@ fn run() -> Result<(), Error> {
     let layer_a = dataset_a.layer(0)?;
 
     // Create a new dataset:
-    let _ = fs::remove_file("/tmp/later.geojson");
+    let _ = std::fs::remove_file("/tmp/later.geojson");
     let drv = Driver::get("GeoJSON")?;
     let mut ds = drv.create(Path::new("/tmp/later.geojson"))?;
     let lyr = ds.create_layer()?;
