@@ -1,5 +1,3 @@
-extern crate gdal;
-
 use gdal::errors::Error;
 use gdal::vector::{Defn, Driver, Feature, FieldDefn, FieldValue, Geometry, OGRFieldType};
 use std::fs;

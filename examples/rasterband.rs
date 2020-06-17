@@ -1,5 +1,3 @@
-extern crate gdal;
-
 use gdal::metadata::Metadata;
 use gdal::raster::{Dataset, RasterBand};
 use std::path::Path;

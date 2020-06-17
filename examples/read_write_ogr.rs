@@ -1,5 +1,3 @@
-extern crate gdal;
-
 use gdal::errors::Error;
 use gdal::spatial_ref::{CoordTransform, SpatialRef};
 use gdal::vector::*;

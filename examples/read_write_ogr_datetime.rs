@@ -1,8 +1,4 @@
 #[cfg(feature = "datetime")]
-extern crate chrono;
-extern crate gdal;
-
-#[cfg(feature = "datetime")]
 use chrono::Duration;
 use gdal::errors::Error;
 

@@ -1,5 +1,3 @@
-extern crate gdal;
-
 fn main() {
     use gdal::metadata::Metadata;
     use gdal::raster::dataset::Dataset;
