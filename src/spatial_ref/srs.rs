@@ -313,11 +313,8 @@ impl SpatialRef {
 
     #[cfg(feature = "gdal_3_0")]
     pub fn get_axis_mapping_strategy(&self) -> gdal_sys::OSRAxisMappingStrategy::Type {
-        unsafe {
-            gdal_sys::OSRGetAxisMappingStrategy(self.0)
-        }        
+        unsafe { gdal_sys::OSRGetAxisMappingStrategy(self.0) }
     }
-    
 
     // TODO: should this take self instead of &self?
     pub fn to_c_hsrs(&self) -> OGRSpatialReferenceH {
