@@ -167,3 +167,15 @@ fn auto_identify() {
     spatial_ref.auto_identify_epsg().unwrap();
     assert_eq!(spatial_ref.auth_code().unwrap(), 32632);
 }
+
+
+#[cfg(feature = "gdal_3_0")]
+#[test]
+fn axis_mapping_strategy() {
+    use gdal_sys;
+
+    let spatial_ref = SpatialRef::from_epsg(4326).unwrap();
+    assert_eq!(spatial_ref.get_axis_mapping_strategy(), gdal_sys::OSRAxisMappingStrategy::OAMS_AUTHORITY_COMPLIANT);
+    spatial_ref.set_axis_mapping_strategy(gdal_sys::OSRAxisMappingStrategy::OAMS_TRADITIONAL_GIS_ORDER);
+    assert_eq!(spatial_ref.get_axis_mapping_strategy(), gdal_sys::OSRAxisMappingStrategy::OAMS_TRADITIONAL_GIS_ORDER);
+}
