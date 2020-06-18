@@ -6,6 +6,13 @@
 
 [GDAL](http://gdal.org/) bindings for [Rust](http://www.rust-lang.org/).
 
+
+### Installation
+
+Comes with prebuild binaries for `GDAL` - to use, specify `features = ["bindgen"]`
+in your `Cargo.toml`. See full readme [here](./gdal-sys/Readme.md)
+
+### Features
 So far, you can:
 
 * open a raster dataset for reading/writing
