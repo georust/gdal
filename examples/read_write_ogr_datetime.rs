@@ -1,15 +1,9 @@
-
-extern crate gdal;
-#[cfg(feature = "datetime")]
-extern crate chrono;
-
-use std::path::Path;
-use gdal::errors::Error;
-use gdal::vector::*;
-use std::fs;
 #[cfg(feature = "datetime")]
 use chrono::Duration;
+use gdal::errors::Error;
+use gdal::vector::*;
 use std::ops::Add;
+use std::path::Path;
 
 #[cfg(feature = "datetime")]
 fn run() -> Result<(), Error> {
@@ -19,7 +13,7 @@ fn run() -> Result<(), Error> {
     let layer_a = dataset_a.layer(0)?;
 
     // Create a new dataset:
-    let _ = fs::remove_file("/tmp/later.geojson");
+    let _ = std::fs::remove_file("/tmp/later.geojson");
     let drv = Driver::get("GeoJSON")?;
     let mut ds = drv.create(Path::new("/tmp/later.geojson"))?;
     let lyr = ds.create_layer()?;
@@ -38,22 +32,24 @@ fn run() -> Result<(), Error> {
         let mut ft = Feature::new(&defn)?;
         ft.set_geometry(feature_a.geometry().clone())?;
         // copy each field value of the feature:
-        for field in  defn.fields() {
-            ft.set_field(&field.name(), &match feature_a.field(&field.name())? {
+        for field in defn.fields() {
+            ft.set_field(
+                &field.name(),
+                &match feature_a.field(&field.name())? {
+                    // add one day to dates
+                    FieldValue::DateValue(value) => {
+                        println!("{} = {}", field.name(), value);
+                        FieldValue::DateValue(value.add(Duration::days(1)))
+                    }
 
-                // add one day to dates
-                FieldValue::DateValue(value) => {
-                    println!("{} = {}", field.name(), value);
-                    FieldValue::DateValue(value.add(Duration::days(1)))
+                    // add 6 hours to datetimes
+                    FieldValue::DateTimeValue(value) => {
+                        println!("{} = {}", field.name(), value);
+                        FieldValue::DateTimeValue(value.add(Duration::hours(6)))
+                    }
+                    v => v,
                 },
-
-                // add 6 hours to datetimes
-                FieldValue::DateTimeValue(value) => {
-                    println!("{} = {}", field.name(), value);
-                    FieldValue::DateTimeValue(value.add(Duration::hours(6)))
-                },
-                v => v
-            })?;
+            )?;
         }
         // Add the feature to the layer:
         ft.create(lyr)?;
@@ -67,8 +63,6 @@ fn run() -> Result<(), Error> {
     Ok(())
 }
 
-
 fn main() {
     run().unwrap();
 }
-

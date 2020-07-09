@@ -1,12 +1,12 @@
-use std::ptr::null_mut;
-use libc::{c_int, c_double, c_void};
-use std::ffi::CString;
-use std::cell::RefCell;
-use utils::{_string, _last_null_pointer_err};
+use crate::spatial_ref::{CoordTransform, SpatialRef};
+use crate::utils::{_last_null_pointer_err, _string};
 use gdal_sys::{self, OGRErr, OGRGeometryH, OGRwkbGeometryType};
-use spatial_ref::{SpatialRef, CoordTransform};
+use libc::{c_double, c_int, c_void};
+use std::cell::RefCell;
+use std::ffi::CString;
+use std::ptr::null_mut;
 
-use errors::*;
+use crate::errors::*;
 
 /// OGR Geometry
 pub struct Geometry {
@@ -27,7 +27,10 @@ impl Geometry {
         //   which is good, because that's when c_geometry (which is managed
         //   by the GDAL feature) becomes invalid. Because `self.owned` is
         //   `true`, we don't call `OGR_G_DestroyGeometry`.
-        Geometry{c_geometry_ref: RefCell::new(None), owned: false}
+        Geometry {
+            c_geometry_ref: RefCell::new(None),
+            owned: false,
+        }
     }
 
     pub fn has_gdal_ptr(&self) -> bool {
@@ -35,13 +38,13 @@ impl Geometry {
     }
 
     pub unsafe fn set_c_geometry(&self, c_geometry: OGRGeometryH) {
-        assert!(! self.has_gdal_ptr());
+        assert!(!self.has_gdal_ptr());
         assert_eq!(self.owned, false);
         *(self.c_geometry_ref.borrow_mut()) = Some(c_geometry);
     }
 
     unsafe fn with_c_geometry(c_geom: OGRGeometryH, owned: bool) -> Geometry {
-        Geometry{
+        Geometry {
             c_geometry_ref: RefCell::new(Some(c_geom)),
             owned,
         }
@@ -67,7 +70,10 @@ impl Geometry {
         let mut c_geom = null_mut();
         let rv = unsafe { gdal_sys::OGR_G_CreateFromWkt(&mut c_wkt_ptr, null_mut(), &mut c_geom) };
         if rv != OGRErr::OGRERR_NONE {
-            Err(ErrorKind::OgrError{err: rv, method_name: "OGR_G_CreateFromWkt"})?;
+            Err(ErrorKind::OgrError {
+                err: rv,
+                method_name: "OGR_G_CreateFromWkt",
+            })?;
         }
         Ok(unsafe { Geometry::with_c_geometry(c_geom, true) })
     }
@@ -76,11 +82,7 @@ impl Geometry {
     pub fn bbox(w: f64, s: f64, e: f64, n: f64) -> Result<Geometry> {
         Geometry::from_wkt(&format!(
             "POLYGON (({} {}, {} {}, {} {}, {} {}, {} {}))",
-            w, n,
-            e, n,
-            e, s,
-            w, s,
-            w, n,
+            w, n, e, n, e, s, w, s, w, n,
         ))
     }
 
@@ -100,7 +102,10 @@ impl Geometry {
         let mut c_wkt = null_mut();
         let rv = unsafe { gdal_sys::OGR_G_ExportToWkt(self.c_geometry(), &mut c_wkt) };
         if rv != OGRErr::OGRERR_NONE {
-            Err(ErrorKind::OgrError{err: rv, method_name: "OGR_G_ExportToWkt"})?;
+            Err(ErrorKind::OgrError {
+                err: rv,
+                method_name: "OGR_G_ExportToWkt",
+            })?;
         }
         let wkt = _string(c_wkt);
         unsafe { gdal_sys::OGRFree(c_wkt as *mut c_void) };
@@ -119,12 +124,9 @@ impl Geometry {
 
     pub fn set_point_2d(&mut self, i: usize, p: (f64, f64)) {
         let (x, y) = p;
-        unsafe { gdal_sys::OGR_G_SetPoint_2D(
-            self.c_geometry(),
-            i as c_int,
-            x as c_double,
-            y as c_double,
-        ) };
+        unsafe {
+            gdal_sys::OGR_G_SetPoint_2D(self.c_geometry(), i as c_int, x as c_double, y as c_double)
+        };
     }
 
     pub fn get_point(&self, i: i32) -> (f64, f64, f64) {
@@ -136,7 +138,7 @@ impl Geometry {
     }
 
     pub fn get_point_vec(&self) -> Vec<(f64, f64, f64)> {
-        let length = unsafe{ gdal_sys::OGR_G_GetPointCount(self.c_geometry()) };
+        let length = unsafe { gdal_sys::OGR_G_GetPointCount(self.c_geometry()) };
         (0..length).map(|i| self.get_point(i)).collect()
     }
 
@@ -168,24 +170,25 @@ impl Geometry {
     pub fn add_geometry(&mut self, mut sub: Geometry) -> Result<()> {
         assert!(sub.owned);
         sub.owned = false;
-        let rv = unsafe { gdal_sys::OGR_G_AddGeometryDirectly(
-            self.c_geometry(),
-            sub.c_geometry(),
-        ) };
+        let rv =
+            unsafe { gdal_sys::OGR_G_AddGeometryDirectly(self.c_geometry(), sub.c_geometry()) };
         if rv != OGRErr::OGRERR_NONE {
-            Err(ErrorKind::OgrError{ err: rv, method_name: "OGR_G_AddGeometryDirectly"})?;
+            Err(ErrorKind::OgrError {
+                err: rv,
+                method_name: "OGR_G_AddGeometryDirectly",
+            })?;
         }
         Ok(())
     }
 
     // Transform the geometry inplace (when we own the Geometry)
     pub fn transform_inplace(&self, htransform: &CoordTransform) -> Result<()> {
-        let rv = unsafe { gdal_sys::OGR_G_Transform(
-            self.c_geometry(),
-            htransform.to_c_hct()
-        ) };
+        let rv = unsafe { gdal_sys::OGR_G_Transform(self.c_geometry(), htransform.to_c_hct()) };
         if rv != OGRErr::OGRERR_NONE {
-            Err(ErrorKind::OgrError{err: rv, method_name: "OGR_G_Transform"})?;
+            Err(ErrorKind::OgrError {
+                err: rv,
+                method_name: "OGR_G_Transform",
+            })?;
         }
         Ok(())
     }
@@ -195,18 +198,21 @@ impl Geometry {
         let new_c_geom = unsafe { gdal_sys::OGR_G_Clone(self.c_geometry()) };
         let rv = unsafe { gdal_sys::OGR_G_Transform(new_c_geom, htransform.to_c_hct()) };
         if rv != OGRErr::OGRERR_NONE {
-            Err(ErrorKind::OgrError{err:rv, method_name: "OGR_G_Transform"})?;
+            Err(ErrorKind::OgrError {
+                err: rv,
+                method_name: "OGR_G_Transform",
+            })?;
         }
-        Ok(unsafe { Geometry::with_c_geometry(new_c_geom, true) } )
+        Ok(unsafe { Geometry::with_c_geometry(new_c_geom, true) })
     }
 
     pub fn transform_to_inplace(&self, spatial_ref: &SpatialRef) -> Result<()> {
-        let rv = unsafe { gdal_sys::OGR_G_TransformTo(
-            self.c_geometry(),
-            spatial_ref.to_c_hsrs()
-        ) };
+        let rv = unsafe { gdal_sys::OGR_G_TransformTo(self.c_geometry(), spatial_ref.to_c_hsrs()) };
         if rv != OGRErr::OGRERR_NONE {
-            Err(ErrorKind::OgrError{err: rv, method_name: "OGR_G_TransformTo"})?;
+            Err(ErrorKind::OgrError {
+                err: rv,
+                method_name: "OGR_G_TransformTo",
+            })?;
         }
         Ok(())
     }
@@ -215,9 +221,12 @@ impl Geometry {
         let new_c_geom = unsafe { gdal_sys::OGR_G_Clone(self.c_geometry()) };
         let rv = unsafe { gdal_sys::OGR_G_TransformTo(new_c_geom, spatial_ref.to_c_hsrs()) };
         if rv != OGRErr::OGRERR_NONE {
-            Err(ErrorKind::OgrError{err: rv, method_name: "OGR_G_TransformTo"})?;
+            Err(ErrorKind::OgrError {
+                err: rv,
+                method_name: "OGR_G_TransformTo",
+            })?;
         }
-        Ok(unsafe { Geometry::with_c_geometry(new_c_geom, true) } )
+        Ok(unsafe { Geometry::with_c_geometry(new_c_geom, true) })
     }
 
     pub fn area(&self) -> f64 {
@@ -237,13 +246,15 @@ impl Geometry {
         } else {
             match SpatialRef::from_c_obj(c_spatial_ref) {
                 Ok(sr) => Some(sr),
-                Err(_) => None
+                Err(_) => None,
             }
         }
     }
 
     pub fn set_spatial_reference(&mut self, spatial_ref: SpatialRef) {
-        unsafe { gdal_sys::OGR_G_AssignSpatialReference(self.c_geometry(), spatial_ref.to_c_hsrs()) };
+        unsafe {
+            gdal_sys::OGR_G_AssignSpatialReference(self.c_geometry(), spatial_ref.to_c_hsrs())
+        };
     }
 }
 
@@ -260,7 +271,7 @@ impl Clone for Geometry {
     fn clone(&self) -> Geometry {
         // assert!(self.has_gdal_ptr());
         let c_geometry = self.c_geometry_ref.borrow();
-        let new_c_geom = unsafe { gdal_sys::OGR_G_Clone(c_geometry.unwrap())};
+        let new_c_geom = unsafe { gdal_sys::OGR_G_Clone(c_geometry.unwrap()) };
         unsafe { Geometry::with_c_geometry(new_c_geom, true) }
     }
 }
@@ -268,7 +279,7 @@ impl Clone for Geometry {
 #[cfg(test)]
 mod tests {
     use super::Geometry;
-    use spatial_ref::SpatialRef;
+    use crate::spatial_ref::SpatialRef;
 
     #[test]
     pub fn test_area() {

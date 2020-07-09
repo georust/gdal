@@ -23,10 +23,10 @@
 //! Refer to [GDAL `ConfigOptions`](https://trac.osgeo.org/gdal/wiki/ConfigOptions) for
 //! a full list of options.
 
-use std::ffi::CString;
-use utils::_string;
+use crate::errors::Result;
+use crate::utils::_string;
 use gdal_sys;
-use errors::*;
+use std::ffi::CString;
 
 /// Set a GDAL library configuration option
 ///
@@ -36,7 +36,9 @@ use errors::*;
 pub fn set_config_option(key: &str, value: &str) -> Result<()> {
     let c_key = CString::new(key.as_bytes())?;
     let c_val = CString::new(value.as_bytes())?;
-    unsafe { gdal_sys::CPLSetConfigOption(c_key.as_ptr(), c_val.as_ptr()); };
+    unsafe {
+        gdal_sys::CPLSetConfigOption(c_key.as_ptr(), c_val.as_ptr());
+    };
     Ok(())
 }
 
@@ -59,7 +61,9 @@ pub fn get_config_option(key: &str, default: &str) -> Result<String> {
 /// a full list of options.
 pub fn clear_config_option(key: &str) -> Result<()> {
     let c_key = CString::new(key.as_bytes())?;
-    unsafe { gdal_sys::CPLSetConfigOption(c_key.as_ptr(), ::std::ptr::null()); };
+    unsafe {
+        gdal_sys::CPLSetConfigOption(c_key.as_ptr(), ::std::ptr::null());
+    };
     Ok(())
 }
 
@@ -70,9 +74,15 @@ mod tests {
 
     #[test]
     fn test_set_get_option() {
-        assert!(set_config_option("GDAL_CACHEMAX","128").is_ok());
-        assert_eq!(get_config_option("GDAL_CACHEMAX", "").unwrap_or("".to_string()), "128");
-        assert_eq!(get_config_option("NON_EXISTANT_OPTION", "DEFAULT_VALUE").unwrap_or("".to_string()), "DEFAULT_VALUE");
+        assert!(set_config_option("GDAL_CACHEMAX", "128").is_ok());
+        assert_eq!(
+            get_config_option("GDAL_CACHEMAX", "").unwrap_or("".to_string()),
+            "128"
+        );
+        assert_eq!(
+            get_config_option("NON_EXISTANT_OPTION", "DEFAULT_VALUE").unwrap_or("".to_string()),
+            "DEFAULT_VALUE"
+        );
     }
 
     #[test]
@@ -84,9 +94,15 @@ mod tests {
 
     #[test]
     fn test_clear_option() {
-        assert!(set_config_option("TEST_OPTION","256").is_ok());
-        assert_eq!(get_config_option("TEST_OPTION", "DEFAULT").unwrap_or("".to_string()), "256");
+        assert!(set_config_option("TEST_OPTION", "256").is_ok());
+        assert_eq!(
+            get_config_option("TEST_OPTION", "DEFAULT").unwrap_or("".to_string()),
+            "256"
+        );
         assert!(clear_config_option("TEST_OPTION").is_ok());
-        assert_eq!(get_config_option("TEST_OPTION", "DEFAULT").unwrap_or("".to_string()), "DEFAULT");
+        assert_eq!(
+            get_config_option("TEST_OPTION", "DEFAULT").unwrap_or("".to_string()),
+            "DEFAULT"
+        );
     }
 }

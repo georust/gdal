@@ -15,30 +15,29 @@
 //! }
 //! ```
 
-
-pub use vector::driver::Driver;
-pub use vector::dataset::Dataset;
-pub use vector::layer::{Layer, FeatureIterator, FieldDefn};
-pub use vector::defn::{Defn, FieldIterator, Field};
-pub use vector::feature::{Feature, FieldValue};
-pub use vector::geometry::Geometry;
+pub use crate::vector::dataset::Dataset;
+pub use crate::vector::defn::{Defn, Field, FieldIterator};
+pub use crate::vector::driver::Driver;
+pub use crate::vector::feature::{Feature, FieldValue};
+pub use crate::vector::geometry::Geometry;
+pub use crate::vector::layer::{FeatureIterator, FieldDefn, Layer};
 pub use gdal_sys::{OGRFieldType, OGRwkbGeometryType};
 
-use errors::{Result};
+use crate::errors::Result;
 
 /// Convert object to a GDAL geometry.
 pub trait ToGdal {
     fn to_gdal(&self) -> Result<Geometry>;
 }
 
-mod driver;
 mod dataset;
-mod layer;
 mod defn;
+mod driver;
 mod feature;
-mod geometry;
 mod gdal_to_geo;
 mod geo_to_gdal;
+mod geometry;
+mod layer;
 
 #[cfg(test)]
 mod tests;

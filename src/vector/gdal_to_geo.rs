@@ -1,6 +1,6 @@
+use crate::vector::Geometry;
 use gdal_sys::{self, OGRwkbGeometryType};
 use geo_types;
-use vector::Geometry;
 
 impl From<Geometry> for geo_types::Geometry<f64> {
     fn from(geo: Geometry) -> geo_types::Geometry<f64> {
@@ -31,7 +31,8 @@ impl From<Geometry> for geo_types::Geometry<f64> {
                 geo_types::Geometry::MultiPoint(geo_types::MultiPoint(coords))
             }
             OGRwkbGeometryType::wkbLineString => {
-                let coords = geo.get_point_vec()
+                let coords = geo
+                    .get_point_vec()
                     .iter()
                     .map(|&(x, y, _)| geo_types::Coordinate { x, y })
                     .collect();
