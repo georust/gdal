@@ -19,6 +19,8 @@ macro_rules! fixture {
             .unwrap()
             .parent()
             .unwrap()
+            .parent()
+            .unwrap()
             .join("fixtures")
             .as_path()
             .join($name)

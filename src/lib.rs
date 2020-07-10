@@ -20,21 +20,13 @@
 #![crate_name = "gdal"]
 #![crate_type = "lib"]
 
-pub use version::version_info;
-
-pub mod config;
 pub mod errors;
-mod gdal_major_object;
-pub mod metadata;
-pub mod raster;
-pub mod spatial_ref;
-mod utils;
-pub mod vector;
-pub mod version;
+pub mod utils;
+pub mod gdal_common;
+pub use gdal_common::*;
 
 #[cfg(test)]
 fn assert_almost_eq(a: f64, b: f64) {
-    let f: f64 = a / b;
-    assert!(f < 1.00001);
-    assert!(f > 0.99999);
+    let diff: f64 = b - a;
+    assert!(diff.abs() < f64::EPSILON);
 }

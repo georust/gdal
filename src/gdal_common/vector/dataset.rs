@@ -1,4 +1,4 @@
-use crate::gdal_major_object::MajorObject;
+use crate::gdal_common::gdal_major_object::MajorObject;
 use crate::metadata::Metadata;
 use crate::spatial_ref::SpatialRef;
 use crate::utils::_last_null_pointer_err;

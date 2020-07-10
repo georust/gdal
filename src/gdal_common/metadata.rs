@@ -1,5 +1,5 @@
 use crate::errors::*;
-use crate::gdal_major_object::MajorObject;
+use crate::gdal_common::gdal_major_object::MajorObject;
 use crate::utils::{_last_cpl_err, _last_null_pointer_err, _string};
 use gdal_sys::{self, CPLErr};
 use std::ffi::CString;

@@ -1,7 +1,7 @@
-use crate::gdal_major_object::MajorObject;
+use crate::gdal_common::gdal_major_object::MajorObject;
 use crate::metadata::Metadata;
 use crate::raster::types::GdalType;
-use crate::raster::{Buffer, Dataset};
+use crate::raster::{Buffer, Dataset, DatasetExt};
 use crate::utils::_last_cpl_err;
 use gdal_sys::{self, CPLErr, GDALDataType, GDALMajorObjectH, GDALRWFlag, GDALRasterBandH};
 use libc::c_int;
@@ -16,12 +16,12 @@ pub struct RasterBand<'a> {
     owning_dataset: &'a Dataset,
 }
 
-impl<'a> RasterBand<'a> {
-    pub fn owning_dataset(&self) -> &'a Dataset {
-        self.owning_dataset
-    }
+pub trait RasterBandExt<'a> {
 
-    pub unsafe fn _with_c_ptr(c_rasterband: GDALRasterBandH, owning_dataset: &'a Dataset) -> Self {
+    fn owning_dataset(&self) -> &'a Dataset;
+    unsafe fn c_rasterband(&self) -> GDALRasterBandH;
+
+    unsafe fn from_c_ptr(c_rasterband: GDALRasterBandH, owning_dataset: &'a Dataset) -> RasterBand<'a> {
         RasterBand {
             c_rasterband,
             owning_dataset,
@@ -29,34 +29,34 @@ impl<'a> RasterBand<'a> {
     }
 
     /// Get block size from a 'Dataset'.
-    pub fn block_size(&self) -> (usize, usize) {
+    fn block_size(&self) -> (usize, usize) {
         let mut size_x = 0;
         let mut size_y = 0;
 
-        unsafe { gdal_sys::GDALGetBlockSize(self.c_rasterband, &mut size_x, &mut size_y) };
+        unsafe { gdal_sys::GDALGetBlockSize(self.c_rasterband(), &mut size_x, &mut size_y) };
         (size_x as usize, size_y as usize)
     }
 
     /// Get x-size of the band
-    pub fn x_size(&self) -> usize {
+    fn x_size(&self) -> usize {
         let out;
         unsafe {
-            out = gdal_sys::GDALGetRasterBandXSize(self.c_rasterband);
+            out = gdal_sys::GDALGetRasterBandXSize(self.c_rasterband());
         }
         out as usize
     }
 
     /// Get y-size of the band
-    pub fn y_size(&self) -> usize {
+    fn y_size(&self) -> usize {
         let out;
-        unsafe { out = gdal_sys::GDALGetRasterBandYSize(self.c_rasterband) }
+        unsafe { out = gdal_sys::GDALGetRasterBandYSize(self.c_rasterband()) }
         out as usize
     }
 
     /// Get dimensions of the band.
     /// Note that this may not be the same as `size` on the
     /// `owning_dataset` due to scale.
-    pub fn size(&self) -> (usize, usize) {
+    fn size(&self) -> (usize, usize) {
         (self.x_size(), self.y_size())
     }
 
@@ -66,7 +66,7 @@ impl<'a> RasterBand<'a> {
     /// * window - the window position from top left
     /// * window_size - the window size (GDAL will interpolate data if window_size != buffer_size)
     /// * buffer_size - the desired size of the 'Buffer'
-    pub fn read_as<T: Copy + GdalType>(
+    fn read_as<T: Copy + GdalType>(
         &self,
         window: (isize, isize),
         window_size: (usize, usize),
@@ -77,7 +77,7 @@ impl<'a> RasterBand<'a> {
         //let no_data:
         let rv = unsafe {
             gdal_sys::GDALRasterIO(
-                self.c_rasterband,
+                self.c_rasterband(),
                 GDALRWFlag::GF_Read,
                 window.0 as c_int,
                 window.1 as c_int,
@@ -110,7 +110,7 @@ impl<'a> RasterBand<'a> {
     /// * array_size - the desired size of the 'Array'
     /// # Docs
     /// The Matrix shape is (rows, cols) and raster shape is (cols in x-axis, rows in y-axis).
-    pub fn read_as_array<T: Copy + GdalType>(
+    fn read_as_array<T: Copy + GdalType>(
         &self,
         window: (isize, isize),
         window_size: (usize, usize),
@@ -121,7 +121,7 @@ impl<'a> RasterBand<'a> {
 
         let values = unsafe {
             gdal_sys::GDALRasterIO(
-                self.c_rasterband,
+                self.c_rasterband(),
                 GDALRWFlag::GF_Read,
                 window.0 as c_int,
                 window.1 as c_int,
@@ -150,8 +150,8 @@ impl<'a> RasterBand<'a> {
     /// Read a full 'Dataset' as 'Buffer<T>'.
     /// # Arguments
     /// * band_index - the band_index
-    pub fn read_band_as<T: Copy + GdalType>(&self) -> Result<Buffer<T>> {
-        let size = self.owning_dataset.size();
+    fn read_band_as<T: Copy + GdalType>(&self) -> Result<Buffer<T>> {
+        let size = self.owning_dataset().size();
         self.read_as::<T>(
             (0, 0),
             (size.0 as usize, size.1 as usize),
@@ -165,7 +165,7 @@ impl<'a> RasterBand<'a> {
     /// * block_index - the block index
     /// # Docs
     /// The Matrix shape is (rows, cols) and raster shape is (cols in x-axis, rows in y-axis).
-    pub fn read_block<T: Copy + GdalType>(&self, block_index: (usize, usize)) -> Result<Array2<T>> {
+    fn read_block<T: Copy + GdalType>(&self, block_index: (usize, usize)) -> Result<Array2<T>> {
         let size = self.block_size();
         let pixels = (size.0 * size.1) as usize;
         let mut data: Vec<T> = Vec::with_capacity(pixels);
@@ -173,7 +173,7 @@ impl<'a> RasterBand<'a> {
         //let no_data:
         let rv = unsafe {
             gdal_sys::GDALReadBlock(
-                self.c_rasterband,
+                self.c_rasterband(),
                 block_index.0 as c_int,
                 block_index.1 as c_int,
                 data.as_mut_ptr() as GDALRasterBandH,
@@ -195,7 +195,7 @@ impl<'a> RasterBand<'a> {
     /// * band_index - the band_index
     /// * window - the window position from top left
     /// * window_size - the window size (GDAL will interpolate data if window_size != Buffer.size)
-    pub fn write<T: GdalType + Copy>(
+    fn write<T: GdalType + Copy>(
         &self,
         window: (isize, isize),
         window_size: (usize, usize),
@@ -204,7 +204,7 @@ impl<'a> RasterBand<'a> {
         assert_eq!(buffer.data.len(), buffer.size.0 * buffer.size.1);
         let rv = unsafe {
             gdal_sys::GDALRasterIO(
-                self.c_rasterband,
+                self.c_rasterband(),
                 GDALRWFlag::GF_Write,
                 window.0 as c_int,
                 window.1 as c_int,
@@ -224,40 +224,40 @@ impl<'a> RasterBand<'a> {
         Ok(())
     }
 
-    pub fn band_type(&self) -> GDALDataType::Type {
-        unsafe { gdal_sys::GDALGetRasterDataType(self.c_rasterband) }
+    fn band_type(&self) -> GDALDataType::Type {
+        unsafe { gdal_sys::GDALGetRasterDataType(self.c_rasterband()) }
     }
 
-    pub fn no_data_value(&self) -> Option<f64> {
+    fn no_data_value(&self) -> Option<f64> {
         let mut pb_success = 1;
         let no_data =
-            unsafe { gdal_sys::GDALGetRasterNoDataValue(self.c_rasterband, &mut pb_success) };
+            unsafe { gdal_sys::GDALGetRasterNoDataValue(self.c_rasterband(), &mut pb_success) };
         if pb_success == 1 {
             return Some(no_data as f64);
         }
         None
     }
 
-    pub fn set_no_data_value(&self, no_data: f64) -> Result<()> {
-        let rv = unsafe { gdal_sys::GDALSetRasterNoDataValue(self.c_rasterband, no_data) };
+    fn set_no_data_value(&self, no_data: f64) -> Result<()> {
+        let rv = unsafe { gdal_sys::GDALSetRasterNoDataValue(self.c_rasterband(), no_data) };
         if rv != CPLErr::CE_None {
             Err(_last_cpl_err(rv))?;
         }
         Ok(())
     }
 
-    pub fn scale(&self) -> Option<f64> {
+    fn scale(&self) -> Option<f64> {
         let mut pb_success = 1;
-        let scale = unsafe { gdal_sys::GDALGetRasterScale(self.c_rasterband, &mut pb_success) };
+        let scale = unsafe { gdal_sys::GDALGetRasterScale(self.c_rasterband(), &mut pb_success) };
         if pb_success == 1 {
             return Some(scale as f64);
         }
         None
     }
 
-    pub fn offset(&self) -> Option<f64> {
+    fn offset(&self) -> Option<f64> {
         let mut pb_success = 1;
-        let offset = unsafe { gdal_sys::GDALGetRasterOffset(self.c_rasterband, &mut pb_success) };
+        let offset = unsafe { gdal_sys::GDALGetRasterOffset(self.c_rasterband(), &mut pb_success) };
         if pb_success == 1 {
             return Some(offset as f64);
         }
@@ -272,7 +272,7 @@ impl<'a> RasterBand<'a> {
         let mut block_size_y = 0;
         let rv = unsafe {
             gdal_sys::GDALGetActualBlockSize(
-                self.c_rasterband,
+                self.c_rasterband(),
                 offset.0 as libc::c_int,
                 offset.1 as libc::c_int,
                 &mut block_size_x,
@@ -284,6 +284,16 @@ impl<'a> RasterBand<'a> {
         }
         Ok((block_size_x as usize, block_size_y as usize))
     }
+}
+
+impl<'a> RasterBandExt<'a> for RasterBand<'a>{
+    fn owning_dataset(&self) -> &'a Dataset {
+        self.owning_dataset
+    }
+    unsafe fn c_rasterband(&self) -> GDALRasterBandH {
+        self.c_rasterband
+    }
+    
 }
 
 impl<'a> MajorObject for RasterBand<'a> {

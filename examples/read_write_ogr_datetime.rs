@@ -1,9 +1,6 @@
 #[cfg(feature = "datetime")]
 use chrono::Duration;
 use gdal::errors::Error;
-use gdal::vector::*;
-use std::ops::Add;
-use std::path::Path;
 
 #[cfg(feature = "datetime")]
 fn run() -> Result<(), Error> {

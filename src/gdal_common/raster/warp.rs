@@ -5,13 +5,14 @@ use libc::c_double;
 use std::ptr::{null, null_mut};
 
 use crate::errors::*;
+use super::DatasetExt;
 
 pub fn reproject(src: &Dataset, dst: &Dataset) -> Result<()> {
     let rv = unsafe {
         gdal_sys::GDALReprojectImage(
-            src._c_ptr(),
+            src.c_dataset(),
             null(),
-            dst._c_ptr(),
+            dst.c_dataset(),
             null(),
             GDALResampleAlg::GRA_Bilinear,
             0.0,

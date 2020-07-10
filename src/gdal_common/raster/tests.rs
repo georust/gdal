@@ -1,5 +1,5 @@
 use crate::metadata::Metadata;
-use crate::raster::{ByteBuffer, Dataset, Driver};
+use crate::raster::{ByteBuffer, Dataset, DatasetExt, Driver, DriverExt, RasterBandExt};
 use gdal_sys::GDALDataType;
 use std::path::Path;
 
@@ -9,6 +9,8 @@ use ndarray::arr2;
 macro_rules! fixture {
     ($name:expr) => {
         Path::new(file!())
+            .parent()
+            .unwrap()
             .parent()
             .unwrap()
             .parent()
