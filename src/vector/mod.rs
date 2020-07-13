@@ -21,6 +21,7 @@ pub use crate::vector::driver::Driver;
 pub use crate::vector::feature::{Feature, FieldValue};
 pub use crate::vector::geometry::Geometry;
 pub use crate::vector::layer::{FeatureIterator, FieldDefn, Layer};
+pub use crate::vector::ops::geometry::intersection::Intersection as GeometryIntersection;
 pub use gdal_sys::{OGRFieldType, OGRwkbGeometryType};
 
 use crate::errors::Result;
@@ -38,6 +39,7 @@ mod gdal_to_geo;
 mod geo_to_gdal;
 mod geometry;
 mod layer;
+mod ops;
 
 #[cfg(test)]
 mod tests;
