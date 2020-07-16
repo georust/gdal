@@ -1,32 +1,22 @@
-use crate::gdal_common::gdal_major_object::MajorObject;
-use crate::metadata::Metadata;
-use crate::raster::types::GdalType;
-use crate::raster::{Dataset, DatasetExt};
-use crate::utils::{_last_null_pointer_err, _string};
 use gdal_sys::{self, GDALDriverH, GDALMajorObjectH};
+use crate::{utils::{_string, _last_null_pointer_err}, _register_drivers, dataset::Dataset, raster::types::GdalType, metadata::Metadata};
+use std::{ptr, ffi::CString, path::Path};
 use libc::c_int;
-use std::ffi::CString;
-use std::ptr::null_mut;
-use std::sync::Once;
+use super::gdal_major_object::MajorObject;
 
 use crate::errors::*;
 
-static START: Once = Once::new();
-
-pub fn _register_drivers() {
-    unsafe {
-        START.call_once(|| {
-            gdal_sys::GDALAllRegister();
-        });
-    }
-}
-
-#[allow(missing_copy_implementations)]
 pub struct Driver {
     c_driver: GDALDriverH,
 }
 
-pub trait DriverExt {
+impl Driver {
+    pub unsafe fn from_c_driver(c_driver: GDALDriverH) -> Driver {
+        Driver { c_driver }
+    }
+}
+
+pub trait DriverCommon {
     
     unsafe fn c_driver(&self) -> GDALDriverH;
     
@@ -38,10 +28,6 @@ pub trait DriverExt {
             Err(_last_null_pointer_err("GDALGetDriverByName"))?;
         };
         Ok(Driver { c_driver })
-    }
-
-    unsafe fn from_c_ptr(c_driver: GDALDriverH) -> Driver {
-        Driver { c_driver }
     }
 
     fn short_name(&self) -> String {
@@ -56,7 +42,7 @@ pub trait DriverExt {
 
     fn create(
         &self,
-        filename: &str,
+        filename: &Path,
         size_x: isize,
         size_y: isize,
         bands: isize,
@@ -64,14 +50,22 @@ pub trait DriverExt {
         self.create_with_band_type::<u8>(filename, size_x, size_y, bands)
     }
 
+    fn create_vector_only(
+        &self,
+        filename: &Path
+    ) -> Result<Dataset> {
+        self.create_with_band_type::<u8>(filename, 0, 0, 0)
+    }
+
     fn create_with_band_type<T: GdalType>(
         &self,
-        filename: &str,
+        filename: &Path,
         size_x: isize,
         size_y: isize,
         bands: isize,
     ) -> Result<Dataset> {
-        let c_filename = CString::new(filename)?;
+        let filename = filename.to_string_lossy();
+        let c_filename = CString::new(filename.as_ref())?;
         let c_dataset = unsafe {
             gdal_sys::GDALCreate(
                 self.c_driver(),
@@ -80,17 +74,17 @@ pub trait DriverExt {
                 size_y as c_int,
                 bands as c_int,
                 T::gdal_type(),
-                null_mut(),
+                ptr::null_mut(),
             )
         };
         if c_dataset.is_null() {
             Err(_last_null_pointer_err("GDALCreate"))?;
         };
-        Ok(unsafe { Dataset::from_c_ptr(c_dataset) })
+        Ok(unsafe { Dataset::from_c_dataset(c_dataset) })
     }
 }
 
-impl DriverExt for Driver {
+impl DriverCommon for Driver {
     unsafe fn c_driver(&self) -> GDALDriverH {
         self.c_driver
     }

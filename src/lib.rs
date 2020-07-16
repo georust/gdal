@@ -25,6 +25,16 @@ pub mod utils;
 pub mod gdal_common;
 pub use gdal_common::*;
 
+#[cfg(feature = "gdal_2_0")]
+pub mod gdal_2_0;
+#[cfg(feature = "gdal_2_0")]
+pub use gdal_2_0::*;
+
+#[cfg(feature = "gdal_3_0")]
+pub mod gdal_3_0;
+#[cfg(feature = "gdal_3_0")]
+pub use gdal_3_0::*;
+
 #[cfg(test)]
 fn assert_almost_eq(a: f64, b: f64) {
     let diff: f64 = b - a;

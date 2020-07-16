@@ -1,6 +1,6 @@
 use crate::spatial_ref::SpatialRef;
 use crate::utils::{_last_null_pointer_err, _string};
-use crate::vector::layer::Layer;
+use crate::vector::layer::{Layer, VectorLayerCommon};
 use gdal_sys::{
     self, OGRFeatureDefnH, OGRFieldDefnH, OGRFieldType, OGRGeomFieldDefnH, OGRwkbGeometryType,
 };

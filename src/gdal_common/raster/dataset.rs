@@ -1,60 +1,17 @@
-use crate::gdal_common::gdal_major_object::MajorObject;
-use crate::gdal_common::metadata::Metadata;
-use crate::raster::driver::_register_drivers;
 use crate::raster::types::GdalType;
-use crate::raster::{Driver, DriverExt, RasterBand, RasterBandExt};
-use crate::utils::{_last_cpl_err, _last_null_pointer_err, _string};
-use gdal_sys::{self, CPLErr, GDALAccess, GDALDataType, GDALDatasetH, GDALMajorObjectH};
+use crate::raster::{RasterBand, RasterBandCommon};
+use crate::utils::{_last_cpl_err, _last_null_pointer_err};
+use gdal_sys::{self, CPLErr, GDALDataType};
 use libc::{c_double, c_int};
-use std::ffi::CString;
-use std::path::Path;
-use std::ptr::null_mut;
 
 #[cfg(feature = "ndarray")]
 use ndarray::Array2;
 
-use crate::errors::*;
+use crate::{dataset::{Dataset, DatasetCommon}, errors::*};
 
 pub type GeoTransform = [c_double; 6];
 
-pub struct Dataset {
-    c_dataset: GDALDatasetH,
-}
-
-impl MajorObject for Dataset {
-    unsafe fn gdal_object_ptr(&self) -> GDALMajorObjectH {
-        self.c_dataset
-    }
-}
-
-impl Metadata for Dataset {}
-
-impl Drop for Dataset {
-    fn drop(&mut self) {
-        unsafe {
-            gdal_sys::GDALClose(self.c_dataset);
-        }
-    }
-}
-
-pub trait DatasetExt: AsRef<Dataset> {
-
-    fn c_dataset(&self) -> GDALDatasetH;
-
-    fn open(path: &Path) -> Result<Dataset> {
-        _register_drivers();
-        let filename = path.to_string_lossy();
-        let c_filename = CString::new(filename.as_ref())?;
-        let c_dataset = unsafe { gdal_sys::GDALOpen(c_filename.as_ptr(), GDALAccess::GA_ReadOnly) };
-        if c_dataset.is_null() {
-            Err(_last_null_pointer_err("GDALOpen"))?;
-        }
-        Ok(Dataset { c_dataset })
-    }
-
-    unsafe fn from_c_ptr(c_dataset: GDALDatasetH) -> Dataset {
-        Dataset { c_dataset }
-    }
+pub trait RasterDatasetCommon: DatasetCommon {
 
     fn rasterband(&self, band_index: isize) -> Result<RasterBand> {
         unsafe {
@@ -72,36 +29,8 @@ pub trait DatasetExt: AsRef<Dataset> {
         (size_x, size_y)
     }
 
-    /// Get block size from a 'Dataset'.
-    /// # Arguments
-    /// * band_index - the band_index
-    /*
-    pub fn size_block(&self, band_index: isize) -> (usize, usize) {
-        let band = self.rasterband(band_index)?;
-        band.size_block()
-    }
-    */
-
-    fn driver(&self) -> Driver {
-        unsafe {
-            let c_driver = gdal_sys::GDALGetDatasetDriver(self.c_dataset());
-            Driver::from_c_ptr(c_driver)
-        }
-    }
-
-    fn count(&self) -> isize {
+    fn raster_count(&self) -> isize {
         (unsafe { gdal_sys::GDALGetRasterCount(self.c_dataset()) }) as isize
-    }
-
-    fn projection(&self) -> String {
-        let rv = unsafe { gdal_sys::GDALGetProjectionRef(self.c_dataset()) };
-        _string(rv)
-    }
-
-    fn set_projection(&self, projection: &str) -> Result<()> {
-        let c_projection = CString::new(projection)?;
-        unsafe { gdal_sys::GDALSetProjection(self.c_dataset(), c_projection.as_ptr()) };
-        Ok(())
     }
 
     /// Affine transformation called geotransformation.
@@ -146,25 +75,6 @@ pub trait DatasetExt: AsRef<Dataset> {
             Err(_last_cpl_err(rv))?;
         }
         Ok(transformation)
-    }
-
-    fn create_copy(&self, driver: &Driver, filename: &str) -> Result<Dataset> {
-        let c_filename = CString::new(filename)?;
-        let c_dataset = unsafe {
-            gdal_sys::GDALCreateCopy(
-                driver.c_driver(),
-                c_filename.as_ptr(),
-                self.c_dataset(),
-                0,
-                null_mut(),
-                None,
-                null_mut(),
-            )
-        };
-        if c_dataset.is_null() {
-            Err(_last_null_pointer_err("GDALCreateCopy"))?;
-        }
-        Ok(Dataset { c_dataset })
     }
 
     fn band_type(&self, band_index: isize) -> Result<GDALDataType::Type> {
@@ -246,18 +156,7 @@ pub trait DatasetExt: AsRef<Dataset> {
     }
 }
 
-impl AsRef<Dataset> for Dataset {
-    fn as_ref(&self) -> &Dataset {
-        self
-    }    
-}
-
-impl DatasetExt for Dataset {
-    fn c_dataset(&self) -> GDALDatasetH {
-        self.c_dataset
-    }
-    
-}
+impl RasterDatasetCommon for Dataset {}
 
 pub struct Buffer<T: GdalType> {
     pub size: (usize, usize),

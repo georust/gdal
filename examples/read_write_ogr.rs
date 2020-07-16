@@ -1,11 +1,11 @@
 use gdal::errors::Error;
 use gdal::spatial_ref::{CoordTransform, SpatialRef};
-use gdal::vector::*;
+use gdal::{driver::DriverCommon, vector::*, dataset::{DatasetCommon, Dataset}};
 use std::fs;
 use std::path::Path;
 
 fn run() -> Result<(), Error> {
-    let mut dataset_a = Dataset::open(Path::new("fixtures/roads.geojson"))?;
+    let mut dataset_a = Dataset::open(&Path::new("fixtures/roads.geojson"))?;
     let layer_a = dataset_a.layer(0)?;
     let fields_defn = layer_a
         .defn()
@@ -16,14 +16,14 @@ fn run() -> Result<(), Error> {
     // Create a new dataset:
     let _ = fs::remove_file("/tmp/abcde.shp");
     let drv = Driver::get("ESRI Shapefile")?;
-    let mut ds = drv.create(Path::new("/tmp/abcde.shp"))?;
+    let mut ds = drv.create(Path::new("/tmp/abcde.shp"), 0, 0, 0)?;
     let lyr = ds.create_layer()?;
 
     // Copy the origin layer shema to the destination layer:
     for fd in &fields_defn {
         let field_defn = FieldDefn::new(&fd.0, fd.1)?;
         field_defn.set_width(fd.2);
-        field_defn.add_to_layer(lyr)?;
+        field_defn.add_to_layer(&lyr)?;
     }
 
     // Prepare the origin and destination spatial references objects:
@@ -34,7 +34,7 @@ fn run() -> Result<(), Error> {
     let htransform = CoordTransform::new(&spatial_ref_src, &spatial_ref_dst)?;
 
     // Get the definition to use on each feature:
-    let defn = Defn::from_layer(lyr);
+    let defn = Defn::from_layer(&lyr);
 
     for feature_a in layer_a.features() {
         // Get the original geometry:
@@ -49,7 +49,7 @@ fn run() -> Result<(), Error> {
             ft.set_field(&fd.0, &feature_a.field(&fd.0)?)?;
         }
         // Add the feature to the layer:
-        ft.create(lyr)?;
+        ft.create(&lyr)?;
     }
 
     Ok(())

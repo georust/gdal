@@ -1,9 +1,9 @@
 use super::{
-    Dataset, Driver, Feature, FeatureIterator, FieldValue, Geometry, OGRFieldType,
-    OGRwkbGeometryType,
+    Feature, FeatureIterator, FieldValue, Geometry, OGRFieldType,
+    OGRwkbGeometryType, VectorDatasetCommon, VectorLayerCommon, Driver
 };
 use crate::assert_almost_eq;
-use crate::spatial_ref::SpatialRef;
+use crate::{driver::DriverCommon, spatial_ref::SpatialRef, dataset::{DatasetCommon, Dataset}};
 use std::path::Path;
 
 mod convert_geo;
@@ -31,7 +31,7 @@ macro_rules! fixture {
 #[test]
 fn test_layer_count() {
     let ds = Dataset::open(fixture!("roads.geojson")).unwrap();
-    assert_eq!(ds.count(), 1);
+    assert_eq!(ds.count_vector_layers(), 1);
 }
 
 #[test]
@@ -271,8 +271,8 @@ fn test_write_features() {
 
     {
         let driver = Driver::get("GeoJSON").unwrap();
-        let mut ds = driver.create(fixture!("output.geojson")).unwrap();
-        let layer = ds.create_layer().unwrap();
+        let mut ds = driver.create_vector_only(fixture!("output.geojson")).unwrap();
+        let mut layer = ds.create_layer().unwrap();
         layer
             .create_defn_fields(&[
                 ("Name", OGRFieldType::OFTString),

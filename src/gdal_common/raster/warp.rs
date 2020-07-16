@@ -1,11 +1,10 @@
-use crate::raster::Dataset;
+use crate::dataset::{DatasetCommon, Dataset};
 use crate::utils::_last_cpl_err;
 use gdal_sys::{self, CPLErr, GDALResampleAlg};
 use libc::c_double;
 use std::ptr::{null, null_mut};
 
 use crate::errors::*;
-use super::DatasetExt;
 
 pub fn reproject(src: &Dataset, dst: &Dataset) -> Result<()> {
     let rv = unsafe {

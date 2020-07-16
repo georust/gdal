@@ -1,10 +1,11 @@
 use crate::metadata::Metadata;
-use crate::raster::{ByteBuffer, Dataset, DatasetExt, Driver, DriverExt, RasterBandExt};
+use crate::{dataset::{DatasetCommon, Dataset}, raster::{ByteBuffer, RasterDatasetCommon}, driver::{DriverCommon, Driver}};
 use gdal_sys::GDALDataType;
 use std::path::Path;
 
 #[cfg(feature = "ndarray")]
 use ndarray::arr2;
+use super::RasterBandCommon;
 
 macro_rules! fixture {
     ($name:expr) => {
@@ -54,7 +55,7 @@ fn test_get_raster_block_size() {
 #[test]
 fn test_get_raster_count() {
     let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
-    let count = dataset.count();
+    let count = dataset.raster_count();
     assert_eq!(count, 3);
 }
 
@@ -81,7 +82,7 @@ fn test_read_raster() {
 #[test]
 fn test_write_raster() {
     let driver = Driver::get("MEM").unwrap();
-    let dataset = driver.create("", 20, 10, 1).unwrap();
+    let dataset = driver.create(Path::new(""), 20, 10, 1).unwrap();
 
     // create a 2x1 raster
     let raster = ByteBuffer {
@@ -133,7 +134,7 @@ fn test_get_metadata_item() {
 #[test]
 fn test_set_metadata_item() {
     let driver = Driver::get("MEM").unwrap();
-    let mut dataset = driver.create("", 1, 1, 1).unwrap();
+    let mut dataset = driver.create(Path::new(""), 1, 1, 1).unwrap();
 
     let key = "Test_Key";
     let domain = "Test_Domain";
@@ -148,18 +149,18 @@ fn test_set_metadata_item() {
 #[test]
 fn test_create() {
     let driver = Driver::get("MEM").unwrap();
-    let dataset = driver.create("", 10, 20, 3).unwrap();
+    let dataset = driver.create(Path::new(""), 10, 20, 3).unwrap();
     assert_eq!(dataset.size(), (10, 20));
-    assert_eq!(dataset.count(), 3);
+    assert_eq!(dataset.raster_count(), 3);
     assert_eq!(dataset.driver().short_name(), "MEM");
 }
 
 #[test]
 fn test_create_with_band_type() {
     let driver = Driver::get("MEM").unwrap();
-    let dataset = driver.create_with_band_type::<f32>("", 10, 20, 3).unwrap();
+    let dataset = driver.create_with_band_type::<f32>(Path::new(""), 10, 20, 3).unwrap();
     assert_eq!(dataset.size(), (10, 20));
-    assert_eq!(dataset.count(), 3);
+    assert_eq!(dataset.raster_count(), 3);
     assert_eq!(dataset.driver().short_name(), "MEM");
     assert_eq!(dataset.band_type(1).unwrap(), GDALDataType::GDT_Float32)
 }
@@ -170,13 +171,13 @@ fn test_create_copy() {
     let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
     let copy = dataset.create_copy(&driver, "").unwrap();
     assert_eq!(copy.size(), (100, 50));
-    assert_eq!(copy.count(), 3);
+    assert_eq!(copy.raster_count(), 3);
 }
 
 #[test]
 fn test_geo_transform() {
     let driver = Driver::get("MEM").unwrap();
-    let dataset = driver.create("", 20, 10, 1).unwrap();
+    let dataset = driver.create(Path::new(""), 20, 10, 1).unwrap();
     let transform = [0., 1., 0., 0., 0., 1.];
     assert!(dataset.set_geo_transform(&transform).is_ok());
     assert_eq!(dataset.geo_transform().unwrap(), transform);
@@ -297,7 +298,7 @@ fn test_read_block_data() {
 #[test]
 fn test_get_band_type() {
     let driver = Driver::get("MEM").unwrap();
-    let dataset = driver.create("", 20, 10, 1).unwrap();
+    let dataset = driver.create(Path::new(""), 20, 10, 1).unwrap();
     assert_eq!(dataset.band_type(1).unwrap(), GDALDataType::GDT_Byte);
     assert!(dataset.band_type(2).is_err());
 }
@@ -305,7 +306,7 @@ fn test_get_band_type() {
 #[test]
 fn test_get_rasterband() {
     let driver = Driver::get("MEM").unwrap();
-    let dataset = driver.create("", 20, 10, 1).unwrap();
+    let dataset = driver.create(Path::new(""), 20, 10, 1).unwrap();
     let rasterband = dataset.rasterband(1);
     assert!(rasterband.is_ok())
 }
@@ -326,7 +327,7 @@ fn test_get_no_data_value() {
 #[test]
 fn test_set_no_data_value() {
     let driver = Driver::get("MEM").unwrap();
-    let dataset = driver.create("", 20, 10, 1).unwrap();
+    let dataset = driver.create(Path::new(""), 20, 10, 1).unwrap();
     let rasterband = dataset.rasterband(1).unwrap();
     assert_eq!(rasterband.no_data_value(), None);
     assert!(rasterband.set_no_data_value(3.14).is_ok());

@@ -11,7 +11,7 @@ use libc::c_int;
 use std::ffi::CString;
 use std::ptr::null_mut;
 
-use crate::errors::*;
+use crate::{dataset::Dataset, errors::*};
 
 /// Layer in a vector dataset
 ///
@@ -25,62 +25,75 @@ use crate::errors::*;
 ///     // do something with each feature
 /// }
 /// ```
-pub struct Layer {
+pub struct Layer<'a> {
     c_layer: OGRLayerH,
     defn: Defn,
+    owning_dataset: &'a Dataset
 }
 
-impl MajorObject for Layer {
+impl <'a> Layer<'a> {
+
+    pub fn c_layer(&self) -> OGRLayerH {
+        self.c_layer
+    }
+
+    pub fn owning_dataset(&self) -> &'a Dataset {
+        self.owning_dataset
+    }
+    
+    pub fn defn(&self) -> &Defn {
+        &self.defn
+    }
+
+    pub unsafe fn from_c_layer(c_layer: OGRLayerH, owning_dataset: &Dataset) -> Layer {
+        let c_defn = gdal_sys::OGR_L_GetLayerDefn(c_layer);
+        let defn = Defn::_with_c_defn(c_defn);
+        Layer { c_layer, defn, owning_dataset }
+    }
+}
+
+impl <'a> MajorObject for Layer<'a> {
     unsafe fn gdal_object_ptr(&self) -> GDALMajorObjectH {
         self.c_layer
     }
 }
 
-impl Metadata for Layer {}
+impl <'a> Metadata for Layer<'a> {}
 
-impl Layer {
-    pub unsafe fn _with_c_layer(c_layer: OGRLayerH) -> Layer {
-        let c_defn = gdal_sys::OGR_L_GetLayerDefn(c_layer);
-        let defn = Defn::_with_c_defn(c_defn);
-        Layer { c_layer, defn }
-    }
-
-    pub unsafe fn c_layer(&self) -> OGRLayerH {
-        self.c_layer
-    }
+pub trait VectorLayerCommon<'a> {
+    
+    unsafe fn c_layer(&self) -> OGRLayerH;
+    fn defn(&self) -> &Defn;
+    fn layer_ref(&self) -> &Layer<'a>;
 
     /// Iterate over all features in this layer.
-    pub fn features(&self) -> FeatureIterator {
-        FeatureIterator::_with_layer(self)
+    fn features(&'a self) -> FeatureIterator<'a> {
+        FeatureIterator::_with_layer(self.layer_ref())
     }
 
-    pub fn set_spatial_filter(&self, geometry: &Geometry) {
-        unsafe { gdal_sys::OGR_L_SetSpatialFilter(self.c_layer, geometry.c_geometry()) };
+    fn set_spatial_filter(&self, geometry: &Geometry) {
+        unsafe { gdal_sys::OGR_L_SetSpatialFilter(self.c_layer(), geometry.c_geometry()) };
     }
 
-    pub fn clear_spatial_filter(&self) {
-        unsafe { gdal_sys::OGR_L_SetSpatialFilter(self.c_layer, null_mut()) };
+    fn clear_spatial_filter(&self) {
+        unsafe { gdal_sys::OGR_L_SetSpatialFilter(self.c_layer(), null_mut()) };
     }
 
     /// Get the name of this layer.
-    pub fn name(&self) -> String {
-        let rv = unsafe { gdal_sys::OGR_L_GetName(self.c_layer) };
+    fn name(&self) -> String {
+        let rv = unsafe { gdal_sys::OGR_L_GetName(self.c_layer()) };
         _string(rv)
     }
 
-    pub fn defn(&self) -> &Defn {
-        &self.defn
-    }
-
-    pub fn create_defn_fields(&self, fields_def: &[(&str, OGRFieldType::Type)]) -> Result<()> {
+    fn create_defn_fields(&self, fields_def: &[(&str, OGRFieldType::Type)]) -> Result<()> {
         for fd in fields_def {
             let fdefn = FieldDefn::new(fd.0, fd.1)?;
-            fdefn.add_to_layer(self)?;
+            fdefn.add_to_layer(self.layer_ref())?;
         }
         Ok(())
     }
-    pub fn create_feature(&mut self, geometry: Geometry) -> Result<()> {
-        let c_feature = unsafe { gdal_sys::OGR_F_Create(self.defn.c_defn()) };
+    fn create_feature(&mut self, geometry: Geometry) -> Result<()> {
+        let c_feature = unsafe { gdal_sys::OGR_F_Create(self.defn().c_defn()) };
         let c_geometry = unsafe { geometry.into_c_geometry() };
         let rv = unsafe { gdal_sys::OGR_F_SetGeometryDirectly(c_feature, c_geometry) };
         if rv != OGRErr::OGRERR_NONE {
@@ -89,7 +102,7 @@ impl Layer {
                 method_name: "OGR_F_SetGeometryDirectly",
             })?;
         }
-        let rv = unsafe { gdal_sys::OGR_L_CreateFeature(self.c_layer, c_feature) };
+        let rv = unsafe { gdal_sys::OGR_L_CreateFeature(self.c_layer(), c_feature) };
         if rv != OGRErr::OGRERR_NONE {
             Err(ErrorKind::OgrError {
                 err: rv,
@@ -99,22 +112,22 @@ impl Layer {
         Ok(())
     }
 
-    pub fn create_feature_fields(
+    fn create_feature_fields(
         &mut self,
         geometry: Geometry,
         field_names: &[&str],
         values: &[FieldValue],
     ) -> Result<()> {
-        let mut ft = Feature::new(&self.defn)?;
+        let mut ft = Feature::new(&self.defn())?;
         ft.set_geometry(geometry)?;
         for (fd, val) in field_names.iter().zip(values.iter()) {
             ft.set_field(fd, val)?;
         }
-        ft.create(self)?;
+        ft.create(self.layer_ref())?;
         Ok(())
     }
 
-    pub fn get_extent(&self, force: bool) -> Result<gdal_sys::OGREnvelope> {
+    fn get_extent(&self, force: bool) -> Result<gdal_sys::OGREnvelope> {
         let mut envelope = OGREnvelope {
             MinX: 0.0,
             MaxX: 0.0,
@@ -122,7 +135,7 @@ impl Layer {
             MaxY: 0.0,
         };
         let force = if force { 1 } else { 0 };
-        let rv = unsafe { gdal_sys::OGR_L_GetExtent(self.c_layer, &mut envelope, force) };
+        let rv = unsafe { gdal_sys::OGR_L_GetExtent(self.c_layer(), &mut envelope, force) };
         if rv != OGRErr::OGRERR_NONE {
             Err(ErrorKind::OgrError {
                 err: rv,
@@ -132,8 +145,8 @@ impl Layer {
         Ok(envelope)
     }
 
-    pub fn spatial_reference(&self) -> Result<SpatialRef> {
-        let c_obj = unsafe { gdal_sys::OGR_L_GetSpatialRef(self.c_layer) };
+    fn spatial_reference(&self) -> Result<SpatialRef> {
+        let c_obj = unsafe { gdal_sys::OGR_L_GetSpatialRef(self.c_layer()) };
         if c_obj.is_null() {
             Err(_last_null_pointer_err("OGR_L_GetSpatialRef"))?;
         }
@@ -141,8 +154,21 @@ impl Layer {
     }
 }
 
+impl <'a> VectorLayerCommon<'a> for Layer<'a> {
+    unsafe fn c_layer(&self) -> OGRLayerH {
+        self.c_layer
+    }
+    fn defn(&self) -> &Defn {
+        &self.defn
+    }
+    fn layer_ref(&self) -> &Layer<'a> {
+        self
+    }
+
+}
+
 pub struct FeatureIterator<'a> {
-    layer: &'a Layer,
+    layer: &'a Layer<'a>,
 }
 
 impl<'a> Iterator for FeatureIterator<'a> {

@@ -1,7 +1,8 @@
 use crate::gdal_common::gdal_major_object::MajorObject;
 use crate::metadata::Metadata;
 use crate::raster::types::GdalType;
-use crate::raster::{Buffer, Dataset, DatasetExt};
+use crate::raster::{Buffer, RasterDatasetCommon};
+use crate::dataset::Dataset;
 use crate::utils::_last_cpl_err;
 use gdal_sys::{self, CPLErr, GDALDataType, GDALMajorObjectH, GDALRWFlag, GDALRasterBandH};
 use libc::c_int;
@@ -16,7 +17,7 @@ pub struct RasterBand<'a> {
     owning_dataset: &'a Dataset,
 }
 
-pub trait RasterBandExt<'a> {
+pub trait RasterBandCommon<'a> {
 
     fn owning_dataset(&self) -> &'a Dataset;
     unsafe fn c_rasterband(&self) -> GDALRasterBandH;
@@ -267,7 +268,7 @@ pub trait RasterBandExt<'a> {
     /// Get actual block size (at the edges) when block size
     /// does not divide band size.
     #[cfg(feature = "gdal_2_2")]
-    pub fn actual_block_size(&self, offset: (isize, isize)) -> Result<(usize, usize)> {
+    fn actual_block_size(&self, offset: (isize, isize)) -> Result<(usize, usize)> {
         let mut block_size_x = 0;
         let mut block_size_y = 0;
         let rv = unsafe {
@@ -286,7 +287,7 @@ pub trait RasterBandExt<'a> {
     }
 }
 
-impl<'a> RasterBandExt<'a> for RasterBand<'a>{
+impl<'a> RasterBandCommon<'a> for RasterBand<'a>{
     fn owning_dataset(&self) -> &'a Dataset {
         self.owning_dataset
     }

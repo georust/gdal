@@ -1,6 +1,8 @@
+
 fn main() {
     use gdal::metadata::Metadata;
-    use gdal::raster::{Driver, DriverExt, Dataset, DatasetExt};
+    use gdal::dataset::{Dataset, DatasetCommon};
+    use gdal::driver::{DriverCommon, Driver};
     use std::path::Path;
 
     let driver = Driver::get("mem").unwrap();
