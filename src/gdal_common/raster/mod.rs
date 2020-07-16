@@ -1,13 +1,14 @@
 //! GDAL Raster Data
 
-pub use dataset::{Buffer, ByteBuffer, RasterDatasetCommon};
+pub use dataset::{Buffer, RasterDatasetCommon};
 pub use rasterband::{RasterBand, RasterBandCommon};
 pub use warp::reproject;
+pub use types::GdalType;
 
-pub mod dataset;
-pub mod rasterband;
-pub mod types;
-pub mod warp;
+mod dataset;
+mod rasterband;
+mod types;
+mod warp;
 
 #[cfg(test)]
 mod tests;

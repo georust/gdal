@@ -1,5 +1,5 @@
-pub use crate::spatial_ref::srs::CoordTransform;
-pub use crate::spatial_ref::srs::SpatialRef;
+pub use srs::CoordTransform;
+pub use srs::{SpatialRef, SpatialRefCommon};
 
 mod srs;
 

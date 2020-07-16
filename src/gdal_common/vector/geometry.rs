@@ -1,4 +1,4 @@
-use crate::spatial_ref::{CoordTransform, SpatialRef};
+use crate::{CoordTransform, SpatialRef, SpatialRefCommon};
 use crate::utils::{_last_null_pointer_err, _string};
 use gdal_sys::{self, OGRErr, OGRGeometryH, OGRwkbGeometryType};
 use libc::{c_double, c_int, c_void};
@@ -207,7 +207,7 @@ impl Geometry {
     }
 
     pub fn transform_to_inplace(&self, spatial_ref: &SpatialRef) -> Result<()> {
-        let rv = unsafe { gdal_sys::OGR_G_TransformTo(self.c_geometry(), spatial_ref.to_c_hsrs()) };
+        let rv = unsafe { gdal_sys::OGR_G_TransformTo(self.c_geometry(), spatial_ref.c_spatial_ref()) };
         if rv != OGRErr::OGRERR_NONE {
             Err(ErrorKind::OgrError {
                 err: rv,
@@ -219,7 +219,7 @@ impl Geometry {
 
     pub fn transform_to(&self, spatial_ref: &SpatialRef) -> Result<Geometry> {
         let new_c_geom = unsafe { gdal_sys::OGR_G_Clone(self.c_geometry()) };
-        let rv = unsafe { gdal_sys::OGR_G_TransformTo(new_c_geom, spatial_ref.to_c_hsrs()) };
+        let rv = unsafe { gdal_sys::OGR_G_TransformTo(new_c_geom, spatial_ref.c_spatial_ref()) };
         if rv != OGRErr::OGRERR_NONE {
             Err(ErrorKind::OgrError {
                 err: rv,
@@ -244,7 +244,7 @@ impl Geometry {
         if c_spatial_ref.is_null() {
             None
         } else {
-            match SpatialRef::from_c_obj(c_spatial_ref) {
+            match SpatialRef::clone_from_c_obj(c_spatial_ref) {
                 Ok(sr) => Some(sr),
                 Err(_) => None,
             }
@@ -253,7 +253,7 @@ impl Geometry {
 
     pub fn set_spatial_reference(&mut self, spatial_ref: SpatialRef) {
         unsafe {
-            gdal_sys::OGR_G_AssignSpatialReference(self.c_geometry(), spatial_ref.to_c_hsrs())
+            gdal_sys::OGR_G_AssignSpatialReference(self.c_geometry(), spatial_ref.c_spatial_ref())
         };
     }
 }
@@ -279,7 +279,7 @@ impl Clone for Geometry {
 #[cfg(test)]
 mod tests {
     use super::Geometry;
-    use crate::spatial_ref::SpatialRef;
+    use crate::{SpatialRefCommon, SpatialRef};
 
     #[test]
     pub fn test_area() {

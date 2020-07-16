@@ -1,12 +1,10 @@
-use crate::spatial_ref::SpatialRef;
 use crate::utils::_last_null_pointer_err;
-use crate::vector::Layer;
 use gdal_sys::{self, OGRLayerH, OGRwkbGeometryType};
 use libc::c_int;
 use std::ffi::CString;
 use std::ptr::null_mut;
 
-use crate::{dataset::{Dataset, DatasetCommon}, errors::*};
+use crate::{Dataset, DatasetCommon, SpatialRefCommon, SpatialRef, vector::Layer, errors::*};
 
 pub trait VectorDatasetCommon: DatasetCommon {
 
@@ -66,7 +64,7 @@ pub trait VectorDatasetCommon: DatasetCommon {
     ) -> Result<Layer> {
         let c_name = CString::new(name)?;
         let c_srs = match srs {
-            Some(srs) => srs.to_c_hsrs(),
+            Some(srs) => srs.c_spatial_ref(),
             None => null_mut(),
         };
 

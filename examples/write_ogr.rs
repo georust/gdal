@@ -1,5 +1,11 @@
 use gdal::errors::Error;
-use gdal::{driver::DriverCommon, vector::{Defn, Driver, Feature, FieldDefn, FieldValue, Geometry, OGRFieldType, VectorDatasetCommon, VectorLayerCommon}};
+use gdal::{
+    DriverCommon, Driver,
+    vector::{
+        Defn, Feature, FieldDefn, FieldValue, Geometry, OGRFieldType, VectorDatasetCommon,
+        VectorLayerCommon,
+    },
+};
 use std::fs;
 use std::path::Path;
 

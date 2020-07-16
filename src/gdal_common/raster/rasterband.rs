@@ -1,8 +1,6 @@
 use crate::gdal_common::gdal_major_object::MajorObject;
-use crate::metadata::Metadata;
-use crate::raster::types::GdalType;
-use crate::raster::{Buffer, RasterDatasetCommon};
-use crate::dataset::Dataset;
+use crate::raster::{Buffer, RasterDatasetCommon, GdalType};
+use crate::{Dataset, Metadata};
 use crate::utils::_last_cpl_err;
 use gdal_sys::{self, CPLErr, GDALDataType, GDALMajorObjectH, GDALRWFlag, GDALRasterBandH};
 use libc::c_int;

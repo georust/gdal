@@ -12,9 +12,10 @@ documentation = "https://georust.github.io/gdal/"
 edition = "2018"
 
 [features]
-default = ["gdal_2_2"]
+default = ["gdal_2_4"]
 bindgen = ["gdal-sys/bindgen"]
 gdal_2_2 = ["gdal-sys/min_gdal_version_2_2"]
+gdal_2_3 = ["gdal-sys/min_gdal_version_2_3"]
 gdal_2_4 = ["gdal-sys/min_gdal_version_2_4"]
 gdal_3_0 = ["gdal-sys/min_gdal_version_3_0"]
 array = ["ndarray"]

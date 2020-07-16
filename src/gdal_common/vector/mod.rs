@@ -4,7 +4,7 @@
 //!
 //! ```
 //! use std::path::Path;
-//! use gdal::vector::Dataset;
+//! use gdal::{Dataset, DatasetCommon, vector::{VectorDatasetCommon, VectorLayerCommon}};
 //!
 //! let mut dataset = Dataset::open(Path::new("fixtures/roads.geojson")).unwrap();
 //! let layer = dataset.layer(0).unwrap();
@@ -17,7 +17,6 @@
 
 pub use crate::vector::dataset::VectorDatasetCommon;
 pub use crate::vector::defn::{Defn, Field, FieldIterator};
-pub use crate::driver::Driver;
 pub use crate::vector::feature::{Feature, FieldValue};
 pub use crate::vector::geometry::Geometry;
 pub use crate::vector::layer::{FeatureIterator, FieldDefn, Layer, VectorLayerCommon};

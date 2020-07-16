@@ -7,7 +7,7 @@ use libc::{c_double, c_int};
 #[cfg(feature = "ndarray")]
 use ndarray::Array2;
 
-use crate::{dataset::{Dataset, DatasetCommon}, errors::*};
+use crate::{Dataset, DatasetCommon, errors::*};
 
 pub type GeoTransform = [c_double; 6];
 
@@ -81,26 +81,10 @@ pub trait RasterDatasetCommon: DatasetCommon {
         self.rasterband(band_index).map(|band| band.band_type())
     }
 
-    /// Read a 'Buffer<u8>' from a 'Dataset'.
-    /// # Arguments
-    /// * band_index - the band_index
-    /// * window - the window position from top left
-    /// * window_size - the window size (GDAL will interpolate data if window_size != buffer_size)
-    /// * buffer_size - the desired size of the 'Buffer'
-    fn read_raster(
-        &self,
-        band_index: isize,
-        window: (isize, isize),
-        window_size: (usize, usize),
-        size: (usize, usize),
-    ) -> Result<ByteBuffer> {
-        self.read_raster_as::<u8>(band_index, window, window_size, size)
-    }
-
     /// Read a full 'Dataset' as 'Buffer<T>'.
     /// # Arguments
     /// * band_index - the band_index
-    fn read_full_raster_as<T: Copy + GdalType>(&self, band_index: isize) -> Result<Buffer<T>> {
+    fn read_full_raster<T: Copy + GdalType>(&self, band_index: isize) -> Result<Buffer<T>> {
         self.rasterband(band_index)?.read_band_as()
     }
 
@@ -110,7 +94,7 @@ pub trait RasterDatasetCommon: DatasetCommon {
     /// * window - the window position from top left
     /// * window_size - the window size (GDAL will interpolate data if window_size != buffer_size)
     /// * buffer_size - the desired size of the 'Buffer'
-    fn read_raster_as<T: Copy + GdalType>(
+    fn read_raster<T: Copy + GdalType>(
         &self,
         band_index: isize,
         window: (isize, isize),
@@ -168,5 +152,3 @@ impl<T: GdalType> Buffer<T> {
         Buffer { size, data }
     }
 }
-
-pub type ByteBuffer = Buffer<u8>;

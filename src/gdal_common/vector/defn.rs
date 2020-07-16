@@ -1,6 +1,6 @@
-use crate::spatial_ref::SpatialRef;
+use crate::{SpatialRef};
 use crate::utils::{_last_null_pointer_err, _string};
-use crate::vector::layer::{Layer, VectorLayerCommon};
+use super::layer::Layer;
 use gdal_sys::{
     self, OGRFeatureDefnH, OGRFieldDefnH, OGRFieldType, OGRGeomFieldDefnH, OGRwkbGeometryType,
 };
@@ -151,6 +151,6 @@ impl<'a> GeomField<'a> {
         if c_obj.is_null() {
             Err(_last_null_pointer_err("OGR_GFld_GetSpatialRef"))?;
         }
-        SpatialRef::from_c_obj(c_obj)
+        SpatialRef::clone_from_c_obj(c_obj)
     }
 }

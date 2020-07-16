@@ -6,7 +6,7 @@
 //!
 //! ```
 //! use std::path::Path;
-//! use gdal::vector::Dataset;
+//! use gdal::{Dataset, DatasetCommon, vector::{VectorDatasetCommon, VectorLayerCommon}};
 //!
 //! let mut dataset = Dataset::open(Path::new("fixtures/roads.geojson")).unwrap();
 //! let layer = dataset.layer(0).unwrap();
@@ -22,13 +22,23 @@
 
 pub mod errors;
 pub mod utils;
-pub mod gdal_common;
+mod gdal_common;
 pub use gdal_common::*;
 
-#[cfg(feature = "gdal_2_0")]
-pub mod gdal_2_0;
-#[cfg(feature = "gdal_2_0")]
-pub use gdal_2_0::*;
+#[cfg(any(feature = "gdal_2_2", feature = "gdal_2_3", feature = "gdal_2_4"))]
+pub mod gdal_2_2;
+#[cfg(any(feature = "gdal_2_2", feature = "gdal_2_3", feature = "gdal_2_4"))]
+pub use gdal_2_2::*;
+
+#[cfg(any(feature = "gdal_2_3", feature = "gdal_2_4"))]
+pub mod gdal_2_3;
+#[cfg(any(feature = "gdal_2_3", feature = "gdal_2_4"))]
+pub use gdal_2_3::*;
+
+#[cfg(feature = "gdal_2_4")]
+pub mod gdal_2_4;
+#[cfg(feature = "gdal_2_4")]
+pub use gdal_2_4::*;
 
 #[cfg(feature = "gdal_3_0")]
 pub mod gdal_3_0;

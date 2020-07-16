@@ -1,9 +1,9 @@
 use super::{
     Feature, FeatureIterator, FieldValue, Geometry, OGRFieldType,
-    OGRwkbGeometryType, VectorDatasetCommon, VectorLayerCommon, Driver
+    OGRwkbGeometryType, VectorDatasetCommon, VectorLayerCommon, 
 };
 use crate::assert_almost_eq;
-use crate::{driver::DriverCommon, spatial_ref::SpatialRef, dataset::{DatasetCommon, Dataset}};
+use crate::{Driver, DriverCommon, SpatialRefCommon, DatasetCommon, Dataset};
 use std::path::Path;
 
 mod convert_geo;
@@ -40,10 +40,10 @@ fn test_layer_extent() {
     let layer = ds.layer(0).unwrap();
     assert!(layer.get_extent(false).is_err());
     let extent = layer.get_extent(true).unwrap();
-    assert_almost_eq(extent.MinX, 26.100768);
-    assert_almost_eq(extent.MaxX, 26.103515);
-    assert_almost_eq(extent.MinY, 44.429858);
-    assert_almost_eq(extent.MaxY, 44.431818);
+    assert_almost_eq(extent.MinX, 26.1007683999999998);
+    assert_almost_eq(extent.MaxX, 26.1035150000000016);
+    assert_almost_eq(extent.MinY, 44.4298581999999982);
+    assert_almost_eq(extent.MaxY, 44.4318178999999986);
 }
 
 #[test]
@@ -193,29 +193,6 @@ fn test_schema() {
     .map(|s| (s.0.to_string(), s.1))
     .collect::<Vec<_>>();
     assert_eq!(name_list, ok_names_types);
-}
-
-#[test]
-fn test_geom_fields() {
-    let mut ds = Dataset::open(fixture!("roads.geojson")).unwrap();
-    let layer = ds.layer(0).unwrap();
-    let name_list = layer
-        .defn()
-        .geom_fields()
-        .map(|f| (f.name(), f.field_type()))
-        .collect::<Vec<_>>();
-    let ok_names_types = vec![("", OGRwkbGeometryType::wkbLineString)]
-        .iter()
-        .map(|s| (s.0.to_string(), s.1.clone()))
-        .collect::<Vec<_>>();
-    assert_eq!(name_list, ok_names_types);
-
-    let geom_field = layer.defn().geom_fields().next().unwrap();
-    let spatial_ref2 = SpatialRef::from_epsg(4326).unwrap();
-    #[cfg(feature = "gdal_3_0")]
-    spatial_ref2.set_axis_mapping_strategy(0);
-
-    assert!(geom_field.spatial_ref().unwrap() == spatial_ref2);
 }
 
 #[test]

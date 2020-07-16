@@ -1,10 +1,9 @@
 use gdal_sys::{self, GDALAccess, GDALDatasetH, GDALMajorObjectH};
 use super::gdal_major_object::MajorObject;
-use crate::metadata::Metadata;
 
 use std::{path::Path, ffi::CString, ptr};
 
-use crate::{utils::{_string, _last_null_pointer_err}, errors::*, _register_drivers, driver::{DriverCommon, Driver}};
+use crate::{utils::{_string, _last_null_pointer_err}, errors::*, _register_drivers, DriverCommon, Driver, Metadata};
 
 pub struct Dataset {
     c_dataset: GDALDatasetH,
@@ -47,6 +46,7 @@ pub trait DatasetCommon: AsRef<Dataset> {
         Self::open_ex(path, None, None, None, None)
     }
 
+    // TODO: use the parameters
     fn open_ex(path: &Path, open_flags: Option<u32>, allowed_drivers: Option<&str>, open_options: Option<&str>, sibling_files: Option<&str>) -> Result<Dataset> {
         _register_drivers();
         let filename = path.to_string_lossy();

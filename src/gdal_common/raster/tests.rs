@@ -1,5 +1,4 @@
-use crate::metadata::Metadata;
-use crate::{dataset::{DatasetCommon, Dataset}, raster::{ByteBuffer, RasterDatasetCommon}, driver::{DriverCommon, Driver}};
+use crate::{DatasetCommon, Dataset, raster::{Buffer, RasterDatasetCommon}, DriverCommon, Driver, Metadata};
 use gdal_sys::GDALDataType;
 use std::path::Path;
 
@@ -73,7 +72,7 @@ fn test_get_projection() {
 #[test]
 fn test_read_raster() {
     let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
-    let rv = dataset.read_raster(1, (20, 30), (2, 3), (2, 3)).unwrap();
+    let rv = dataset.read_raster::<u8>(1, (20, 30), (2, 3), (2, 3)).unwrap();
     assert_eq!(rv.size.0, 2);
     assert_eq!(rv.size.1, 3);
     assert_eq!(rv.data, vec!(7, 7, 7, 10, 8, 12));
@@ -85,7 +84,7 @@ fn test_write_raster() {
     let dataset = driver.create(Path::new(""), 20, 10, 1).unwrap();
 
     // create a 2x1 raster
-    let raster = ByteBuffer {
+    let raster = Buffer::<u8> {
         size: (2, 1),
         data: vec![50u8, 20u8],
     };
@@ -95,11 +94,11 @@ fn test_write_raster() {
     assert!(res.is_ok());
 
     // read a pixel from the left side
-    let left = dataset.read_raster(1, (5, 5), (1, 1), (1, 1)).unwrap();
+    let left = dataset.read_raster::<u8>(1, (5, 5), (1, 1), (1, 1)).unwrap();
     assert_eq!(left.data[0], 50u8);
 
     // read a pixel from the right side
-    let right = dataset.read_raster(1, (15, 5), (1, 1), (1, 1)).unwrap();
+    let right = dataset.read_raster::<u8>(1, (15, 5), (1, 1), (1, 1)).unwrap();
     assert_eq!(right.data[0], 20u8);
 }
 
@@ -199,7 +198,7 @@ fn test_get_driver_by_name() {
 fn test_read_raster_as() {
     let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
     let rv = dataset
-        .read_raster_as::<u8>(1, (20, 30), (2, 3), (2, 3))
+        .read_raster::<u8>(1, (20, 30), (2, 3), (2, 3))
         .unwrap();
     assert_eq!(rv.data, vec!(7, 7, 7, 10, 8, 12));
     assert_eq!(rv.size.0, 2);
@@ -241,7 +240,7 @@ fn test_read_raster_as_array() {
 #[test]
 fn test_read_full_raster_as() {
     let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
-    let rv = dataset.read_full_raster_as::<u8>(1).unwrap();
+    let rv = dataset.read_full_raster::<u8>(1).unwrap();
     assert_eq!(rv.size.0, 100);
     assert_eq!(rv.size.1, 50);
 }

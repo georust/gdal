@@ -1,4 +1,4 @@
-use crate::dataset::{DatasetCommon, Dataset};
+use crate::{DatasetCommon, Dataset};
 use crate::utils::_last_cpl_err;
 use gdal_sys::{self, CPLErr, GDALResampleAlg};
 use libc::c_double;
