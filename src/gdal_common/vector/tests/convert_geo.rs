@@ -1,4 +1,4 @@
-use crate::vector::{Geometry, ToGdal};
+use crate::{Geometry, ToGdal};
 use geo_types;
 
 #[test]

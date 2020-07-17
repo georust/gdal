@@ -4,7 +4,7 @@ use libc::c_int;
 use std::ffi::CString;
 use std::ptr::null_mut;
 
-use crate::{Dataset, DatasetCommon, SpatialRefCommon, SpatialRef, vector::Layer, errors::*};
+use crate::{Dataset, DatasetCommon, SpatialRefCommon, SpatialRef, Layer, errors::*};
 
 pub trait VectorDatasetCommon: DatasetCommon {
 

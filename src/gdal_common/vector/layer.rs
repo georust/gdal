@@ -1,6 +1,5 @@
 use crate::gdal_common::gdal_major_object::MajorObject;
 use crate::utils::{_last_null_pointer_err, _string};
-use crate::vector::{Feature, FieldValue, Geometry, Defn};
 use gdal_sys::{
     self, GDALMajorObjectH, OGREnvelope, OGRErr, OGRFieldDefnH, OGRFieldType, OGRLayerH,
 };
@@ -8,7 +7,7 @@ use libc::c_int;
 use std::ffi::CString;
 use std::ptr::null_mut;
 
-use crate::{Dataset, errors::*, Metadata, SpatialRef };
+use crate::{Dataset, errors::*, Metadata, SpatialRef, Feature, FieldValue, Geometry, Defn};
 
 /// Layer in a vector dataset
 ///

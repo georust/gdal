@@ -1,4 +1,4 @@
-use crate::{DatasetCommon, Dataset, vector::VectorDatasetCommon, SpatialRef, SpatialRefCommon, vector::OGRwkbGeometryType};
+use crate::{DatasetCommon, Dataset, VectorDatasetCommon, SpatialRef, SpatialRefCommon, OGRwkbGeometryType};
 use std::path::Path;
 
 macro_rules! fixture {

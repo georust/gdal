@@ -1,5 +1,4 @@
-use crate::raster::types::GdalType;
-use crate::raster::{RasterBand, RasterBandCommon};
+use crate::{RasterBand, RasterBandCommon, RasterBuffer, GdalType};
 use crate::utils::{_last_cpl_err, _last_null_pointer_err};
 use gdal_sys::{self, CPLErr, GDALDataType};
 use libc::{c_double, c_int};
@@ -81,26 +80,26 @@ pub trait RasterDatasetCommon: DatasetCommon {
         self.rasterband(band_index).map(|band| band.band_type())
     }
 
-    /// Read a full 'Dataset' as 'Buffer<T>'.
+    /// Read a full 'Dataset' as 'RasterBuffer<T>'.
     /// # Arguments
     /// * band_index - the band_index
-    fn read_full_raster<T: Copy + GdalType>(&self, band_index: isize) -> Result<Buffer<T>> {
+    fn read_full_raster<T: Copy + GdalType>(&self, band_index: isize) -> Result<RasterBuffer<T>> {
         self.rasterband(band_index)?.read_band_as()
     }
 
-    /// Read a 'Buffer<T>' from a 'Dataset'. T implements 'GdalType'
+    /// Read a 'RasterBuffer<T>' from a 'Dataset'. T implements 'GdalType'
     /// # Arguments
     /// * band_index - the band_index
     /// * window - the window position from top left
     /// * window_size - the window size (GDAL will interpolate data if window_size != buffer_size)
-    /// * buffer_size - the desired size of the 'Buffer'
+    /// * buffer_size - the desired size of the 'RasterBuffer'
     fn read_raster<T: Copy + GdalType>(
         &self,
         band_index: isize,
         window: (isize, isize),
         window_size: (usize, usize),
         size: (usize, usize),
-    ) -> Result<Buffer<T>> {
+    ) -> Result<RasterBuffer<T>> {
         self.rasterband(band_index)?
             .read_as(window, window_size, size)
     }
@@ -123,17 +122,17 @@ pub trait RasterDatasetCommon: DatasetCommon {
             .read_as_array(window, window_size, array_size)
     }
 
-    /// Write a 'Buffer<T>' into a 'Dataset'.
+    /// Write a 'RasterBuffer<T>' into a 'Dataset'.
     /// # Arguments
     /// * band_index - the band_index
     /// * window - the window position from top left
-    /// * window_size - the window size (GDAL will interpolate data if window_size != Buffer.size)
+    /// * window_size - the window size (GDAL will interpolate data if window_size != RasterBuffer.size)
     fn write_raster<T: GdalType + Copy>(
         &self,
         band_index: isize,
         window: (isize, isize),
         window_size: (usize, usize),
-        buffer: &Buffer<T>,
+        buffer: &RasterBuffer<T>,
     ) -> Result<()> {
         self.rasterband(band_index)?
             .write(window, window_size, buffer)
@@ -141,14 +140,3 @@ pub trait RasterDatasetCommon: DatasetCommon {
 }
 
 impl RasterDatasetCommon for Dataset {}
-
-pub struct Buffer<T: GdalType> {
-    pub size: (usize, usize),
-    pub data: Vec<T>,
-}
-
-impl<T: GdalType> Buffer<T> {
-    pub fn new(size: (usize, usize), data: Vec<T>) -> Buffer<T> {
-        Buffer { size, data }
-    }
-}

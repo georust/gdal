@@ -1,8 +1,7 @@
 
-use crate::{CoordTransform, SpatialRef, SpatialRefCommon};
+use crate::{CoordTransform, SpatialRef, SpatialRefCommon, Geometry};
 use crate::assert_almost_eq;
 use crate::errors::ErrorKind;
-use crate::vector::Geometry;
 
 #[test]
 fn from_proj4_to_wkt() {

@@ -1,5 +1,5 @@
 use gdal_sys::{self, GDALDriverH, GDALMajorObjectH};
-use crate::{utils::{_string, _last_null_pointer_err}, _register_drivers, Dataset, raster::GdalType, Metadata};
+use crate::{utils::{_string, _last_null_pointer_err}, _register_drivers, Dataset, GdalType, Metadata};
 use std::{ptr, ffi::CString, path::Path};
 use libc::c_int;
 use super::gdal_major_object::MajorObject;

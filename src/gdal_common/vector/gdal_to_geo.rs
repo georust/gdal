@@ -1,4 +1,4 @@
-use crate::vector::Geometry;
+use crate::Geometry;
 use gdal_sys::{self, OGRwkbGeometryType};
 use geo_types;
 

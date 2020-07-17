@@ -1,6 +1,5 @@
 use crate::gdal_common::gdal_major_object::MajorObject;
-use crate::raster::{Buffer, RasterDatasetCommon, GdalType};
-use crate::{Dataset, Metadata};
+use crate::{RasterBuffer, RasterDatasetCommon, GdalType, Dataset, Metadata};
 use crate::utils::_last_cpl_err;
 use gdal_sys::{self, CPLErr, GDALDataType, GDALMajorObjectH, GDALRWFlag, GDALRasterBandH};
 use libc::c_int;
@@ -59,18 +58,18 @@ pub trait RasterBandCommon<'a> {
         (self.x_size(), self.y_size())
     }
 
-    /// Read a 'Buffer<T>' from a 'Dataset'. T implements 'GdalType'
+    /// Read a 'RasterBuffer<T>' from a 'Dataset'. T implements 'GdalType'
     /// # Arguments
     /// * band_index - the band_index
     /// * window - the window position from top left
     /// * window_size - the window size (GDAL will interpolate data if window_size != buffer_size)
-    /// * buffer_size - the desired size of the 'Buffer'
+    /// * buffer_size - the desired size of the 'RasterBuffer'
     fn read_as<T: Copy + GdalType>(
         &self,
         window: (isize, isize),
         window_size: (usize, usize),
         size: (usize, usize),
-    ) -> Result<Buffer<T>> {
+    ) -> Result<RasterBuffer<T>> {
         let pixels = (size.0 * size.1) as usize;
         let mut data: Vec<T> = Vec::with_capacity(pixels);
         //let no_data:
@@ -98,7 +97,7 @@ pub trait RasterBandCommon<'a> {
             data.set_len(pixels);
         };
 
-        Ok(Buffer { size, data })
+        Ok(RasterBuffer { size, data })
     }
 
     #[cfg(feature = "ndarray")]
@@ -146,10 +145,10 @@ pub trait RasterBandCommon<'a> {
         Array2::from_shape_vec((array_size.1, array_size.0), data).map_err(Into::into)
     }
 
-    /// Read a full 'Dataset' as 'Buffer<T>'.
+    /// Read a full 'Dataset' as 'RasterBuffer<T>'.
     /// # Arguments
     /// * band_index - the band_index
-    fn read_band_as<T: Copy + GdalType>(&self) -> Result<Buffer<T>> {
+    fn read_band_as<T: Copy + GdalType>(&self) -> Result<RasterBuffer<T>> {
         let size = self.owning_dataset().size();
         self.read_as::<T>(
             (0, 0),
@@ -189,7 +188,7 @@ pub trait RasterBandCommon<'a> {
         Array2::from_shape_vec((size.1, size.0), data).map_err(Into::into)
     }
 
-    // Write a 'Buffer<T>' into a 'Dataset'.
+    // Write a 'RasterBuffer<T>' into a 'Dataset'.
     /// # Arguments
     /// * band_index - the band_index
     /// * window - the window position from top left
@@ -198,7 +197,7 @@ pub trait RasterBandCommon<'a> {
         &self,
         window: (isize, isize),
         window_size: (usize, usize),
-        buffer: &Buffer<T>,
+        buffer: &RasterBuffer<T>,
     ) -> Result<()> {
         assert_eq!(buffer.data.len(), buffer.size.0 * buffer.size.1);
         let rv = unsafe {

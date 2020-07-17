@@ -1,5 +1,5 @@
 use crate::errors::*;
-use crate::vector::{Geometry, ToGdal};
+use crate::{Geometry, ToGdal};
 use gdal_sys::OGRwkbGeometryType;
 use geo_types;
 use num_traits::Float;

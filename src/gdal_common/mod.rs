@@ -1,6 +1,7 @@
-pub mod raster;
-pub mod vector;
 pub mod config;
+
+mod raster;
+mod vector;
 mod version;
 mod spatial_ref;
 mod metadata;
@@ -8,7 +9,7 @@ mod dataset;
 mod driver;
 mod gdal_major_object;
 
-pub use {dataset::*, driver::*, metadata::*, spatial_ref::*, version::*};
+pub use {dataset::*, driver::*, metadata::*, spatial_ref::*, version::*, raster::*, vector::*};
 
 use std::sync::Once;
 use gdal_sys;

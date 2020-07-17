@@ -1,4 +1,4 @@
-use crate::{DatasetCommon, Dataset, raster::{Buffer, RasterDatasetCommon}, DriverCommon, Driver, Metadata};
+use crate::{DatasetCommon, Dataset, RasterBuffer, RasterDatasetCommon, DriverCommon, Driver, Metadata};
 use gdal_sys::GDALDataType;
 use std::path::Path;
 
@@ -84,7 +84,7 @@ fn test_write_raster() {
     let dataset = driver.create(Path::new(""), 20, 10, 1).unwrap();
 
     // create a 2x1 raster
-    let raster = Buffer::<u8> {
+    let raster = RasterBuffer::<u8> {
         size: (2, 1),
         data: vec![50u8, 20u8],
     };
