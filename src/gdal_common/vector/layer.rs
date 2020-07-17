@@ -13,7 +13,7 @@ use crate::{Dataset, errors::*, Metadata, SpatialRef, Feature, FieldValue, Geome
 ///
 /// ```
 /// use std::path::Path;
-/// use gdal::{Dataset, DatasetCommon, vector::{VectorDatasetCommon, VectorLayerCommon}};
+/// use gdal::{Dataset, DatasetCommon, VectorDatasetCommon, VectorLayerCommon};
 ///
 /// let mut dataset = Dataset::open(Path::new("fixtures/roads.geojson")).unwrap();
 /// let layer = dataset.layer(0).unwrap();
