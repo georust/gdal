@@ -19,7 +19,7 @@ array = ["ndarray"]
 failure = "0.1"
 failure_derive = "0.1"
 libc = "0.2"
-geo-types = "0.4"
+geo-types = "0.6"
 # gdal-sys = { path = "gdal-sys", version = "0.2"}
 gdal-sys = "0.2"
 num-traits = "0.2"

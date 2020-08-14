@@ -1,6 +1,6 @@
 use vector::{Geometry, ToGdal};
 use geo_types;
-use gdal_sys::{OGRwkbGeometryType};
+use gdal_sys::OGRwkbGeometryType;
 use errors::*;
 use num_traits::Float;
 
@@ -72,6 +72,18 @@ impl <T> ToGdal for geo_types::Polygon<T> where T: Float {
     }
 }
 
+impl <T> ToGdal for geo_types::Rect<T> where T: Float {
+    fn to_gdal(&self) -> Result<Geometry> {
+        self.to_owned().to_polygon().to_gdal()
+    }
+}
+
+impl <T> ToGdal for geo_types::Triangle<T> where T: Float {
+    fn to_gdal(&self) -> Result<Geometry> {
+        self.to_owned().to_polygon().to_gdal()
+    }
+}
+
 impl <T> ToGdal for geo_types::MultiPolygon<T> where T: Float {
     fn to_gdal(&self) -> Result<Geometry> {
         let mut geom = Geometry::empty(OGRwkbGeometryType::wkbMultiPolygon)?;
@@ -98,9 +110,14 @@ impl <T> ToGdal for geo_types::Geometry<T> where T: Float {
     fn to_gdal(&self) -> Result<Geometry> {
         match *self {
             geo_types::Geometry::Point(ref c) => c.to_gdal(),
+
             geo_types::Geometry::Line(ref c) => c.to_gdal(),
             geo_types::Geometry::LineString(ref c) => c.to_gdal(),
+
+            geo_types::Geometry::Rect(ref c) => c.to_gdal(),
+            geo_types::Geometry::Triangle(ref c) => c.to_gdal(),
             geo_types::Geometry::Polygon(ref c) => c.to_gdal(),
+
             geo_types::Geometry::MultiPoint(ref c) => c.to_gdal(),
             geo_types::Geometry::MultiLineString(ref c) => c.to_gdal(),
             geo_types::Geometry::MultiPolygon(ref c) => c.to_gdal(),
