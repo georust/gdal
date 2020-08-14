@@ -21,7 +21,7 @@ pub struct Dataset {
     c_dataset: GDALDatasetH,
 }
 
-unsafe impl Send for Dataset {}
+// unsafe impl Send for Dataset {}
 
 impl MajorObject for Dataset {
     unsafe fn gdal_object_ptr(&self) -> GDALMajorObjectH {
