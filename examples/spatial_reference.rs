@@ -1,5 +1,3 @@
-extern crate gdal;
-
 use gdal::spatial_ref::{CoordTransform, SpatialRef};
 use gdal::vector::Geometry;
 

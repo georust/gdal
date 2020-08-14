@@ -1,15 +1,17 @@
-use std::ptr::null_mut;
-use std::ffi::CString;
+use crate::gdal_major_object::MajorObject;
+use crate::metadata::Metadata;
+use crate::spatial_ref::SpatialRef;
+use crate::utils::{_last_null_pointer_err, _string};
+use crate::vector::defn::Defn;
+use crate::vector::{Feature, FieldValue, Geometry};
+use gdal_sys::{
+    self, GDALMajorObjectH, OGREnvelope, OGRErr, OGRFieldDefnH, OGRFieldType, OGRLayerH,
+};
 use libc::c_int;
-use vector::{Feature, Geometry, FieldValue};
-use vector::defn::Defn;
-use gdal_major_object::MajorObject;
-use metadata::Metadata;
-use gdal_sys::{self, OGRErr, OGREnvelope, OGRFieldDefnH, OGRFieldType, OGRLayerH, GDALMajorObjectH};
-use utils::{_last_null_pointer_err, _string};
-use spatial_ref::SpatialRef;
+use std::ffi::CString;
+use std::ptr::null_mut;
 
-use errors::*;
+use crate::errors::*;
 
 /// Layer in a vector dataset
 ///
@@ -36,12 +38,11 @@ impl MajorObject for Layer {
 
 impl Metadata for Layer {}
 
-
 impl Layer {
     pub unsafe fn _with_c_layer(c_layer: OGRLayerH) -> Layer {
         let c_defn = gdal_sys::OGR_L_GetLayerDefn(c_layer);
         let defn = Defn::_with_c_defn(c_defn);
-        Layer{c_layer, defn}
+        Layer { c_layer, defn }
     }
 
     pub unsafe fn c_layer(&self) -> OGRLayerH {
@@ -83,17 +84,27 @@ impl Layer {
         let c_geometry = unsafe { geometry.into_c_geometry() };
         let rv = unsafe { gdal_sys::OGR_F_SetGeometryDirectly(c_feature, c_geometry) };
         if rv != OGRErr::OGRERR_NONE {
-            Err(ErrorKind::OgrError{err: rv, method_name: "OGR_F_SetGeometryDirectly"})?;
+            Err(ErrorKind::OgrError {
+                err: rv,
+                method_name: "OGR_F_SetGeometryDirectly",
+            })?;
         }
         let rv = unsafe { gdal_sys::OGR_L_CreateFeature(self.c_layer, c_feature) };
         if rv != OGRErr::OGRERR_NONE {
-            Err(ErrorKind::OgrError{err: rv, method_name: "OGR_L_CreateFeature"})?;
+            Err(ErrorKind::OgrError {
+                err: rv,
+                method_name: "OGR_L_CreateFeature",
+            })?;
         }
         Ok(())
     }
 
-    pub fn create_feature_fields(&mut self, geometry: Geometry,
-                                 field_names: &[&str], values: &[FieldValue]) -> Result<()> {
+    pub fn create_feature_fields(
+        &mut self,
+        geometry: Geometry,
+        field_names: &[&str],
+        values: &[FieldValue],
+    ) -> Result<()> {
         let mut ft = Feature::new(&self.defn)?;
         ft.set_geometry(geometry)?;
         for (fd, val) in field_names.iter().zip(values.iter()) {
@@ -104,11 +115,19 @@ impl Layer {
     }
 
     pub fn get_extent(&self, force: bool) -> Result<gdal_sys::OGREnvelope> {
-        let mut envelope = OGREnvelope { MinX: 0.0, MaxX: 0.0, MinY: 0.0, MaxY: 0.0 };
+        let mut envelope = OGREnvelope {
+            MinX: 0.0,
+            MaxX: 0.0,
+            MinY: 0.0,
+            MaxY: 0.0,
+        };
         let force = if force { 1 } else { 0 };
         let rv = unsafe { gdal_sys::OGR_L_GetExtent(self.c_layer, &mut envelope, force) };
         if rv != OGRErr::OGRERR_NONE {
-            Err(ErrorKind::OgrError{err: rv, method_name: "OGR_L_GetExtent"})?;
+            Err(ErrorKind::OgrError {
+                err: rv,
+                method_name: "OGR_L_GetExtent",
+            })?;
         }
         Ok(envelope)
     }
@@ -172,15 +191,18 @@ impl FieldDefn {
         Ok(FieldDefn { c_obj })
     }
     pub fn set_width(&self, width: i32) {
-        unsafe {gdal_sys:: OGR_Fld_SetWidth(self.c_obj, width as c_int) };
+        unsafe { gdal_sys::OGR_Fld_SetWidth(self.c_obj, width as c_int) };
     }
     pub fn set_precision(&self, precision: i32) {
-        unsafe {gdal_sys:: OGR_Fld_SetPrecision(self.c_obj, precision as c_int) };
+        unsafe { gdal_sys::OGR_Fld_SetPrecision(self.c_obj, precision as c_int) };
     }
     pub fn add_to_layer(&self, layer: &Layer) -> Result<()> {
         let rv = unsafe { gdal_sys::OGR_L_CreateField(layer.c_layer(), self.c_obj, 1) };
         if rv != OGRErr::OGRERR_NONE {
-            Err(ErrorKind::OgrError{err: rv, method_name: "OGR_L_CreateFeature"})?;
+            Err(ErrorKind::OgrError {
+                err: rv,
+                method_name: "OGR_L_CreateFeature",
+            })?;
         }
         Ok(())
     }
