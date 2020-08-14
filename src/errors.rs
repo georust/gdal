@@ -1,8 +1,8 @@
-use libc::{c_int};
+use libc::c_int;
 use std::{self, fmt, result};
 
+use failure::{Backtrace, Context, Fail};
 use gdal_sys::{CPLErr, OGRErr, OGRFieldType};
-use failure::{Context, Fail, Backtrace};
 
 pub type Result<T> = result::Result<T, Error>;
 
@@ -13,7 +13,6 @@ pub struct Error {
 
 #[derive(Clone, PartialEq, Debug, Fail)]
 pub enum ErrorKind {
-
     #[fail(display = "FfiNulError")]
     FfiNulError(#[cause] std::ffi::NulError),
     #[fail(display = "StrUtf8Error")]
@@ -21,50 +20,65 @@ pub enum ErrorKind {
     #[cfg(feature = "ndarray")]
     #[fail(display = "NdarrayShapeError")]
     NdarrayShapeError(#[cause] ndarray::ShapeError),
-    #[fail(display = "CPL error class: '{:?}', error number: '{}', error msg: '{}'", class, number, msg)]
+    #[fail(
+        display = "CPL error class: '{:?}', error number: '{}', error msg: '{}'",
+        class, number, msg
+    )]
     CplError {
         class: CPLErr::Type,
         number: c_int,
-        msg: String
+        msg: String,
     },
-    #[fail(display ="GDAL method '{}' returned a NULL pointer. Error msg: '{}'", method_name, msg)]
+    #[fail(
+        display = "GDAL method '{}' returned a NULL pointer. Error msg: '{}'",
+        method_name, msg
+    )]
     NullPointer {
         method_name: &'static str,
-        msg: String
+        msg: String,
     },
     #[fail(display = "Can't cast to f64")]
     CastToF64Error,
-    #[fail(display ="OGR method '{}' returned error: '{:?}'", method_name, err)]
+    #[fail(display = "OGR method '{}' returned error: '{:?}'", method_name, err)]
     OgrError {
         err: OGRErr::Type,
-        method_name: &'static str
+        method_name: &'static str,
     },
-    #[fail(display ="Unhandled type {:?} on OGR method {}", field_type, method_name)]
+    #[fail(
+        display = "Unhandled type {:?} on OGR method {}",
+        field_type, method_name
+    )]
     UnhandledFieldType {
         field_type: OGRFieldType::Type,
-        method_name: &'static str
+        method_name: &'static str,
     },
-    #[fail(display ="Invalid field name '{}' used on method {}", field_name, method_name)]
+    #[fail(
+        display = "Invalid field name '{}' used on method {}",
+        field_name, method_name
+    )]
     InvalidFieldName {
         field_name: String,
-        method_name: &'static str
+        method_name: &'static str,
     },
-    #[fail(display ="Invalid field index {} used on method {}", index, method_name)]
+    #[fail(
+        display = "Invalid field index {} used on method {}",
+        index, method_name
+    )]
     InvalidFieldIndex {
         index: usize,
-        method_name: &'static str
+        method_name: &'static str,
     },
-    #[fail(display ="Unlinked Geometry on method {}", method_name)]
-    UnlinkedGeometry {
-        method_name: &'static str
-    },
-    #[fail(display ="Invalid coordinate range while transforming points from {} to {}: {:?}", from, to, msg)]
+    #[fail(display = "Unlinked Geometry on method {}", method_name)]
+    UnlinkedGeometry { method_name: &'static str },
+    #[fail(
+        display = "Invalid coordinate range while transforming points from {} to {}: {:?}",
+        from, to, msg
+    )]
     InvalidCoordinateRange {
         from: String,
         to: String,
-        msg: Option<String>
-    }
-
+        msg: Option<String>,
+    },
 }
 
 impl Fail for Error {
@@ -91,7 +105,9 @@ impl Error {
 
 impl From<ErrorKind> for Error {
     fn from(kind: ErrorKind) -> Error {
-        Error { inner: Context::new(kind) }
+        Error {
+            inner: Context::new(kind),
+        }
     }
 }
 
@@ -103,19 +119,25 @@ impl From<Context<ErrorKind>> for Error {
 
 impl From<std::ffi::NulError> for Error {
     fn from(err: std::ffi::NulError) -> Error {
-        Error { inner: Context::new(ErrorKind::FfiNulError(err)) }
+        Error {
+            inner: Context::new(ErrorKind::FfiNulError(err)),
+        }
     }
 }
 
 impl From<std::str::Utf8Error> for Error {
     fn from(err: std::str::Utf8Error) -> Error {
-        Error { inner: Context::new(ErrorKind::StrUtf8Error(err)) }
+        Error {
+            inner: Context::new(ErrorKind::StrUtf8Error(err)),
+        }
     }
 }
 
 #[cfg(feature = "ndarray")]
 impl From<ndarray::ShapeError> for Error {
     fn from(err: ndarray::ShapeError) -> Error {
-        Error { inner: Context::new(ErrorKind::NdarrayShapeError(err)) }
+        Error {
+            inner: Context::new(ErrorKind::NdarrayShapeError(err)),
+        }
     }
 }

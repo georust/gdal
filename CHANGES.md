@@ -1,5 +1,13 @@
 # Changes
 
+## 0.5.0
+
+* [Bump geo-types from 0.3 -> 0.4](https://github.com/georust/gdal/pull/71)
+* [Allow reading block-size of Rasters](https://github.com/georust/gdal/pull/67)
+* [Add prebuilt-bindings GDAL 2.3 and GDAL 2.4](https://github.com/georust/gdal/pull/69)
+* [Make GdalType trait public](https://github.com/georust/gdal/pull/66)
+* [RasterBand to Ndarray, with failure](https://github.com/georust/gdal/pull/68)
+
 ## 0.4.0
 * [Migrate to the `geo-types` crate](https://github.com/georust/gdal/pull/60)
 * [Replace `error-chain` with `failure`](https://github.com/georust/gdal/pull/58)

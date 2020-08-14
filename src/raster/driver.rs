@@ -1,17 +1,17 @@
+use crate::gdal_major_object::MajorObject;
+use crate::metadata::Metadata;
+use crate::raster::types::GdalType;
+use crate::raster::Dataset;
+use crate::utils::{_last_null_pointer_err, _string};
+use gdal_sys::{self, GDALDriverH, GDALMajorObjectH};
 use libc::c_int;
 use std::ffi::CString;
 use std::ptr::null_mut;
-use std::sync::{Once, ONCE_INIT};
-use utils::{_string, _last_null_pointer_err};
-use raster::Dataset;
-use raster::types::GdalType;
-use gdal_major_object::MajorObject;
-use metadata::Metadata;
-use gdal_sys::{self, GDALDriverH, GDALMajorObjectH};
+use std::sync::Once;
 
-use errors::*;
+use crate::errors::*;
 
-static START: Once = ONCE_INIT;
+static START: Once = Once::new();
 
 pub fn _register_drivers() {
     unsafe {
@@ -21,12 +21,10 @@ pub fn _register_drivers() {
     }
 }
 
-
 #[allow(missing_copy_implementations)]
 pub struct Driver {
     c_driver: GDALDriverH,
 }
-
 
 impl Driver {
     pub fn get(name: &str) -> Result<Driver> {
@@ -36,7 +34,7 @@ impl Driver {
         if c_driver.is_null() {
             Err(_last_null_pointer_err("GDALGetDriverByName"))?;
         };
-        Ok(Driver{c_driver})
+        Ok(Driver { c_driver })
     }
 
     pub unsafe fn _with_c_ptr(c_driver: GDALDriverH) -> Driver {
@@ -62,14 +60,9 @@ impl Driver {
         filename: &str,
         size_x: isize,
         size_y: isize,
-        bands: isize
+        bands: isize,
     ) -> Result<Dataset> {
-        self.create_with_band_type::<u8>(
-            filename,
-            size_x,
-            size_y,
-            bands,
-        )
+        self.create_with_band_type::<u8>(filename, size_x, size_y, bands)
     }
 
     pub fn create_with_band_type<T: GdalType>(
@@ -80,15 +73,17 @@ impl Driver {
         bands: isize,
     ) -> Result<Dataset> {
         let c_filename = CString::new(filename)?;
-        let c_dataset = unsafe { gdal_sys::GDALCreate(
+        let c_dataset = unsafe {
+            gdal_sys::GDALCreate(
                 self.c_driver,
                 c_filename.as_ptr(),
                 size_x as c_int,
                 size_y as c_int,
                 bands as c_int,
                 T::gdal_type(),
-                null_mut()
-            ) };
+                null_mut(),
+            )
+        };
         if c_dataset.is_null() {
             Err(_last_null_pointer_err("GDALCreate"))?;
         };
