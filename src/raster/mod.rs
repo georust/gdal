@@ -4,6 +4,7 @@ pub use crate::raster::dataset::{Buffer, ByteBuffer, Dataset};
 pub use crate::raster::driver::Driver;
 pub use crate::raster::rasterband::RasterBand;
 pub use crate::raster::warp::reproject;
+pub use gdal_sys::GDALAccess;
 
 pub mod dataset;
 pub mod driver;
