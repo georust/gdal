@@ -40,17 +40,6 @@ impl Drop for Dataset {
 }
 
 impl Dataset {
-    pub fn open(path: &Path) -> Result<Dataset> {
-        _register_drivers();
-        let filename = path.to_string_lossy();
-        let c_filename = CString::new(filename.as_ref())?;
-        let c_dataset = unsafe { gdal_sys::GDALOpen(c_filename.as_ptr(), GDALAccess::GA_ReadOnly) };
-        if c_dataset.is_null() {
-            Err(_last_null_pointer_err("GDALOpen"))?;
-        }
-        Ok(Dataset { c_dataset })
-    }
-
     pub fn open_with_access(path: &Path, access: GDALAccess::Type) -> Result<Dataset> {
         _register_drivers();
         let filename = path.to_string_lossy();
@@ -60,6 +49,14 @@ impl Dataset {
             Err(_last_null_pointer_err("GDALOpen"))?;
         }
         Ok(Dataset { c_dataset })
+    }
+
+    pub fn open(path: &Path) -> Result<Dataset> {
+        Dataset::open_with_access(path, GDALAccess::GA_ReadOnly)
+    }
+
+    pub fn edit(path: &Path) -> Result<Dataset> {
+        Dataset::open_with_access(path, GDALAccess::GA_Update)
     }
 
     pub unsafe fn _with_c_ptr(c_dataset: GDALDatasetH) -> Dataset {
