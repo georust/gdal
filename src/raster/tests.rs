@@ -2,6 +2,7 @@ use crate::metadata::Metadata;
 use crate::raster::{ByteBuffer, Dataset, Driver};
 use gdal_sys::GDALDataType;
 use std::path::Path;
+use std::{env, fs};
 
 #[cfg(feature = "ndarray")]
 use ndarray::arr2;
@@ -77,10 +78,36 @@ fn test_read_raster() {
 }
 
 #[test]
-#[should_panic]
 fn test_edit_raster() {
-    // PNG driver does not allow edit
-    Dataset::edit(fixture!("tinymarble.png")).unwrap();
+    let raster_path = env::temp_dir().join("rust-gdal-edit-test.tif");
+
+    {
+        let driver = Driver::get("GTiff").unwrap();
+        let dataset = driver.create_with_band_type::<u8>(&raster_path.to_string_lossy(), 20, 10, 1).unwrap();
+    }
+
+    {
+        let dataset = Dataset::edit(&raster_path).unwrap();
+
+        // create a 2x1 raster
+        let raster = ByteBuffer {
+            size: (2, 1),
+            data: vec![50u8, 20u8],
+        };
+
+        // epand it to fill the image (20x10)
+        let res = dataset.write_raster(1, (0, 0), (20, 10), &raster);
+        assert!(res.is_ok());
+
+        let left = dataset.read_raster(1, (5, 5), (1, 1), (1, 1)).unwrap();
+        assert_eq!(left.data[0], 50u8);
+
+        // read a pixel from the right side
+        let right = dataset.read_raster(1, (15, 5), (1, 1), (1, 1)).unwrap();
+        assert_eq!(right.data[0], 20u8);
+    }
+
+    fs::remove_file(raster_path).unwrap();
 }
 
 #[test]
