@@ -1,21 +1,30 @@
 language: rust
 sudo: enabled
-dist: trusty
 
-before_install:
-  - sudo add-apt-repository ppa:ubuntugis/ppa -y
-  - sudo apt-get update -q
-  - sudo apt-get install -y libgdal-dev libgdal20
+jobs:
+  include:
+    - os: linux
+      dist: trusty
+      rust: stable
+      env: CI_USE_GDAL_VERSION=2
+    - os: linux
+      dist: trusty
+      rust: beta
+      env: CI_USE_GDAL_VERSION=2
+    - os: linux
+      dist: trusty
+      rust: nightly
+      env: CI_USE_GDAL_VERSION=2
+    - os: osx
+      rust: stable
+      env: CI_USE_GDAL_VERSION=2
+
+before_install: script/ci-before-install.sh
 
 addons:
  apt:
   packages:
     - build-essential
-
-rust:
-  - stable
-  - beta
-  - nightly
 
 script:
   - cargo test
@@ -26,6 +35,7 @@ after_success: |
   [ $TRAVIS_BRANCH = master ] &&
   [ $TRAVIS_PULL_REQUEST = false ] &&
   [ $TRAVIS_RUST_VERSION = nightly ] &&
+  [ $TRAVIS_OS_NAME = linux ] &&
   echo '<meta http-equiv=refresh content=0;url=gdal/index.html>' > target/doc/index.html &&
   pip install ghp-import --user $USER &&
   $HOME/.local/bin/ghp-import -n target/doc &&
