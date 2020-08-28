@@ -51,6 +51,17 @@ impl Dataset {
         Ok(Dataset { c_dataset })
     }
 
+    pub fn open_with_access(path: &Path, access: GDALAccess::Type) -> Result<Dataset> {
+        _register_drivers();
+        let filename = path.to_string_lossy();
+        let c_filename = CString::new(filename.as_ref())?;
+        let c_dataset = unsafe { gdal_sys::GDALOpen(c_filename.as_ptr(), access) };
+        if c_dataset.is_null() {
+            Err(_last_null_pointer_err("GDALOpen"))?;
+        }
+        Ok(Dataset { c_dataset })
+    }
+
     pub unsafe fn _with_c_ptr(c_dataset: GDALDatasetH) -> Dataset {
         Dataset { c_dataset }
     }
