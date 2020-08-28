@@ -77,6 +77,13 @@ fn test_read_raster() {
 }
 
 #[test]
+#[should_panic]
+fn test_edit_raster() {
+    // PNG driver does not allow edit
+    Dataset::edit(fixture!("tinymarble.png")).unwrap();
+}
+
+#[test]
 fn test_write_raster() {
     let driver = Driver::get("MEM").unwrap();
     let dataset = driver.create("", 20, 10, 1).unwrap();
