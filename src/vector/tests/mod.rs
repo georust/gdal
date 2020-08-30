@@ -304,3 +304,21 @@ fn test_write_features() {
     assert_eq!(ft.field("Value").unwrap().into_real(), Some(45.78));
     assert_eq!(ft.field("Int_value").unwrap().into_int(), Some(1));
 }
+
+#[test]
+fn test_copy_layer() {
+    use std::fs;
+
+    {
+        let mut ds = Dataset::open(fixture!("roads.geojson")).unwrap();
+        let layer = ds.layer(0).unwrap();
+        let driver = Driver::get("GPKG").unwrap();
+        let mut ds_out = driver.create(fixture!("output.gpkg")).unwrap();
+        ds_out.copy_layer(layer, "new_layer").unwrap();
+    }
+
+    let mut ds = Dataset::open(fixture!("output.gpkg")).unwrap();
+    fs::remove_file(fixture!("output.gpkg")).unwrap();
+    let layer = ds.layer(0).unwrap();
+    assert_eq!(layer.features().count(), 21);
+}

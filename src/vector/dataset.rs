@@ -128,6 +128,28 @@ impl Dataset {
         self._child_layer(c_layer);
         Ok(self.layers.last_mut().unwrap()) // TODO: is this safe?
     }
+
+    /// Copy layers to another dataset.
+    pub fn copy_layer(
+        &mut self,
+        layer: &Layer,
+        name: &str
+    ) -> Result<&mut Layer> {
+        let c_name = CString::new(name)?;
+        let c_layer = unsafe{
+            gdal_sys::OGR_DS_CopyLayer(
+                self.c_dataset,
+                layer.c_layer(),
+                c_name.as_ptr(),
+                null_mut(),
+            )
+        };
+        if c_layer.is_null() {
+            Err(_last_null_pointer_err("OGR_DS_CopyLayer"))?;
+        };
+        self._child_layer(c_layer);
+        Ok(self.layers.last_mut().unwrap()) // TODO: is this safe?
+    }
 }
 
 impl Drop for Dataset {
