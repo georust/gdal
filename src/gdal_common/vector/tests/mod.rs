@@ -1,9 +1,9 @@
 use super::{
-    Feature, FeatureIterator, FieldValue, Geometry, OGRFieldType,
-    OGRwkbGeometryType, VectorDatasetCommon, VectorLayerCommon, 
+    Feature, FeatureIterator, FieldValue, Geometry, OGRFieldType, OGRwkbGeometryType,
+    VectorDatasetCommon, VectorLayerCommon,
 };
 use crate::assert_almost_eq;
-use crate::{Driver, DriverCommon, SpatialRefCommon, DatasetCommon, Dataset};
+use crate::{Dataset, DatasetCommon, Driver, DriverCommon, SpatialRefCommon};
 use std::path::Path;
 
 mod convert_geo;
@@ -248,7 +248,9 @@ fn test_write_features() {
 
     {
         let driver = Driver::get("GeoJSON").unwrap();
-        let mut ds = driver.create_vector_only(fixture!("output.geojson")).unwrap();
+        let mut ds = driver
+            .create_vector_only(fixture!("output.geojson"))
+            .unwrap();
         let mut layer = ds.create_layer().unwrap();
         layer
             .create_defn_fields(&[

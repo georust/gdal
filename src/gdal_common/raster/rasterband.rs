@@ -1,6 +1,6 @@
 use crate::gdal_common::gdal_major_object::MajorObject;
-use crate::{RasterBuffer, RasterDatasetCommon, GdalType, Dataset, Metadata};
 use crate::utils::_last_cpl_err;
+use crate::{Dataset, GdalType, Metadata, RasterBuffer, RasterDatasetCommon};
 use gdal_sys::{self, CPLErr, GDALDataType, GDALMajorObjectH, GDALRWFlag, GDALRasterBandH};
 use libc::c_int;
 
@@ -15,11 +15,13 @@ pub struct RasterBand<'a> {
 }
 
 pub trait RasterBandCommon<'a> {
-
     fn owning_dataset(&self) -> &'a Dataset;
     unsafe fn c_rasterband(&self) -> GDALRasterBandH;
 
-    unsafe fn from_c_ptr(c_rasterband: GDALRasterBandH, owning_dataset: &'a Dataset) -> RasterBand<'a> {
+    unsafe fn from_c_ptr(
+        c_rasterband: GDALRasterBandH,
+        owning_dataset: &'a Dataset,
+    ) -> RasterBand<'a> {
         RasterBand {
             c_rasterband,
             owning_dataset,
@@ -284,14 +286,13 @@ pub trait RasterBandCommon<'a> {
     }
 }
 
-impl<'a> RasterBandCommon<'a> for RasterBand<'a>{
+impl<'a> RasterBandCommon<'a> for RasterBand<'a> {
     fn owning_dataset(&self) -> &'a Dataset {
         self.owning_dataset
     }
     unsafe fn c_rasterband(&self) -> GDALRasterBandH {
         self.c_rasterband
     }
-    
 }
 
 impl<'a> MajorObject for RasterBand<'a> {

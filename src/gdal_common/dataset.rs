@@ -1,9 +1,13 @@
-use gdal_sys::{self, GDALAccess, GDALDatasetH, GDALMajorObjectH};
 use super::gdal_major_object::MajorObject;
+use gdal_sys::{self, GDALAccess, GDALDatasetH, GDALMajorObjectH};
 
-use std::{path::Path, ffi::CString, ptr};
+use std::{ffi::CString, path::Path, ptr};
 
-use crate::{utils::{_string, _last_null_pointer_err}, errors::*, _register_drivers, DriverCommon, Driver, Metadata};
+use crate::{
+    errors::*,
+    utils::{_last_null_pointer_err, _string},
+    Driver, DriverCommon, Metadata, _register_drivers,
+};
 
 pub struct Dataset {
     c_dataset: GDALDatasetH,
@@ -11,9 +15,7 @@ pub struct Dataset {
 
 impl Dataset {
     pub unsafe fn from_c_dataset(c_dataset: GDALDatasetH) -> Dataset {
-        Dataset {
-            c_dataset
-        }
+        Dataset { c_dataset }
     }
 }
 
@@ -36,7 +38,7 @@ impl Drop for Dataset {
 impl AsRef<Dataset> for Dataset {
     fn as_ref(&self) -> &Dataset {
         self
-    }    
+    }
 }
 
 pub trait DatasetCommon: AsRef<Dataset> {
@@ -47,14 +49,27 @@ pub trait DatasetCommon: AsRef<Dataset> {
     }
 
     // TODO: use the parameters
-    fn open_ex(path: &Path, open_flags: Option<u32>, allowed_drivers: Option<&str>, open_options: Option<&str>, sibling_files: Option<&str>) -> Result<Dataset> {
+    fn open_ex(
+        path: &Path,
+        open_flags: Option<u32>,
+        allowed_drivers: Option<&str>,
+        open_options: Option<&str>,
+        sibling_files: Option<&str>,
+    ) -> Result<Dataset> {
         _register_drivers();
         let filename = path.to_string_lossy();
         let c_filename = CString::new(filename.as_ref())?;
         let c_open_flags = open_flags.unwrap_or(GDALAccess::GA_ReadOnly); // This defaults to GdalAccess::GA_ReadOnly
-        
 
-        let c_dataset = unsafe { gdal_sys::GDALOpenEx(c_filename.as_ptr(), c_open_flags, ptr::null(), ptr::null(), ptr::null()) };
+        let c_dataset = unsafe {
+            gdal_sys::GDALOpenEx(
+                c_filename.as_ptr(),
+                c_open_flags,
+                ptr::null(),
+                ptr::null(),
+                ptr::null(),
+            )
+        };
         if c_dataset.is_null() {
             Err(_last_null_pointer_err("GDALOpenEx"))?;
         }
@@ -92,9 +107,8 @@ pub trait DatasetCommon: AsRef<Dataset> {
         if c_dataset.is_null() {
             Err(_last_null_pointer_err("GDALCreateCopy"))?;
         }
-        Ok(unsafe {Dataset::from_c_dataset(c_dataset)})
+        Ok(unsafe { Dataset::from_c_dataset(c_dataset) })
     }
-
 
     fn driver(&self) -> Driver {
         unsafe {
@@ -102,11 +116,10 @@ pub trait DatasetCommon: AsRef<Dataset> {
             Driver::from_c_driver(c_driver)
         }
     }
-
 }
 
 impl DatasetCommon for Dataset {
     fn c_dataset(&self) -> GDALDatasetH {
         self.c_dataset
-    }    
+    }
 }

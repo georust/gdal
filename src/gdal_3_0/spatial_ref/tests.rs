@@ -1,7 +1,6 @@
-
-use crate::{CoordTransform, SpatialRef, SpatialRefCommon};
 use crate::errors::ErrorKind;
-use crate::{SpatialRef_3_0, vector::Geometry, assert_almost_eq};
+use crate::{assert_almost_eq, Geometry, SpatialRef_3_0};
+use crate::{CoordTransform, SpatialRef, SpatialRefCommon};
 
 #[test]
 fn from_proj4_to_wkt() {
@@ -27,8 +26,10 @@ fn transform_coordinates() {
     let spatial_ref1 = SpatialRef::from_wkt("GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",7030]],TOWGS84[0,0,0,0,0,0,0],AUTHORITY[\"EPSG\",6326]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",8901]],UNIT[\"DMSH\",0.0174532925199433,AUTHORITY[\"EPSG\",9108]],AXIS[\"Lat\",NORTH],AXIS[\"Long\",EAST],AUTHORITY[\"EPSG\",4326]]").unwrap();
     let spatial_ref2 = SpatialRef::from_epsg(3035).unwrap();
 
-    spatial_ref1.set_axis_mapping_strategy(gdal_sys::OSRAxisMappingStrategy::OAMS_TRADITIONAL_GIS_ORDER);
-    spatial_ref2.set_axis_mapping_strategy(gdal_sys::OSRAxisMappingStrategy::OAMS_TRADITIONAL_GIS_ORDER);
+    spatial_ref1
+        .set_axis_mapping_strategy(gdal_sys::OSRAxisMappingStrategy::OAMS_TRADITIONAL_GIS_ORDER);
+    spatial_ref2
+        .set_axis_mapping_strategy(gdal_sys::OSRAxisMappingStrategy::OAMS_TRADITIONAL_GIS_ORDER);
 
     let transform = CoordTransform::new(&spatial_ref1, &spatial_ref2).unwrap();
     let mut xs = [23.43, 23.50];
@@ -65,12 +66,10 @@ fn transform_ogr_geometry() {
     assert_eq!(expected_value, geom.wkt().unwrap());
 }
 
-
 #[test]
 fn failing_transformation() {
     let wgs84 = SpatialRef::from_epsg(4326).unwrap();
     let dhd_2 = SpatialRef::from_epsg(31462).unwrap();
-
 
     wgs84.set_axis_mapping_strategy(gdal_sys::OSRAxisMappingStrategy::OAMS_TRADITIONAL_GIS_ORDER);
     dhd_2.set_axis_mapping_strategy(gdal_sys::OSRAxisMappingStrategy::OAMS_TRADITIONAL_GIS_ORDER);
@@ -87,7 +86,8 @@ fn failing_transformation() {
     let webmercator = SpatialRef::from_epsg(3857).unwrap();
 
     wgs84.set_axis_mapping_strategy(gdal_sys::OSRAxisMappingStrategy::OAMS_TRADITIONAL_GIS_ORDER);
-    webmercator.set_axis_mapping_strategy(gdal_sys::OSRAxisMappingStrategy::OAMS_TRADITIONAL_GIS_ORDER);
+    webmercator
+        .set_axis_mapping_strategy(gdal_sys::OSRAxisMappingStrategy::OAMS_TRADITIONAL_GIS_ORDER);
 
     let mut x = [1000000.0];
     let mut y = [1000000.0];

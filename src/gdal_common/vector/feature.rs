@@ -1,5 +1,5 @@
 use crate::utils::{_last_null_pointer_err, _string};
-use crate::{Geometry, Layer, Defn};
+use crate::{Defn, Geometry, Layer};
 use gdal_sys::{self, OGRErr, OGRFeatureH, OGRFieldType};
 use libc::{c_double, c_int};
 use std::ffi::CString;

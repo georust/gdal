@@ -1,5 +1,5 @@
-use crate::{CoordTransform, SpatialRef, SpatialRefCommon};
 use crate::utils::{_last_null_pointer_err, _string};
+use crate::{CoordTransform, SpatialRef, SpatialRefCommon};
 use gdal_sys::{self, OGRErr, OGRGeometryH, OGRwkbGeometryType};
 use libc::{c_double, c_int, c_void};
 use std::cell::RefCell;
@@ -207,7 +207,8 @@ impl Geometry {
     }
 
     pub fn transform_to_inplace(&self, spatial_ref: &SpatialRef) -> Result<()> {
-        let rv = unsafe { gdal_sys::OGR_G_TransformTo(self.c_geometry(), spatial_ref.c_spatial_ref()) };
+        let rv =
+            unsafe { gdal_sys::OGR_G_TransformTo(self.c_geometry(), spatial_ref.c_spatial_ref()) };
         if rv != OGRErr::OGRERR_NONE {
             Err(ErrorKind::OgrError {
                 err: rv,
@@ -279,7 +280,7 @@ impl Clone for Geometry {
 #[cfg(test)]
 mod tests {
     use super::Geometry;
-    use crate::{SpatialRefCommon, SpatialRef};
+    use crate::{SpatialRef, SpatialRefCommon};
 
     #[test]
     pub fn test_area() {

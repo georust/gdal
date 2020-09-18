@@ -4,10 +4,9 @@ use libc::c_int;
 use std::ffi::CString;
 use std::ptr::null_mut;
 
-use crate::{Dataset, DatasetCommon, SpatialRefCommon, SpatialRef, Layer, errors::*};
+use crate::{errors::*, Dataset, DatasetCommon, Layer, SpatialRef, SpatialRefCommon};
 
 pub trait VectorDatasetCommon: DatasetCommon {
-
     /// Get number of layers.
     fn count_vector_layers(&self) -> isize {
         (unsafe { gdal_sys::OGR_DS_GetLayerCount(self.c_dataset()) }) as isize

@@ -96,7 +96,6 @@ impl PartialEq for SpatialRef {
 }
 
 impl SpatialRef {
-
     pub fn clone_from_c_obj(c_obj: OGRSpatialReferenceH) -> Result<SpatialRef> {
         let mut_c_obj = unsafe { gdal_sys::OSRClone(c_obj) };
         if mut_c_obj.is_null() {
@@ -109,7 +108,7 @@ impl SpatialRef {
 
 pub trait SpatialRefCommon {
     fn c_spatial_ref(&self) -> OGRSpatialReferenceH;
-    
+
     fn new() -> Result<SpatialRef> {
         let c_obj = unsafe { gdal_sys::OSRNewSpatialReference(ptr::null()) };
         if c_obj.is_null() {
@@ -214,7 +213,9 @@ pub trait SpatialRefCommon {
 
     fn to_pretty_wkt(&self) -> Result<String> {
         let mut c_wkt = ptr::null_mut();
-        let rv = unsafe { gdal_sys::OSRExportToPrettyWkt(self.c_spatial_ref(), &mut c_wkt, false as c_int) };
+        let rv = unsafe {
+            gdal_sys::OSRExportToPrettyWkt(self.c_spatial_ref(), &mut c_wkt, false as c_int)
+        };
         if rv != OGRErr::OGRERR_NONE {
             Err(ErrorKind::OgrError {
                 err: rv,
@@ -227,7 +228,8 @@ pub trait SpatialRefCommon {
 
     fn to_xml(&self) -> Result<String> {
         let mut c_raw_xml = ptr::null_mut();
-        let rv = unsafe { gdal_sys::OSRExportToXML(self.c_spatial_ref(), &mut c_raw_xml, ptr::null()) };
+        let rv =
+            unsafe { gdal_sys::OSRExportToXML(self.c_spatial_ref(), &mut c_raw_xml, ptr::null()) };
         if rv != OGRErr::OGRERR_NONE {
             Err(ErrorKind::OgrError {
                 err: rv,
@@ -309,4 +311,3 @@ impl SpatialRefCommon for SpatialRef {
         self.0
     }
 }
-

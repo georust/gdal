@@ -1,5 +1,8 @@
 use gdal::errors::Error;
-use gdal::{CoordTransform, SpatialRef, SpatialRefCommon, Dataset, DatasetCommon, DriverCommon, Driver, FieldDefn, VectorDatasetCommon, Defn, Feature, VectorLayerCommon};
+use gdal::{
+    CoordTransform, Dataset, DatasetCommon, Defn, Driver, DriverCommon, Feature, FieldDefn,
+    SpatialRef, SpatialRefCommon, VectorDatasetCommon, VectorLayerCommon,
+};
 use std::fs;
 use std::path::Path;
 

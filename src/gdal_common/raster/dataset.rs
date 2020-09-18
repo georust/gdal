@@ -1,17 +1,16 @@
-use crate::{RasterBand, RasterBandCommon, RasterBuffer, GdalType};
 use crate::utils::{_last_cpl_err, _last_null_pointer_err};
+use crate::{GdalType, RasterBand, RasterBandCommon, RasterBuffer};
 use gdal_sys::{self, CPLErr, GDALDataType};
 use libc::{c_double, c_int};
 
 #[cfg(feature = "ndarray")]
 use ndarray::Array2;
 
-use crate::{Dataset, DatasetCommon, errors::*};
+use crate::{errors::*, Dataset, DatasetCommon};
 
 pub type GeoTransform = [c_double; 6];
 
 pub trait RasterDatasetCommon: DatasetCommon {
-
     fn rasterband(&self, band_index: isize) -> Result<RasterBand> {
         unsafe {
             let c_band = gdal_sys::GDALGetRasterBand(self.c_dataset(), band_index as c_int);

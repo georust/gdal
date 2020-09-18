@@ -1,6 +1,6 @@
-use crate::{SpatialRef};
-use crate::utils::{_last_null_pointer_err, _string};
 use super::layer::Layer;
+use crate::utils::{_last_null_pointer_err, _string};
+use crate::SpatialRef;
 use gdal_sys::{
     self, OGRFeatureDefnH, OGRFieldDefnH, OGRFieldType, OGRGeomFieldDefnH, OGRwkbGeometryType,
 };

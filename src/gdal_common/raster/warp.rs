@@ -1,5 +1,5 @@
-use crate::{DatasetCommon, Dataset};
 use crate::utils::_last_cpl_err;
+use crate::{Dataset, DatasetCommon};
 use gdal_sys::{self, CPLErr, GDALResampleAlg};
 use libc::c_double;
 use std::ptr::{null, null_mut};

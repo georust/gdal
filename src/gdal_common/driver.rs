@@ -1,8 +1,11 @@
-use gdal_sys::{self, GDALDriverH, GDALMajorObjectH};
-use crate::{utils::{_string, _last_null_pointer_err}, _register_drivers, Dataset, GdalType, Metadata};
-use std::{ptr, ffi::CString, path::Path};
-use libc::c_int;
 use super::gdal_major_object::MajorObject;
+use crate::{
+    utils::{_last_null_pointer_err, _string},
+    Dataset, GdalType, Metadata, _register_drivers,
+};
+use gdal_sys::{self, GDALDriverH, GDALMajorObjectH};
+use libc::c_int;
+use std::{ffi::CString, path::Path, ptr};
 
 use crate::errors::*;
 
@@ -17,9 +20,8 @@ impl Driver {
 }
 
 pub trait DriverCommon {
-    
     unsafe fn c_driver(&self) -> GDALDriverH;
-    
+
     fn get(name: &str) -> Result<Driver> {
         _register_drivers();
         let c_name = CString::new(name)?;
@@ -50,10 +52,7 @@ pub trait DriverCommon {
         self.create_with_band_type::<u8>(filename, size_x, size_y, bands)
     }
 
-    fn create_vector_only(
-        &self,
-        filename: &Path
-    ) -> Result<Dataset> {
+    fn create_vector_only(&self, filename: &Path) -> Result<Dataset> {
         self.create_with_band_type::<u8>(filename, 0, 0, 0)
     }
 
@@ -88,7 +87,6 @@ impl DriverCommon for Driver {
     unsafe fn c_driver(&self) -> GDALDriverH {
         self.c_driver
     }
-    
 }
 
 impl MajorObject for Driver {

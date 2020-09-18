@@ -1,6 +1,11 @@
+use std::{ops::Add, path::Path};
+
 #[cfg(feature = "datetime")]
 use chrono::Duration;
-use gdal::errors::Error;
+use gdal::{
+    errors::Error, Dataset, DatasetCommon, Defn, Driver, DriverCommon, Feature, FieldDefn,
+    FieldValue, VectorDatasetCommon, VectorLayerCommon,
+};
 
 #[cfg(feature = "datetime")]
 fn run() -> Result<(), Error> {
@@ -12,18 +17,18 @@ fn run() -> Result<(), Error> {
     // Create a new dataset:
     let _ = std::fs::remove_file("/tmp/later.geojson");
     let drv = Driver::get("GeoJSON")?;
-    let mut ds = drv.create(Path::new("/tmp/later.geojson"))?;
+    let mut ds = drv.create_vector_only(Path::new("/tmp/later.geojson"))?;
     let lyr = ds.create_layer()?;
 
     // Copy the origin layer shema to the destination layer:
     for field in layer_a.defn().fields() {
         let field_defn = FieldDefn::new(&field.name(), field.field_type())?;
         field_defn.set_width(field.width());
-        field_defn.add_to_layer(lyr)?;
+        field_defn.add_to_layer(&lyr)?;
     }
 
     // Get the definition to use on each feature:
-    let defn = Defn::from_layer(lyr);
+    let defn = Defn::from_layer(&lyr);
 
     for feature_a in layer_a.features() {
         let mut ft = Feature::new(&defn)?;
@@ -49,7 +54,7 @@ fn run() -> Result<(), Error> {
             )?;
         }
         // Add the feature to the layer:
-        ft.create(lyr)?;
+        ft.create(&lyr)?;
     }
     Ok(())
 }

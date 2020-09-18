@@ -26,9 +26,9 @@ mod layer;
 pub use dataset::VectorDatasetCommon;
 pub use defn::{Defn, Field, FieldIterator};
 pub use feature::{Feature, FieldValue};
+pub use gdal_sys::{OGRFieldType, OGRwkbGeometryType};
 pub use geometry::Geometry;
 pub use layer::{FeatureIterator, FieldDefn, Layer, VectorLayerCommon};
-pub use gdal_sys::{OGRFieldType, OGRwkbGeometryType};
 
 use crate::errors::Result;
 

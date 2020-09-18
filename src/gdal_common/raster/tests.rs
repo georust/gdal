@@ -1,10 +1,12 @@
-use crate::{DatasetCommon, Dataset, RasterBuffer, RasterDatasetCommon, DriverCommon, Driver, Metadata};
+use crate::{
+    Dataset, DatasetCommon, Driver, DriverCommon, Metadata, RasterBuffer, RasterDatasetCommon,
+};
 use gdal_sys::GDALDataType;
 use std::path::Path;
 
+use super::RasterBandCommon;
 #[cfg(feature = "ndarray")]
 use ndarray::arr2;
-use super::RasterBandCommon;
 
 macro_rules! fixture {
     ($name:expr) => {
@@ -72,7 +74,9 @@ fn test_get_projection() {
 #[test]
 fn test_read_raster() {
     let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
-    let rv = dataset.read_raster::<u8>(1, (20, 30), (2, 3), (2, 3)).unwrap();
+    let rv = dataset
+        .read_raster::<u8>(1, (20, 30), (2, 3), (2, 3))
+        .unwrap();
     assert_eq!(rv.size.0, 2);
     assert_eq!(rv.size.1, 3);
     assert_eq!(rv.data, vec!(7, 7, 7, 10, 8, 12));
@@ -94,11 +98,15 @@ fn test_write_raster() {
     assert!(res.is_ok());
 
     // read a pixel from the left side
-    let left = dataset.read_raster::<u8>(1, (5, 5), (1, 1), (1, 1)).unwrap();
+    let left = dataset
+        .read_raster::<u8>(1, (5, 5), (1, 1), (1, 1))
+        .unwrap();
     assert_eq!(left.data[0], 50u8);
 
     // read a pixel from the right side
-    let right = dataset.read_raster::<u8>(1, (15, 5), (1, 1), (1, 1)).unwrap();
+    let right = dataset
+        .read_raster::<u8>(1, (15, 5), (1, 1), (1, 1))
+        .unwrap();
     assert_eq!(right.data[0], 20u8);
 }
 
@@ -157,7 +165,9 @@ fn test_create() {
 #[test]
 fn test_create_with_band_type() {
     let driver = Driver::get("MEM").unwrap();
-    let dataset = driver.create_with_band_type::<f32>(Path::new(""), 10, 20, 3).unwrap();
+    let dataset = driver
+        .create_with_band_type::<f32>(Path::new(""), 10, 20, 3)
+        .unwrap();
     assert_eq!(dataset.size(), (10, 20));
     assert_eq!(dataset.raster_count(), 3);
     assert_eq!(dataset.driver().short_name(), "MEM");

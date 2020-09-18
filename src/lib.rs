@@ -21,8 +21,8 @@
 #![crate_type = "lib"]
 
 pub mod errors;
-pub mod utils;
 mod gdal_common;
+pub mod utils;
 pub use gdal_common::*;
 
 #[cfg(any(feature = "gdal_2_2", feature = "gdal_2_3", feature = "gdal_2_4"))]

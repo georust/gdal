@@ -1,7 +1,6 @@
-
-use crate::{CoordTransform, SpatialRef, SpatialRefCommon, Geometry};
 use crate::assert_almost_eq;
 use crate::errors::ErrorKind;
+use crate::{CoordTransform, Geometry, SpatialRef, SpatialRefCommon};
 
 #[test]
 fn from_proj4_to_wkt() {
@@ -9,7 +8,7 @@ fn from_proj4_to_wkt() {
         "+proj=laea +lat_0=52 +lon_0=10 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +units=m +no_defs",
     )
     .unwrap();
-  
+
     assert_eq!(spatial_ref.to_wkt().unwrap(), "PROJCS[\"unnamed\",GEOGCS[\"GRS 1980(IUGG, 1980)\",DATUM[\"unknown\",SPHEROID[\"GRS80\",6378137,298.257222101]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433]],PROJECTION[\"Lambert_Azimuthal_Equal_Area\"],PARAMETER[\"latitude_of_center\",52],PARAMETER[\"longitude_of_center\",10],PARAMETER[\"false_easting\",4321000],PARAMETER[\"false_northing\",3210000],UNIT[\"Meter\",1]]");
 }
 
@@ -57,7 +56,6 @@ fn transform_ogr_geometry() {
     geom.transform_inplace(&htransform).unwrap();
     assert_eq!(expected_value, geom.wkt().unwrap());
 }
-
 
 #[test]
 fn failing_transformation() {

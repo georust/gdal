@@ -1,18 +1,18 @@
 pub mod config;
 
-mod raster;
-mod vector;
-mod version;
-mod spatial_ref;
-mod metadata;
 mod dataset;
 mod driver;
 mod gdal_major_object;
+mod metadata;
+mod raster;
+mod spatial_ref;
+mod vector;
+mod version;
 
-pub use {dataset::*, driver::*, metadata::*, spatial_ref::*, version::*, raster::*, vector::*};
+pub use {dataset::*, driver::*, metadata::*, raster::*, spatial_ref::*, vector::*, version::*};
 
-use std::sync::Once;
 use gdal_sys;
+use std::sync::Once;
 
 static START: Once = Once::new();
 
@@ -23,4 +23,3 @@ pub fn _register_drivers() {
         });
     }
 }
-

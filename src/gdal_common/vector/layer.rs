@@ -7,7 +7,7 @@ use libc::c_int;
 use std::ffi::CString;
 use std::ptr::null_mut;
 
-use crate::{Dataset, errors::*, Metadata, SpatialRef, Feature, FieldValue, Geometry, Defn};
+use crate::{errors::*, Dataset, Defn, Feature, FieldValue, Geometry, Metadata, SpatialRef};
 
 /// Layer in a vector dataset
 ///
@@ -24,11 +24,10 @@ use crate::{Dataset, errors::*, Metadata, SpatialRef, Feature, FieldValue, Geome
 pub struct Layer<'a> {
     c_layer: OGRLayerH,
     defn: Defn,
-    owning_dataset: &'a Dataset
+    owning_dataset: &'a Dataset,
 }
 
-impl <'a> Layer<'a> {
-
+impl<'a> Layer<'a> {
     pub fn c_layer(&self) -> OGRLayerH {
         self.c_layer
     }
@@ -36,7 +35,7 @@ impl <'a> Layer<'a> {
     pub fn owning_dataset(&self) -> &'a Dataset {
         self.owning_dataset
     }
-    
+
     pub fn defn(&self) -> &Defn {
         &self.defn
     }
@@ -44,20 +43,23 @@ impl <'a> Layer<'a> {
     pub unsafe fn from_c_layer(c_layer: OGRLayerH, owning_dataset: &Dataset) -> Layer {
         let c_defn = gdal_sys::OGR_L_GetLayerDefn(c_layer);
         let defn = Defn::_with_c_defn(c_defn);
-        Layer { c_layer, defn, owning_dataset }
+        Layer {
+            c_layer,
+            defn,
+            owning_dataset,
+        }
     }
 }
 
-impl <'a> MajorObject for Layer<'a> {
+impl<'a> MajorObject for Layer<'a> {
     unsafe fn gdal_object_ptr(&self) -> GDALMajorObjectH {
         self.c_layer
     }
 }
 
-impl <'a> Metadata for Layer<'a> {}
+impl<'a> Metadata for Layer<'a> {}
 
 pub trait VectorLayerCommon<'a> {
-    
     unsafe fn c_layer(&self) -> OGRLayerH;
     fn defn(&self) -> &Defn;
     fn layer_ref(&self) -> &Layer<'a>;
@@ -150,7 +152,7 @@ pub trait VectorLayerCommon<'a> {
     }
 }
 
-impl <'a> VectorLayerCommon<'a> for Layer<'a> {
+impl<'a> VectorLayerCommon<'a> for Layer<'a> {
     unsafe fn c_layer(&self) -> OGRLayerH {
         self.c_layer
     }
@@ -160,7 +162,6 @@ impl <'a> VectorLayerCommon<'a> for Layer<'a> {
     fn layer_ref(&self) -> &Layer<'a> {
         self
     }
-
 }
 
 pub struct FeatureIterator<'a> {

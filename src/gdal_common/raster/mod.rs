@@ -1,9 +1,9 @@
 //! GDAL Raster Data
 
-pub use dataset::{RasterDatasetCommon};
+pub use dataset::RasterDatasetCommon;
 pub use rasterband::{RasterBand, RasterBandCommon};
-pub use warp::reproject;
 pub use types::GdalType;
+pub use warp::reproject;
 
 mod dataset;
 mod rasterband;
