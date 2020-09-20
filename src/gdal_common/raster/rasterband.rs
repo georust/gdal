@@ -16,8 +16,13 @@ pub struct RasterBand<'a> {
 
 pub trait RasterBandCommon<'a> {
     fn owning_dataset(&self) -> &'a Dataset;
+
+    /// # Safety
+    /// This method returns a C pointer
     unsafe fn c_rasterband(&self) -> GDALRasterBandH;
 
+    /// # Safety
+    /// This method operates on a C pointer
     unsafe fn from_c_ptr(
         c_rasterband: GDALRasterBandH,
         owning_dataset: &'a Dataset,
@@ -92,7 +97,7 @@ pub trait RasterBandCommon<'a> {
             )
         };
         if rv != CPLErr::CE_None {
-            Err(_last_cpl_err(rv))?;
+            return Err(_last_cpl_err(rv).into());
         }
 
         unsafe {
@@ -136,7 +141,7 @@ pub trait RasterBandCommon<'a> {
             )
         };
         if values != CPLErr::CE_None {
-            Err(_last_cpl_err(values))?;
+            return Err(_last_cpl_err(values).into());
         }
 
         unsafe {
@@ -180,7 +185,7 @@ pub trait RasterBandCommon<'a> {
             )
         };
         if rv != CPLErr::CE_None {
-            Err(_last_cpl_err(rv))?;
+            return Err(_last_cpl_err(rv).into());
         }
 
         unsafe {
@@ -219,7 +224,7 @@ pub trait RasterBandCommon<'a> {
             )
         };
         if rv != CPLErr::CE_None {
-            Err(_last_cpl_err(rv))?;
+            return Err(_last_cpl_err(rv).into());
         }
         Ok(())
     }
@@ -241,7 +246,7 @@ pub trait RasterBandCommon<'a> {
     fn set_no_data_value(&self, no_data: f64) -> Result<()> {
         let rv = unsafe { gdal_sys::GDALSetRasterNoDataValue(self.c_rasterband(), no_data) };
         if rv != CPLErr::CE_None {
-            Err(_last_cpl_err(rv))?;
+            return Err(_last_cpl_err(rv).into());
         }
         Ok(())
     }
@@ -280,7 +285,7 @@ pub trait RasterBandCommon<'a> {
             )
         };
         if rv != CPLErr::CE_None {
-            Err(_last_cpl_err(rv))?;
+            return Err(_last_cpl_err(rv).into());
         }
         Ok((block_size_x as usize, block_size_y as usize))
     }

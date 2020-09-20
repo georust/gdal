@@ -21,7 +21,7 @@ pub trait VectorDatasetCommon: DatasetCommon {
     fn layer(&mut self, idx: isize) -> Result<Layer> {
         let c_layer = unsafe { gdal_sys::OGR_DS_GetLayer(self.c_dataset(), idx as c_int) };
         if c_layer.is_null() {
-            Err(_last_null_pointer_err("OGR_DS_GetLayer"))?;
+            return Err(_last_null_pointer_err("OGR_DS_GetLayer").into());
         }
         Ok(self._child_layer(c_layer))
     }
@@ -31,7 +31,7 @@ pub trait VectorDatasetCommon: DatasetCommon {
         let c_name = CString::new(name)?;
         let c_layer = unsafe { gdal_sys::OGR_DS_GetLayerByName(self.c_dataset(), c_name.as_ptr()) };
         if c_layer.is_null() {
-            Err(_last_null_pointer_err("OGR_DS_GetLayerByName"))?;
+            return Err(_last_null_pointer_err("OGR_DS_GetLayerByName").into());
         }
         Ok(self._child_layer(c_layer))
     }
@@ -49,7 +49,7 @@ pub trait VectorDatasetCommon: DatasetCommon {
             )
         };
         if c_layer.is_null() {
-            Err(_last_null_pointer_err("OGR_DS_CreateLayer"))?;
+            return Err(_last_null_pointer_err("OGR_DS_CreateLayer").into());
         };
         Ok(self._child_layer(c_layer))
     }
@@ -71,7 +71,7 @@ pub trait VectorDatasetCommon: DatasetCommon {
             gdal_sys::OGR_DS_CreateLayer(self.c_dataset(), c_name.as_ptr(), c_srs, ty, null_mut())
         };
         if c_layer.is_null() {
-            Err(_last_null_pointer_err("OGR_DS_CreateLayer"))?;
+            return Err(_last_null_pointer_err("OGR_DS_CreateLayer").into());
         };
         Ok(self._child_layer(c_layer))
     }

@@ -11,7 +11,6 @@ mod version;
 
 pub use {dataset::*, driver::*, metadata::*, raster::*, spatial_ref::*, vector::*, version::*};
 
-use gdal_sys;
 use std::sync::Once;
 
 static START: Once = Once::new();

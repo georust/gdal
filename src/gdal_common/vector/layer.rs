@@ -40,6 +40,9 @@ impl<'a> Layer<'a> {
         &self.defn
     }
 
+    /// Creates a new `Layer` from a C pointer.
+    /// # Safety
+    /// This function operates on a C pointer
     pub unsafe fn from_c_layer(c_layer: OGRLayerH, owning_dataset: &Dataset) -> Layer {
         let c_defn = gdal_sys::OGR_L_GetLayerDefn(c_layer);
         let defn = Defn::_with_c_defn(c_defn);
@@ -60,6 +63,9 @@ impl<'a> MajorObject for Layer<'a> {
 impl<'a> Metadata for Layer<'a> {}
 
 pub trait VectorLayerCommon<'a> {
+    /// Returns the `Layers` C pointer.
+    /// # Safety
+    /// This function operates on a C pointer
     unsafe fn c_layer(&self) -> OGRLayerH;
     fn defn(&self) -> &Defn;
     fn layer_ref(&self) -> &Layer<'a>;
@@ -80,7 +86,7 @@ pub trait VectorLayerCommon<'a> {
     /// Get the name of this layer.
     fn name(&self) -> String {
         let rv = unsafe { gdal_sys::OGR_L_GetName(self.c_layer()) };
-        _string(rv)
+        unsafe { _string(rv) }
     }
 
     fn create_defn_fields(&self, fields_def: &[(&str, OGRFieldType::Type)]) -> Result<()> {
@@ -95,17 +101,19 @@ pub trait VectorLayerCommon<'a> {
         let c_geometry = unsafe { geometry.into_c_geometry() };
         let rv = unsafe { gdal_sys::OGR_F_SetGeometryDirectly(c_feature, c_geometry) };
         if rv != OGRErr::OGRERR_NONE {
-            Err(ErrorKind::OgrError {
+            return Err(ErrorKind::OgrError {
                 err: rv,
                 method_name: "OGR_F_SetGeometryDirectly",
-            })?;
+            }
+            .into());
         }
         let rv = unsafe { gdal_sys::OGR_L_CreateFeature(self.c_layer(), c_feature) };
         if rv != OGRErr::OGRERR_NONE {
-            Err(ErrorKind::OgrError {
+            return Err(ErrorKind::OgrError {
                 err: rv,
                 method_name: "OGR_L_CreateFeature",
-            })?;
+            }
+            .into());
         }
         Ok(())
     }
@@ -116,7 +124,7 @@ pub trait VectorLayerCommon<'a> {
         field_names: &[&str],
         values: &[FieldValue],
     ) -> Result<()> {
-        let mut ft = Feature::new(&self.defn())?;
+        let mut ft = Feature::try_new(&self.defn())?;
         ft.set_geometry(geometry)?;
         for (fd, val) in field_names.iter().zip(values.iter()) {
             ft.set_field(fd, val)?;
@@ -135,10 +143,11 @@ pub trait VectorLayerCommon<'a> {
         let force = if force { 1 } else { 0 };
         let rv = unsafe { gdal_sys::OGR_L_GetExtent(self.c_layer(), &mut envelope, force) };
         if rv != OGRErr::OGRERR_NONE {
-            Err(ErrorKind::OgrError {
+            return Err(ErrorKind::OgrError {
                 err: rv,
                 method_name: "OGR_L_GetExtent",
-            })?;
+            }
+            .into());
         }
         Ok(envelope)
     }
@@ -146,7 +155,7 @@ pub trait VectorLayerCommon<'a> {
     fn spatial_reference(&self) -> Result<SpatialRef> {
         let c_obj = unsafe { gdal_sys::OGR_L_GetSpatialRef(self.c_layer()) };
         if c_obj.is_null() {
-            Err(_last_null_pointer_err("OGR_L_GetSpatialRef"))?;
+            return Err(_last_null_pointer_err("OGR_L_GetSpatialRef").into());
         }
         SpatialRef::clone_from_c_obj(c_obj)
     }
@@ -209,7 +218,7 @@ impl FieldDefn {
         let c_str = CString::new(name)?;
         let c_obj = unsafe { gdal_sys::OGR_Fld_Create(c_str.as_ptr(), field_type) };
         if c_obj.is_null() {
-            Err(_last_null_pointer_err("OGR_Fld_Create"))?;
+            return Err(_last_null_pointer_err("OGR_Fld_Create").into());
         };
         Ok(FieldDefn { c_obj })
     }
@@ -222,10 +231,11 @@ impl FieldDefn {
     pub fn add_to_layer(&self, layer: &Layer) -> Result<()> {
         let rv = unsafe { gdal_sys::OGR_L_CreateField(layer.c_layer(), self.c_obj, 1) };
         if rv != OGRErr::OGRERR_NONE {
-            Err(ErrorKind::OgrError {
+            return Err(ErrorKind::OgrError {
                 err: rv,
                 method_name: "OGR_L_CreateFeature",
-            })?;
+            }
+            .into());
         }
         Ok(())
     }

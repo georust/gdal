@@ -40,10 +40,10 @@ fn test_layer_extent() {
     let layer = ds.layer(0).unwrap();
     assert!(layer.get_extent(false).is_err());
     let extent = layer.get_extent(true).unwrap();
-    assert_almost_eq(extent.MinX, 26.1007683999999998);
-    assert_almost_eq(extent.MaxX, 26.1035150000000016);
-    assert_almost_eq(extent.MinY, 44.4298581999999982);
-    assert_almost_eq(extent.MaxY, 44.4318178999999986);
+    assert_almost_eq(extent.MinX, 26.100_768_4);
+    assert_almost_eq(extent.MaxX, 26.103_515);
+    assert_almost_eq(extent.MinY, 44.429_858_2);
+    assert_almost_eq(extent.MaxY, 44.431_817_9);
 }
 
 #[test]

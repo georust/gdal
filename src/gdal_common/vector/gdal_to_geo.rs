@@ -1,6 +1,5 @@
 use crate::Geometry;
 use gdal_sys::{self, OGRwkbGeometryType};
-use geo_types;
 
 impl From<Geometry> for geo_types::Geometry<f64> {
     fn from(geo: Geometry) -> geo_types::Geometry<f64> {

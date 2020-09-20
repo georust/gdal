@@ -1,7 +1,3 @@
-#[cfg(feature = "bindgen")]
-use bindgen;
-use pkg_config;
-
 use pkg_config::Config;
 use std::env;
 use std::fs;

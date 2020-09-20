@@ -1,10 +1,9 @@
 use crate::utils::_string;
-use gdal_sys;
 use std::ffi::CString;
 
 pub fn version_info(key: &str) -> String {
     let c_key = CString::new(key.as_bytes()).unwrap();
-    _string(unsafe { gdal_sys::GDALVersionInfo(c_key.as_ptr()) })
+    unsafe { _string(gdal_sys::GDALVersionInfo(c_key.as_ptr())) }
 }
 
 #[cfg(test)]

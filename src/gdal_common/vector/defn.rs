@@ -16,10 +16,14 @@ pub struct Defn {
 }
 
 impl Defn {
+    /// # Safety
+    /// This method operates on a C pointer
     pub unsafe fn _with_c_defn(c_defn: OGRFeatureDefnH) -> Defn {
         Defn { c_defn }
     }
 
+    /// # Safety
+    /// This method returns a C pointer    
     pub unsafe fn c_defn(&self) -> OGRFeatureDefnH {
         self.c_defn
     }
@@ -87,7 +91,7 @@ impl<'a> Field<'a> {
     /// Get the name of this field.
     pub fn name(&'a self) -> String {
         let rv = unsafe { gdal_sys::OGR_Fld_GetNameRef(self.c_field_defn) };
-        _string(rv)
+        unsafe { _string(rv) }
     }
 
     pub fn field_type(&'a self) -> OGRFieldType::Type {
@@ -139,7 +143,7 @@ impl<'a> GeomField<'a> {
     /// Get the name of this field.
     pub fn name(&'a self) -> String {
         let rv = unsafe { gdal_sys::OGR_GFld_GetNameRef(self.c_field_defn) };
-        _string(rv)
+        unsafe { _string(rv) }
     }
 
     pub fn field_type(&'a self) -> OGRwkbGeometryType::Type {
@@ -149,7 +153,7 @@ impl<'a> GeomField<'a> {
     pub fn spatial_ref(&'a self) -> Result<SpatialRef> {
         let c_obj = unsafe { gdal_sys::OGR_GFld_GetSpatialRef(self.c_field_defn) };
         if c_obj.is_null() {
-            Err(_last_null_pointer_err("OGR_GFld_GetSpatialRef"))?;
+            return Err(_last_null_pointer_err("OGR_GFld_GetSpatialRef").into());
         }
         SpatialRef::clone_from_c_obj(c_obj)
     }

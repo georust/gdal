@@ -14,12 +14,18 @@ pub struct Driver {
 }
 
 impl Driver {
+    /// Creates a new `Driver` from a C pointer.
+    /// # Safety
+    /// This function operates on a C pointer
     pub unsafe fn from_c_driver(c_driver: GDALDriverH) -> Driver {
         Driver { c_driver }
     }
 }
 
 pub trait DriverCommon {
+    /// Returns the `Driver` C pointer.
+    /// # Safety
+    /// This function operates on a C pointer
     unsafe fn c_driver(&self) -> GDALDriverH;
 
     fn get(name: &str) -> Result<Driver> {
@@ -27,19 +33,19 @@ pub trait DriverCommon {
         let c_name = CString::new(name)?;
         let c_driver = unsafe { gdal_sys::GDALGetDriverByName(c_name.as_ptr()) };
         if c_driver.is_null() {
-            Err(_last_null_pointer_err("GDALGetDriverByName"))?;
+            return Err(_last_null_pointer_err("GDALGetDriverByName").into());
         };
         Ok(Driver { c_driver })
     }
 
     fn short_name(&self) -> String {
         let rv = unsafe { gdal_sys::GDALGetDriverShortName(self.c_driver()) };
-        _string(rv)
+        unsafe { _string(rv) }
     }
 
     fn long_name(&self) -> String {
         let rv = unsafe { gdal_sys::GDALGetDriverLongName(self.c_driver()) };
-        _string(rv)
+        unsafe { _string(rv) }
     }
 
     fn create(
@@ -77,7 +83,7 @@ pub trait DriverCommon {
             )
         };
         if c_dataset.is_null() {
-            Err(_last_null_pointer_err("GDALCreate"))?;
+            return Err(_last_null_pointer_err("GDALCreate").into());
         };
         Ok(unsafe { Dataset::from_c_dataset(c_dataset) })
     }

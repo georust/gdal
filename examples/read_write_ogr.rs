@@ -44,7 +44,7 @@ fn run() -> Result<(), Error> {
         // Get a new transformed geometry:
         let new_geom = geom.transform(&htransform)?;
         // Create the new feature, set its geometry:
-        let mut ft = Feature::new(&defn)?;
+        let mut ft = Feature::try_new(&defn)?;
         ft.set_geometry(new_geom)?;
         // copy each field value of the feature:
         for fd in &fields_defn {

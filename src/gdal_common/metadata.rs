@@ -8,9 +8,10 @@ pub trait Metadata: MajorObject {
     fn description(&self) -> Result<String> {
         let c_res = unsafe { gdal_sys::GDALGetDescription(self.gdal_object_ptr()) };
         if c_res.is_null() {
-            Err(_last_null_pointer_err("GDALGetDescription"))?;
+            return Err(_last_null_pointer_err("GDALGetDescription").into());
         }
-        Ok(_string(c_res))
+        let rstr = unsafe { _string(c_res) };
+        Ok(rstr)
     }
 
     fn metadata_item(&self, key: &str, domain: &str) -> Option<String> {
@@ -24,7 +25,9 @@ pub trait Metadata: MajorObject {
                     )
                 };
                 if !c_res.is_null() {
-                    return Some(_string(c_res));
+                    let rstr = unsafe { _string(c_res) };
+
+                    return Some(rstr);
                 }
             }
         }
@@ -45,7 +48,7 @@ pub trait Metadata: MajorObject {
             )
         };
         if c_res != CPLErr::CE_None {
-            Err(_last_cpl_err(c_res))?;
+            return Err(_last_cpl_err(c_res).into());
         }
         Ok(())
     }

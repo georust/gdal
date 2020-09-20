@@ -31,7 +31,7 @@ fn run() -> Result<(), Error> {
     let defn = Defn::from_layer(&lyr);
 
     for feature_a in layer_a.features() {
-        let mut ft = Feature::new(&defn)?;
+        let mut ft = Feature::try_new(&defn)?;
         ft.set_geometry(feature_a.geometry().clone())?;
         // copy each field value of the feature:
         for field in defn.fields() {

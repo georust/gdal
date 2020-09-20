@@ -14,6 +14,9 @@ pub struct Dataset {
 }
 
 impl Dataset {
+    /// Creates a new `Dataset` from a C pointer.
+    /// # Safety
+    /// This function operates on a C pointer
     pub unsafe fn from_c_dataset(c_dataset: GDALDatasetH) -> Dataset {
         Dataset { c_dataset }
     }
@@ -52,9 +55,9 @@ pub trait DatasetCommon: AsRef<Dataset> {
     fn open_ex(
         path: &Path,
         open_flags: Option<u32>,
-        allowed_drivers: Option<&str>,
-        open_options: Option<&str>,
-        sibling_files: Option<&str>,
+        _allowed_drivers: Option<&str>,
+        _open_options: Option<&str>,
+        _sibling_files: Option<&str>,
     ) -> Result<Dataset> {
         _register_drivers();
         let filename = path.to_string_lossy();
@@ -71,18 +74,21 @@ pub trait DatasetCommon: AsRef<Dataset> {
             )
         };
         if c_dataset.is_null() {
-            Err(_last_null_pointer_err("GDALOpenEx"))?;
+            return Err(_last_null_pointer_err("GDALOpenEx").into());
         }
         Ok(Dataset { c_dataset })
     }
 
+    /// Creates a new `Driver` from a C pointer.
+    /// # Safety
+    /// This function operates on a C pointer
     unsafe fn from_c_ptr(c_dataset: GDALDatasetH) -> Dataset {
         Dataset { c_dataset }
     }
 
     fn projection(&self) -> String {
         let rv = unsafe { gdal_sys::GDALGetProjectionRef(self.c_dataset()) };
-        _string(rv)
+        unsafe { _string(rv) }
     }
 
     fn set_projection(&self, projection: &str) -> Result<()> {
@@ -105,7 +111,7 @@ pub trait DatasetCommon: AsRef<Dataset> {
             )
         };
         if c_dataset.is_null() {
-            Err(_last_null_pointer_err("GDALCreateCopy"))?;
+            return Err(_last_null_pointer_err("GDALCreateCopy").into());
         }
         Ok(unsafe { Dataset::from_c_dataset(c_dataset) })
     }

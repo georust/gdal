@@ -32,7 +32,7 @@ fn test_geom_fields() {
         .collect::<Vec<_>>();
     let ok_names_types = vec![("", OGRwkbGeometryType::wkbLineString)]
         .iter()
-        .map(|s| (s.0.to_string(), s.1.clone()))
+        .map(|s| (s.0.to_string(), s.1))
         .collect::<Vec<_>>();
     assert_eq!(name_list, ok_names_types);
 

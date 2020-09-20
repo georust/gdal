@@ -184,6 +184,7 @@ fn test_create_copy() {
 }
 
 #[test]
+#[allow(clippy::float_cmp)]
 fn test_geo_transform() {
     let driver = Driver::get("MEM").unwrap();
     let dataset = driver.create(Path::new(""), 20, 10, 1).unwrap();
@@ -193,6 +194,7 @@ fn test_geo_transform() {
 }
 
 #[test]
+#[allow(clippy::float_cmp)]
 fn test_get_driver_by_name() {
     let missing_driver = Driver::get("wtf");
     assert!(missing_driver.is_err());
@@ -339,8 +341,8 @@ fn test_set_no_data_value() {
     let dataset = driver.create(Path::new(""), 20, 10, 1).unwrap();
     let rasterband = dataset.rasterband(1).unwrap();
     assert_eq!(rasterband.no_data_value(), None);
-    assert!(rasterband.set_no_data_value(3.14).is_ok());
-    assert_eq!(rasterband.no_data_value(), Some(3.14));
+    assert!(rasterband.set_no_data_value(3.5).is_ok());
+    assert_eq!(rasterband.no_data_value(), Some(3.5));
 }
 
 #[test]

@@ -24,7 +24,7 @@ impl CoordTransform {
     pub fn new(sp_ref1: &SpatialRef, sp_ref2: &SpatialRef) -> Result<CoordTransform> {
         let c_obj = unsafe { gdal_sys::OCTNewCoordinateTransformation(sp_ref1.0, sp_ref2.0) };
         if c_obj.is_null() {
-            Err(_last_null_pointer_err("OCTNewCoordinateTransformation"))?;
+            return Err(_last_null_pointer_err("OCTNewCoordinateTransformation").into());
         }
         Ok(CoordTransform {
             inner: c_obj,
@@ -57,13 +57,14 @@ impl CoordTransform {
                     Some(msg)
                 }
             } else {
-                Err(err)?
+                return Err(err.into());
             };
             Err(ErrorKind::InvalidCoordinateRange {
                 from: self.from.clone(),
                 to: self.to.clone(),
                 msg,
-            })?
+            }
+            .into())
         }
     }
 
@@ -99,7 +100,7 @@ impl SpatialRef {
     pub fn clone_from_c_obj(c_obj: OGRSpatialReferenceH) -> Result<SpatialRef> {
         let mut_c_obj = unsafe { gdal_sys::OSRClone(c_obj) };
         if mut_c_obj.is_null() {
-            Err(_last_null_pointer_err("OSRClone"))?
+            Err(_last_null_pointer_err("OSRClone").into())
         } else {
             Ok(SpatialRef(mut_c_obj))
         }
@@ -109,10 +110,10 @@ impl SpatialRef {
 pub trait SpatialRefCommon {
     fn c_spatial_ref(&self) -> OGRSpatialReferenceH;
 
-    fn new() -> Result<SpatialRef> {
+    fn try_new() -> Result<SpatialRef> {
         let c_obj = unsafe { gdal_sys::OSRNewSpatialReference(ptr::null()) };
         if c_obj.is_null() {
-            Err(_last_null_pointer_err("OSRNewSpatialReference"))?;
+            return Err(_last_null_pointer_err("OSRNewSpatialReference").into());
         }
         Ok(SpatialRef(c_obj))
     }
@@ -120,15 +121,16 @@ pub trait SpatialRefCommon {
     fn from_definition(definition: &str) -> Result<SpatialRef> {
         let c_obj = unsafe { gdal_sys::OSRNewSpatialReference(ptr::null()) };
         if c_obj.is_null() {
-            Err(_last_null_pointer_err("OSRNewSpatialReference"))?;
+            return Err(_last_null_pointer_err("OSRNewSpatialReference").into());
         }
         let rv =
             unsafe { gdal_sys::OSRSetFromUserInput(c_obj, CString::new(definition)?.as_ptr()) };
         if rv != OGRErr::OGRERR_NONE {
-            Err(ErrorKind::OgrError {
+            return Err(ErrorKind::OgrError {
                 err: rv,
                 method_name: "OSRSetFromUserInput",
-            })?;
+            }
+            .into());
         }
         Ok(SpatialRef(c_obj))
     }
@@ -137,7 +139,7 @@ pub trait SpatialRefCommon {
         let c_str = CString::new(wkt)?;
         let c_obj = unsafe { gdal_sys::OSRNewSpatialReference(c_str.as_ptr()) };
         if c_obj.is_null() {
-            Err(_last_null_pointer_err("OSRNewSpatialReference"))?;
+            return Err(_last_null_pointer_err("OSRNewSpatialReference").into());
         }
         Ok(SpatialRef(c_obj))
     }
@@ -147,13 +149,13 @@ pub trait SpatialRefCommon {
         let c_obj = unsafe { gdal_sys::OSRNewSpatialReference(null_ptr) };
         let rv = unsafe { gdal_sys::OSRImportFromEPSG(c_obj, epsg_code as c_int) };
         if rv != OGRErr::OGRERR_NONE {
-            Err(ErrorKind::OgrError {
+            return Err(ErrorKind::OgrError {
                 err: rv,
                 method_name: "OSRImportFromEPSG",
-            })?
-        } else {
-            Ok(SpatialRef(c_obj))
+            }
+            .into());
         }
+        Ok(SpatialRef(c_obj))
     }
 
     fn from_proj4(proj4_string: &str) -> Result<SpatialRef> {
@@ -162,13 +164,13 @@ pub trait SpatialRefCommon {
         let c_obj = unsafe { gdal_sys::OSRNewSpatialReference(null_ptr) };
         let rv = unsafe { gdal_sys::OSRImportFromProj4(c_obj, c_str.as_ptr()) };
         if rv != OGRErr::OGRERR_NONE {
-            Err(ErrorKind::OgrError {
+            return Err(ErrorKind::OgrError {
                 err: rv,
                 method_name: "OSRImportFromProj4",
-            })?
-        } else {
-            Ok(SpatialRef(c_obj))
+            }
+            .into());
         }
+        Ok(SpatialRef(c_obj))
     }
 
     fn from_esri(esri_wkt: &str) -> Result<SpatialRef> {
@@ -181,7 +183,8 @@ pub trait SpatialRefCommon {
             Err(ErrorKind::OgrError {
                 err: rv,
                 method_name: "OSRImportFromESRI",
-            })?
+            }
+            .into())
         } else {
             Ok(SpatialRef(c_obj))
         }
@@ -191,22 +194,24 @@ pub trait SpatialRefCommon {
         let mut c_wkt = ptr::null_mut();
         let rv = unsafe { gdal_sys::OSRExportToWkt(self.c_spatial_ref(), &mut c_wkt) };
         if rv != OGRErr::OGRERR_NONE {
-            Err(ErrorKind::OgrError {
+            return Err(ErrorKind::OgrError {
                 err: rv,
                 method_name: "OSRExportToWkt",
-            })?
-        } else {
-            Ok(_string(c_wkt))
+            }
+            .into());
         }
+        let wkt = unsafe { _string(c_wkt) };
+        Ok(wkt)
     }
 
     fn morph_to_esri(&self) -> Result<()> {
         let rv = unsafe { gdal_sys::OSRMorphToESRI(self.c_spatial_ref()) };
         if rv != OGRErr::OGRERR_NONE {
-            Err(ErrorKind::OgrError {
+            return Err(ErrorKind::OgrError {
                 err: rv,
                 method_name: "OSRMorphToESRI",
-            })?;
+            }
+            .into());
         }
         Ok(())
     }
@@ -217,13 +222,14 @@ pub trait SpatialRefCommon {
             gdal_sys::OSRExportToPrettyWkt(self.c_spatial_ref(), &mut c_wkt, false as c_int)
         };
         if rv != OGRErr::OGRERR_NONE {
-            Err(ErrorKind::OgrError {
+            return Err(ErrorKind::OgrError {
                 err: rv,
                 method_name: "OSRExportToPrettyWkt",
-            })?
-        } else {
-            Ok(_string(c_wkt))
+            }
+            .into());
         }
+        let wkt = unsafe { _string(c_wkt) };
+        Ok(wkt)
     }
 
     fn to_xml(&self) -> Result<String> {
@@ -231,13 +237,14 @@ pub trait SpatialRefCommon {
         let rv =
             unsafe { gdal_sys::OSRExportToXML(self.c_spatial_ref(), &mut c_raw_xml, ptr::null()) };
         if rv != OGRErr::OGRERR_NONE {
-            Err(ErrorKind::OgrError {
+            return Err(ErrorKind::OgrError {
                 err: rv,
                 method_name: "OSRExportToXML",
-            })?
-        } else {
-            Ok(_string(c_raw_xml))
+            }
+            .into());
         }
+        let xml = unsafe { _string(c_raw_xml) };
+        Ok(xml)
     }
 
     fn to_proj4(&self) -> Result<String> {
@@ -250,23 +257,24 @@ pub trait SpatialRefCommon {
             }
             .into())
         } else {
-            Ok(_string(c_proj4str))
+            let proj4str = unsafe { _string(c_proj4str) };
+            Ok(proj4str)
         }
     }
 
     fn auth_name(&self) -> Result<String> {
         let c_ptr = unsafe { gdal_sys::OSRGetAuthorityName(self.c_spatial_ref(), ptr::null()) };
         if c_ptr.is_null() {
-            Err(_last_null_pointer_err("SRGetAuthorityName"))?
-        } else {
-            Ok(_string(c_ptr))
+            return Err(_last_null_pointer_err("SRGetAuthorityName").into());
         }
+        let str = unsafe { _string(c_ptr) };
+        Ok(str)
     }
 
     fn auth_code(&self) -> Result<i32> {
         let c_ptr = unsafe { gdal_sys::OSRGetAuthorityCode(self.c_spatial_ref(), ptr::null()) };
         if c_ptr.is_null() {
-            Err(_last_null_pointer_err("OSRGetAuthorityCode"))?;
+            return Err(_last_null_pointer_err("OSRGetAuthorityCode").into());
         }
         let c_str = unsafe { CStr::from_ptr(c_ptr) };
         let epsg = i32::from_str(c_str.to_str()?);
@@ -275,19 +283,20 @@ pub trait SpatialRefCommon {
             Err(_) => Err(ErrorKind::OgrError {
                 err: OGRErr::OGRERR_UNSUPPORTED_SRS,
                 method_name: "OSRGetAuthorityCode",
-            })?,
+            }
+            .into()),
         }
     }
 
     fn authority(&self) -> Result<String> {
         let c_ptr = unsafe { gdal_sys::OSRGetAuthorityName(self.c_spatial_ref(), ptr::null()) };
         if c_ptr.is_null() {
-            Err(_last_null_pointer_err("SRGetAuthorityName"))?;
+            return Err(_last_null_pointer_err("SRGetAuthorityName").into());
         }
         let name = unsafe { CStr::from_ptr(c_ptr) }.to_str()?;
         let c_ptr = unsafe { gdal_sys::OSRGetAuthorityCode(self.c_spatial_ref(), ptr::null()) };
         if c_ptr.is_null() {
-            Err(_last_null_pointer_err("OSRGetAuthorityCode"))?;
+            return Err(_last_null_pointer_err("OSRGetAuthorityCode").into());
         }
         let code = unsafe { CStr::from_ptr(c_ptr) }.to_str()?;
         Ok(format!("{}:{}", name, code))
@@ -296,13 +305,13 @@ pub trait SpatialRefCommon {
     fn auto_identify_epsg(&mut self) -> Result<()> {
         let rv = unsafe { gdal_sys::OSRAutoIdentifyEPSG(self.c_spatial_ref()) };
         if rv != OGRErr::OGRERR_NONE {
-            Err(ErrorKind::OgrError {
+            return Err(ErrorKind::OgrError {
                 err: rv,
                 method_name: "OSRAutoIdentifyEPSG",
-            })?
-        } else {
-            Ok(())
+            }
+            .into());
         }
+        Ok(())
     }
 }
 

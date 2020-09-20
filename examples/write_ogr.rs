@@ -24,21 +24,21 @@ fn example_1() -> Result<(), Error> {
     let defn = Defn::from_layer(&lyr);
 
     // 1st feature:
-    let mut ft = Feature::new(&defn)?;
+    let mut ft = Feature::try_new(&defn)?;
     ft.set_geometry(Geometry::from_wkt("POINT (45.21 21.76)")?)?;
     ft.set_field_string("Name", "Feature 1")?;
     ft.set_field_double("Value", 45.78)?;
     ft.create(&lyr)?;
 
     // 2nd feature:
-    let mut ft = Feature::new(&defn)?;
+    let mut ft = Feature::try_new(&defn)?;
     ft.set_field_double("Value", 0.789)?;
     ft.set_geometry(Geometry::from_wkt("POINT (46.50 22.50)")?)?;
     ft.set_field_string("Name", "Feature 2")?;
     ft.create(&lyr)?;
 
     // Feature triggering an error due to a wrong field name:
-    let mut ft = Feature::new(&defn)?;
+    let mut ft = Feature::try_new(&defn)?;
     ft.set_geometry(Geometry::from_wkt("POINT (46.50 22.50)")?)?;
     ft.set_field_string("Name", "Feature 2")?;
     match ft.set_field_double("Values", 0.789) {

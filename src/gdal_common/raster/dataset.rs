@@ -15,7 +15,7 @@ pub trait RasterDatasetCommon: DatasetCommon {
         unsafe {
             let c_band = gdal_sys::GDALGetRasterBand(self.c_dataset(), band_index as c_int);
             if c_band.is_null() {
-                Err(_last_null_pointer_err("GDALGetRasterBand"))?;
+                return Err(_last_null_pointer_err("GDALGetRasterBand").into());
             }
             Ok(RasterBand::from_c_ptr(c_band, self.as_ref()))
         }
@@ -50,7 +50,7 @@ pub trait RasterDatasetCommon: DatasetCommon {
             gdal_sys::GDALSetGeoTransform(self.c_dataset(), transformation.as_ptr() as *mut f64)
         };
         if rv != CPLErr::CE_None {
-            Err(_last_cpl_err(rv))?;
+            return Err(_last_cpl_err(rv).into());
         }
         Ok(())
     }
@@ -70,7 +70,7 @@ pub trait RasterDatasetCommon: DatasetCommon {
 
         // check if the dataset has a GeoTransform
         if rv != CPLErr::CE_None {
-            Err(_last_cpl_err(rv))?;
+            return Err(_last_cpl_err(rv).into());
         }
         Ok(transformation)
     }
