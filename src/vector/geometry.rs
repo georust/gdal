@@ -123,10 +123,31 @@ impl Geometry {
         self.c_geometry()
     }
 
+    pub fn set_point(&mut self, i: usize, p: (f64, f64, f64)) {
+        let (x, y, z) = p;
+        unsafe {
+            gdal_sys::OGR_G_SetPoint(self.c_geometry(), i as c_int, x as c_double, y as c_double, z as c_double);
+        };
+    }
+
     pub fn set_point_2d(&mut self, i: usize, p: (f64, f64)) {
         let (x, y) = p;
         unsafe {
             gdal_sys::OGR_G_SetPoint_2D(self.c_geometry(), i as c_int, x as c_double, y as c_double)
+        };
+    }
+
+    pub fn add_point(&mut self, p: (f64, f64, f64)) {
+        let (x, y, z) = p;
+        unsafe {
+            gdal_sys::OGR_G_AddPoint(self.c_geometry(), x as c_double, y as c_double, z as c_double)
+        };
+    }
+
+    pub fn add_point_2d(&mut self, p: (f64, f64)) {
+        let (x, y) = p;
+        unsafe {
+            gdal_sys::OGR_G_AddPoint_2D(self.c_geometry(), x as c_double, y as c_double)
         };
     }
 
@@ -323,6 +344,40 @@ mod tests {
         let wkt = "POLYGON ((45.0 45.0, 45.0 50.0, 50.0 50.0, 50.0 45.0, 45.0 45.0))";
         let geom = Geometry::from_wkt(wkt).unwrap();
         assert!(!geom.is_empty());
+    }
+
+    #[test]
+    pub fn test_create_multipoint_2d() {
+        let mut geom = Geometry::empty(::gdal_sys::OGRwkbGeometryType::wkbMultiPoint).unwrap();
+        let mut point = Geometry::empty(::gdal_sys::OGRwkbGeometryType::wkbPoint).unwrap();
+        point.add_point_2d((1.0, 2.0));
+        geom.add_geometry(point).unwrap();
+        let mut point = Geometry::empty(::gdal_sys::OGRwkbGeometryType::wkbPoint).unwrap();
+        point.add_point_2d((2.0, 3.0));
+        assert!(!point.is_empty());
+        point.set_point_2d(0, (2.0, 4.0));
+        geom.add_geometry(point).unwrap();
+        assert!(!geom.is_empty());
+
+        let expected = Geometry::from_wkt("MULTIPOINT((1.0 2.0), (2.0 4.0))").unwrap();
+        assert_eq!(geom, expected);
+    }
+
+    #[test]
+    pub fn test_create_multipoint_3d() {
+        let mut geom = Geometry::empty(::gdal_sys::OGRwkbGeometryType::wkbMultiPoint).unwrap();
+        let mut point = Geometry::empty(::gdal_sys::OGRwkbGeometryType::wkbPoint).unwrap();
+        point.add_point((1.0, 2.0, 3.0));
+        geom.add_geometry(point).unwrap();
+        let mut point = Geometry::empty(::gdal_sys::OGRwkbGeometryType::wkbPoint).unwrap();
+        point.add_point((3.0, 2.0, 1.0));
+        assert!(!point.is_empty());
+        point.set_point(0, (4.0, 2.0, 1.0));
+        geom.add_geometry(point).unwrap();
+        assert!(!geom.is_empty());
+
+        let expected = Geometry::from_wkt("MULTIPOINT((1.0 2.0 3.0), (4.0 2.0 1.0))").unwrap();
+        assert_eq!(geom, expected);
     }
 
     #[test]
