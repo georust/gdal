@@ -1,6 +1,5 @@
 use crate::metadata::Metadata;
-use crate::raster::{ByteBuffer, Dataset, Driver};
-use gdal_sys::GDALDataType;
+use crate::raster::{ByteBuffer, Dataset, Driver, GDALDataType};
 use std::path::Path;
 
 #[cfg(feature = "ndarray")]
