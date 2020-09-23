@@ -3,6 +3,7 @@ use crate::utils::{_last_null_pointer_err, _string};
 use gdal_sys::{self, OGRErr, OGRGeometryH, OGRwkbGeometryType};
 use libc::{c_double, c_int, c_void};
 use std::cell::RefCell;
+use std::fmt::{self, Debug};
 use std::ffi::CString;
 use std::ptr::null_mut;
 
@@ -275,6 +276,23 @@ impl Clone for Geometry {
         unsafe { Geometry::with_c_geometry(new_c_geom, true) }
     }
 }
+
+impl Debug for Geometry {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self.wkt() {
+            Ok(wkt) => f.write_str(wkt.as_str()),
+            Err(_) => Err(fmt::Error),
+        }
+    }
+}
+
+impl PartialEq for Geometry {
+    fn eq(&self, other: &Self) -> bool {
+        unsafe { gdal_sys::OGR_G_Equal(self.c_geometry(), other.c_geometry()) != 0 }
+    }
+}
+
+impl Eq for Geometry {}
 
 #[cfg(test)]
 mod tests {
