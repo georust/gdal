@@ -2,7 +2,7 @@ use super::{
     Dataset, Driver, Feature, FeatureIterator, FieldValue, Geometry, OGRFieldType,
     OGRwkbGeometryType,
 };
-use crate::assert_almost_eq;
+use crate::{assert_almost_eq, errors};
 use crate::spatial_ref::SpatialRef;
 use std::path::Path;
 
@@ -261,6 +261,41 @@ fn test_convex_hull() {
             .unwrap(),
         hull
     );
+}
+
+#[test]
+#[cfg(feature = "gdal_2_1")]
+fn test_delaunay_triangulation() -> Result<(), errors::Error> {
+    let square = Geometry::from_wkt("POLYGON ((0 1,1 1,1 0,0 0,0 1))")?;
+    let triangles = Geometry::from_wkt(
+        "GEOMETRYCOLLECTION (POLYGON ((0 1,0 0,1 0,0 1)),POLYGON ((0 1,1 0,1 1,0 1)))")?;
+    assert_eq!(
+        square.delaunay_triangulation(None)?,
+        triangles
+    );
+    Ok(())
+}
+
+#[test]
+fn test_simplify() -> Result<(), errors::Error> {
+    let line = Geometry::from_wkt("LINESTRING(1.2 0.19,1.63 0.58,1.98 0.65,2.17 0.89)")?;
+    let triangles = Geometry::from_wkt("LINESTRING (1.2 0.19,2.17 0.89)")?;
+    assert_eq!(
+        line.simplify(0.5)?,
+        triangles
+    );
+    Ok(())
+}
+
+#[test]
+fn test_simplify_preserve_topology() -> Result<(), errors::Error> {
+    let donut = Geometry::from_wkt("POLYGON ((20 35,10 30,10 10,30 5,45 20,20 35),(30 20,20 15,20 25,30 20))")?;
+    let triangles = Geometry::from_wkt("POLYGON ((20 35,10 10,30 5,45 20,20 35),(30 20,20 15,20 25,30 20))")?;
+    assert_eq!(
+        donut.simplify_preserve_topology(100.0)?,
+        triangles
+    );
+    Ok(())
 }
 
 #[test]

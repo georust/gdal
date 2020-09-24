@@ -13,6 +13,7 @@ edition = "2018"
 
 [features]
 bindgen = ["gdal-sys/bindgen"]
+gdal_2_1 = ["gdal-sys/min_gdal_version_2_1"]
 gdal_2_2 = ["gdal-sys/min_gdal_version_2_2"]
 gdal_2_4 = ["gdal-sys/min_gdal_version_2_4"]
 gdal_3_0 = ["gdal-sys/min_gdal_version_3_0"]
