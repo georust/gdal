@@ -197,6 +197,8 @@ fn main() {
 
             std::fs::copy(&binding_path, &out_path)
                 .expect("Can't copy bindings to output directory");
+        } else {
+            panic!("No GDAL version detected");
         }
     }
 }
