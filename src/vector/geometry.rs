@@ -182,7 +182,7 @@ impl Geometry {
     }
 
     // Transform the geometry inplace (when we own the Geometry)
-    pub fn transform_inplace(&self, htransform: &CoordTransform) -> Result<()> {
+    pub fn transform_inplace(&mut self, htransform: &CoordTransform) -> Result<()> {
         let rv = unsafe { gdal_sys::OGR_G_Transform(self.c_geometry(), htransform.to_c_hct()) };
         if rv != OGRErr::OGRERR_NONE {
             Err(ErrorKind::OgrError {
@@ -206,7 +206,7 @@ impl Geometry {
         Ok(unsafe { Geometry::with_c_geometry(new_c_geom, true) })
     }
 
-    pub fn transform_to_inplace(&self, spatial_ref: &SpatialRef) -> Result<()> {
+    pub fn transform_to_inplace(&mut self, spatial_ref: &SpatialRef) -> Result<()> {
         let rv = unsafe { gdal_sys::OGR_G_TransformTo(self.c_geometry(), spatial_ref.to_c_hsrs()) };
         if rv != OGRErr::OGRERR_NONE {
             Err(ErrorKind::OgrError {
