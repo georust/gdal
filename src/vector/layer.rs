@@ -1,9 +1,9 @@
-use crate::gdal_major_object::MajorObject;
 use crate::metadata::Metadata;
 use crate::spatial_ref::SpatialRef;
 use crate::utils::{_last_null_pointer_err, _string};
 use crate::vector::defn::Defn;
 use crate::vector::{Feature, FieldValue, Geometry};
+use crate::{dataset::Dataset, gdal_major_object::MajorObject};
 use gdal_sys::{
     self, GDALMajorObjectH, OGREnvelope, OGRErr, OGRFieldDefnH, OGRFieldType, OGRLayerH,
 };
@@ -25,24 +25,29 @@ use crate::errors::*;
 ///     // do something with each feature
 /// }
 /// ```
-pub struct Layer {
+pub struct Layer<'a> {
     c_layer: OGRLayerH,
+    owning_dataset: &'a Dataset,
     defn: Defn,
 }
 
-impl MajorObject for Layer {
+impl<'a> MajorObject for Layer<'a> {
     unsafe fn gdal_object_ptr(&self) -> GDALMajorObjectH {
         self.c_layer
     }
 }
 
-impl Metadata for Layer {}
+impl<'a> Metadata for Layer<'a> {}
 
-impl Layer {
-    pub unsafe fn _with_c_layer(c_layer: OGRLayerH) -> Layer {
+impl<'a> Layer<'a> {
+    pub unsafe fn _with_c_layer(c_layer: OGRLayerH, owning_dataset: &'a Dataset) -> Layer<'a> {
         let c_defn = gdal_sys::OGR_L_GetLayerDefn(c_layer);
         let defn = Defn::_with_c_defn(c_defn);
-        Layer { c_layer, defn }
+        Layer {
+            c_layer,
+            owning_dataset,
+            defn,
+        }
     }
 
     pub unsafe fn c_layer(&self) -> OGRLayerH {

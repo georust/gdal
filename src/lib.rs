@@ -23,6 +23,7 @@
 pub use version::version_info;
 
 pub mod config;
+pub mod dataset;
 pub mod errors;
 mod gdal_major_object;
 pub mod metadata;
