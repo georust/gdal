@@ -3,7 +3,8 @@ use crate::metadata::Metadata;
 use crate::raster::types::GdalType;
 use crate::raster::{Buffer, Dataset};
 use crate::utils::_last_cpl_err;
-use gdal_sys::{self, CPLErr, GDALDataType, GDALMajorObjectH, GDALRWFlag, GDALRasterBandH};
+use crate::raster::GDALDataType;
+use gdal_sys::{self, CPLErr, GDALMajorObjectH, GDALRWFlag, GDALRasterBandH};
 use libc::c_int;
 
 #[cfg(feature = "ndarray")]
