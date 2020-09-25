@@ -266,7 +266,7 @@ impl<'a> RasterBand<'a> {
 
     /// Get actual block size (at the edges) when block size
     /// does not divide band size.
-    #[cfg(feature = "gdal_2_2")]
+    #[cfg(all(major_ge_2, minor_ge_2))]
     pub fn actual_block_size(&self, offset: (isize, isize)) -> Result<(usize, usize)> {
         let mut block_size_x = 0;
         let mut block_size_y = 0;

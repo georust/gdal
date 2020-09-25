@@ -364,7 +364,7 @@ fn test_get_rasterband_block_size() {
 }
 
 #[test]
-#[cfg(feature = "gdal_2_2")]
+#[cfg(all(major_ge_2, minor_ge_2))]
 fn test_get_rasterband_actual_block_size() {
     let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
     let rasterband = dataset.rasterband(1).unwrap();

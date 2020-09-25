@@ -24,9 +24,9 @@ fn from_proj4_to_wkt() {
     )
     .unwrap();
     // TODO: handle proj changes on lib level
-    #[cfg(not(feature = "gdal_3_0"))]
+    #[cfg(not(major_ge_3))]
     assert_eq!(spatial_ref.to_wkt().unwrap(), "PROJCS[\"unnamed\",GEOGCS[\"GRS 1980(IUGG, 1980)\",DATUM[\"unknown\",SPHEROID[\"GRS80\",6378137,298.257222101]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433]],PROJECTION[\"Lambert_Azimuthal_Equal_Area\"],PARAMETER[\"latitude_of_center\",52],PARAMETER[\"longitude_of_center\",10],PARAMETER[\"false_easting\",4321000],PARAMETER[\"false_northing\",3210000],UNIT[\"Meter\",1]]");
-    #[cfg(feature = "gdal_3_0")]
+    #[cfg(major_ge_3)]
     assert_eq!(spatial_ref.to_wkt().unwrap(), "PROJCS[\"unknown\",GEOGCS[\"unknown\",DATUM[\"Unknown based on GRS80 ellipsoid\",SPHEROID[\"GRS 1980\",6378137,298.257222101,AUTHORITY[\"EPSG\",\"7019\"]]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Lambert_Azimuthal_Equal_Area\"],PARAMETER[\"latitude_of_center\",52],PARAMETER[\"longitude_of_center\",10],PARAMETER[\"false_easting\",4321000],PARAMETER[\"false_northing\",3210000],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH]]");
 }
 
@@ -35,9 +35,9 @@ fn from_epsg_to_wkt_proj4() {
     let spatial_ref = SpatialRef::from_epsg(4326).unwrap();
     let wkt = spatial_ref.to_wkt().unwrap();
     // TODO: handle proj changes on lib level
-    #[cfg(not(feature = "gdal_3_0"))]
+    #[cfg(not(major_ge_3))]
     assert_eq!("GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",\"7030\"]],AUTHORITY[\"EPSG\",\"6326\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]", wkt);
-    #[cfg(feature = "gdal_3_0")]
+    #[cfg(major_ge_3)]
     assert_eq!("GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",\"7030\"]],AUTHORITY[\"EPSG\",\"6326\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AXIS[\"Latitude\",NORTH],AXIS[\"Longitude\",EAST],AUTHORITY[\"EPSG\",\"4326\"]]", wkt);
     let proj4string = spatial_ref.to_proj4().unwrap();
     assert_eq!("+proj=longlat +datum=WGS84 +no_defs", proj4string.trim());
@@ -70,10 +70,10 @@ fn transform_coordinates() {
     let spatial_ref2 = SpatialRef::from_epsg(3035).unwrap();
 
     // TODO: handle axis order in tests
-    #[cfg(feature = "gdal_3_0")]
+    #[cfg(major_ge_3)]
     spatial_ref1
         .set_axis_mapping_strategy(gdal_sys::OSRAxisMappingStrategy::OAMS_TRADITIONAL_GIS_ORDER);
-    #[cfg(feature = "gdal_3_0")]
+    #[cfg(major_ge_3)]
     spatial_ref2
         .set_axis_mapping_strategy(gdal_sys::OSRAxisMappingStrategy::OAMS_TRADITIONAL_GIS_ORDER);
 
@@ -103,10 +103,10 @@ fn transform_ogr_geometry() {
     let spatial_ref2 = SpatialRef::from_wkt("GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",7030]],TOWGS84[0,0,0,0,0,0,0],AUTHORITY[\"EPSG\",6326]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",8901]],UNIT[\"DMSH\",0.0174532925199433,AUTHORITY[\"EPSG\",9108]],AXIS[\"Lat\",NORTH],AXIS[\"Long\",EAST],AUTHORITY[\"EPSG\",4326]]").unwrap();
 
     // TODO: handle axis order in tests
-    #[cfg(feature = "gdal_3_0")]
+    #[cfg(major_ge_3)]
     spatial_ref1
         .set_axis_mapping_strategy(gdal_sys::OSRAxisMappingStrategy::OAMS_TRADITIONAL_GIS_ORDER);
-    #[cfg(feature = "gdal_3_0")]
+    #[cfg(major_ge_3)]
     spatial_ref2
         .set_axis_mapping_strategy(gdal_sys::OSRAxisMappingStrategy::OAMS_TRADITIONAL_GIS_ORDER);
 
