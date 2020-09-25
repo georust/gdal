@@ -30,6 +30,10 @@ fn main() {
         detected_version.major, detected_version.minor, detected_version.patch
     );
 
+    println!("cargo:rustc-cfg=major_is_{}", detected_version.major);
+    println!("cargo:rustc-cfg=minor_is_{}", detected_version.minor);
+    println!("cargo:rustc-cfg=patch_is_{}", detected_version.patch);
+
     // we only support GDAL >= 2.0.
     for major in 2..=detected_version.major {
         println!("cargo:rustc-cfg=major_ge_{}", major);
