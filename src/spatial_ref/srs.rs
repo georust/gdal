@@ -304,14 +304,14 @@ impl SpatialRef {
         }
     }
 
-    #[cfg(feature = "gdal_3_0")]
+    #[cfg(major_ge_3)]
     pub fn set_axis_mapping_strategy(&self, strategy: gdal_sys::OSRAxisMappingStrategy::Type) {
         unsafe {
             gdal_sys::OSRSetAxisMappingStrategy(self.0, strategy);
         }
     }
 
-    #[cfg(feature = "gdal_3_0")]
+    #[cfg(major_ge_3)]
     pub fn get_axis_mapping_strategy(&self) -> gdal_sys::OSRAxisMappingStrategy::Type {
         unsafe { gdal_sys::OSRGetAxisMappingStrategy(self.0) }
     }

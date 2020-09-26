@@ -13,9 +13,6 @@ edition = "2018"
 
 [features]
 bindgen = ["gdal-sys/bindgen"]
-gdal_2_2 = ["gdal-sys/min_gdal_version_2_2"]
-gdal_2_4 = ["gdal-sys/min_gdal_version_2_4"]
-gdal_3_0 = ["gdal-sys/min_gdal_version_3_0"]
 array = ["ndarray"]
 datetime = ["chrono"]
 
@@ -25,10 +22,13 @@ failure_derive = "0.1"
 libc = "0.2"
 geo-types = "0.4"
 gdal-sys = { path = "gdal-sys", version = "0.2"}
-#gdal-sys = "0.2"
 num-traits = "0.2"
 ndarray = {version = "0.12.1", optional = true }
 chrono = { version = "0.4", optional = true }
+
+[build-dependencies]
+gdal-sys = { path = "gdal-sys", version = "0.2"}
+semver = "0.11"
 
 [workspace]
 members = ["gdal-sys"]
