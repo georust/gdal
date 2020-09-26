@@ -192,7 +192,7 @@ fn main() {
                 version.major, version.minor
             ));
             if !binding_path.exists() {
-                panic!("No pre-build binding available for this GDAl version.");
+                panic!("No pre-built bindings available for GDAL version {}.{}. Use `--features bindgen` to generate your own bindings.", version.major, version.minor);
             }
 
             std::fs::copy(&binding_path, &out_path)
