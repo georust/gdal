@@ -363,7 +363,7 @@ fn test_get_rasterband_block_size() {
 }
 
 #[test]
-#[cfg(all(major_ge_2, minor_ge_2))]
+#[cfg(any(all(major_ge_2, minor_ge_2), major_ge_3))] // GDAL 2.2 .. 2.x or >= 3
 fn test_get_rasterband_actual_block_size() {
     let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
     let rasterband = dataset.rasterband(1).unwrap();

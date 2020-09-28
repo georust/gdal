@@ -1,9 +1,9 @@
 use crate::gdal_major_object::MajorObject;
 use crate::metadata::Metadata;
 use crate::raster::types::GdalType;
+use crate::raster::GDALDataType;
 use crate::raster::{Buffer, Dataset};
 use crate::utils::_last_cpl_err;
-use crate::raster::GDALDataType;
 use gdal_sys::{self, CPLErr, GDALMajorObjectH, GDALRWFlag, GDALRasterBandH};
 use libc::c_int;
 
@@ -267,7 +267,7 @@ impl<'a> RasterBand<'a> {
 
     /// Get actual block size (at the edges) when block size
     /// does not divide band size.
-    #[cfg(all(major_ge_2, minor_ge_2))]
+    #[cfg(any(all(major_is_2, minor_ge_2), major_ge_3))] // GDAL 2.2 .. 2.x or >= 3
     pub fn actual_block_size(&self, offset: (isize, isize)) -> Result<(usize, usize)> {
         let mut block_size_x = 0;
         let mut block_size_y = 0;
