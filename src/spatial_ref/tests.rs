@@ -144,9 +144,9 @@ fn failing_transformation() {
     let dhd_2 = SpatialRef::from_epsg(31462).unwrap();
 
     // TODO: handle axis order in tests
-    #[cfg(feature = "gdal_3_0")]
+    #[cfg(major_ge_3)]
     wgs84.set_axis_mapping_strategy(gdal_sys::OSRAxisMappingStrategy::OAMS_TRADITIONAL_GIS_ORDER);
-    #[cfg(feature = "gdal_3_0")]
+    #[cfg(major_ge_3)]
     dhd_2.set_axis_mapping_strategy(gdal_sys::OSRAxisMappingStrategy::OAMS_TRADITIONAL_GIS_ORDER);
 
     let mut x = [1979105.06, 0.0];
@@ -161,9 +161,9 @@ fn failing_transformation() {
     let webmercator = SpatialRef::from_epsg(3857).unwrap();
 
     // TODO: handle axis order in tests
-    #[cfg(feature = "gdal_3_0")]
+    #[cfg(major_ge_3)]
     wgs84.set_axis_mapping_strategy(gdal_sys::OSRAxisMappingStrategy::OAMS_TRADITIONAL_GIS_ORDER);
-    #[cfg(feature = "gdal_3_0")]
+    #[cfg(major_ge_3)]
     webmercator
         .set_axis_mapping_strategy(gdal_sys::OSRAxisMappingStrategy::OAMS_TRADITIONAL_GIS_ORDER);
 
@@ -207,7 +207,7 @@ fn auto_identify() {
     assert_eq!(spatial_ref.auth_code().unwrap(), 32632);
 }
 
-#[cfg(feature = "gdal_3_0")]
+#[cfg(major_ge_3)]
 #[test]
 fn axis_mapping_strategy() {
     use gdal_sys;
