@@ -2,6 +2,7 @@
 use chrono::Duration;
 use gdal::errors::Error;
 use gdal::vector::*;
+use gdal::Driver;
 use std::ops::Add;
 use std::path::Path;
 
@@ -15,18 +16,18 @@ fn run() -> Result<(), Error> {
     // Create a new dataset:
     let _ = std::fs::remove_file("/tmp/later.geojson");
     let drv = Driver::get("GeoJSON")?;
-    let mut ds = drv.create(Path::new("/tmp/later.geojson"))?;
-    let lyr = ds.create_layer()?;
+    let mut ds = drv.create_vector_only("/tmp/later.geojson")?;
+    let lyr = ds.create_layer("", None, OGRwkbGeometryType::wkbUnknown)?;
 
     // Copy the origin layer shema to the destination layer:
     for field in layer_a.defn().fields() {
         let field_defn = FieldDefn::new(&field.name(), field.field_type())?;
         field_defn.set_width(field.width());
-        field_defn.add_to_layer(lyr)?;
+        field_defn.add_to_layer(&lyr)?;
     }
 
     // Get the definition to use on each feature:
-    let defn = Defn::from_layer(lyr);
+    let defn = Defn::from_layer(&lyr);
 
     for feature_a in layer_a.features() {
         let mut ft = Feature::new(&defn)?;
@@ -52,7 +53,7 @@ fn run() -> Result<(), Error> {
             )?;
         }
         // Add the feature to the layer:
-        ft.create(lyr)?;
+        ft.create(&lyr)?;
     }
     Ok(())
 }

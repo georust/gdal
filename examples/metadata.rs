@@ -1,9 +1,9 @@
 fn main() {
+    use gdal::dataset::Dataset;
     use gdal::metadata::Metadata;
-    use gdal::raster::dataset::Dataset;
     use std::path::Path;
 
-    let driver = gdal::raster::driver::Driver::get("mem").unwrap();
+    let driver = gdal::Driver::get("mem").unwrap();
     println!("driver description: {:?}", driver.description());
 
     let path = Path::new("./fixtures/tinymarble.png");

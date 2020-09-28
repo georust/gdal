@@ -1,21 +1,24 @@
 use std::{ffi::CString, path::Path, ptr, sync::Once};
 
 use crate::{
-    gdal_major_object::MajorObject, raster::Driver, raster::RasterBand, spatial_ref::SpatialRef,
-    utils::_last_null_pointer_err, vector::Layer,
+    gdal_major_object::MajorObject, raster::RasterBand, spatial_ref::SpatialRef,
+    utils::_last_cpl_err, utils::_last_null_pointer_err, vector::Layer, Driver,
 };
 use crate::{metadata::Metadata, utils::_string};
-use gdal_sys::{self, GDALAccess, GDALDatasetH, GDALMajorObjectH, OGRLayerH, OGRwkbGeometryType};
-use libc::c_int;
+use gdal_sys::{
+    self, CPLErr, GDALAccess, GDALDatasetH, GDALMajorObjectH, OGRLayerH, OGRwkbGeometryType,
+};
+use libc::{c_double, c_int};
 use ptr::null_mut;
 
 use crate::errors::*;
 
+pub type GeoTransform = [c_double; 6];
+static START: Once = Once::new();
+
 pub struct Dataset {
     c_dataset: GDALDatasetH,
 }
-
-static START: Once = Once::new();
 
 pub fn _register_drivers() {
     unsafe {
@@ -30,6 +33,10 @@ impl Dataset {
         Dataset { c_dataset }
     }
 
+    pub unsafe fn c_dataset(&self) -> GDALDatasetH {
+        self.c_dataset
+    }
+
     pub fn open(path: &Path) -> Result<Dataset> {
         Self::open_ex(path, None, None, None, None)
     }
@@ -37,9 +44,9 @@ impl Dataset {
     pub fn open_ex(
         path: &Path,
         open_flags: Option<u32>,
-        allowed_drivers: Option<&str>,
-        open_options: Option<&str>,
-        sibling_files: Option<&str>,
+        _allowed_drivers: Option<&str>, // TODO: use parameters
+        _open_options: Option<&str>,
+        _sibling_files: Option<&str>,
     ) -> Result<Dataset> {
         _register_drivers();
         let filename = path.to_string_lossy();
@@ -112,21 +119,30 @@ impl Dataset {
         }
     }
 
-    fn _child_layer(&self, c_layer: OGRLayerH) -> Layer {
+    fn child_layer(&self, c_layer: OGRLayerH) -> Layer {
         let layer = unsafe { Layer::_with_c_layer(c_layer, self) };
         layer
     }
 
-    fn layer_count(&self) -> isize {
+    pub fn layer_count(&self) -> isize {
         (unsafe { gdal_sys::OGR_DS_GetLayerCount(self.c_dataset) }) as isize
     }
 
-    fn layer(&mut self, idx: isize) -> Result<Layer> {
+    pub fn layer(&mut self, idx: isize) -> Result<Layer> {
         let c_layer = unsafe { gdal_sys::OGR_DS_GetLayer(self.c_dataset, idx as c_int) };
         if c_layer.is_null() {
             Err(_last_null_pointer_err("OGR_DS_GetLayer"))?;
         }
-        Ok(self._child_layer(c_layer))
+        Ok(self.child_layer(c_layer))
+    }
+
+    pub fn layer_by_name(&mut self, name: &str) -> Result<Layer> {
+        let c_name = CString::new(name)?;
+        let c_layer = unsafe { gdal_sys::OGR_DS_GetLayerByName(self.c_dataset(), c_name.as_ptr()) };
+        if c_layer.is_null() {
+            Err(_last_null_pointer_err("OGR_DS_GetLayerByName"))?;
+        }
+        Ok(self.child_layer(c_layer))
     }
 
     pub fn raster_count(&self) -> isize {
@@ -157,7 +173,51 @@ impl Dataset {
         if c_layer.is_null() {
             Err(_last_null_pointer_err("OGR_DS_CreateLayer"))?;
         };
-        Ok(self._child_layer(c_layer))
+        Ok(self.child_layer(c_layer))
+    }
+
+    /// Affine transformation called geotransformation.
+    ///
+    /// This is like a linear transformation preserves points, straight lines and planes.
+    /// Also, sets of parallel lines remain parallel after an affine transformation.
+    /// # Arguments
+    /// * transformation - coeficients of transformations
+    ///
+    /// x-coordinate of the top-left corner pixel (x-offset)
+    /// width of a pixel (x-resolution)
+    /// row rotation (typically zero)
+    /// y-coordinate of the top-left corner pixel
+    /// column rotation (typically zero)
+    /// height of a pixel (y-resolution, typically negative)
+    pub fn set_geo_transform(&self, transformation: &GeoTransform) -> Result<()> {
+        assert_eq!(transformation.len(), 6);
+        let rv = unsafe {
+            gdal_sys::GDALSetGeoTransform(self.c_dataset, transformation.as_ptr() as *mut f64)
+        };
+        if rv != CPLErr::CE_None {
+            Err(_last_cpl_err(rv))?;
+        }
+        Ok(())
+    }
+
+    /// Get affine transformation coefficients.
+    ///
+    /// x-coordinate of the top-left corner pixel (x-offset)
+    /// width of a pixel (x-resolution)
+    /// row rotation (typically zero)
+    /// y-coordinate of the top-left corner pixel
+    /// column rotation (typically zero)
+    /// height of a pixel (y-resolution, typically negative)
+    pub fn geo_transform(&self) -> Result<GeoTransform> {
+        let mut transformation = GeoTransform::default();
+        let rv =
+            unsafe { gdal_sys::GDALGetGeoTransform(self.c_dataset, transformation.as_mut_ptr()) };
+
+        // check if the dataset has a GeoTransform
+        if rv != CPLErr::CE_None {
+            Err(_last_cpl_err(rv))?;
+        }
+        Ok(transformation)
     }
 }
 

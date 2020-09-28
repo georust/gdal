@@ -40,6 +40,10 @@ impl<'a> MajorObject for Layer<'a> {
 impl<'a> Metadata for Layer<'a> {}
 
 impl<'a> Layer<'a> {
+    pub fn owning_dataset(&self) -> &Dataset {
+        self.owning_dataset
+    }
+
     pub unsafe fn _with_c_layer(c_layer: OGRLayerH, owning_dataset: &'a Dataset) -> Layer<'a> {
         let c_defn = gdal_sys::OGR_L_GetLayerDefn(c_layer);
         let defn = Defn::_with_c_defn(c_defn);
@@ -147,7 +151,7 @@ impl<'a> Layer<'a> {
 }
 
 pub struct FeatureIterator<'a> {
-    layer: &'a Layer,
+    layer: &'a Layer<'a>,
 }
 
 impl<'a> Iterator for FeatureIterator<'a> {

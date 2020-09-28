@@ -1,4 +1,4 @@
-use crate::raster::Dataset;
+use crate::dataset::Dataset;
 use crate::utils::_last_cpl_err;
 use gdal_sys::{self, CPLErr, GDALResampleAlg};
 use libc::c_double;
@@ -9,9 +9,9 @@ use crate::errors::*;
 pub fn reproject(src: &Dataset, dst: &Dataset) -> Result<()> {
     let rv = unsafe {
         gdal_sys::GDALReprojectImage(
-            src._c_ptr(),
+            src.c_dataset(),
             null(),
-            dst._c_ptr(),
+            dst.c_dataset(),
             null(),
             GDALResampleAlg::GRA_Bilinear,
             0.0,

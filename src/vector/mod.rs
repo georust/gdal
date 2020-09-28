@@ -15,9 +15,8 @@
 //! }
 //! ```
 
-pub use crate::vector::dataset::Dataset;
+pub use crate::dataset::Dataset;
 pub use crate::vector::defn::{Defn, Field, FieldIterator};
-pub use crate::vector::driver::Driver;
 pub use crate::vector::feature::{Feature, FieldValue};
 pub use crate::vector::geometry::Geometry;
 pub use crate::vector::layer::{FeatureIterator, FieldDefn, Layer};
@@ -31,9 +30,7 @@ pub trait ToGdal {
     fn to_gdal(&self) -> Result<Geometry>;
 }
 
-mod dataset;
 mod defn;
-mod driver;
 mod feature;
 mod gdal_to_geo;
 mod geo_to_gdal;
