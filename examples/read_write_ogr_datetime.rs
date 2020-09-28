@@ -3,9 +3,8 @@ use gdal::errors::Error;
 #[cfg(feature = "datetime")]
 fn run() -> Result<(), Error> {
     use chrono::Duration;
-    use gdal::dataset::Dataset;
     use gdal::vector::{Defn, Feature, FieldDefn, FieldValue};
-    use gdal::Driver;
+    use gdal::{Dataset, Driver};
     use std::ops::Add;
     use std::path::Path;
 

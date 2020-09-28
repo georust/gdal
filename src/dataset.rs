@@ -1,10 +1,10 @@
 use std::{ffi::CString, path::Path, ptr, sync::Once};
 
+use crate::utils::{_last_cpl_err, _last_null_pointer_err, _string};
 use crate::{
-    gdal_major_object::MajorObject, raster::RasterBand, spatial_ref::SpatialRef,
-    utils::_last_cpl_err, utils::_last_null_pointer_err, vector::Layer, Driver,
+    gdal_major_object::MajorObject, raster::RasterBand, spatial_ref::SpatialRef, vector::Layer,
+    Driver, Metadata,
 };
-use crate::{metadata::Metadata, utils::_string};
 use gdal_sys::{
     self, CPLErr, GDALAccess, GDALDatasetH, GDALMajorObjectH, OGRLayerH, OGRwkbGeometryType,
 };

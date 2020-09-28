@@ -23,18 +23,20 @@
 pub use version::version_info;
 
 pub mod config;
-pub mod dataset;
+mod dataset;
 mod driver;
 pub mod errors;
 mod gdal_major_object;
-pub mod metadata;
+mod metadata;
 pub mod raster;
 pub mod spatial_ref;
 mod utils;
 pub mod vector;
 pub mod version;
 
+pub use dataset::Dataset;
 pub use driver::Driver;
+pub use metadata::Metadata;
 
 #[cfg(test)]
 fn assert_almost_eq(a: f64, b: f64) {

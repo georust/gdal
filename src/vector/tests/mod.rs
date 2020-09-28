@@ -1,8 +1,6 @@
-use super::{
-    Dataset, Feature, FeatureIterator, FieldValue, Geometry, OGRFieldType, OGRwkbGeometryType,
-};
+use super::{Feature, FeatureIterator, FieldValue, Geometry, OGRFieldType, OGRwkbGeometryType};
 use crate::spatial_ref::SpatialRef;
-use crate::{assert_almost_eq, Driver};
+use crate::{assert_almost_eq, Dataset, Driver};
 use std::path::Path;
 
 mod convert_geo;

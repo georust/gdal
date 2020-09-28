@@ -15,21 +15,6 @@
 //! }
 //! ```
 
-pub use crate::dataset::Dataset;
-pub use crate::vector::defn::{Defn, Field, FieldIterator};
-pub use crate::vector::feature::{Feature, FieldValue};
-pub use crate::vector::geometry::Geometry;
-pub use crate::vector::layer::{FeatureIterator, FieldDefn, Layer};
-pub use crate::vector::ops::geometry::intersection::Intersection as GeometryIntersection;
-pub use gdal_sys::{OGRFieldType, OGRwkbGeometryType};
-
-use crate::errors::Result;
-
-/// Convert object to a GDAL geometry.
-pub trait ToGdal {
-    fn to_gdal(&self) -> Result<Geometry>;
-}
-
 mod defn;
 mod feature;
 mod gdal_to_geo;
@@ -37,6 +22,20 @@ mod geo_to_gdal;
 mod geometry;
 mod layer;
 mod ops;
+
+pub use defn::{Defn, Field, FieldIterator};
+pub use feature::{Feature, FieldValue};
+pub use gdal_sys::{OGRFieldType, OGRwkbGeometryType};
+pub use geometry::Geometry;
+pub use layer::{FeatureIterator, FieldDefn, Layer};
+pub use ops::GeometryIntersection;
+
+use crate::errors::Result;
+
+/// Convert object to a GDAL geometry.
+pub trait ToGdal {
+    fn to_gdal(&self) -> Result<Geometry>;
+}
 
 #[cfg(test)]
 mod tests;

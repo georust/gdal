@@ -1,7 +1,7 @@
 use gdal::errors::Error;
 use gdal::spatial_ref::{CoordTransform, SpatialRef};
 use gdal::vector::*;
-use gdal::Driver;
+use gdal::{Dataset, Driver};
 use std::fs;
 use std::path::Path;
 
