@@ -155,6 +155,12 @@ impl Dataset {
         (size_x, size_y)
     }
 
+    /// Create a new layer with a blank name, no `SpatialRef`, and without (wkbUnknown) geometry type.
+    pub fn create_layer_blank(&mut self) -> Result<Layer> {
+        self.create_layer("", None, OGRwkbGeometryType::wkbUnknown)
+    }
+
+    /// Create a new layer with a name, an optional `SpatialRef`, and a geometry type.
     pub fn create_layer(
         &mut self,
         name: &str,

@@ -18,7 +18,7 @@ fn run() -> Result<(), Error> {
     let _ = fs::remove_file("/tmp/abcde.shp");
     let drv = Driver::get("ESRI Shapefile")?;
     let mut ds = drv.create_vector_only("/tmp/abcde.shp")?;
-    let lyr = ds.create_layer("", None, OGRwkbGeometryType::wkbUnknown)?;
+    let lyr = ds.create_layer_blank()?;
 
     // Copy the origin layer shema to the destination layer:
     for fd in &fields_defn {

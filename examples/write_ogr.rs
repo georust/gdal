@@ -1,7 +1,6 @@
 use gdal::errors::Error;
 use gdal::vector::{Defn, Feature, FieldDefn, FieldValue, Geometry, OGRFieldType};
 use gdal::Driver;
-use gdal_sys::OGRwkbGeometryType;
 use std::fs;
 
 /// Example 1, the detailed way:
@@ -10,7 +9,7 @@ fn example_1() -> Result<(), Error> {
     let drv = Driver::get("GeoJSON")?;
     let mut ds = drv.create_vector_only("/tmp/output1.geojson")?;
 
-    let lyr = ds.create_layer("", None, OGRwkbGeometryType::wkbUnknown)?;
+    let lyr = ds.create_layer_blank()?;
 
     let field_defn = FieldDefn::new("Name", OGRFieldType::OFTString)?;
     field_defn.set_width(80);
@@ -53,7 +52,7 @@ fn example_2() -> Result<(), Error> {
     let _ = fs::remove_file("/tmp/output2.geojson");
     let driver = Driver::get("GeoJSON")?;
     let mut ds = driver.create_vector_only("/tmp/output2.geojson")?;
-    let mut layer = ds.create_layer("", None, OGRwkbGeometryType::wkbUnknown)?;
+    let mut layer = ds.create_layer_blank()?;
 
     layer.create_defn_fields(&[
         ("Name", OGRFieldType::OFTString),

@@ -271,9 +271,7 @@ fn test_write_features() {
         let mut ds = driver
             .create_vector_only(&fixture!("output.geojson").to_string_lossy())
             .unwrap();
-        let mut layer = ds
-            .create_layer("", None, OGRwkbGeometryType::wkbUnknown)
-            .unwrap();
+        let mut layer = ds.create_layer_blank().unwrap();
         layer
             .create_defn_fields(&[
                 ("Name", OGRFieldType::OFTString),

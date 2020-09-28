@@ -1,13 +1,14 @@
-#[cfg(feature = "datetime")]
-use chrono::Duration;
 use gdal::errors::Error;
-use gdal::vector::*;
-use gdal::Driver;
-use std::ops::Add;
-use std::path::Path;
 
 #[cfg(feature = "datetime")]
 fn run() -> Result<(), Error> {
+    use chrono::Duration;
+    use gdal::dataset::Dataset;
+    use gdal::vector::{Defn, Feature, FieldDefn, FieldValue};
+    use gdal::Driver;
+    use std::ops::Add;
+    use std::path::Path;
+
     println!("gdal crate was build with datetime support");
 
     let mut dataset_a = Dataset::open(Path::new("fixtures/points_with_datetime.json"))?;
@@ -17,7 +18,7 @@ fn run() -> Result<(), Error> {
     let _ = std::fs::remove_file("/tmp/later.geojson");
     let drv = Driver::get("GeoJSON")?;
     let mut ds = drv.create_vector_only("/tmp/later.geojson")?;
-    let lyr = ds.create_layer("", None, OGRwkbGeometryType::wkbUnknown)?;
+    let lyr = ds.create_layer_blank()?;
 
     // Copy the origin layer shema to the destination layer:
     for field in layer_a.defn().fields() {
