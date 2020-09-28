@@ -43,7 +43,7 @@ impl Dataset {
 
     pub fn open_ex(
         path: &Path,
-        open_flags: Option<u32>,
+        open_flags: Option<GDALAccess::Type>,
         _allowed_drivers: Option<&str>, // TODO: use parameters
         _open_options: Option<&str>,
         _sibling_files: Option<&str>,
