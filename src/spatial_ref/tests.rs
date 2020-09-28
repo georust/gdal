@@ -175,7 +175,7 @@ fn failing_transformation() {
     let r = trafo.transform_coords(&mut x, &mut y, &mut z);
 
     assert_eq!(r.is_err(), true);
-    if let &ErrorKind::InvalidCoordinateRange { .. } = r.unwrap_err().kind_ref() {
+    if let ErrorKind::InvalidCoordinateRange { .. } = r.unwrap_err().kind_ref() {
         // assert_eq!(msg, &Some("latitude or longitude exceeded limits".into()));
     } else {
         panic!("Wrong error type");
@@ -210,8 +210,6 @@ fn auto_identify() {
 #[cfg(major_ge_3)]
 #[test]
 fn axis_mapping_strategy() {
-    use gdal_sys;
-
     let spatial_ref = SpatialRef::from_epsg(4326).unwrap();
     assert_eq!(
         spatial_ref.get_axis_mapping_strategy(),

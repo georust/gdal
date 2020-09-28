@@ -44,9 +44,13 @@ impl<'a> Layer<'a> {
         self.owning_dataset
     }
 
-    pub unsafe fn _with_c_layer(c_layer: OGRLayerH, owning_dataset: &'a Dataset) -> Layer<'a> {
+    /// Creates a new Layer from a GDAL layer pointer
+    ///
+    /// # Safety
+    /// This method operates on a raw C pointer
+    pub unsafe fn from_c_layer(c_layer: OGRLayerH, owning_dataset: &'a Dataset) -> Layer<'a> {
         let c_defn = gdal_sys::OGR_L_GetLayerDefn(c_layer);
-        let defn = Defn::_with_c_defn(c_defn);
+        let defn = Defn::from_c_defn(c_defn);
         Layer {
             c_layer,
             owning_dataset,
@@ -54,6 +58,10 @@ impl<'a> Layer<'a> {
         }
     }
 
+    /// Returns the C wrapped pointer
+    ///
+    /// # Safety
+    /// This method returns a raw C pointer
     pub unsafe fn c_layer(&self) -> OGRLayerH {
         self.c_layer
     }
@@ -93,17 +101,19 @@ impl<'a> Layer<'a> {
         let c_geometry = unsafe { geometry.into_c_geometry() };
         let rv = unsafe { gdal_sys::OGR_F_SetGeometryDirectly(c_feature, c_geometry) };
         if rv != OGRErr::OGRERR_NONE {
-            Err(ErrorKind::OgrError {
+            return Err(ErrorKind::OgrError {
                 err: rv,
                 method_name: "OGR_F_SetGeometryDirectly",
-            })?;
+            }
+            .into());
         }
         let rv = unsafe { gdal_sys::OGR_L_CreateFeature(self.c_layer, c_feature) };
         if rv != OGRErr::OGRERR_NONE {
-            Err(ErrorKind::OgrError {
+            return Err(ErrorKind::OgrError {
                 err: rv,
                 method_name: "OGR_L_CreateFeature",
-            })?;
+            }
+            .into());
         }
         Ok(())
     }
@@ -133,10 +143,11 @@ impl<'a> Layer<'a> {
         let force = if force { 1 } else { 0 };
         let rv = unsafe { gdal_sys::OGR_L_GetExtent(self.c_layer, &mut envelope, force) };
         if rv != OGRErr::OGRERR_NONE {
-            Err(ErrorKind::OgrError {
+            return Err(ErrorKind::OgrError {
                 err: rv,
                 method_name: "OGR_L_GetExtent",
-            })?;
+            }
+            .into());
         }
         Ok(envelope)
     }
@@ -144,7 +155,7 @@ impl<'a> Layer<'a> {
     pub fn spatial_reference(&self) -> Result<SpatialRef> {
         let c_obj = unsafe { gdal_sys::OGR_L_GetSpatialRef(self.c_layer) };
         if c_obj.is_null() {
-            Err(_last_null_pointer_err("OGR_L_GetSpatialRef"))?;
+            return Err(_last_null_pointer_err("OGR_L_GetSpatialRef").into());
         }
         SpatialRef::from_c_obj(c_obj)
     }
@@ -163,7 +174,7 @@ impl<'a> Iterator for FeatureIterator<'a> {
         if c_feature.is_null() {
             None
         } else {
-            Some(unsafe { Feature::_with_c_feature(self.layer.defn(), c_feature) })
+            Some(unsafe { Feature::from_c_feature(self.layer.defn(), c_feature) })
         }
     }
 }
@@ -195,7 +206,7 @@ impl FieldDefn {
         let c_str = CString::new(name)?;
         let c_obj = unsafe { gdal_sys::OGR_Fld_Create(c_str.as_ptr(), field_type) };
         if c_obj.is_null() {
-            Err(_last_null_pointer_err("OGR_Fld_Create"))?;
+            return Err(_last_null_pointer_err("OGR_Fld_Create").into());
         };
         Ok(FieldDefn { c_obj })
     }
@@ -208,10 +219,11 @@ impl FieldDefn {
     pub fn add_to_layer(&self, layer: &Layer) -> Result<()> {
         let rv = unsafe { gdal_sys::OGR_L_CreateField(layer.c_layer(), self.c_obj, 1) };
         if rv != OGRErr::OGRERR_NONE {
-            Err(ErrorKind::OgrError {
+            return Err(ErrorKind::OgrError {
                 err: rv,
                 method_name: "OGR_L_CreateFeature",
-            })?;
+            }
+            .into());
         }
         Ok(())
     }

@@ -1,4 +1,3 @@
-use gdal_sys;
 use semver::Version;
 
 pub fn gdal_version_info(key: &str) -> String {
@@ -15,7 +14,7 @@ fn main() {
     let gdal_version_string = gdal_version_info("--version"); // This expects GDAL to repond with "GDAL Semver , RELEASE DATE"
     println!("GDAL version string: \"{}\"", gdal_version_string);
 
-    let semver_substring = &gdal_version_string[4..gdal_version_string.find(",").unwrap_or(12)];
+    let semver_substring = &gdal_version_string[4..gdal_version_string.find(',').unwrap_or(12)];
     println!("GDAL semver string: \"{}\"", semver_substring);
 
     let detected_version = Version::parse(semver_substring).expect("Could not parse gdal version!");

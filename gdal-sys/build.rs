@@ -1,5 +1,3 @@
-#[cfg(feature = "bindgen")]
-use bindgen;
 use semver::Version;
 
 use pkg_config::Config;
@@ -172,7 +170,9 @@ fn main() {
             include_paths.push(dir.to_str().unwrap().to_string());
         }
         if version.is_none() {
-            version = Version::parse(&gdal.version).ok();
+            if let Ok(pkg_version) = Version::parse(&gdal.version) {
+                version.replace(pkg_version);
+            }
         }
     }
 

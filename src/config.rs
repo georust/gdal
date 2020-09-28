@@ -25,7 +25,6 @@
 
 use crate::errors::Result;
 use crate::utils::_string;
-use gdal_sys;
 use std::ffi::CString;
 
 /// Set a GDAL library configuration option
@@ -70,17 +69,17 @@ pub fn clear_config_option(key: &str) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    //use std::ffi::NulError;
 
     #[test]
     fn test_set_get_option() {
         assert!(set_config_option("GDAL_CACHEMAX", "128").is_ok());
         assert_eq!(
-            get_config_option("GDAL_CACHEMAX", "").unwrap_or("".to_string()),
+            get_config_option("GDAL_CACHEMAX", "").unwrap_or_else(|_| "".to_string()),
             "128"
         );
         assert_eq!(
-            get_config_option("NON_EXISTANT_OPTION", "DEFAULT_VALUE").unwrap_or("".to_string()),
+            get_config_option("NON_EXISTANT_OPTION", "DEFAULT_VALUE")
+                .unwrap_or_else(|_| "".to_string()),
             "DEFAULT_VALUE"
         );
     }
@@ -96,12 +95,12 @@ mod tests {
     fn test_clear_option() {
         assert!(set_config_option("TEST_OPTION", "256").is_ok());
         assert_eq!(
-            get_config_option("TEST_OPTION", "DEFAULT").unwrap_or("".to_string()),
+            get_config_option("TEST_OPTION", "DEFAULT").unwrap_or_else(|_| "".to_string()),
             "256"
         );
         assert!(clear_config_option("TEST_OPTION").is_ok());
         assert_eq!(
-            get_config_option("TEST_OPTION", "DEFAULT").unwrap_or("".to_string()),
+            get_config_option("TEST_OPTION", "DEFAULT").unwrap_or_else(|_| "".to_string()),
             "DEFAULT"
         );
     }

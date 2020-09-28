@@ -29,10 +29,10 @@ pub fn _register_drivers() {
 }
 
 impl Dataset {
-    pub unsafe fn from_c_dataset(c_dataset: GDALDatasetH) -> Dataset {
-        Dataset { c_dataset }
-    }
-
+    /// Returns the wrapped C pointer
+    ///
+    /// # Safety
+    /// This method returns a raw C pointer
     pub unsafe fn c_dataset(&self) -> GDALDatasetH {
         self.c_dataset
     }
@@ -63,12 +63,16 @@ impl Dataset {
             )
         };
         if c_dataset.is_null() {
-            Err(_last_null_pointer_err("GDALOpenEx"))?;
+            return Err(_last_null_pointer_err("GDALOpenEx").into());
         }
         Ok(Dataset { c_dataset })
     }
 
-    pub unsafe fn from_c_ptr(c_dataset: GDALDatasetH) -> Dataset {
+    /// Creates a new Dataset by wrapping a C pointer
+    ///
+    /// # Safety
+    /// This method operates on a raw C pointer
+    pub unsafe fn from_c_dataset(c_dataset: GDALDatasetH) -> Dataset {
         Dataset { c_dataset }
     }
 
@@ -87,7 +91,7 @@ impl Dataset {
         let c_filename = CString::new(filename)?;
         let c_dataset = unsafe {
             gdal_sys::GDALCreateCopy(
-                driver._c_ptr(),
+                driver.c_driver(),
                 c_filename.as_ptr(),
                 self.c_dataset,
                 0,
@@ -97,7 +101,7 @@ impl Dataset {
             )
         };
         if c_dataset.is_null() {
-            Err(_last_null_pointer_err("GDALCreateCopy"))?;
+            return Err(_last_null_pointer_err("GDALCreateCopy").into());
         }
         Ok(unsafe { Dataset::from_c_dataset(c_dataset) })
     }
@@ -105,7 +109,7 @@ impl Dataset {
     pub fn driver(&self) -> Driver {
         unsafe {
             let c_driver = gdal_sys::GDALGetDatasetDriver(self.c_dataset);
-            Driver::_with_c_ptr(c_driver)
+            Driver::from_c_driver(c_driver)
         }
     }
 
@@ -113,15 +117,14 @@ impl Dataset {
         unsafe {
             let c_band = gdal_sys::GDALGetRasterBand(self.c_dataset, band_index as c_int);
             if c_band.is_null() {
-                Err(_last_null_pointer_err("GDALGetRasterBand"))?;
+                return Err(_last_null_pointer_err("GDALGetRasterBand").into());
             }
             Ok(RasterBand::_with_c_ptr(c_band, self))
         }
     }
 
     fn child_layer(&self, c_layer: OGRLayerH) -> Layer {
-        let layer = unsafe { Layer::_with_c_layer(c_layer, self) };
-        layer
+        unsafe { Layer::from_c_layer(c_layer, self) }
     }
 
     pub fn layer_count(&self) -> isize {
@@ -131,7 +134,7 @@ impl Dataset {
     pub fn layer(&mut self, idx: isize) -> Result<Layer> {
         let c_layer = unsafe { gdal_sys::OGR_DS_GetLayer(self.c_dataset, idx as c_int) };
         if c_layer.is_null() {
-            Err(_last_null_pointer_err("OGR_DS_GetLayer"))?;
+            return Err(_last_null_pointer_err("OGR_DS_GetLayer").into());
         }
         Ok(self.child_layer(c_layer))
     }
@@ -140,7 +143,7 @@ impl Dataset {
         let c_name = CString::new(name)?;
         let c_layer = unsafe { gdal_sys::OGR_DS_GetLayerByName(self.c_dataset(), c_name.as_ptr()) };
         if c_layer.is_null() {
-            Err(_last_null_pointer_err("OGR_DS_GetLayerByName"))?;
+            return Err(_last_null_pointer_err("OGR_DS_GetLayerByName").into());
         }
         Ok(self.child_layer(c_layer))
     }
@@ -177,7 +180,7 @@ impl Dataset {
             gdal_sys::OGR_DS_CreateLayer(self.c_dataset, c_name.as_ptr(), c_srs, ty, null_mut())
         };
         if c_layer.is_null() {
-            Err(_last_null_pointer_err("OGR_DS_CreateLayer"))?;
+            return Err(_last_null_pointer_err("OGR_DS_CreateLayer").into());
         };
         Ok(self.child_layer(c_layer))
     }
@@ -201,7 +204,7 @@ impl Dataset {
             gdal_sys::GDALSetGeoTransform(self.c_dataset, transformation.as_ptr() as *mut f64)
         };
         if rv != CPLErr::CE_None {
-            Err(_last_cpl_err(rv))?;
+            return Err(_last_cpl_err(rv).into());
         }
         Ok(())
     }
@@ -221,7 +224,7 @@ impl Dataset {
 
         // check if the dataset has a GeoTransform
         if rv != CPLErr::CE_None {
-            Err(_last_cpl_err(rv))?;
+            return Err(_last_cpl_err(rv).into());
         }
         Ok(transformation)
     }

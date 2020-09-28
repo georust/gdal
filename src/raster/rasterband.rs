@@ -21,6 +21,10 @@ impl<'a> RasterBand<'a> {
         self.owning_dataset
     }
 
+    /// Create a RasterBand from a wrapped C pointer
+    ///
+    /// # Safety
+    /// This method operates on a raw C pointer
     pub unsafe fn _with_c_ptr(c_rasterband: GDALRasterBandH, owning_dataset: &'a Dataset) -> Self {
         RasterBand {
             c_rasterband,
@@ -92,7 +96,7 @@ impl<'a> RasterBand<'a> {
             )
         };
         if rv != CPLErr::CE_None {
-            Err(_last_cpl_err(rv))?;
+            return Err(_last_cpl_err(rv).into());
         }
 
         unsafe {
@@ -136,7 +140,7 @@ impl<'a> RasterBand<'a> {
             )
         };
         if values != CPLErr::CE_None {
-            Err(_last_cpl_err(values))?;
+            return Err(_last_cpl_err(values).into());
         }
 
         unsafe {
@@ -180,7 +184,7 @@ impl<'a> RasterBand<'a> {
             )
         };
         if rv != CPLErr::CE_None {
-            Err(_last_cpl_err(rv))?;
+            return Err(_last_cpl_err(rv).into());
         }
 
         unsafe {
@@ -219,7 +223,7 @@ impl<'a> RasterBand<'a> {
             )
         };
         if rv != CPLErr::CE_None {
-            Err(_last_cpl_err(rv))?;
+            return Err(_last_cpl_err(rv).into());
         }
         Ok(())
     }
@@ -241,7 +245,7 @@ impl<'a> RasterBand<'a> {
     pub fn set_no_data_value(&self, no_data: f64) -> Result<()> {
         let rv = unsafe { gdal_sys::GDALSetRasterNoDataValue(self.c_rasterband, no_data) };
         if rv != CPLErr::CE_None {
-            Err(_last_cpl_err(rv))?;
+            return Err(_last_cpl_err(rv).into());
         }
         Ok(())
     }
@@ -280,7 +284,7 @@ impl<'a> RasterBand<'a> {
             )
         };
         if rv != CPLErr::CE_None {
-            Err(_last_cpl_err(rv))?;
+            return Err(_last_cpl_err(rv).into());
         }
         Ok((block_size_x as usize, block_size_y as usize))
     }

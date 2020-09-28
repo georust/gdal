@@ -24,7 +24,7 @@ impl<'a> Feature<'a> {
     pub fn new(defn: &'a Defn) -> Result<Feature> {
         let c_feature = unsafe { gdal_sys::OGR_F_Create(defn.c_defn()) };
         if c_feature.is_null() {
-            Err(_last_null_pointer_err("OGR_F_Create"))?;
+            return Err(_last_null_pointer_err("OGR_F_Create").into());
         };
         Ok(Feature {
             _defn: defn,
@@ -33,7 +33,11 @@ impl<'a> Feature<'a> {
         })
     }
 
-    pub unsafe fn _with_c_feature(defn: &'a Defn, c_feature: OGRFeatureH) -> Feature {
+    /// Creates a new Feature by wrapping a C pointer and a Defn
+    ///
+    /// # Safety
+    /// This method operates on a raw C pointer
+    pub unsafe fn from_c_feature(defn: &'a Defn, c_feature: OGRFeatureH) -> Feature {
         Feature {
             _defn: defn,
             c_feature,
@@ -56,10 +60,11 @@ impl<'a> Feature<'a> {
         let c_name = CString::new(name)?;
         let field_id = unsafe { gdal_sys::OGR_F_GetFieldIndex(self.c_feature, c_name.as_ptr()) };
         if field_id == -1 {
-            Err(ErrorKind::InvalidFieldName {
+            return Err(ErrorKind::InvalidFieldName {
                 field_name: name.to_string(),
                 method_name: "OGR_F_GetFieldIndex",
-            })?;
+            }
+            .into());
         }
         let field_defn = unsafe { gdal_sys::OGR_F_GetFieldDefnRef(self.c_feature, field_id) };
         let field_type = unsafe { gdal_sys::OGR_Fld_GetType(field_defn) };
@@ -91,7 +96,8 @@ impl<'a> Feature<'a> {
             _ => Err(ErrorKind::UnhandledFieldType {
                 field_type,
                 method_name: "OGR_Fld_GetType",
-            })?,
+            }
+            .into()),
         }
     }
 
@@ -119,10 +125,11 @@ impl<'a> Feature<'a> {
             )
         };
         if success == 0 {
-            Err(ErrorKind::OgrError {
+            return Err(ErrorKind::OgrError {
                 err: OGRErr::OGRERR_FAILURE,
                 method_name: "OGR_F_GetFieldAsDateTime",
-            })?;
+            }
+            .into());
         }
 
         // from https://github.com/OSGeo/gdal/blob/33a8a0edc764253b582e194d330eec3b83072863/gdal/ogr/ogrutils.cpp#L1309
@@ -154,7 +161,8 @@ impl<'a> Feature<'a> {
             Err(ErrorKind::InvalidFieldName {
                 field_name: field_name.to_string(),
                 method_name: "geometry_by_name",
-            })?
+            }
+            .into())
         } else {
             self.geometry_by_index(idx as usize)
         }
@@ -162,15 +170,16 @@ impl<'a> Feature<'a> {
 
     pub fn geometry_by_index(&self, idx: usize) -> Result<&Geometry> {
         if idx >= self.geometry.len() {
-            Err(ErrorKind::InvalidFieldIndex {
+            return Err(ErrorKind::InvalidFieldIndex {
                 index: idx,
                 method_name: "geometry_by_name",
-            })?;
+            }
+            .into());
         }
         if !self.geometry[idx].has_gdal_ptr() {
             let c_geom = unsafe { gdal_sys::OGR_F_GetGeomFieldRef(self.c_feature, idx as i32) };
             if c_geom.is_null() {
-                Err(_last_null_pointer_err("OGR_F_GetGeomFieldRef"))?;
+                return Err(_last_null_pointer_err("OGR_F_GetGeomFieldRef").into());
             }
             unsafe { self.geometry[idx].set_c_geometry(c_geom) };
         }
@@ -180,10 +189,11 @@ impl<'a> Feature<'a> {
     pub fn create(&self, lyr: &Layer) -> Result<()> {
         let rv = unsafe { gdal_sys::OGR_L_CreateFeature(lyr.c_layer(), self.c_feature) };
         if rv != OGRErr::OGRERR_NONE {
-            Err(ErrorKind::OgrError {
+            return Err(ErrorKind::OgrError {
                 err: rv,
                 method_name: "OGR_L_CreateFeature",
-            })?;
+            }
+            .into());
         }
         Ok(())
     }
@@ -194,10 +204,11 @@ impl<'a> Feature<'a> {
         let idx =
             unsafe { gdal_sys::OGR_F_GetFieldIndex(self.c_feature, c_str_field_name.as_ptr()) };
         if idx == -1 {
-            Err(ErrorKind::InvalidFieldName {
+            return Err(ErrorKind::InvalidFieldName {
                 field_name: field_name.to_string(),
                 method_name: "OGR_F_GetFieldIndex",
-            })?;
+            }
+            .into());
         }
         unsafe { gdal_sys::OGR_F_SetFieldString(self.c_feature, idx, c_str_value.as_ptr()) };
         Ok(())
@@ -208,10 +219,11 @@ impl<'a> Feature<'a> {
         let idx =
             unsafe { gdal_sys::OGR_F_GetFieldIndex(self.c_feature, c_str_field_name.as_ptr()) };
         if idx == -1 {
-            Err(ErrorKind::InvalidFieldName {
+            return Err(ErrorKind::InvalidFieldName {
                 field_name: field_name.to_string(),
                 method_name: "OGR_F_GetFieldIndex",
-            })?;
+            }
+            .into());
         }
         unsafe { gdal_sys::OGR_F_SetFieldDouble(self.c_feature, idx, value as c_double) };
         Ok(())
@@ -222,10 +234,11 @@ impl<'a> Feature<'a> {
         let idx =
             unsafe { gdal_sys::OGR_F_GetFieldIndex(self.c_feature, c_str_field_name.as_ptr()) };
         if idx == -1 {
-            Err(ErrorKind::InvalidFieldName {
+            return Err(ErrorKind::InvalidFieldName {
                 field_name: field_name.to_string(),
                 method_name: "OGR_F_GetFieldIndex",
-            })?;
+            }
+            .into());
         }
         unsafe { gdal_sys::OGR_F_SetFieldInteger(self.c_feature, idx, value as c_int) };
         Ok(())
@@ -236,10 +249,11 @@ impl<'a> Feature<'a> {
         let idx =
             unsafe { gdal_sys::OGR_F_GetFieldIndex(self.c_feature, c_str_field_name.as_ptr()) };
         if idx == -1 {
-            Err(ErrorKind::InvalidFieldName {
+            return Err(ErrorKind::InvalidFieldName {
                 field_name: field_name.to_string(),
                 method_name: "OGR_F_GetFieldIndex",
-            })?;
+            }
+            .into());
         }
         unsafe { gdal_sys::OGR_F_SetFieldInteger64(self.c_feature, idx, value as c_longlong) };
         Ok(())
@@ -251,10 +265,11 @@ impl<'a> Feature<'a> {
         let idx =
             unsafe { gdal_sys::OGR_F_GetFieldIndex(self.c_feature, c_str_field_name.as_ptr()) };
         if idx == -1 {
-            Err(ErrorKind::InvalidFieldName {
+            return Err(ErrorKind::InvalidFieldName {
                 field_name: field_name.to_string(),
                 method_name: "OGR_F_GetFieldIndex",
-            })?;
+            }
+            .into());
         }
 
         let year = value.year() as c_int;
@@ -305,10 +320,11 @@ impl<'a> Feature<'a> {
     pub fn set_geometry(&mut self, geom: Geometry) -> Result<()> {
         let rv = unsafe { gdal_sys::OGR_F_SetGeometry(self.c_feature, geom.c_geometry()) };
         if rv != OGRErr::OGRERR_NONE {
-            Err(ErrorKind::OgrError {
+            return Err(ErrorKind::OgrError {
                 err: rv,
                 method_name: "OGR_G_SetGeometry",
-            })?;
+            }
+            .into());
         }
         self.geometry[0] = geom;
         Ok(())
