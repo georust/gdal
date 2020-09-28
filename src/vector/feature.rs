@@ -3,7 +3,11 @@ use crate::vector::geometry::Geometry;
 use crate::vector::layer::Layer;
 use crate::vector::Defn;
 use gdal_sys::{self, OGRErr, OGRFeatureH, OGRFieldType};
+#[cfg(feature = "gdal_2_2")]
+use libc::c_longlong;
 use libc::{c_double, c_int};
+#[cfg(feature = "gdal_2_2")]
+use std::convert::TryInto;
 use std::ffi::CString;
 
 #[cfg(feature = "datetime")]
@@ -73,6 +77,11 @@ impl<'a> Feature<'a> {
             OGRFieldType::OFTInteger => {
                 let rv = unsafe { gdal_sys::OGR_F_GetFieldAsInteger(self.c_feature, field_id) };
                 Ok(FieldValue::IntegerValue(rv as i32))
+            }
+            #[cfg(feature = "gdal_2_2")]
+            OGRFieldType::OFTInteger64 => {
+                let rv = unsafe { gdal_sys::OGR_F_GetFieldAsInteger64(self.c_feature, field_id) };
+                Ok(FieldValue::Integer64Value(rv))
             }
             #[cfg(feature = "datetime")]
             OGRFieldType::OFTDateTime => Ok(FieldValue::DateTimeValue(
@@ -225,6 +234,21 @@ impl<'a> Feature<'a> {
         Ok(())
     }
 
+    #[cfg(feature = "gdal_2_2")]
+    pub fn set_field_integer64(&self, field_name: &str, value: i64) -> Result<()> {
+        let c_str_field_name = CString::new(field_name)?;
+        let idx =
+            unsafe { gdal_sys::OGR_F_GetFieldIndex(self.c_feature, c_str_field_name.as_ptr()) };
+        if idx == -1 {
+            Err(ErrorKind::InvalidFieldName {
+                field_name: field_name.to_string(),
+                method_name: "OGR_F_GetFieldIndex",
+            })?;
+        }
+        unsafe { gdal_sys::OGR_F_SetFieldInteger64(self.c_feature, idx, value as c_longlong) };
+        Ok(())
+    }
+
     #[cfg(feature = "datetime")]
     pub fn set_field_datetime(&self, field_name: &str, value: DateTime<FixedOffset>) -> Result<()> {
         let c_str_field_name = CString::new(field_name)?;
@@ -271,6 +295,9 @@ impl<'a> Feature<'a> {
             FieldValue::StringValue(ref value) => self.set_field_string(field_name, value.as_str()),
             FieldValue::IntegerValue(value) => self.set_field_integer(field_name, value),
 
+            #[cfg(feature = "gdal_2_2")]
+            FieldValue::Integer64Value(value) => self.set_field_integer64(field_name, value),
+
             #[cfg(feature = "datetime")]
             FieldValue::DateTimeValue(value) => self.set_field_datetime(field_name, value),
 
@@ -304,6 +331,8 @@ impl<'a> Drop for Feature<'a> {
 
 pub enum FieldValue {
     IntegerValue(i32),
+    #[cfg(feature = "gdal_2_2")]
+    Integer64Value(i64),
     StringValue(String),
     RealValue(f64),
 
@@ -315,7 +344,7 @@ pub enum FieldValue {
 }
 
 impl FieldValue {
-    /// Interpret the value as `String`. Panics if the value is something else.
+    /// Interpret the value as `String`. Returns `None` if the value is something else.
     pub fn into_string(self) -> Option<String> {
         match self {
             FieldValue::StringValue(rv) => Some(rv),
@@ -323,7 +352,7 @@ impl FieldValue {
         }
     }
 
-    /// Interpret the value as `f64`. Panics if the value is something else.
+    /// Interpret the value as `f64`. Returns `None` if the value is something else.
     pub fn into_real(self) -> Option<f64> {
         match self {
             FieldValue::RealValue(rv) => Some(rv),
@@ -331,15 +360,27 @@ impl FieldValue {
         }
     }
 
-    /// Interpret the value as `i32`. Panics if the value is something else.
+    /// Interpret the value as `i32`. Returns `None` if the value is something else.
     pub fn into_int(self) -> Option<i32> {
         match self {
             FieldValue::IntegerValue(rv) => Some(rv),
+            #[cfg(feature = "gdal_2_2")]
+            FieldValue::Integer64Value(rv) => rv.try_into().ok(),
             _ => None,
         }
     }
 
-    /// Interpret the value as `Date`.
+    /// Interpret the value as `i64`. Returns `None` if the value is something else.
+    #[cfg(feature = "gdal_2_2")]
+    pub fn into_int64(self) -> Option<i64> {
+        match self {
+            FieldValue::IntegerValue(rv) => Some(rv as i64),
+            FieldValue::Integer64Value(rv) => Some(rv),
+            _ => None,
+        }
+    }
+
+    /// Interpret the value as `Date`. Returns `None` if the value is something else.
     #[cfg(feature = "datetime")]
     pub fn into_date(self) -> Option<Date<FixedOffset>> {
         match self {
@@ -349,7 +390,7 @@ impl FieldValue {
         }
     }
 
-    /// Interpret the value as `DateTime`.
+    /// Interpret the value as `DateTime`. Returns `None` if the value is something else.
     #[cfg(feature = "datetime")]
     pub fn into_datetime(self) -> Option<DateTime<FixedOffset>> {
         match self {

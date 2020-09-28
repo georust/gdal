@@ -209,7 +209,7 @@ fn test_geom_fields() {
 
     let geom_field = layer.defn().geom_fields().next().unwrap();
     let spatial_ref2 = SpatialRef::from_epsg(4326).unwrap();
-    #[cfg(feature = "gdal_3_0")]
+    #[cfg(major_ge_3)]
     spatial_ref2.set_axis_mapping_strategy(0);
 
     assert!(geom_field.spatial_ref().unwrap() == spatial_ref2);
