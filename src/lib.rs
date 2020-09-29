@@ -6,7 +6,7 @@
 //!
 //! ```
 //! use std::path::Path;
-//! use gdal::vector::Dataset;
+//! use gdal::Dataset;
 //!
 //! let mut dataset = Dataset::open(Path::new("fixtures/roads.geojson")).unwrap();
 //! let layer = dataset.layer(0).unwrap();
