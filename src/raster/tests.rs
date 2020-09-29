@@ -1,5 +1,8 @@
+use crate::dataset::Dataset;
 use crate::metadata::Metadata;
-use crate::raster::{ByteBuffer, Dataset, Driver, GDALDataType};
+use crate::raster::ByteBuffer;
+use crate::Driver;
+use gdal_sys::GDALDataType;
 use std::path::Path;
 
 #[cfg(feature = "ndarray")]
@@ -33,7 +36,7 @@ fn test_open() {
 #[test]
 fn test_get_raster_size() {
     let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
-    let (size_x, size_y) = dataset.size();
+    let (size_x, size_y) = dataset.raster_size();
     assert_eq!(size_x, 100);
     assert_eq!(size_y, 50);
 }
@@ -51,7 +54,7 @@ fn test_get_raster_block_size() {
 #[test]
 fn test_get_raster_count() {
     let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
-    let count = dataset.count();
+    let count = dataset.raster_count();
     assert_eq!(count, 3);
 }
 
@@ -69,7 +72,8 @@ fn test_get_projection() {
 #[test]
 fn test_read_raster() {
     let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
-    let rv = dataset.read_raster(1, (20, 30), (2, 3), (2, 3)).unwrap();
+    let rb = dataset.rasterband(1).unwrap();
+    let rv = rb.read_as::<u8>((20, 30), (2, 3), (2, 3)).unwrap();
     assert_eq!(rv.size.0, 2);
     assert_eq!(rv.size.1, 3);
     assert_eq!(rv.data, vec!(7, 7, 7, 10, 8, 12));
@@ -87,15 +91,18 @@ fn test_write_raster() {
     };
 
     // epand it to fill the image (20x10)
-    let res = dataset.write_raster(1, (0, 0), (20, 10), &raster);
+    let rb = dataset.rasterband(1).unwrap();
+
+    let res = rb.write((0, 0), (20, 10), &raster);
+
     assert!(res.is_ok());
 
     // read a pixel from the left side
-    let left = dataset.read_raster(1, (5, 5), (1, 1), (1, 1)).unwrap();
+    let left = rb.read_as::<u8>((5, 5), (1, 1), (1, 1)).unwrap();
     assert_eq!(left.data[0], 50u8);
 
     // read a pixel from the right side
-    let right = dataset.read_raster(1, (15, 5), (1, 1), (1, 1)).unwrap();
+    let right = rb.read_as::<u8>((15, 5), (1, 1), (1, 1)).unwrap();
     assert_eq!(right.data[0], 20u8);
 }
 
@@ -146,8 +153,8 @@ fn test_set_metadata_item() {
 fn test_create() {
     let driver = Driver::get("MEM").unwrap();
     let dataset = driver.create("", 10, 20, 3).unwrap();
-    assert_eq!(dataset.size(), (10, 20));
-    assert_eq!(dataset.count(), 3);
+    assert_eq!(dataset.raster_size(), (10, 20));
+    assert_eq!(dataset.raster_count(), 3);
     assert_eq!(dataset.driver().short_name(), "MEM");
 }
 
@@ -155,10 +162,11 @@ fn test_create() {
 fn test_create_with_band_type() {
     let driver = Driver::get("MEM").unwrap();
     let dataset = driver.create_with_band_type::<f32>("", 10, 20, 3).unwrap();
-    assert_eq!(dataset.size(), (10, 20));
-    assert_eq!(dataset.count(), 3);
+    assert_eq!(dataset.raster_size(), (10, 20));
+    assert_eq!(dataset.raster_count(), 3);
     assert_eq!(dataset.driver().short_name(), "MEM");
-    assert_eq!(dataset.band_type(1).unwrap(), GDALDataType::GDT_Float32)
+    let rb = dataset.rasterband(1).unwrap();
+    assert_eq!(rb.band_type(), GDALDataType::GDT_Float32)
 }
 
 #[test]
@@ -166,8 +174,8 @@ fn test_create_copy() {
     let driver = Driver::get("MEM").unwrap();
     let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
     let copy = dataset.create_copy(&driver, "").unwrap();
-    assert_eq!(copy.size(), (100, 50));
-    assert_eq!(copy.count(), 3);
+    assert_eq!(copy.raster_size(), (100, 50));
+    assert_eq!(copy.raster_count(), 3);
 }
 
 #[test]
@@ -194,13 +202,12 @@ fn test_get_driver_by_name() {
 #[test]
 fn test_read_raster_as() {
     let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
-    let rv = dataset
-        .read_raster_as::<u8>(1, (20, 30), (2, 3), (2, 3))
-        .unwrap();
+    let rb = dataset.rasterband(1).unwrap();
+    let rv = rb.read_as::<u8>((20, 30), (2, 3), (2, 3)).unwrap();
     assert_eq!(rv.data, vec!(7, 7, 7, 10, 8, 12));
     assert_eq!(rv.size.0, 2);
     assert_eq!(rv.size.1, 3);
-    assert_eq!(dataset.band_type(1).unwrap(), GDALDataType::GDT_Byte);
+    assert_eq!(rb.band_type(), GDALDataType::GDT_Byte);
 }
 
 #[test]
@@ -211,9 +218,9 @@ fn test_read_raster_as_array() {
     let (window_size_x, window_size_y) = (3, 4);
     let (array_size_x, array_size_y) = (3, 4);
     let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
-    let values = dataset
+    let rb = dataset.rasterband(band_index).unwrap();
+    let values = rb
         .read_as_array::<u8>(
-            band_index,
             (left, top),
             (window_size_x, window_size_y),
             (array_size_x, array_size_y),
@@ -228,16 +235,14 @@ fn test_read_raster_as_array() {
     ]);
 
     assert_eq!(values, data);
-    assert_eq!(
-        dataset.band_type(band_index).unwrap(),
-        GDALDataType::GDT_Byte
-    );
+    assert_eq!(rb.band_type(), GDALDataType::GDT_Byte);
 }
 
 #[test]
 fn test_read_full_raster_as() {
     let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
-    let rv = dataset.read_full_raster_as::<u8>(1).unwrap();
+    let rb = dataset.rasterband(1).unwrap();
+    let rv = rb.read_band_as::<u8>().unwrap();
     assert_eq!(rv.size.0, 100);
     assert_eq!(rv.size.1, 50);
 }
@@ -295,8 +300,8 @@ fn test_read_block_data() {
 fn test_get_band_type() {
     let driver = Driver::get("MEM").unwrap();
     let dataset = driver.create("", 20, 10, 1).unwrap();
-    assert_eq!(dataset.band_type(1).unwrap(), GDALDataType::GDT_Byte);
-    assert!(dataset.band_type(2).is_err());
+    let rb = dataset.rasterband(1).unwrap();
+    assert_eq!(rb.band_type(), GDALDataType::GDT_Byte);
 }
 
 #[test]
@@ -304,7 +309,9 @@ fn test_get_rasterband() {
     let driver = Driver::get("MEM").unwrap();
     let dataset = driver.create("", 20, 10, 1).unwrap();
     let rasterband = dataset.rasterband(1);
-    assert!(rasterband.is_ok())
+    assert!(rasterband.is_ok());
+    let rasterband2 = dataset.rasterband(2);
+    assert!(rasterband2.is_err());
 }
 
 #[test]

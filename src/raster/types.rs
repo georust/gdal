@@ -1,4 +1,4 @@
-use crate::raster::GDALDataType;
+pub use gdal_sys::GDALDataType;
 
 pub trait GdalType {
     fn gdal_type() -> GDALDataType::Type;

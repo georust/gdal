@@ -1,7 +1,7 @@
+use crate::dataset::Dataset;
 use crate::gdal_major_object::MajorObject;
 use crate::metadata::Metadata;
-use crate::raster::types::GdalType;
-use crate::raster::Dataset;
+use crate::raster::GdalType;
 use crate::utils::{_last_null_pointer_err, _string};
 use gdal_sys::{self, GDALDriverH, GDALMajorObjectH};
 use libc::c_int;
@@ -87,7 +87,11 @@ impl Driver {
         if c_dataset.is_null() {
             Err(_last_null_pointer_err("GDALCreate"))?;
         };
-        Ok(unsafe { Dataset::_with_c_ptr(c_dataset) })
+        Ok(unsafe { Dataset::from_c_dataset(c_dataset) })
+    }
+
+    pub fn create_vector_only(&self, filename: &str) -> Result<Dataset> {
+        self.create_with_band_type::<u8>(filename, 0, 0, 0)
     }
 }
 

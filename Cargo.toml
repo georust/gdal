@@ -12,6 +12,7 @@ documentation = "https://georust.github.io/gdal/"
 edition = "2018"
 
 [features]
+default = []
 bindgen = ["gdal-sys/bindgen"]
 array = ["ndarray"]
 datetime = ["chrono"]

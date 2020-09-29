@@ -1,8 +1,7 @@
+use crate::dataset::Dataset;
 use crate::gdal_major_object::MajorObject;
 use crate::metadata::Metadata;
-use crate::raster::types::GdalType;
-use crate::raster::GDALDataType;
-use crate::raster::{Buffer, Dataset};
+use crate::raster::{GDALDataType, GdalType};
 use crate::utils::_last_cpl_err;
 use gdal_sys::{self, CPLErr, GDALMajorObjectH, GDALRWFlag, GDALRasterBandH};
 use libc::c_int;
@@ -152,7 +151,7 @@ impl<'a> RasterBand<'a> {
     /// # Arguments
     /// * band_index - the band_index
     pub fn read_band_as<T: Copy + GdalType>(&self) -> Result<Buffer<T>> {
-        let size = self.owning_dataset.size();
+        let size = self.owning_dataset.raster_size();
         self.read_as::<T>(
             (0, 0),
             (size.0 as usize, size.1 as usize),
@@ -294,3 +293,16 @@ impl<'a> MajorObject for RasterBand<'a> {
 }
 
 impl<'a> Metadata for RasterBand<'a> {}
+
+pub struct Buffer<T: GdalType> {
+    pub size: (usize, usize),
+    pub data: Vec<T>,
+}
+
+impl<T: GdalType> Buffer<T> {
+    pub fn new(size: (usize, usize), data: Vec<T>) -> Buffer<T> {
+        Buffer { size, data }
+    }
+}
+
+pub type ByteBuffer = Buffer<u8>;
