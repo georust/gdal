@@ -191,7 +191,7 @@ impl Geometry {
         Ok(unsafe { Geometry::with_c_geometry(c_geom, true) })
     }
 
-    #[cfg(all(major_ge_2, minor_ge_1))]
+    #[cfg(any(all(major_is_2, minor_ge_1), major_ge_3))]
     pub fn delaunay_triangulation(&self, tolerance: Option<f64>) -> Result<Self> {
         let c_geom = unsafe { gdal_sys::OGR_G_DelaunayTriangulation(self.c_geometry(), tolerance.unwrap_or(0.0), 0) };
         if c_geom.is_null() {

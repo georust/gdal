@@ -261,7 +261,7 @@ fn test_convex_hull() {
 }
 
 #[test]
-#[cfg(all(major_ge_2, minor_ge_1))]
+#[cfg(any(all(major_is_2, minor_ge_1), major_ge_3))]
 fn test_delaunay_triangulation() -> Result<(), errors::Error> {
     let square = Geometry::from_wkt("POLYGON ((0 1,1 1,1 0,0 0,0 1))")?;
     let triangles = Geometry::from_wkt(
