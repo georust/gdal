@@ -1,6 +1,6 @@
 use super::{Feature, FeatureIterator, FieldValue, Geometry, OGRFieldType, OGRwkbGeometryType};
 use crate::spatial_ref::SpatialRef;
-use crate::{assert_almost_eq, Dataset, Driver};
+use crate::{assert_almost_eq, Dataset, Driver, errors};
 use std::path::Path;
 
 mod convert_geo;
@@ -261,7 +261,7 @@ fn test_convex_hull() {
 }
 
 #[test]
-#[cfg(feature = "gdal_2_1")]
+#[cfg(all(major_ge_2, minor_ge_1))]
 fn test_delaunay_triangulation() -> Result<(), errors::Error> {
     let square = Geometry::from_wkt("POLYGON ((0 1,1 1,1 0,0 0,0 1))")?;
     let triangles = Geometry::from_wkt(
