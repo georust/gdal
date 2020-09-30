@@ -3,7 +3,9 @@ use crate::vector::geometry::Geometry;
 use crate::vector::layer::Layer;
 use crate::vector::Defn;
 use gdal_sys::{self, OGRErr, OGRFeatureH, OGRFieldType};
+use libc::c_longlong;
 use libc::{c_double, c_int};
+use std::convert::TryInto;
 use std::ffi::CString;
 
 #[cfg(feature = "datetime")]
@@ -22,7 +24,7 @@ impl<'a> Feature<'a> {
     pub fn new(defn: &'a Defn) -> Result<Feature> {
         let c_feature = unsafe { gdal_sys::OGR_F_Create(defn.c_defn()) };
         if c_feature.is_null() {
-            Err(_last_null_pointer_err("OGR_F_Create"))?;
+            return Err(_last_null_pointer_err("OGR_F_Create").into());
         };
         Ok(Feature {
             _defn: defn,
@@ -31,7 +33,11 @@ impl<'a> Feature<'a> {
         })
     }
 
-    pub unsafe fn _with_c_feature(defn: &'a Defn, c_feature: OGRFeatureH) -> Feature {
+    /// Creates a new Feature by wrapping a C pointer and a Defn
+    ///
+    /// # Safety
+    /// This method operates on a raw C pointer
+    pub unsafe fn from_c_feature(defn: &'a Defn, c_feature: OGRFeatureH) -> Feature {
         Feature {
             _defn: defn,
             c_feature,
@@ -54,10 +60,11 @@ impl<'a> Feature<'a> {
         let c_name = CString::new(name)?;
         let field_id = unsafe { gdal_sys::OGR_F_GetFieldIndex(self.c_feature, c_name.as_ptr()) };
         if field_id == -1 {
-            Err(ErrorKind::InvalidFieldName {
+            return Err(ErrorKind::InvalidFieldName {
                 field_name: name.to_string(),
                 method_name: "OGR_F_GetFieldIndex",
-            })?;
+            }
+            .into());
         }
         let field_defn = unsafe { gdal_sys::OGR_F_GetFieldDefnRef(self.c_feature, field_id) };
         let field_type = unsafe { gdal_sys::OGR_Fld_GetType(field_defn) };
@@ -74,6 +81,10 @@ impl<'a> Feature<'a> {
                 let rv = unsafe { gdal_sys::OGR_F_GetFieldAsInteger(self.c_feature, field_id) };
                 Ok(FieldValue::IntegerValue(rv as i32))
             }
+            OGRFieldType::OFTInteger64 => {
+                let rv = unsafe { gdal_sys::OGR_F_GetFieldAsInteger64(self.c_feature, field_id) };
+                Ok(FieldValue::Integer64Value(rv))
+            }
             #[cfg(feature = "datetime")]
             OGRFieldType::OFTDateTime => Ok(FieldValue::DateTimeValue(
                 self.get_field_datetime(field_id)?,
@@ -85,7 +96,8 @@ impl<'a> Feature<'a> {
             _ => Err(ErrorKind::UnhandledFieldType {
                 field_type,
                 method_name: "OGR_Fld_GetType",
-            })?,
+            }
+            .into()),
         }
     }
 
@@ -113,10 +125,11 @@ impl<'a> Feature<'a> {
             )
         };
         if success == 0 {
-            Err(ErrorKind::OgrError {
+            return Err(ErrorKind::OgrError {
                 err: OGRErr::OGRERR_FAILURE,
                 method_name: "OGR_F_GetFieldAsDateTime",
-            })?;
+            }
+            .into());
         }
 
         // from https://github.com/OSGeo/gdal/blob/33a8a0edc764253b582e194d330eec3b83072863/gdal/ogr/ogrutils.cpp#L1309
@@ -148,7 +161,8 @@ impl<'a> Feature<'a> {
             Err(ErrorKind::InvalidFieldName {
                 field_name: field_name.to_string(),
                 method_name: "geometry_by_name",
-            })?
+            }
+            .into())
         } else {
             self.geometry_by_index(idx as usize)
         }
@@ -156,15 +170,16 @@ impl<'a> Feature<'a> {
 
     pub fn geometry_by_index(&self, idx: usize) -> Result<&Geometry> {
         if idx >= self.geometry.len() {
-            Err(ErrorKind::InvalidFieldIndex {
+            return Err(ErrorKind::InvalidFieldIndex {
                 index: idx,
                 method_name: "geometry_by_name",
-            })?;
+            }
+            .into());
         }
         if !self.geometry[idx].has_gdal_ptr() {
             let c_geom = unsafe { gdal_sys::OGR_F_GetGeomFieldRef(self.c_feature, idx as i32) };
             if c_geom.is_null() {
-                Err(_last_null_pointer_err("OGR_F_GetGeomFieldRef"))?;
+                return Err(_last_null_pointer_err("OGR_F_GetGeomFieldRef").into());
             }
             unsafe { self.geometry[idx].set_c_geometry(c_geom) };
         }
@@ -174,10 +189,11 @@ impl<'a> Feature<'a> {
     pub fn create(&self, lyr: &Layer) -> Result<()> {
         let rv = unsafe { gdal_sys::OGR_L_CreateFeature(lyr.c_layer(), self.c_feature) };
         if rv != OGRErr::OGRERR_NONE {
-            Err(ErrorKind::OgrError {
+            return Err(ErrorKind::OgrError {
                 err: rv,
                 method_name: "OGR_L_CreateFeature",
-            })?;
+            }
+            .into());
         }
         Ok(())
     }
@@ -188,10 +204,11 @@ impl<'a> Feature<'a> {
         let idx =
             unsafe { gdal_sys::OGR_F_GetFieldIndex(self.c_feature, c_str_field_name.as_ptr()) };
         if idx == -1 {
-            Err(ErrorKind::InvalidFieldName {
+            return Err(ErrorKind::InvalidFieldName {
                 field_name: field_name.to_string(),
                 method_name: "OGR_F_GetFieldIndex",
-            })?;
+            }
+            .into());
         }
         unsafe { gdal_sys::OGR_F_SetFieldString(self.c_feature, idx, c_str_value.as_ptr()) };
         Ok(())
@@ -202,10 +219,11 @@ impl<'a> Feature<'a> {
         let idx =
             unsafe { gdal_sys::OGR_F_GetFieldIndex(self.c_feature, c_str_field_name.as_ptr()) };
         if idx == -1 {
-            Err(ErrorKind::InvalidFieldName {
+            return Err(ErrorKind::InvalidFieldName {
                 field_name: field_name.to_string(),
                 method_name: "OGR_F_GetFieldIndex",
-            })?;
+            }
+            .into());
         }
         unsafe { gdal_sys::OGR_F_SetFieldDouble(self.c_feature, idx, value as c_double) };
         Ok(())
@@ -216,12 +234,28 @@ impl<'a> Feature<'a> {
         let idx =
             unsafe { gdal_sys::OGR_F_GetFieldIndex(self.c_feature, c_str_field_name.as_ptr()) };
         if idx == -1 {
-            Err(ErrorKind::InvalidFieldName {
+            return Err(ErrorKind::InvalidFieldName {
                 field_name: field_name.to_string(),
                 method_name: "OGR_F_GetFieldIndex",
-            })?;
+            }
+            .into());
         }
         unsafe { gdal_sys::OGR_F_SetFieldInteger(self.c_feature, idx, value as c_int) };
+        Ok(())
+    }
+
+    pub fn set_field_integer64(&self, field_name: &str, value: i64) -> Result<()> {
+        let c_str_field_name = CString::new(field_name)?;
+        let idx =
+            unsafe { gdal_sys::OGR_F_GetFieldIndex(self.c_feature, c_str_field_name.as_ptr()) };
+        if idx == -1 {
+            return Err(ErrorKind::InvalidFieldName {
+                field_name: field_name.to_string(),
+                method_name: "OGR_F_GetFieldIndex",
+            }
+            .into());
+        }
+        unsafe { gdal_sys::OGR_F_SetFieldInteger64(self.c_feature, idx, value as c_longlong) };
         Ok(())
     }
 
@@ -231,10 +265,11 @@ impl<'a> Feature<'a> {
         let idx =
             unsafe { gdal_sys::OGR_F_GetFieldIndex(self.c_feature, c_str_field_name.as_ptr()) };
         if idx == -1 {
-            Err(ErrorKind::InvalidFieldName {
+            return Err(ErrorKind::InvalidFieldName {
                 field_name: field_name.to_string(),
                 method_name: "OGR_F_GetFieldIndex",
-            })?;
+            }
+            .into());
         }
 
         let year = value.year() as c_int;
@@ -270,6 +305,7 @@ impl<'a> Feature<'a> {
             FieldValue::RealValue(value) => self.set_field_double(field_name, value),
             FieldValue::StringValue(ref value) => self.set_field_string(field_name, value.as_str()),
             FieldValue::IntegerValue(value) => self.set_field_integer(field_name, value),
+            FieldValue::Integer64Value(value) => self.set_field_integer64(field_name, value),
 
             #[cfg(feature = "datetime")]
             FieldValue::DateTimeValue(value) => self.set_field_datetime(field_name, value),
@@ -284,10 +320,11 @@ impl<'a> Feature<'a> {
     pub fn set_geometry(&mut self, geom: Geometry) -> Result<()> {
         let rv = unsafe { gdal_sys::OGR_F_SetGeometry(self.c_feature, geom.c_geometry()) };
         if rv != OGRErr::OGRERR_NONE {
-            Err(ErrorKind::OgrError {
+            return Err(ErrorKind::OgrError {
                 err: rv,
                 method_name: "OGR_G_SetGeometry",
-            })?;
+            }
+            .into());
         }
         self.geometry[0] = geom;
         Ok(())
@@ -304,6 +341,7 @@ impl<'a> Drop for Feature<'a> {
 
 pub enum FieldValue {
     IntegerValue(i32),
+    Integer64Value(i64),
     StringValue(String),
     RealValue(f64),
 
@@ -315,7 +353,7 @@ pub enum FieldValue {
 }
 
 impl FieldValue {
-    /// Interpret the value as `String`. Panics if the value is something else.
+    /// Interpret the value as `String`. Returns `None` if the value is something else.
     pub fn into_string(self) -> Option<String> {
         match self {
             FieldValue::StringValue(rv) => Some(rv),
@@ -323,7 +361,7 @@ impl FieldValue {
         }
     }
 
-    /// Interpret the value as `f64`. Panics if the value is something else.
+    /// Interpret the value as `f64`. Returns `None` if the value is something else.
     pub fn into_real(self) -> Option<f64> {
         match self {
             FieldValue::RealValue(rv) => Some(rv),
@@ -331,15 +369,25 @@ impl FieldValue {
         }
     }
 
-    /// Interpret the value as `i32`. Panics if the value is something else.
+    /// Interpret the value as `i32`. Returns `None` if the value is something else.
     pub fn into_int(self) -> Option<i32> {
         match self {
             FieldValue::IntegerValue(rv) => Some(rv),
+            FieldValue::Integer64Value(rv) => rv.try_into().ok(),
             _ => None,
         }
     }
 
-    /// Interpret the value as `Date`.
+    /// Interpret the value as `i64`. Returns `None` if the value is something else.
+    pub fn into_int64(self) -> Option<i64> {
+        match self {
+            FieldValue::IntegerValue(rv) => Some(rv as i64),
+            FieldValue::Integer64Value(rv) => Some(rv),
+            _ => None,
+        }
+    }
+
+    /// Interpret the value as `Date`. Returns `None` if the value is something else.
     #[cfg(feature = "datetime")]
     pub fn into_date(self) -> Option<Date<FixedOffset>> {
         match self {
@@ -349,7 +397,7 @@ impl FieldValue {
         }
     }
 
-    /// Interpret the value as `DateTime`.
+    /// Interpret the value as `DateTime`. Returns `None` if the value is something else.
     #[cfg(feature = "datetime")]
     pub fn into_datetime(self) -> Option<DateTime<FixedOffset>> {
         match self {

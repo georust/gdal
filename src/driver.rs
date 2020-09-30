@@ -1,7 +1,7 @@
+use crate::dataset::Dataset;
 use crate::gdal_major_object::MajorObject;
 use crate::metadata::Metadata;
-use crate::raster::types::GdalType;
-use crate::raster::Dataset;
+use crate::raster::GdalType;
 use crate::utils::{_last_null_pointer_err, _string};
 use gdal_sys::{self, GDALDriverH, GDALMajorObjectH};
 use libc::c_int;
@@ -32,16 +32,24 @@ impl Driver {
         let c_name = CString::new(name)?;
         let c_driver = unsafe { gdal_sys::GDALGetDriverByName(c_name.as_ptr()) };
         if c_driver.is_null() {
-            Err(_last_null_pointer_err("GDALGetDriverByName"))?;
+            return Err(_last_null_pointer_err("GDALGetDriverByName").into());
         };
         Ok(Driver { c_driver })
     }
 
-    pub unsafe fn _with_c_ptr(c_driver: GDALDriverH) -> Driver {
+    /// Creates a new Driver object by wrapping a C pointer
+    ///
+    /// # Safety
+    /// This method operates on a raw C pointer
+    pub unsafe fn from_c_driver(c_driver: GDALDriverH) -> Driver {
         Driver { c_driver }
     }
 
-    pub unsafe fn _c_ptr(&self) -> GDALDriverH {
+    /// Returns the wrapped C pointer
+    ///
+    /// # Safety
+    /// This method returns a raw C pointer
+    pub unsafe fn c_driver(&self) -> GDALDriverH {
         self.c_driver
     }
 
@@ -85,9 +93,13 @@ impl Driver {
             )
         };
         if c_dataset.is_null() {
-            Err(_last_null_pointer_err("GDALCreate"))?;
+            return Err(_last_null_pointer_err("GDALCreate").into());
         };
-        Ok(unsafe { Dataset::_with_c_ptr(c_dataset) })
+        Ok(unsafe { Dataset::from_c_dataset(c_dataset) })
+    }
+
+    pub fn create_vector_only(&self, filename: &str) -> Result<Dataset> {
+        self.create_with_band_type::<u8>(filename, 0, 0, 0)
     }
 }
 

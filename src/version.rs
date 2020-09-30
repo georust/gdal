@@ -1,5 +1,4 @@
 use crate::utils::_string;
-use gdal_sys;
 use std::ffi::CString;
 
 pub fn version_info(key: &str) -> String {

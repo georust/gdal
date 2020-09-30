@@ -1,7 +1,7 @@
-pub use crate::spatial_ref::srs::CoordTransform;
-pub use crate::spatial_ref::srs::SpatialRef;
-
 mod srs;
+
+pub use srs::CoordTransform;
+pub use srs::SpatialRef;
 
 #[cfg(test)]
 mod tests;

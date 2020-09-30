@@ -4,7 +4,7 @@
 //!
 //! ```
 //! use std::path::Path;
-//! use gdal::vector::Dataset;
+//! use gdal::Dataset;
 //!
 //! let mut dataset = Dataset::open(Path::new("fixtures/roads.geojson")).unwrap();
 //! let layer = dataset.layer(0).unwrap();
@@ -15,14 +15,20 @@
 //! }
 //! ```
 
-pub use crate::vector::dataset::Dataset;
-pub use crate::vector::defn::{Defn, Field, FieldIterator};
-pub use crate::vector::driver::Driver;
-pub use crate::vector::feature::{Feature, FieldValue};
-pub use crate::vector::geometry::Geometry;
-pub use crate::vector::layer::{FeatureIterator, FieldDefn, Layer};
-pub use crate::vector::ops::geometry::intersection::Intersection as GeometryIntersection;
+mod defn;
+mod feature;
+mod gdal_to_geo;
+mod geo_to_gdal;
+mod geometry;
+mod layer;
+mod ops;
+
+pub use defn::{Defn, Field, FieldIterator};
+pub use feature::{Feature, FieldValue};
 pub use gdal_sys::{OGRFieldType, OGRwkbGeometryType};
+pub use geometry::Geometry;
+pub use layer::{FeatureIterator, FieldDefn, Layer};
+pub use ops::GeometryIntersection;
 
 use crate::errors::Result;
 
@@ -30,16 +36,6 @@ use crate::errors::Result;
 pub trait ToGdal {
     fn to_gdal(&self) -> Result<Geometry>;
 }
-
-mod dataset;
-mod defn;
-mod driver;
-mod feature;
-mod gdal_to_geo;
-mod geo_to_gdal;
-mod geometry;
-mod layer;
-mod ops;
 
 #[cfg(test)]
 mod tests;

@@ -1,15 +1,12 @@
 //! GDAL Raster Data
 
-pub use crate::raster::dataset::{Buffer, ByteBuffer, Dataset};
-pub use crate::raster::driver::Driver;
-pub use crate::raster::rasterband::RasterBand;
-pub use crate::raster::warp::reproject;
+mod rasterband;
+mod types;
+mod warp;
 
-pub mod dataset;
-pub mod driver;
-pub mod rasterband;
-pub mod types;
-pub mod warp;
+pub use rasterband::{Buffer, ByteBuffer, RasterBand};
+pub use types::{GDALDataType, GdalType};
+pub use warp::reproject;
 
 #[cfg(test)]
 mod tests;

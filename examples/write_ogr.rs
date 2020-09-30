@@ -1,38 +1,38 @@
 use gdal::errors::Error;
-use gdal::vector::{Defn, Driver, Feature, FieldDefn, FieldValue, Geometry, OGRFieldType};
+use gdal::vector::{Defn, Feature, FieldDefn, FieldValue, Geometry, OGRFieldType};
+use gdal::Driver;
 use std::fs;
-use std::path::Path;
 
 /// Example 1, the detailed way:
 fn example_1() -> Result<(), Error> {
     let _ = fs::remove_file("/tmp/output1.geojson");
     let drv = Driver::get("GeoJSON")?;
-    let mut ds = drv.create(Path::new("/tmp/output1.geojson"))?;
+    let mut ds = drv.create_vector_only("/tmp/output1.geojson")?;
 
-    let lyr = ds.create_layer()?;
+    let lyr = ds.create_layer_blank()?;
 
     let field_defn = FieldDefn::new("Name", OGRFieldType::OFTString)?;
     field_defn.set_width(80);
-    field_defn.add_to_layer(lyr)?;
+    field_defn.add_to_layer(&lyr)?;
 
     let field_defn = FieldDefn::new("Value", OGRFieldType::OFTReal)?;
-    field_defn.add_to_layer(lyr)?;
+    field_defn.add_to_layer(&lyr)?;
 
-    let defn = Defn::from_layer(lyr);
+    let defn = Defn::from_layer(&lyr);
 
     // 1st feature:
     let mut ft = Feature::new(&defn)?;
     ft.set_geometry(Geometry::from_wkt("POINT (45.21 21.76)")?)?;
     ft.set_field_string("Name", "Feature 1")?;
     ft.set_field_double("Value", 45.78)?;
-    ft.create(lyr)?;
+    ft.create(&lyr)?;
 
     // 2nd feature:
     let mut ft = Feature::new(&defn)?;
     ft.set_field_double("Value", 0.789)?;
     ft.set_geometry(Geometry::from_wkt("POINT (46.50 22.50)")?)?;
     ft.set_field_string("Name", "Feature 2")?;
-    ft.create(lyr)?;
+    ft.create(&lyr)?;
 
     // Feature triggering an error due to a wrong field name:
     let mut ft = Feature::new(&defn)?;
@@ -42,7 +42,7 @@ fn example_1() -> Result<(), Error> {
         Ok(v) => v,
         Err(err) => println!("{}", err),
     };
-    ft.create(lyr)?;
+    ft.create(&lyr)?;
 
     Ok(())
 }
@@ -51,8 +51,8 @@ fn example_1() -> Result<(), Error> {
 fn example_2() -> Result<(), Error> {
     let _ = fs::remove_file("/tmp/output2.geojson");
     let driver = Driver::get("GeoJSON")?;
-    let mut ds = driver.create(Path::new("/tmp/output2.geojson"))?;
-    let layer = ds.create_layer()?;
+    let mut ds = driver.create_vector_only("/tmp/output2.geojson")?;
+    let mut layer = ds.create_layer_blank()?;
 
     layer.create_defn_fields(&[
         ("Name", OGRFieldType::OFTString),

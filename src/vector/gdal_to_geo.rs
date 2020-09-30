@@ -1,13 +1,12 @@
 use crate::vector::Geometry;
 use gdal_sys::{self, OGRwkbGeometryType};
-use geo_types;
 
 impl From<Geometry> for geo_types::Geometry<f64> {
     fn from(geo: Geometry) -> geo_types::Geometry<f64> {
         let geometry_type = unsafe { gdal_sys::OGR_G_GetGeometryType(geo.c_geometry()) };
 
         let ring = |n: usize| {
-            let ring = unsafe { geo._get_geometry(n) };
+            let ring = unsafe { geo.get_unowned_geometry(n) };
             match ring.into() {
                 geo_types::Geometry::LineString(r) => r,
                 _ => panic!("Expected to get a LineString"),
@@ -23,7 +22,7 @@ impl From<Geometry> for geo_types::Geometry<f64> {
                 let point_count =
                     unsafe { gdal_sys::OGR_G_GetGeometryCount(geo.c_geometry()) } as usize;
                 let coords = (0..point_count)
-                    .map(|n| match unsafe { geo._get_geometry(n) }.into() {
+                    .map(|n| match unsafe { geo.get_unowned_geometry(n) }.into() {
                         geo_types::Geometry::Point(p) => p,
                         _ => panic!("Expected to get a Point"),
                     })
@@ -42,7 +41,7 @@ impl From<Geometry> for geo_types::Geometry<f64> {
                 let string_count =
                     unsafe { gdal_sys::OGR_G_GetGeometryCount(geo.c_geometry()) } as usize;
                 let strings = (0..string_count)
-                    .map(|n| match unsafe { geo._get_geometry(n) }.into() {
+                    .map(|n| match unsafe { geo.get_unowned_geometry(n) }.into() {
                         geo_types::Geometry::LineString(s) => s,
                         _ => panic!("Expected to get a LineString"),
                     })
@@ -60,7 +59,7 @@ impl From<Geometry> for geo_types::Geometry<f64> {
                 let string_count =
                     unsafe { gdal_sys::OGR_G_GetGeometryCount(geo.c_geometry()) } as usize;
                 let strings = (0..string_count)
-                    .map(|n| match unsafe { geo._get_geometry(n) }.into() {
+                    .map(|n| match unsafe { geo.get_unowned_geometry(n) }.into() {
                         geo_types::Geometry::Polygon(s) => s,
                         _ => panic!("Expected to get a Polygon"),
                     })
@@ -71,7 +70,7 @@ impl From<Geometry> for geo_types::Geometry<f64> {
                 let item_count =
                     unsafe { gdal_sys::OGR_G_GetGeometryCount(geo.c_geometry()) } as usize;
                 let geometry_list = (0..item_count)
-                    .map(|n| unsafe { geo._get_geometry(n) }.into())
+                    .map(|n| unsafe { geo.get_unowned_geometry(n) }.into())
                     .collect();
                 geo_types::Geometry::GeometryCollection(geo_types::GeometryCollection(
                     geometry_list,

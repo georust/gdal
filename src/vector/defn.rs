@@ -16,10 +16,18 @@ pub struct Defn {
 }
 
 impl Defn {
-    pub unsafe fn _with_c_defn(c_defn: OGRFeatureDefnH) -> Defn {
+    /// Creates a new Defn by wrapping a C pointer
+    ///
+    /// # Safety
+    /// This method operates on a raw C pointer    
+    pub unsafe fn from_c_defn(c_defn: OGRFeatureDefnH) -> Defn {
         Defn { c_defn }
     }
 
+    /// Returns the wrapped C pointer
+    ///
+    /// # Safety
+    /// This method returns a raw C pointer
     pub unsafe fn c_defn(&self) -> OGRFeatureDefnH {
         self.c_defn
     }
@@ -149,7 +157,7 @@ impl<'a> GeomField<'a> {
     pub fn spatial_ref(&'a self) -> Result<SpatialRef> {
         let c_obj = unsafe { gdal_sys::OGR_GFld_GetSpatialRef(self.c_field_defn) };
         if c_obj.is_null() {
-            Err(_last_null_pointer_err("OGR_GFld_GetSpatialRef"))?;
+            return Err(_last_null_pointer_err("OGR_GFld_GetSpatialRef").into());
         }
         SpatialRef::from_c_obj(c_obj)
     }

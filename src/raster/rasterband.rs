@@ -1,9 +1,9 @@
+use crate::dataset::Dataset;
 use crate::gdal_major_object::MajorObject;
 use crate::metadata::Metadata;
-use crate::raster::types::GdalType;
-use crate::raster::{Buffer, Dataset};
+use crate::raster::{GDALDataType, GdalType};
 use crate::utils::_last_cpl_err;
-use gdal_sys::{self, CPLErr, GDALDataType, GDALMajorObjectH, GDALRWFlag, GDALRasterBandH};
+use gdal_sys::{self, CPLErr, GDALMajorObjectH, GDALRWFlag, GDALRasterBandH};
 use libc::c_int;
 
 #[cfg(feature = "ndarray")]
@@ -21,6 +21,10 @@ impl<'a> RasterBand<'a> {
         self.owning_dataset
     }
 
+    /// Create a RasterBand from a wrapped C pointer
+    ///
+    /// # Safety
+    /// This method operates on a raw C pointer
     pub unsafe fn _with_c_ptr(c_rasterband: GDALRasterBandH, owning_dataset: &'a Dataset) -> Self {
         RasterBand {
             c_rasterband,
@@ -92,7 +96,7 @@ impl<'a> RasterBand<'a> {
             )
         };
         if rv != CPLErr::CE_None {
-            Err(_last_cpl_err(rv))?;
+            return Err(_last_cpl_err(rv).into());
         }
 
         unsafe {
@@ -136,7 +140,7 @@ impl<'a> RasterBand<'a> {
             )
         };
         if values != CPLErr::CE_None {
-            Err(_last_cpl_err(values))?;
+            return Err(_last_cpl_err(values).into());
         }
 
         unsafe {
@@ -151,7 +155,7 @@ impl<'a> RasterBand<'a> {
     /// # Arguments
     /// * band_index - the band_index
     pub fn read_band_as<T: Copy + GdalType>(&self) -> Result<Buffer<T>> {
-        let size = self.owning_dataset.size();
+        let size = self.owning_dataset.raster_size();
         self.read_as::<T>(
             (0, 0),
             (size.0 as usize, size.1 as usize),
@@ -180,7 +184,7 @@ impl<'a> RasterBand<'a> {
             )
         };
         if rv != CPLErr::CE_None {
-            Err(_last_cpl_err(rv))?;
+            return Err(_last_cpl_err(rv).into());
         }
 
         unsafe {
@@ -219,7 +223,7 @@ impl<'a> RasterBand<'a> {
             )
         };
         if rv != CPLErr::CE_None {
-            Err(_last_cpl_err(rv))?;
+            return Err(_last_cpl_err(rv).into());
         }
         Ok(())
     }
@@ -241,7 +245,7 @@ impl<'a> RasterBand<'a> {
     pub fn set_no_data_value(&self, no_data: f64) -> Result<()> {
         let rv = unsafe { gdal_sys::GDALSetRasterNoDataValue(self.c_rasterband, no_data) };
         if rv != CPLErr::CE_None {
-            Err(_last_cpl_err(rv))?;
+            return Err(_last_cpl_err(rv).into());
         }
         Ok(())
     }
@@ -266,7 +270,7 @@ impl<'a> RasterBand<'a> {
 
     /// Get actual block size (at the edges) when block size
     /// does not divide band size.
-    #[cfg(feature = "gdal_2_2")]
+    #[cfg(any(all(major_is_2, minor_ge_2), major_ge_3))] // GDAL 2.2 .. 2.x or >= 3
     pub fn actual_block_size(&self, offset: (isize, isize)) -> Result<(usize, usize)> {
         let mut block_size_x = 0;
         let mut block_size_y = 0;
@@ -280,7 +284,7 @@ impl<'a> RasterBand<'a> {
             )
         };
         if rv != CPLErr::CE_None {
-            Err(_last_cpl_err(rv))?;
+            return Err(_last_cpl_err(rv).into());
         }
         Ok((block_size_x as usize, block_size_y as usize))
     }
@@ -293,3 +297,16 @@ impl<'a> MajorObject for RasterBand<'a> {
 }
 
 impl<'a> Metadata for RasterBand<'a> {}
+
+pub struct Buffer<T: GdalType> {
+    pub size: (usize, usize),
+    pub data: Vec<T>,
+}
+
+impl<T: GdalType> Buffer<T> {
+    pub fn new(size: (usize, usize), data: Vec<T>) -> Buffer<T> {
+        Buffer { size, data }
+    }
+}
+
+pub type ByteBuffer = Buffer<u8>;

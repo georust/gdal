@@ -1,5 +1,5 @@
-use gdal::metadata::Metadata;
-use gdal::raster::{Dataset, RasterBand};
+use gdal::raster::RasterBand;
+use gdal::{Dataset, Metadata};
 use std::path::Path;
 
 fn main() {

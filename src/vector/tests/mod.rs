@@ -1,9 +1,6 @@
-use super::{
-    Dataset, Driver, Feature, FeatureIterator, FieldValue, Geometry, OGRFieldType,
-    OGRwkbGeometryType,
-};
-use crate::{assert_almost_eq, errors};
+use super::{Feature, FeatureIterator, FieldValue, Geometry, OGRFieldType, OGRwkbGeometryType};
 use crate::spatial_ref::SpatialRef;
+use crate::{assert_almost_eq, Dataset, Driver};
 use std::path::Path;
 
 mod convert_geo;
@@ -29,7 +26,7 @@ macro_rules! fixture {
 #[test]
 fn test_layer_count() {
     let ds = Dataset::open(fixture!("roads.geojson")).unwrap();
-    assert_eq!(ds.count(), 1);
+    assert_eq!(ds.layer_count(), 1);
 }
 
 #[test]
@@ -204,13 +201,13 @@ fn test_geom_fields() {
         .collect::<Vec<_>>();
     let ok_names_types = vec![("", OGRwkbGeometryType::wkbLineString)]
         .iter()
-        .map(|s| (s.0.to_string(), s.1.clone()))
+        .map(|s| (s.0.to_string(), s.1))
         .collect::<Vec<_>>();
     assert_eq!(name_list, ok_names_types);
 
     let geom_field = layer.defn().geom_fields().next().unwrap();
     let spatial_ref2 = SpatialRef::from_epsg(4326).unwrap();
-    #[cfg(feature = "gdal_3_0")]
+    #[cfg(major_ge_3)]
     spatial_ref2.set_axis_mapping_strategy(0);
 
     assert!(geom_field.spatial_ref().unwrap() == spatial_ref2);
@@ -304,8 +301,10 @@ fn test_write_features() {
 
     {
         let driver = Driver::get("GeoJSON").unwrap();
-        let mut ds = driver.create(fixture!("output.geojson")).unwrap();
-        let layer = ds.create_layer().unwrap();
+        let mut ds = driver
+            .create_vector_only(&fixture!("output.geojson").to_string_lossy())
+            .unwrap();
+        let mut layer = ds.create_layer_blank().unwrap();
         layer
             .create_defn_fields(&[
                 ("Name", OGRFieldType::OFTString),
