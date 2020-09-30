@@ -191,6 +191,34 @@ impl Geometry {
         Ok(unsafe { Geometry::with_c_geometry(c_geom, true) })
     }
 
+    #[cfg(any(all(major_is_2, minor_ge_1), major_ge_3))]
+    pub fn delaunay_triangulation(&self, tolerance: Option<f64>) -> Result<Self> {
+        let c_geom = unsafe { gdal_sys::OGR_G_DelaunayTriangulation(self.c_geometry(), tolerance.unwrap_or(0.0), 0) };
+        if c_geom.is_null() {
+            Err(_last_null_pointer_err("OGR_G_DelaunayTriangulation"))?;
+        };
+
+        Ok(unsafe { Geometry::with_c_geometry(c_geom, true) })
+    }
+
+    pub fn simplify(&self, tolerance: f64) -> Result<Self> {
+        let c_geom = unsafe { gdal_sys::OGR_G_Simplify(self.c_geometry(), tolerance) };
+        if c_geom.is_null() {
+            Err(_last_null_pointer_err("OGR_G_Simplify"))?;
+        };
+
+        Ok(unsafe { Geometry::with_c_geometry(c_geom, true) })
+    }
+
+    pub fn simplify_preserve_topology(&self, tolerance: f64) -> Result<Self> {
+        let c_geom = unsafe { gdal_sys::OGR_G_SimplifyPreserveTopology(self.c_geometry(), tolerance) };
+        if c_geom.is_null() {
+            Err(_last_null_pointer_err("OGR_G_SimplifyPreserveTopology"))?;
+        };
+
+        Ok(unsafe { Geometry::with_c_geometry(c_geom, true) })
+    }
+
     pub fn geometry_type(&self) -> OGRwkbGeometryType::Type {
         unsafe { gdal_sys::OGR_G_GetGeometryType(self.c_geometry()) }
     }
