@@ -341,18 +341,53 @@ fn test_set_no_data_value() {
 
 #[test]
 fn test_get_scale() {
-    let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
+    let dataset = Dataset::open(fixture!("offset_scaled_tinymarble.tif")).unwrap();
     let rasterband = dataset.rasterband(1).unwrap();
     let scale = rasterband.scale();
-    assert_eq!(scale, Some(1.0));
+    assert_eq!(scale, Some(1.2));
 }
 
 #[test]
 fn test_get_offset() {
+    let dataset = Dataset::open(fixture!("offset_scaled_tinymarble.tif")).unwrap();
+    let rasterband = dataset.rasterband(1).unwrap();
+    let offset = rasterband.offset();
+    assert_eq!(offset, Some(12.0));
+}
+
+#[test]
+fn test_get_default_scale() {
+    let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
+    let rasterband = dataset.rasterband(1).unwrap();
+    let scale = rasterband.scale();
+
+    if cfg!(all(major_ge_3, minor_ge_1)) {
+        // This behavior changed in 3.1.0
+        // Since the default value is indistinguishable from "not set", None is returned. Unclear
+        // if this is a bug or intended behavior, but tracked at:
+        // https://github.com/OSGeo/gdal/issues/2579
+        assert_eq!(scale, None);
+    } else {
+        // on gdal 2.x and gdal 3.0
+        assert_eq!(scale, Some(1.0));
+    }
+}
+
+#[test]
+fn test_get_default_offset() {
     let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
     let rasterband = dataset.rasterband(1).unwrap();
     let offset = rasterband.offset();
-    assert_eq!(offset, Some(0.0));
+    if cfg!(all(major_ge_3, minor_ge_1)) {
+        // This behavior changed in 3.1.0
+        // Since the default value is indistinguishable from "not set", None is returned.  Unclear
+        // if this is a bug or intended behavior, but tracked at:
+        // https://github.com/OSGeo/gdal/issues/2579
+        assert_eq!(offset, None);
+    } else {
+        // on gdal 2.x and gdal 3.0
+        assert_eq!(offset, Some(0.0));
+    }
 }
 
 #[test]
