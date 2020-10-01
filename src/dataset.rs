@@ -189,12 +189,12 @@ impl Dataset {
             if c_band.is_null() {
                 return Err(_last_null_pointer_err("GDALGetRasterBand").into());
             }
-            Ok(RasterBand::_with_c_ptr(c_band, self))
+            Ok(RasterBand::from_c_rasterband(self, c_band))
         }
     }
 
     fn child_layer(&self, c_layer: OGRLayerH) -> Layer {
-        unsafe { Layer::from_c_layer(c_layer, self) }
+        unsafe { Layer::from_c_layer(self, c_layer) }
     }
 
     pub fn layer_count(&self) -> isize {

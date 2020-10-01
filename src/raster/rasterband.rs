@@ -1,3 +1,5 @@
+use std::marker::PhantomData;
+
 use crate::dataset::Dataset;
 use crate::gdal_major_object::MajorObject;
 use crate::metadata::Metadata;
@@ -11,24 +13,25 @@ use ndarray::Array2;
 
 use crate::errors::*;
 
+/// Represents a single band of a dataset.
+///
+/// This object carries the lifetime of the dataset that
+/// contains it. This is necessary to prevent the dataset
+/// from being dropped before the band.
 pub struct RasterBand<'a> {
     c_rasterband: GDALRasterBandH,
-    owning_dataset: &'a Dataset,
+    phantom: PhantomData<&'a Dataset>,
 }
 
 impl<'a> RasterBand<'a> {
-    pub fn owning_dataset(&self) -> &'a Dataset {
-        self.owning_dataset
-    }
-
     /// Create a RasterBand from a wrapped C pointer
     ///
     /// # Safety
     /// This method operates on a raw C pointer
-    pub unsafe fn _with_c_ptr(c_rasterband: GDALRasterBandH, owning_dataset: &'a Dataset) -> Self {
+    pub unsafe fn from_c_rasterband(_: &'a Dataset, c_rasterband: GDALRasterBandH) -> Self {
         RasterBand {
             c_rasterband,
-            owning_dataset,
+            phantom: PhantomData,
         }
     }
 
@@ -159,7 +162,7 @@ impl<'a> RasterBand<'a> {
     /// # Arguments
     /// * band_index - the band_index
     pub fn read_band_as<T: Copy + GdalType>(&self) -> Result<Buffer<T>> {
-        let size = self.owning_dataset.raster_size();
+        let size = self.size();
         self.read_as::<T>(
             (0, 0),
             (size.0 as usize, size.1 as usize),

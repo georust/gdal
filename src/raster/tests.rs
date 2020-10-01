@@ -244,15 +244,6 @@ fn test_read_raster_as_array() {
 }
 
 #[test]
-fn test_read_full_raster_as() {
-    let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
-    let rb = dataset.rasterband(1).unwrap();
-    let rv = rb.read_band_as::<u8>().unwrap();
-    assert_eq!(rv.size.0, 100);
-    assert_eq!(rv.size.1, 50);
-}
-
-#[test]
 #[cfg(feature = "ndarray")]
 fn test_read_block_as_array() {
     let band_index = 1;
