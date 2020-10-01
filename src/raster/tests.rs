@@ -77,6 +77,10 @@ fn test_read_raster() {
     assert_eq!(rv.size.0, 2);
     assert_eq!(rv.size.1, 3);
     assert_eq!(rv.data, vec!(7, 7, 7, 10, 8, 12));
+
+    let mut buf = rv;
+    rb.read_into_slice((20, 30), (2, 3), (2, 3), &mut buf.data).unwrap();
+    assert_eq!(buf.data, vec!(7, 7, 7, 10, 8, 12));
 }
 
 #[test]
