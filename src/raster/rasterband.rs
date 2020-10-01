@@ -64,20 +64,23 @@ impl<'a> RasterBand<'a> {
         (self.x_size(), self.y_size())
     }
 
-    /// Read a 'Buffer<T>' from a 'Dataset'. T implements 'GdalType'
+    /// Read data from this band into a slice. T implements 'GdalType'
+    ///
     /// # Arguments
-    /// * band_index - the band_index
     /// * window - the window position from top left
     /// * window_size - the window size (GDAL will interpolate data if window_size != buffer_size)
-    /// * buffer_size - the desired size of the 'Buffer'
-    pub fn read_as<T: Copy + GdalType>(
+    /// * size - the desired size to read
+    /// * buffer - a slice to hold the data (length must equal product of size parameter)
+    pub fn read_into_slice<T: Copy + GdalType>(
         &self,
         window: (isize, isize),
         window_size: (usize, usize),
         size: (usize, usize),
-    ) -> Result<Buffer<T>> {
+        buffer: &mut [T],
+    ) -> Result<()> {
         let pixels = (size.0 * size.1) as usize;
-        let mut data: Vec<T> = Vec::with_capacity(pixels);
+        assert_eq!(buffer.len(), pixels);
+
         //let no_data:
         let rv = unsafe {
             gdal_sys::GDALRasterIO(
@@ -87,7 +90,7 @@ impl<'a> RasterBand<'a> {
                 window.1 as c_int,
                 window_size.0 as c_int,
                 window_size.1 as c_int,
-                data.as_mut_ptr() as GDALRasterBandH,
+                buffer.as_mut_ptr() as GDALRasterBandH,
                 size.0 as c_int,
                 size.1 as c_int,
                 T::gdal_type(),
@@ -99,15 +102,41 @@ impl<'a> RasterBand<'a> {
             return Err(_last_cpl_err(rv).into());
         }
 
+        Ok(())
+    }
+
+    /// Read a 'Buffer<T>' from this band. T implements 'GdalType'
+    ///
+    /// # Arguments
+    /// * window - the window position from top left
+    /// * window_size - the window size (GDAL will interpolate data if window_size != buffer_size)
+    /// * buffer_size - the desired size of the 'Buffer'
+    pub fn read_as<T: Copy + GdalType>(
+        &self,
+        window: (isize, isize),
+        window_size: (usize, usize),
+        size: (usize, usize),
+    ) -> Result<Buffer<T>> {
+        let pixels = (size.0 * size.1) as usize;
+
+        let mut data: Vec<T> = Vec::with_capacity(pixels);
+
+        // Safety: the read_into_slice line below writes
+        // exactly pixel elements into the slice, before we
+        // read from this slice. This paradigm is suggested
+        // in the rust std docs
+        // (https://doc.rust-lang.org/std/vec/struct.Vec.html#examples-18)
         unsafe {
             data.set_len(pixels);
         };
+        self.read_into_slice(window, window_size, size, &mut data)?;
 
         Ok(Buffer { size, data })
     }
 
     #[cfg(feature = "ndarray")]
-    /// Read a 'Array2<T>' from a 'Dataset'. T implements 'GdalType'.
+    /// Read a 'Array2<T>' from this band. T implements 'GdalType'.
+    ///
     /// # Arguments
     /// * window - the window position from top left
     /// * window_size - the window size (GDAL will interpolate data if window_size != array_size)
@@ -120,38 +149,13 @@ impl<'a> RasterBand<'a> {
         window_size: (usize, usize),
         array_size: (usize, usize),
     ) -> Result<Array2<T>> {
-        let pixels = (array_size.0 * array_size.1) as usize;
-        let mut data: Vec<T> = Vec::with_capacity(pixels);
-
-        let values = unsafe {
-            gdal_sys::GDALRasterIO(
-                self.c_rasterband,
-                GDALRWFlag::GF_Read,
-                window.0 as c_int,
-                window.1 as c_int,
-                window_size.0 as c_int,
-                window_size.1 as c_int,
-                data.as_mut_ptr() as GDALRasterBandH,
-                array_size.0 as c_int,
-                array_size.1 as c_int,
-                T::gdal_type(),
-                0,
-                0,
-            )
-        };
-        if values != CPLErr::CE_None {
-            return Err(_last_cpl_err(values).into());
-        }
-
-        unsafe {
-            data.set_len(pixels);
-        };
+        let data = self.read_as::<T>(window, window_size, array_size)?;
 
         // Matrix shape is (rows, cols) and raster shape is (cols in x-axis, rows in y-axis)
-        Array2::from_shape_vec((array_size.1, array_size.0), data).map_err(Into::into)
+        Ok( Array2::from_shape_vec((array_size.1, array_size.0), data.data)? )
     }
 
-    /// Read a full 'Dataset' as 'Buffer<T>'.
+    /// Read the full band as a 'Buffer<T>'.
     /// # Arguments
     /// * band_index - the band_index
     pub fn read_band_as<T: Copy + GdalType>(&self) -> Result<Buffer<T>> {
