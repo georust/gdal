@@ -8,8 +8,8 @@ use gdal_sys::{
     self, GDALMajorObjectH, OGREnvelope, OGRErr, OGRFieldDefnH, OGRFieldType, OGRLayerH,
 };
 use libc::c_int;
-use std::ffi::CString;
 use std::ptr::null_mut;
+use std::{ffi::CString, marker::PhantomData};
 
 use crate::errors::*;
 
@@ -27,8 +27,8 @@ use crate::errors::*;
 /// ```
 pub struct Layer<'a> {
     c_layer: OGRLayerH,
-    owning_dataset: &'a Dataset,
     defn: Defn,
+    phantom: PhantomData<&'a Dataset>,
 }
 
 impl<'a> MajorObject for Layer<'a> {
@@ -40,21 +40,17 @@ impl<'a> MajorObject for Layer<'a> {
 impl<'a> Metadata for Layer<'a> {}
 
 impl<'a> Layer<'a> {
-    pub fn owning_dataset(&self) -> &Dataset {
-        self.owning_dataset
-    }
-
     /// Creates a new Layer from a GDAL layer pointer
     ///
     /// # Safety
     /// This method operates on a raw C pointer
-    pub unsafe fn from_c_layer(c_layer: OGRLayerH, owning_dataset: &'a Dataset) -> Layer<'a> {
+    pub unsafe fn from_c_layer(_: &'a Dataset, c_layer: OGRLayerH) -> Layer<'a> {
         let c_defn = gdal_sys::OGR_L_GetLayerDefn(c_layer);
         let defn = Defn::from_c_defn(c_defn);
         Layer {
             c_layer,
-            owning_dataset,
             defn,
+            phantom: PhantomData,
         }
     }
 

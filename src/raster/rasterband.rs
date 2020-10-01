@@ -1,3 +1,5 @@
+use std::marker::PhantomData;
+
 use crate::dataset::Dataset;
 use crate::gdal_major_object::MajorObject;
 use crate::metadata::Metadata;
@@ -13,22 +15,18 @@ use crate::errors::*;
 
 pub struct RasterBand<'a> {
     c_rasterband: GDALRasterBandH,
-    owning_dataset: &'a Dataset,
+    phantom: PhantomData<&'a Dataset>,
 }
 
 impl<'a> RasterBand<'a> {
-    pub fn owning_dataset(&self) -> &'a Dataset {
-        self.owning_dataset
-    }
-
     /// Create a RasterBand from a wrapped C pointer
     ///
     /// # Safety
     /// This method operates on a raw C pointer
-    pub unsafe fn _with_c_ptr(c_rasterband: GDALRasterBandH, owning_dataset: &'a Dataset) -> Self {
+    pub unsafe fn from_c_rasterband(_: &'a Dataset, c_rasterband: GDALRasterBandH) -> Self {
         RasterBand {
             c_rasterband,
-            owning_dataset,
+            phantom: PhantomData,
         }
     }
 
@@ -149,18 +147,6 @@ impl<'a> RasterBand<'a> {
 
         // Matrix shape is (rows, cols) and raster shape is (cols in x-axis, rows in y-axis)
         Array2::from_shape_vec((array_size.1, array_size.0), data).map_err(Into::into)
-    }
-
-    /// Read a full 'Dataset' as 'Buffer<T>'.
-    /// # Arguments
-    /// * band_index - the band_index
-    pub fn read_band_as<T: Copy + GdalType>(&self) -> Result<Buffer<T>> {
-        let size = self.owning_dataset.raster_size();
-        self.read_as::<T>(
-            (0, 0),
-            (size.0 as usize, size.1 as usize),
-            (size.0 as usize, size.1 as usize),
-        )
     }
 
     #[cfg(feature = "ndarray")]
