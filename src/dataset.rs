@@ -28,6 +28,10 @@ pub fn _register_drivers() {
     }
 }
 
+// GDAL Docs state: The returned dataset should only be accessed by one thread at a time.
+// See: https://gdal.org/api/raster_c_api.html#_CPPv48GDALOpenPKc10GDALAccess
+unsafe impl Send for Dataset {}
+
 impl Dataset {
     /// Returns the wrapped C pointer
     ///
