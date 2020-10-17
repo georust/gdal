@@ -1,6 +1,6 @@
+use gdal::errors::Result;
 use gdal::spatial_ref::{CoordTransform, SpatialRef};
 use gdal::vector::Geometry;
-use gdal::errors::Result;
 
 fn run() -> Result<()> {
     let spatial_ref1 = SpatialRef::from_proj4(

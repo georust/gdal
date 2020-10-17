@@ -24,7 +24,7 @@ impl<'a> Feature<'a> {
     pub fn new(defn: &'a Defn) -> Result<Feature> {
         let c_feature = unsafe { gdal_sys::OGR_F_Create(defn.c_defn()) };
         if c_feature.is_null() {
-            return Err(_last_null_pointer_err("OGR_F_Create").into());
+            return Err(_last_null_pointer_err("OGR_F_Create"));
         };
         Ok(Feature {
             _defn: defn,
@@ -123,11 +123,10 @@ impl<'a> Feature<'a> {
             )
         };
         if success == 0 {
-            return Err(ErrorKind::OgrError {
+            return Err(GdalError::OgrError {
                 err: OGRErr::OGRERR_FAILURE,
                 method_name: "OGR_F_GetFieldAsDateTime",
-            }
-            .into());
+            });
         }
 
         // from https://github.com/OSGeo/gdal/blob/33a8a0edc764253b582e194d330eec3b83072863/gdal/ogr/ogrutils.cpp#L1309

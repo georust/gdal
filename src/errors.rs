@@ -1,7 +1,7 @@
 use libc::c_int;
 
-use thiserror::Error;
 use gdal_sys::{CPLErr, OGRErr, OGRFieldType};
+use thiserror::Error;
 
 pub type Result<T> = std::result::Result<T, GdalError>;
 
@@ -49,7 +49,9 @@ pub enum GdalError {
     },
     #[error("Unlinked Geometry on method '{method_name}'")]
     UnlinkedGeometry { method_name: &'static str },
-    #[error("Invalid coordinate range while transforming points from '{from}' to '{to}': '{msg:?}'")]
+    #[error(
+        "Invalid coordinate range while transforming points from '{from}' to '{to}': '{msg:?}'"
+    )]
     InvalidCoordinateRange {
         from: String,
         to: String,

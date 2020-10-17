@@ -148,7 +148,7 @@ impl<'a> Layer<'a> {
     pub fn spatial_reference(&self) -> Result<SpatialRef> {
         let c_obj = unsafe { gdal_sys::OGR_L_GetSpatialRef(self.c_layer) };
         if c_obj.is_null() {
-            return Err(_last_null_pointer_err("OGR_L_GetSpatialRef").into());
+            return Err(_last_null_pointer_err("OGR_L_GetSpatialRef"));
         }
         SpatialRef::from_c_obj(c_obj)
     }
@@ -199,7 +199,7 @@ impl FieldDefn {
         let c_str = CString::new(name)?;
         let c_obj = unsafe { gdal_sys::OGR_Fld_Create(c_str.as_ptr(), field_type) };
         if c_obj.is_null() {
-            return Err(_last_null_pointer_err("OGR_Fld_Create").into());
+            return Err(_last_null_pointer_err("OGR_Fld_Create"));
         };
         Ok(FieldDefn { c_obj })
     }

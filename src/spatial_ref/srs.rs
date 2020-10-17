@@ -24,7 +24,7 @@ impl CoordTransform {
     pub fn new(sp_ref1: &SpatialRef, sp_ref2: &SpatialRef) -> Result<CoordTransform> {
         let c_obj = unsafe { gdal_sys::OCTNewCoordinateTransformation(sp_ref1.0, sp_ref2.0) };
         if c_obj.is_null() {
-            return Err(_last_null_pointer_err("OCTNewCoordinateTransformation").into());
+            return Err(_last_null_pointer_err("OCTNewCoordinateTransformation"));
         }
         Ok(CoordTransform {
             inner: c_obj,
@@ -183,7 +183,7 @@ impl SpatialRef {
     pub fn from_c_obj(c_obj: OGRSpatialReferenceH) -> Result<SpatialRef> {
         let mut_c_obj = unsafe { gdal_sys::OSRClone(c_obj) };
         if mut_c_obj.is_null() {
-            Err(_last_null_pointer_err("OSRClone").into())
+            Err(_last_null_pointer_err("OSRClone"))
         } else {
             Ok(SpatialRef(mut_c_obj))
         }

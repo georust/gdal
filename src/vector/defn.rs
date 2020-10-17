@@ -157,7 +157,7 @@ impl<'a> GeomField<'a> {
     pub fn spatial_ref(&'a self) -> Result<SpatialRef> {
         let c_obj = unsafe { gdal_sys::OGR_GFld_GetSpatialRef(self.c_field_defn) };
         if c_obj.is_null() {
-            return Err(_last_null_pointer_err("OGR_GFld_GetSpatialRef").into());
+            return Err(_last_null_pointer_err("OGR_GFld_GetSpatialRef"));
         }
         SpatialRef::from_c_obj(c_obj)
     }

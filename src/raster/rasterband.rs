@@ -102,7 +102,7 @@ impl<'a> RasterBand<'a> {
             )
         };
         if rv != CPLErr::CE_None {
-            return Err(_last_cpl_err(rv).into());
+            return Err(_last_cpl_err(rv));
         }
 
         Ok(())
@@ -155,7 +155,10 @@ impl<'a> RasterBand<'a> {
         let data = self.read_as::<T>(window, window_size, array_size)?;
 
         // Matrix shape is (rows, cols) and raster shape is (cols in x-axis, rows in y-axis)
-        Ok( Array2::from_shape_vec((array_size.1, array_size.0), data.data)? )
+        Ok(Array2::from_shape_vec(
+            (array_size.1, array_size.0),
+            data.data,
+        )?)
     }
 
     /// Read the full band as a 'Buffer<T>'.
@@ -230,7 +233,7 @@ impl<'a> RasterBand<'a> {
             )
         };
         if rv != CPLErr::CE_None {
-            return Err(_last_cpl_err(rv).into());
+            return Err(_last_cpl_err(rv));
         }
         Ok(())
     }
@@ -252,7 +255,7 @@ impl<'a> RasterBand<'a> {
     pub fn set_no_data_value(&self, no_data: f64) -> Result<()> {
         let rv = unsafe { gdal_sys::GDALSetRasterNoDataValue(self.c_rasterband, no_data) };
         if rv != CPLErr::CE_None {
-            return Err(_last_cpl_err(rv).into());
+            return Err(_last_cpl_err(rv));
         }
         Ok(())
     }
@@ -291,7 +294,7 @@ impl<'a> RasterBand<'a> {
             )
         };
         if rv != CPLErr::CE_None {
-            return Err(_last_cpl_err(rv).into());
+            return Err(_last_cpl_err(rv));
         }
         Ok((block_size_x as usize, block_size_y as usize))
     }
