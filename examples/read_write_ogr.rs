@@ -1,11 +1,11 @@
-use gdal::errors::Error;
+use gdal::errors::Result;
 use gdal::spatial_ref::{CoordTransform, SpatialRef};
 use gdal::vector::*;
 use gdal::{Dataset, Driver};
 use std::fs;
 use std::path::Path;
 
-fn run() -> Result<(), Error> {
+fn run() -> Result<()> {
     let mut dataset_a = Dataset::open(Path::new("fixtures/roads.geojson"))?;
     let layer_a = dataset_a.layer(0)?;
     let fields_defn = layer_a

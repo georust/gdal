@@ -79,11 +79,10 @@ impl Geometry {
         let mut c_geom = null_mut();
         let rv = unsafe { gdal_sys::OGR_G_CreateFromWkt(&mut c_wkt_ptr, null_mut(), &mut c_geom) };
         if rv != OGRErr::OGRERR_NONE {
-            return Err(ErrorKind::OgrError {
+            return Err(GdalError::OgrError {
                 err: rv,
                 method_name: "OGR_G_CreateFromWkt",
-            }
-            .into());
+            });
         }
         Ok(unsafe { Geometry::with_c_geometry(c_geom, true) })
     }
@@ -100,7 +99,7 @@ impl Geometry {
     pub fn json(&self) -> Result<String> {
         let c_json = unsafe { gdal_sys::OGR_G_ExportToJson(self.c_geometry()) };
         if c_json.is_null() {
-            return Err(_last_null_pointer_err("OGR_G_ExportToJson").into());
+            return Err(_last_null_pointer_err("OGR_G_ExportToJson"));
         };
         let rv = _string(c_json);
         unsafe { gdal_sys::VSIFree(c_json as *mut c_void) };
@@ -112,11 +111,10 @@ impl Geometry {
         let mut c_wkt = null_mut();
         let rv = unsafe { gdal_sys::OGR_G_ExportToWkt(self.c_geometry(), &mut c_wkt) };
         if rv != OGRErr::OGRERR_NONE {
-            return Err(ErrorKind::OgrError {
+            return Err(GdalError::OgrError {
                 err: rv,
                 method_name: "OGR_G_ExportToWkt",
-            }
-            .into());
+            });
         }
         let wkt = _string(c_wkt);
         unsafe { gdal_sys::OGRFree(c_wkt as *mut c_void) };
@@ -245,11 +243,10 @@ impl Geometry {
         let rv =
             unsafe { gdal_sys::OGR_G_AddGeometryDirectly(self.c_geometry(), sub.c_geometry()) };
         if rv != OGRErr::OGRERR_NONE {
-            return Err(ErrorKind::OgrError {
+            return Err(GdalError::OgrError {
                 err: rv,
                 method_name: "OGR_G_AddGeometryDirectly",
-            }
-            .into());
+            });
         }
         Ok(())
     }
@@ -258,11 +255,10 @@ impl Geometry {
     pub fn transform_inplace(&mut self, htransform: &CoordTransform) -> Result<()> {
         let rv = unsafe { gdal_sys::OGR_G_Transform(self.c_geometry(), htransform.to_c_hct()) };
         if rv != OGRErr::OGRERR_NONE {
-            return Err(ErrorKind::OgrError {
+            return Err(GdalError::OgrError {
                 err: rv,
                 method_name: "OGR_G_Transform",
-            }
-            .into());
+            });
         }
         Ok(())
     }
@@ -272,11 +268,10 @@ impl Geometry {
         let new_c_geom = unsafe { gdal_sys::OGR_G_Clone(self.c_geometry()) };
         let rv = unsafe { gdal_sys::OGR_G_Transform(new_c_geom, htransform.to_c_hct()) };
         if rv != OGRErr::OGRERR_NONE {
-            return Err(ErrorKind::OgrError {
+            return Err(GdalError::OgrError {
                 err: rv,
                 method_name: "OGR_G_Transform",
-            }
-            .into());
+            });
         }
         Ok(unsafe { Geometry::with_c_geometry(new_c_geom, true) })
     }
@@ -284,11 +279,10 @@ impl Geometry {
     pub fn transform_to_inplace(&mut self, spatial_ref: &SpatialRef) -> Result<()> {
         let rv = unsafe { gdal_sys::OGR_G_TransformTo(self.c_geometry(), spatial_ref.to_c_hsrs()) };
         if rv != OGRErr::OGRERR_NONE {
-            return Err(ErrorKind::OgrError {
+            return Err(GdalError::OgrError {
                 err: rv,
                 method_name: "OGR_G_TransformTo",
-            }
-            .into());
+            });
         }
         Ok(())
     }
@@ -298,11 +292,10 @@ impl Geometry {
         let new_c_geom = unsafe { gdal_sys::OGR_G_Clone(self.c_geometry()) };
         let rv = unsafe { gdal_sys::OGR_G_TransformTo(new_c_geom, spatial_ref.to_c_hsrs()) };
         if rv != OGRErr::OGRERR_NONE {
-            return Err(ErrorKind::OgrError {
+            return Err(GdalError::OgrError {
                 err: rv,
                 method_name: "OGR_G_TransformTo",
-            }
-            .into());
+            });
         }
         Ok(unsafe { Geometry::with_c_geometry(new_c_geom, true) })
     }

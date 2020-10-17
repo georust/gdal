@@ -1,7 +1,8 @@
 use gdal::spatial_ref::{CoordTransform, SpatialRef};
 use gdal::vector::Geometry;
+use gdal::errors::Result;
 
-fn run() -> Result<(), gdal::errors::Error> {
+fn run() -> Result<()> {
     let spatial_ref1 = SpatialRef::from_proj4(
         "+proj=laea +lat_0=52 +lon_0=10 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +units=m +no_defs",
     )?;
