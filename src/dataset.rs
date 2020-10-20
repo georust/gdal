@@ -64,7 +64,7 @@ impl Dataset {
         // handle driver params:
         // we need to keep the CStrings and the pointers around
         let c_allowed_drivers = allowed_drivers.map(|d| {
-            d.into_iter()
+            d.iter()
                 .map(|&s| CString::new(s))
                 .collect::<std::result::Result<Vec<CString>, NulError>>()
         });
@@ -85,7 +85,7 @@ impl Dataset {
         // handle open options params:
         // we need to keep the CStrings and the pointers around
         let c_open_options = open_options.map(|d| {
-            d.into_iter()
+            d.iter()
                 .map(|&s| CString::new(s))
                 .collect::<std::result::Result<Vec<CString>, NulError>>()
         });
@@ -109,7 +109,7 @@ impl Dataset {
         // handle sibling files params:
         // we need to keep the CStrings and the pointers around
         let c_sibling_files = sibling_files.map(|d| {
-            d.into_iter()
+            d.iter()
                 .map(|&s| CString::new(s))
                 .collect::<std::result::Result<Vec<CString>, NulError>>()
         });
@@ -140,7 +140,7 @@ impl Dataset {
             )
         };
         if c_dataset.is_null() {
-            return Err(_last_null_pointer_err("GDALOpenEx").into());
+            return Err(_last_null_pointer_err("GDALOpenEx"));
         }
         Ok(Dataset { c_dataset })
     }
@@ -178,7 +178,7 @@ impl Dataset {
             )
         };
         if c_dataset.is_null() {
-            return Err(_last_null_pointer_err("GDALCreateCopy").into());
+            return Err(_last_null_pointer_err("GDALCreateCopy"));
         }
         Ok(unsafe { Dataset::from_c_dataset(c_dataset) })
     }
@@ -194,7 +194,7 @@ impl Dataset {
         unsafe {
             let c_band = gdal_sys::GDALGetRasterBand(self.c_dataset, band_index as c_int);
             if c_band.is_null() {
-                return Err(_last_null_pointer_err("GDALGetRasterBand").into());
+                return Err(_last_null_pointer_err("GDALGetRasterBand"));
             }
             Ok(RasterBand::from_c_rasterband(self, c_band))
         }
@@ -211,7 +211,7 @@ impl Dataset {
     pub fn layer(&mut self, idx: isize) -> Result<Layer> {
         let c_layer = unsafe { gdal_sys::OGR_DS_GetLayer(self.c_dataset, idx as c_int) };
         if c_layer.is_null() {
-            return Err(_last_null_pointer_err("OGR_DS_GetLayer").into());
+            return Err(_last_null_pointer_err("OGR_DS_GetLayer"));
         }
         Ok(self.child_layer(c_layer))
     }
@@ -220,7 +220,7 @@ impl Dataset {
         let c_name = CString::new(name)?;
         let c_layer = unsafe { gdal_sys::OGR_DS_GetLayerByName(self.c_dataset(), c_name.as_ptr()) };
         if c_layer.is_null() {
-            return Err(_last_null_pointer_err("OGR_DS_GetLayerByName").into());
+            return Err(_last_null_pointer_err("OGR_DS_GetLayerByName"));
         }
         Ok(self.child_layer(c_layer))
     }
@@ -257,7 +257,7 @@ impl Dataset {
             gdal_sys::OGR_DS_CreateLayer(self.c_dataset, c_name.as_ptr(), c_srs, ty, null_mut())
         };
         if c_layer.is_null() {
-            return Err(_last_null_pointer_err("OGR_DS_CreateLayer").into());
+            return Err(_last_null_pointer_err("OGR_DS_CreateLayer"));
         };
         Ok(self.child_layer(c_layer))
     }
@@ -281,7 +281,7 @@ impl Dataset {
             gdal_sys::GDALSetGeoTransform(self.c_dataset, transformation.as_ptr() as *mut f64)
         };
         if rv != CPLErr::CE_None {
-            return Err(_last_cpl_err(rv).into());
+            return Err(_last_cpl_err(rv));
         }
         Ok(())
     }
@@ -301,7 +301,7 @@ impl Dataset {
 
         // check if the dataset has a GeoTransform
         if rv != CPLErr::CE_None {
-            return Err(_last_cpl_err(rv).into());
+            return Err(_last_cpl_err(rv));
         }
         Ok(transformation)
     }

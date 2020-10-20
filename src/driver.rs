@@ -32,7 +32,7 @@ impl Driver {
         let c_name = CString::new(name)?;
         let c_driver = unsafe { gdal_sys::GDALGetDriverByName(c_name.as_ptr()) };
         if c_driver.is_null() {
-            return Err(_last_null_pointer_err("GDALGetDriverByName").into());
+            return Err(_last_null_pointer_err("GDALGetDriverByName"));
         };
         Ok(Driver { c_driver })
     }
@@ -93,7 +93,7 @@ impl Driver {
             )
         };
         if c_dataset.is_null() {
-            return Err(_last_null_pointer_err("GDALCreate").into());
+            return Err(_last_null_pointer_err("GDALCreate"));
         };
         Ok(unsafe { Dataset::from_c_dataset(c_dataset) })
     }

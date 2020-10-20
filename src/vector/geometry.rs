@@ -3,8 +3,8 @@ use crate::utils::{_last_null_pointer_err, _string};
 use gdal_sys::{self, OGRErr, OGRGeometryH, OGRwkbGeometryType};
 use libc::{c_double, c_int, c_void};
 use std::cell::RefCell;
-use std::fmt::{self, Debug};
 use std::ffi::CString;
+use std::fmt::{self, Debug};
 use std::ptr::null_mut;
 
 use crate::errors::*;
@@ -62,7 +62,7 @@ impl Geometry {
     pub fn empty(wkb_type: OGRwkbGeometryType::Type) -> Result<Geometry> {
         let c_geom = unsafe { gdal_sys::OGR_G_CreateGeometry(wkb_type) };
         if c_geom.is_null() {
-            return Err(_last_null_pointer_err("OGR_G_CreateGeometry").into());
+            return Err(_last_null_pointer_err("OGR_G_CreateGeometry"));
         };
         Ok(unsafe { Geometry::with_c_geometry(c_geom, true) })
     }
@@ -79,11 +79,10 @@ impl Geometry {
         let mut c_geom = null_mut();
         let rv = unsafe { gdal_sys::OGR_G_CreateFromWkt(&mut c_wkt_ptr, null_mut(), &mut c_geom) };
         if rv != OGRErr::OGRERR_NONE {
-            return Err(ErrorKind::OgrError {
+            return Err(GdalError::OgrError {
                 err: rv,
                 method_name: "OGR_G_CreateFromWkt",
-            }
-            .into());
+            });
         }
         Ok(unsafe { Geometry::with_c_geometry(c_geom, true) })
     }
@@ -100,7 +99,7 @@ impl Geometry {
     pub fn json(&self) -> Result<String> {
         let c_json = unsafe { gdal_sys::OGR_G_ExportToJson(self.c_geometry()) };
         if c_json.is_null() {
-            return Err(_last_null_pointer_err("OGR_G_ExportToJson").into());
+            return Err(_last_null_pointer_err("OGR_G_ExportToJson"));
         };
         let rv = _string(c_json);
         unsafe { gdal_sys::VSIFree(c_json as *mut c_void) };
@@ -112,11 +111,10 @@ impl Geometry {
         let mut c_wkt = null_mut();
         let rv = unsafe { gdal_sys::OGR_G_ExportToWkt(self.c_geometry(), &mut c_wkt) };
         if rv != OGRErr::OGRERR_NONE {
-            return Err(ErrorKind::OgrError {
+            return Err(GdalError::OgrError {
                 err: rv,
                 method_name: "OGR_G_ExportToWkt",
-            }
-            .into());
+            });
         }
         let wkt = _string(c_wkt);
         unsafe { gdal_sys::OGRFree(c_wkt as *mut c_void) };
@@ -141,10 +139,16 @@ impl Geometry {
         self.c_geometry()
     }
 
-    pub fn set_point(&mut self, i: usize, p: (f64, f64, f64)) {
-        let (x, y, z) = p;
+    pub fn set_point(&mut self, i: usize, point: (f64, f64, f64)) {
+        let (x, y, z) = point;
         unsafe {
-            gdal_sys::OGR_G_SetPoint(self.c_geometry(), i as c_int, x as c_double, y as c_double, z as c_double);
+            gdal_sys::OGR_G_SetPoint(
+                self.c_geometry(),
+                i as c_int,
+                x as c_double,
+                y as c_double,
+                z as c_double,
+            );
         };
     }
 
@@ -158,15 +162,18 @@ impl Geometry {
     pub fn add_point(&mut self, p: (f64, f64, f64)) {
         let (x, y, z) = p;
         unsafe {
-            gdal_sys::OGR_G_AddPoint(self.c_geometry(), x as c_double, y as c_double, z as c_double)
+            gdal_sys::OGR_G_AddPoint(
+                self.c_geometry(),
+                x as c_double,
+                y as c_double,
+                z as c_double,
+            )
         };
     }
 
     pub fn add_point_2d(&mut self, p: (f64, f64)) {
         let (x, y) = p;
-        unsafe {
-            gdal_sys::OGR_G_AddPoint_2D(self.c_geometry(), x as c_double, y as c_double)
-        };
+        unsafe { gdal_sys::OGR_G_AddPoint_2D(self.c_geometry(), x as c_double, y as c_double) };
     }
 
     pub fn get_point(&self, i: i32) -> (f64, f64, f64) {
@@ -186,16 +193,18 @@ impl Geometry {
     pub fn convex_hull(&self) -> Result<Geometry> {
         let c_geom = unsafe { gdal_sys::OGR_G_ConvexHull(self.c_geometry()) };
         if c_geom.is_null() {
-            return Err(_last_null_pointer_err("OGR_G_ConvexHull").into());
+            return Err(_last_null_pointer_err("OGR_G_ConvexHull"));
         };
         Ok(unsafe { Geometry::with_c_geometry(c_geom, true) })
     }
 
     #[cfg(any(all(major_is_2, minor_ge_1), major_ge_3))]
     pub fn delaunay_triangulation(&self, tolerance: Option<f64>) -> Result<Self> {
-        let c_geom = unsafe { gdal_sys::OGR_G_DelaunayTriangulation(self.c_geometry(), tolerance.unwrap_or(0.0), 0) };
+        let c_geom = unsafe {
+            gdal_sys::OGR_G_DelaunayTriangulation(self.c_geometry(), tolerance.unwrap_or(0.0), 0)
+        };
         if c_geom.is_null() {
-            Err(_last_null_pointer_err("OGR_G_DelaunayTriangulation"))?;
+            return Err(_last_null_pointer_err("OGR_G_DelaunayTriangulation"));
         };
 
         Ok(unsafe { Geometry::with_c_geometry(c_geom, true) })
@@ -204,16 +213,17 @@ impl Geometry {
     pub fn simplify(&self, tolerance: f64) -> Result<Self> {
         let c_geom = unsafe { gdal_sys::OGR_G_Simplify(self.c_geometry(), tolerance) };
         if c_geom.is_null() {
-            Err(_last_null_pointer_err("OGR_G_Simplify"))?;
+            return Err(_last_null_pointer_err("OGR_G_Simplify"));
         };
 
         Ok(unsafe { Geometry::with_c_geometry(c_geom, true) })
     }
 
     pub fn simplify_preserve_topology(&self, tolerance: f64) -> Result<Self> {
-        let c_geom = unsafe { gdal_sys::OGR_G_SimplifyPreserveTopology(self.c_geometry(), tolerance) };
+        let c_geom =
+            unsafe { gdal_sys::OGR_G_SimplifyPreserveTopology(self.c_geometry(), tolerance) };
         if c_geom.is_null() {
-            Err(_last_null_pointer_err("OGR_G_SimplifyPreserveTopology"))?;
+            return Err(_last_null_pointer_err("OGR_G_SimplifyPreserveTopology"));
         };
 
         Ok(unsafe { Geometry::with_c_geometry(c_geom, true) })
@@ -245,11 +255,10 @@ impl Geometry {
         let rv =
             unsafe { gdal_sys::OGR_G_AddGeometryDirectly(self.c_geometry(), sub.c_geometry()) };
         if rv != OGRErr::OGRERR_NONE {
-            return Err(ErrorKind::OgrError {
+            return Err(GdalError::OgrError {
                 err: rv,
                 method_name: "OGR_G_AddGeometryDirectly",
-            }
-            .into());
+            });
         }
         Ok(())
     }
@@ -258,11 +267,10 @@ impl Geometry {
     pub fn transform_inplace(&mut self, htransform: &CoordTransform) -> Result<()> {
         let rv = unsafe { gdal_sys::OGR_G_Transform(self.c_geometry(), htransform.to_c_hct()) };
         if rv != OGRErr::OGRERR_NONE {
-            return Err(ErrorKind::OgrError {
+            return Err(GdalError::OgrError {
                 err: rv,
                 method_name: "OGR_G_Transform",
-            }
-            .into());
+            });
         }
         Ok(())
     }
@@ -272,11 +280,10 @@ impl Geometry {
         let new_c_geom = unsafe { gdal_sys::OGR_G_Clone(self.c_geometry()) };
         let rv = unsafe { gdal_sys::OGR_G_Transform(new_c_geom, htransform.to_c_hct()) };
         if rv != OGRErr::OGRERR_NONE {
-            return Err(ErrorKind::OgrError {
+            return Err(GdalError::OgrError {
                 err: rv,
                 method_name: "OGR_G_Transform",
-            }
-            .into());
+            });
         }
         Ok(unsafe { Geometry::with_c_geometry(new_c_geom, true) })
     }
@@ -284,11 +291,10 @@ impl Geometry {
     pub fn transform_to_inplace(&mut self, spatial_ref: &SpatialRef) -> Result<()> {
         let rv = unsafe { gdal_sys::OGR_G_TransformTo(self.c_geometry(), spatial_ref.to_c_hsrs()) };
         if rv != OGRErr::OGRERR_NONE {
-            return Err(ErrorKind::OgrError {
+            return Err(GdalError::OgrError {
                 err: rv,
                 method_name: "OGR_G_TransformTo",
-            }
-            .into());
+            });
         }
         Ok(())
     }
@@ -298,11 +304,10 @@ impl Geometry {
         let new_c_geom = unsafe { gdal_sys::OGR_G_Clone(self.c_geometry()) };
         let rv = unsafe { gdal_sys::OGR_G_TransformTo(new_c_geom, spatial_ref.to_c_hsrs()) };
         if rv != OGRErr::OGRERR_NONE {
-            return Err(ErrorKind::OgrError {
+            return Err(GdalError::OgrError {
                 err: rv,
                 method_name: "OGR_G_TransformTo",
-            }
-            .into());
+            });
         }
         Ok(unsafe { Geometry::with_c_geometry(new_c_geom, true) })
     }
