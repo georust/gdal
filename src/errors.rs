@@ -57,4 +57,6 @@ pub enum GdalError {
         to: String,
         msg: Option<String>,
     },
+    #[error("Unsupported geometry type: '{geometry_type}'")]
+    UnsupportedGeometryType { geometry_type: &'static str },
 }

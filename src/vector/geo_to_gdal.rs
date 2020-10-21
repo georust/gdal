@@ -167,6 +167,12 @@ where
             geo_types::Geometry::MultiLineString(ref c) => c.to_gdal(),
             geo_types::Geometry::MultiPolygon(ref c) => c.to_gdal(),
             geo_types::Geometry::GeometryCollection(ref c) => c.to_gdal(),
+            geo_types::Geometry::Triangle(_) => Err(GdalError::UnsupportedGeometryType {
+                geometry_type: "Triangle",
+            }),
+            geo_types::Geometry::Rect(_) => Err(GdalError::UnsupportedGeometryType {
+                geometry_type: "Rect",
+            }),
         }
     }
 }
