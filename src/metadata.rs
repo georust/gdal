@@ -13,7 +13,7 @@ pub trait Metadata: MajorObject {
         Ok(_string(c_res))
     }
 
-    fn metadata_domain_list(&self) -> Vec<String> {
+    fn metadata_domains(&self) -> Vec<String> {
         let mut domains = Vec::new();
         let c_res = unsafe {
             gdal_sys::GDALGetMetadataDomainList(self.gdal_object_ptr())
@@ -33,13 +33,17 @@ pub trait Metadata: MajorObject {
         domains
     }
 
-    fn metadata(&self, domain: &str) -> Vec<String> {
+    fn metadata_domain(&self, domain: &str) -> Option<Vec<String>> {
         let mut metadata = Vec::new();
         if let Ok(c_domain) = CString::new(domain.to_owned()){
             let c_res = unsafe {
                 gdal_sys::GDALGetMetadata(self.gdal_object_ptr(),
                     c_domain.as_ptr())
             };
+
+            if c_res.is_null() {
+                return None;
+            }
 
             if !c_res.is_null() {
                 for i in 0.. {
@@ -53,7 +57,7 @@ pub trait Metadata: MajorObject {
             }
         }
 
-        metadata
+        Some(metadata)
     }
 
     fn metadata_item(&self, key: &str, domain: &str) -> Option<String> {

@@ -115,6 +115,27 @@ fn test_get_description() {
 }
 
 #[test]
+fn test_get_metadata_domains() {
+    let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
+    let domains = dataset.metadata_domains();
+
+    assert_eq!(domains, vec!("", "IMAGE_STRUCTURE", 
+        "xml:XMP", "DERIVED_SUBDATASETS", "COLOR_PROFILE"));
+}
+
+#[test]
+fn test_get_metadata_domain() {
+    let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
+    let domain = "None";
+    let meta = dataset.metadata_domain(domain);
+    assert_eq!(meta, None);
+
+    let domain = "IMAGE_STRUCTURE";
+    let meta = dataset.metadata_domain(domain);
+    assert_eq!(meta, Some(vec!(String::from("INTERLEAVE=PIXEL"))));
+}
+
+#[test]
 fn test_get_metadata_item() {
     let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
     let key = "None";
