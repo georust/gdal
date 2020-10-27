@@ -152,6 +152,39 @@ impl<'a> Layer<'a> {
         }
         SpatialRef::from_c_obj(c_obj)
     }
+
+    pub fn start_transaction(&mut self) -> Result<()> {
+        let rv = unsafe { gdal_sys::OGR_L_StartTransaction(self.c_layer) };
+        if rv != OGRErr::OGRERR_NONE {
+            return Err(GdalError::OgrError {
+                err: rv,
+                method_name: "OGR_L_StartTransaction",
+            });
+        }
+        Ok(())
+    }
+
+    pub fn commit_transaction(&mut self) -> Result<()> {
+        let rv = unsafe { gdal_sys::OGR_L_CommitTransaction(self.c_layer) };
+        if rv != OGRErr::OGRERR_NONE {
+            return Err(GdalError::OgrError {
+                err: rv,
+                method_name: "OGR_L_CommitTransaction",
+            });
+        }
+        Ok(())
+    }
+
+    pub fn rollback_transaction(&mut self) -> Result<()> {
+        let rv = unsafe { gdal_sys::OGR_L_RollbackTransaction(self.c_layer) };
+        if rv != OGRErr::OGRERR_NONE {
+            return Err(GdalError::OgrError {
+                err: rv,
+                method_name: "OGR_L_RollbackTransaction",
+            });
+        }
+        Ok(())
+    }
 }
 
 pub struct FeatureIterator<'a> {
