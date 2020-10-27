@@ -9,7 +9,7 @@ use gdal_sys::{
 };
 use libc::c_int;
 use std::ptr::null_mut;
-use std::{ffi::CString, marker::PhantomData};
+use std::{convert::TryInto, ffi::CString, marker::PhantomData};
 
 use crate::errors::*;
 
@@ -112,6 +112,19 @@ impl<'a> Layer<'a> {
         Ok(())
     }
 
+    pub fn feature_count(&self) -> Option<u64> {
+        let rv = unsafe { gdal_sys::OGR_L_GetFeatureCount(self.c_layer, 0) };
+        if rv < 0 {
+            None
+        } else {
+            Some(rv as u64)
+        }
+    }
+
+    pub fn feature_count_force(&self) -> u64 {
+        (unsafe { gdal_sys::OGR_L_GetFeatureCount(self.c_layer, 1) }) as u64
+    }
+
     pub fn create_feature_fields(
         &mut self,
         geometry: Geometry,
@@ -168,6 +181,13 @@ impl<'a> Iterator for FeatureIterator<'a> {
             None
         } else {
             Some(unsafe { Feature::from_c_feature(self.layer.defn(), c_feature) })
+        }
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        match self.layer.feature_count().map(|s| s.try_into().ok()).flatten() {
+            Some(size) => (size, Some(size)),
+            None => (0, None),
         }
     }
 }
