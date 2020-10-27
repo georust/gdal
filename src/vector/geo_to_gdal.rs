@@ -153,6 +153,24 @@ where
     }
 }
 
+impl<T> ToGdal for geo_types::Rect<T>
+where
+    T: Float,
+{
+    fn to_gdal(&self) -> Result<Geometry> {
+        self.to_polygon().to_gdal()
+    }
+}
+
+impl<T> ToGdal for geo_types::Triangle<T>
+where
+    T: Float,
+{
+    fn to_gdal(&self) -> Result<Geometry> {
+        self.to_polygon().to_gdal()
+    }
+}
+
 impl<T> ToGdal for geo_types::Geometry<T>
 where
     T: Float,
@@ -167,6 +185,8 @@ where
             geo_types::Geometry::MultiLineString(ref c) => c.to_gdal(),
             geo_types::Geometry::MultiPolygon(ref c) => c.to_gdal(),
             geo_types::Geometry::GeometryCollection(ref c) => c.to_gdal(),
+            geo_types::Geometry::Rect(ref c) => c.to_gdal(),
+            geo_types::Geometry::Triangle(ref c) => c.to_gdal(),
         }
     }
 }
