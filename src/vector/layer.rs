@@ -154,14 +154,25 @@ impl<'a> Layer<'a> {
         }
     }
 
-    pub fn get_extent(&self, force: bool) -> Result<gdal_sys::OGREnvelope> {
+    /// Returns the extent of this layer as an axis-aligned bounding box, even if it requires
+    /// expensive calculation.
+    ///
+    /// Some drivers will actually scan the entire layer once to count objects.
+    ///
+    /// Depending on the driver, the returned extent may or may not take the [spatial
+    /// filter](`Layer::set_spatial_filter`) into account. So it is safer to call `get_extent`
+    /// without setting a spatial filter.
+    ///
+    /// Layers without any geometry may return [`OGRErr::OGRERR_FAILURE`] to indicate that no
+    /// meaningful extents could be collected.
+    pub fn get_extent(&self) -> Result<gdal_sys::OGREnvelope> {
         let mut envelope = OGREnvelope {
             MinX: 0.0,
             MaxX: 0.0,
             MinY: 0.0,
             MaxY: 0.0,
         };
-        let force = if force { 1 } else { 0 };
+        let force = 1;
         let rv = unsafe { gdal_sys::OGR_L_GetExtent(self.c_layer, &mut envelope, force) };
         if rv != OGRErr::OGRERR_NONE {
             return Err(GdalError::OgrError {
@@ -170,6 +181,37 @@ impl<'a> Layer<'a> {
             });
         }
         Ok(envelope)
+    }
+
+    /// Returns the extent of this layer as an axis-aligned bounding box, if it is possible to
+    /// compute this efficiently.
+    ///
+    /// For some drivers, it would be expensive to calculate the extent, in which case [`None`]
+    /// will be returned.
+    ///
+    /// Depending on the driver, the returned extent may or may not take the [spatial
+    /// filter](`Layer::set_spatial_filter`) into account. So it is safer to call `try_get_extent`
+    /// without setting a spatial filter.
+    pub fn try_get_extent(&self) -> Result<Option<gdal_sys::OGREnvelope>> {
+        let mut envelope = OGREnvelope {
+            MinX: 0.0,
+            MaxX: 0.0,
+            MinY: 0.0,
+            MaxY: 0.0,
+        };
+        let force = 0;
+        let rv = unsafe { gdal_sys::OGR_L_GetExtent(self.c_layer, &mut envelope, force) };
+        if rv == OGRErr::OGRERR_FAILURE {
+            Ok(None)
+        } else {
+            if rv != OGRErr::OGRERR_NONE {
+                return Err(GdalError::OgrError {
+                    err: rv,
+                    method_name: "OGR_L_GetExtent",
+                });
+            }
+            Ok(Some(envelope))
+        }
     }
 
     pub fn spatial_ref(&self) -> Result<SpatialRef> {
