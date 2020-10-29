@@ -1,4 +1,4 @@
-use super::{Feature, FeatureIterator, FieldValue, Geometry, OGRFieldType, OGRwkbGeometryType};
+use super::{Feature, FeatureIterator, FieldValue, Geometry, Layer, OGRFieldType, OGRwkbGeometryType};
 use crate::spatial_ref::SpatialRef;
 use crate::{assert_almost_eq, Dataset, Driver};
 use std::path::Path;
@@ -49,13 +49,20 @@ fn test_layer_spatial_reference() {
     assert_eq!(srs.auth_code().unwrap(), 4326);
 }
 
+fn with_layer<F>(name: &str, f: F)
+where
+    F: Fn(Layer)
+{
+    let mut ds = Dataset::open(fixture!(name)).unwrap();
+    let layer = ds.layer(0).unwrap();
+    f(layer);
+}
+
 fn with_features<F>(name: &str, f: F)
 where
     F: Fn(FeatureIterator),
 {
-    let mut ds = Dataset::open(fixture!(name)).unwrap();
-    let layer = ds.layer(0).unwrap();
-    f(layer.features());
+    with_layer(name, |layer| f(layer.features()));
 }
 
 fn with_first_feature<F>(name: &str, f: F)
@@ -71,8 +78,23 @@ mod tests {
     use crate::errors::Result;
 
     #[test]
+    fn test_feature_count() {
+        with_layer("roads.geojson", |layer| {
+            assert_eq!(layer.feature_count(), 21);
+        });
+    }
+
+    #[test]
+    fn test_try_feature_count() {
+        with_layer("roads.geojson", |layer| {
+            assert_eq!(layer.try_feature_count(), Some(21));
+        });
+    }
+
+    #[test]
     fn test_iterate_features() {
         with_features("roads.geojson", |features| {
+            assert_eq!(features.size_hint(), (21, Some(21)));
             assert_eq!(features.count(), 21);
         });
     }

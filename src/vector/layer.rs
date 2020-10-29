@@ -9,7 +9,7 @@ use gdal_sys::{
 };
 use libc::c_int;
 use std::ptr::null_mut;
-use std::{ffi::CString, marker::PhantomData};
+use std::{convert::TryInto, ffi::CString, marker::PhantomData};
 
 use crate::errors::*;
 
@@ -127,6 +127,33 @@ impl<'a> Layer<'a> {
         Ok(())
     }
 
+    /// Returns the number of features in this layer, even if it requires expensive calculation.
+    ///
+    /// Some drivers will actually scan the entire layer once to count objects.
+    ///
+    /// The returned count takes the [spatial filter](`Layer::set_spatial_filter`) into account.
+    /// For dynamic databases the count may not be exact.
+    pub fn feature_count(&self) -> u64 {
+        (unsafe { gdal_sys::OGR_L_GetFeatureCount(self.c_layer, 1) }) as u64
+    }
+
+    /// Returns the number of features in this layer, if it is possible to compute this
+    /// efficiently.
+    ///
+    /// For some drivers, it would be expensive to establish the feature count, in which case
+    /// [`None`] will be returned.
+    ///
+    /// The returned count takes the [spatial filter](`Layer::set_spatial_filter`) into account.
+    /// For dynamic databases the count may not be exact.
+    pub fn try_feature_count(&self) -> Option<u64> {
+        let rv = unsafe { gdal_sys::OGR_L_GetFeatureCount(self.c_layer, 0) };
+        if rv < 0 {
+            None
+        } else {
+            Some(rv as u64)
+        }
+    }
+
     pub fn get_extent(&self, force: bool) -> Result<gdal_sys::OGREnvelope> {
         let mut envelope = OGREnvelope {
             MinX: 0.0,
@@ -168,6 +195,13 @@ impl<'a> Iterator for FeatureIterator<'a> {
             None
         } else {
             Some(unsafe { Feature::from_c_feature(self.layer.defn(), c_feature) })
+        }
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        match self.layer.try_feature_count().map(|s| s.try_into().ok()).flatten() {
+            Some(size) => (size, Some(size)),
+            None => (0, None),
         }
     }
 }
