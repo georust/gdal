@@ -42,10 +42,10 @@ fn test_layer_extent() {
 }
 
 #[test]
-fn test_layer_spatial_reference() {
+fn test_layer_spatial_ref() {
     let mut ds = Dataset::open(fixture!("roads.geojson")).unwrap();
     let layer = ds.layer(0).unwrap();
-    let srs = layer.spatial_reference().unwrap();
+    let srs = layer.spatial_ref().unwrap();
     assert_eq!(srs.auth_code().unwrap(), 4326);
 }
 
