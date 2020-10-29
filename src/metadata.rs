@@ -13,6 +13,53 @@ pub trait Metadata: MajorObject {
         Ok(_string(c_res))
     }
 
+    fn metadata_domains(&self) -> Vec<String> {
+        let mut domains = Vec::new();
+        let c_res = unsafe {
+            gdal_sys::GDALGetMetadataDomainList(self.gdal_object_ptr())
+        };
+
+        if !c_res.is_null() {
+            for i in 0.. {
+                let p = unsafe { *c_res.offset(i) };
+                if p.is_null() {
+                    break;
+                }
+
+                domains.push(_string(p));
+            }
+        }
+
+        domains
+    }
+
+    fn metadata_domain(&self, domain: &str) -> Option<Vec<String>> {
+        let mut metadata = Vec::new();
+        if let Ok(c_domain) = CString::new(domain.to_owned()){
+            let c_res = unsafe {
+                gdal_sys::GDALGetMetadata(self.gdal_object_ptr(),
+                    c_domain.as_ptr())
+            };
+
+            if c_res.is_null() {
+                return None;
+            }
+
+            if !c_res.is_null() {
+                for i in 0.. {
+                    let p = unsafe { *c_res.offset(i) };
+                    if p.is_null() {
+                        break;
+                    }
+
+                    metadata.push(_string(p));
+                }
+            }
+        }
+
+        Some(metadata)
+    }
+
     fn metadata_item(&self, key: &str, domain: &str) -> Option<String> {
         if let Ok(c_key) = CString::new(key.to_owned()) {
             if let Ok(c_domain) = CString::new(domain.to_owned()) {
