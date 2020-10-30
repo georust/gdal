@@ -321,7 +321,7 @@ impl Geometry {
     /// succeeds, it returns an Ok(Some(SpatialRef)), otherwise, you get the
     /// Err.
     ///
-    pub fn spatial_reference(&self) -> Option<SpatialRef> {
+    pub fn spatial_ref(&self) -> Option<SpatialRef> {
         let c_spatial_ref = unsafe { gdal_sys::OGR_G_GetSpatialReference(self.c_geometry()) };
 
         if c_spatial_ref.is_null() {
@@ -334,7 +334,7 @@ impl Geometry {
         }
     }
 
-    pub fn set_spatial_reference(&mut self, spatial_ref: SpatialRef) {
+    pub fn set_spatial_ref(&mut self, spatial_ref: SpatialRef) {
         unsafe {
             gdal_sys::OGR_G_AssignSpatialReference(self.c_geometry(), spatial_ref.to_c_hsrs())
         };
@@ -443,19 +443,19 @@ mod tests {
     }
 
     #[test]
-    pub fn test_spatial_reference() {
+    pub fn test_spatial_ref() {
         let geom = Geometry::empty(::gdal_sys::OGRwkbGeometryType::wkbMultiPolygon).unwrap();
-        assert!(geom.spatial_reference().is_none());
+        assert!(geom.spatial_ref().is_none());
 
         let geom = Geometry::from_wkt("POINT(0 0)").unwrap();
-        assert!(geom.spatial_reference().is_none());
+        assert!(geom.spatial_ref().is_none());
 
         let wkt = "POLYGON ((45.0 45.0, 45.0 50.0, 50.0 50.0, 50.0 45.0, 45.0 45.0))";
         let mut geom = Geometry::from_wkt(wkt).unwrap();
-        assert!(geom.spatial_reference().is_none());
+        assert!(geom.spatial_ref().is_none());
 
         let srs = SpatialRef::from_epsg(4326).unwrap();
-        geom.set_spatial_reference(srs);
-        assert!(geom.spatial_reference().is_some());
+        geom.set_spatial_ref(srs);
+        assert!(geom.spatial_ref().is_some());
     }
 }

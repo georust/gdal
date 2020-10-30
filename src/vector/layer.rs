@@ -172,7 +172,7 @@ impl<'a> Layer<'a> {
         Ok(envelope)
     }
 
-    pub fn spatial_reference(&self) -> Result<SpatialRef> {
+    pub fn spatial_ref(&self) -> Result<SpatialRef> {
         let c_obj = unsafe { gdal_sys::OGR_L_GetSpatialRef(self.c_layer) };
         if c_obj.is_null() {
             return Err(_last_null_pointer_err("OGR_L_GetSpatialRef"));
