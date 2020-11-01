@@ -30,15 +30,21 @@ fn test_layer_count() {
 }
 
 #[test]
-fn test_layer_extent() {
+fn test_layer_get_extent() {
     let mut ds = Dataset::open(fixture!("roads.geojson")).unwrap();
     let layer = ds.layer(0).unwrap();
-    assert!(layer.get_extent(false).is_err());
-    let extent = layer.get_extent(true).unwrap();
+    let extent = layer.get_extent().unwrap();
     assert_almost_eq(extent.MinX, 26.100768);
     assert_almost_eq(extent.MaxX, 26.103515);
     assert_almost_eq(extent.MinY, 44.429858);
     assert_almost_eq(extent.MaxY, 44.431818);
+}
+
+#[test]
+fn test_layer_try_get_extent() {
+    let mut ds = Dataset::open(fixture!("roads.geojson")).unwrap();
+    let layer = ds.layer(0).unwrap();
+    assert!(layer.try_get_extent().unwrap().is_none());
 }
 
 #[test]
