@@ -3,6 +3,7 @@
 [![Build Status](https://travis-ci.org/georust/gdal.png?branch=master)](https://travis-ci.org/georust/gdal)
 
 Low level [GDAL](http://gdal.org/) bindings for [Rust](http://www.rust-lang.org/).
+The build script will try to auto-dectect the installed GDAL version.
 
 Contains:
 
@@ -32,5 +33,3 @@ On Windows, the easiest solution is to point the `GDAL_HOME` environment variabl
 ## Pre-generated bindings
 
 By default, the bundled bindings will be used. To generate them when building the crate, the `bindgen` feature must be enabled.
-
-You can enable one of the `min_gdal_version_X_Y` features to pick a specific version of the pre-generated bindings. For more information, see the [Cargo.toml](Cargo.toml) file.
