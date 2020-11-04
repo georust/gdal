@@ -106,6 +106,13 @@ mod tests {
     }
 
     #[test]
+    fn test_fid() {
+        with_first_feature("roads.geojson", |feature| {
+            assert_eq!(feature.fid(), Some(236194095));
+        });
+    }
+
+    #[test]
     fn test_string_field() {
         with_features("roads.geojson", |mut features| {
             let feature = features.next().unwrap();
@@ -209,7 +216,6 @@ mod tests {
             .map(|f| (f.name(), f.field_type()))
             .collect::<Vec<_>>();
         let ok_names_types = vec![
-            ("id", OGRFieldType::OFTString),
             ("kind", OGRFieldType::OFTString),
             ("sort_key", OGRFieldType::OFTReal),
             ("is_link", OGRFieldType::OFTString),

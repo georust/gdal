@@ -53,6 +53,16 @@ impl<'a> Feature<'a> {
             .collect()
     }
 
+    /// Returns the feature identifier, or `None` if none has been assigned.
+    pub fn fid(&self) -> Option<u64> {
+        let fid = unsafe { gdal_sys::OGR_F_GetFID(self.c_feature) };
+        if fid < 0 {
+            None
+        } else {
+            Some(fid as u64)
+        }
+    }
+
     /// Get the value of a named field. If the field exists, it returns a
     /// `FieldValue` wrapper, that you need to unpack to a base type
     /// (string, float, etc). If the field is missing, returns `None`.
