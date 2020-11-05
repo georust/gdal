@@ -16,7 +16,7 @@ fn run() -> gdal::errors::Result<()> {
     let _ = std::fs::remove_file(&path);
     let drv = Driver::get("GeoJSON")?;
     let mut ds = drv.create_vector_only(path.to_str().unwrap())?;
-    let lyr = ds.create_layer_blank()?;
+    let lyr = ds.create_layer(Default::default())?;
 
     // Copy the origin layer shema to the destination layer:
     for field in layer_a.defn().fields() {

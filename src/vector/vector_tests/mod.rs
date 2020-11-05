@@ -471,7 +471,7 @@ mod tests {
             let mut ds = driver
                 .create_vector_only(&fixture!("output.geojson").to_string_lossy())
                 .unwrap();
-            let mut layer = ds.create_layer_blank().unwrap();
+            let mut layer = ds.create_layer(Default::default()).unwrap();
             layer
                 .create_defn_fields(&[
                     ("Name", OGRFieldType::OFTString),

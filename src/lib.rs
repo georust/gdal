@@ -35,7 +35,7 @@ pub mod vector;
 pub mod version;
 
 pub use dataset::{
-    Dataset, DatasetOptions, GdalOpenFlags, GeoTransform, LayerIterator, Transaction,
+    Dataset, DatasetOptions, GdalOpenFlags, GeoTransform, LayerIterator, LayerOptions, Transaction,
 };
 pub use driver::Driver;
 pub use metadata::Metadata;
