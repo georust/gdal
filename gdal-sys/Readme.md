@@ -29,8 +29,10 @@ On Windows, the easiest solution is to point the `GDAL_HOME` environment variabl
 * `windows-msvc` requires `gdal_i.lib` to be found in `%GDAL_HOME%\lib`.
 * `windows-gnu` requires either `gdal_i.lib` in `%GDAL_HOME%\lib` OR `gdal{version}.dll` in `%GDAL_HOME%\bin`.
 
-## Pre-generated bindings
+## Generated bindings
 
-By default, the bundled bindings will be used. To generate them when building the crate, the `bindgen` feature must be enabled.
+By default, gdal-sys will detect the version of libgdal you have installed and
+attempt to use prebuilt bindings corresponding to that version. Alternatively,
+you can generate your own bindings from your libgdal installation by specifying
+the `bindgen` feature.
 
-You can enable one of the `min_gdal_version_X_Y` features to pick a specific version of the pre-generated bindings. For more information, see the [Cargo.toml](Cargo.toml) file.
