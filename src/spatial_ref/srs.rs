@@ -1,6 +1,6 @@
 use crate::utils::{_last_cpl_err, _last_null_pointer_err, _string};
 use gdal_sys::{self, CPLErr, OGRCoordinateTransformationH, OGRErr, OGRSpatialReferenceH};
-use libc::c_int;
+use libc::{c_int, c_char};
 use std::ffi::{CStr, CString};
 use std::ptr;
 use std::str::FromStr;
@@ -166,7 +166,7 @@ impl SpatialRef {
 
     pub fn from_esri(esri_wkt: &str) -> Result<SpatialRef> {
         let c_str = CString::new(esri_wkt)?;
-        let mut ptrs = vec![c_str.as_ptr() as *mut i8, ptr::null_mut()];
+        let mut ptrs = vec![c_str.as_ptr() as *mut c_char, ptr::null_mut()];
         let null_ptr = ptr::null_mut();
         let c_obj = unsafe { gdal_sys::OSRNewSpatialReference(null_ptr) };
         let rv = unsafe { gdal_sys::OSRImportFromESRI(c_obj, ptrs.as_mut_ptr()) };
