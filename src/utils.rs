@@ -9,6 +9,27 @@ pub fn _string(raw_ptr: *const c_char) -> String {
     c_str.to_string_lossy().into_owned()
 }
 
+pub fn _string_array(raw_ptr: *mut *mut c_char) -> Vec<String> {
+    let mut ret_val: Vec<String> = vec![];
+    let mut i = 0;
+    unsafe {
+        loop {
+            let ptr = raw_ptr.add(i);
+            if ptr.is_null() {
+                break;
+            }
+            let next = ptr.read();
+            if next.is_null() {
+                break;
+            }
+            let value = _string(next);
+            i += 1;
+            ret_val.push(value);
+        }
+    }
+    ret_val
+}
+
 // TODO: inspect if this is sane...
 pub fn _last_cpl_err(cpl_err_class: CPLErr::Type) -> GdalError {
     let last_err_no = unsafe { gdal_sys::CPLGetLastErrorNo() };

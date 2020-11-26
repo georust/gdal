@@ -30,6 +30,12 @@ fn test_layer_count() {
 }
 
 #[test]
+fn test_many_layer_count() {
+    let ds = Dataset::open(fixture!("three_layer_ds.s3db")).unwrap();
+    assert_eq!(ds.layer_count(), 3);
+}
+
+#[test]
 fn test_layer_get_extent() {
     let mut ds = Dataset::open(fixture!("roads.geojson")).unwrap();
     let layer = ds.layer(0).unwrap();
@@ -53,6 +59,15 @@ fn test_layer_spatial_ref() {
     let layer = ds.layer(0).unwrap();
     let srs = layer.spatial_ref().unwrap();
     assert_eq!(srs.auth_code().unwrap(), 4326);
+}
+
+fn ds_with_layer<F>(ds_name: &str, layer_name: &str, f: F)
+    where
+        F: Fn(Layer)
+{
+    let mut ds = Dataset::open(fixture!(ds_name)).unwrap();
+    let layer = ds.layer_by_name(layer_name).unwrap();
+    f(layer);
 }
 
 fn with_layer<F>(name: &str, f: F)
@@ -91,6 +106,13 @@ mod tests {
     }
 
     #[test]
+    fn test_many_feature_count() {
+        ds_with_layer("three_layer_ds.s3db", "layer_0", |layer| {
+            assert_eq!(layer.feature_count(), 3);
+        });
+    }
+
+    #[test]
     fn test_try_feature_count() {
         with_layer("roads.geojson", |layer| {
             assert_eq!(layer.try_feature_count(), Some(21));
@@ -113,6 +135,14 @@ mod tests {
             assert_eq!(features.size_hint(), (21, Some(21)));
             assert_eq!(features.count(), 21);
         });
+    }
+
+    #[test]
+    fn test_iterate_layers() {
+        let ds = Dataset::open(fixture!("three_layer_ds.s3db")).unwrap();
+        let layers = ds.layers();
+        assert_eq!(layers.size_hint(), (3, Some(3)));
+        assert_eq!(layers.count(), 3);
     }
 
     #[test]
@@ -139,6 +169,72 @@ mod tests {
                     })
                     .count(),
                 2
+            );
+        });
+    }
+
+    #[test]
+    fn test_string_list_field() {
+        with_features("soundg.json", |mut features| {
+            let feature = features.next().unwrap();
+            assert_eq!(
+                feature.field("a_string_list").unwrap(),
+                FieldValue::StringListValue(vec![
+                    String::from("a"),
+                    String::from("list"),
+                    String::from("of"),
+                    String::from("strings")
+                ])
+            );
+        });
+    }
+
+    #[test]
+    fn test_field_in_layer() {
+        ds_with_layer("three_layer_ds.s3db", "layer_0", |layer| {
+            let feature = layer.features().next().unwrap();
+                assert_eq!(
+                    feature.field("id").unwrap(),
+                    FieldValue::IntegerValue(0)
+                );
+        });
+    }
+
+    #[test]
+    fn test_int_list_field() {
+        with_features("soundg.json", |mut features| {
+            let feature = features.next().unwrap();
+            assert_eq!(
+                feature.field("an_int_list").unwrap(),
+                FieldValue::IntegerListValue(vec![
+                    1, 2
+                ])
+            );
+        });
+    }
+
+    #[test]
+    fn test_real_list_field() {
+        with_features("soundg.json", |mut features| {
+            let feature = features.next().unwrap();
+            assert_eq!(
+                feature.field("a_real_list").unwrap(),
+                FieldValue::RealListValue(vec![
+                    0.1, 0.2
+                ])
+            );
+        });
+    }
+
+    #[test]
+    fn test_long_list_field() {
+        with_features("soundg.json", |mut features| {
+            let feature = features.next().unwrap();
+            assert_eq!(
+                feature.field("a_long_list").unwrap(),
+                FieldValue::Integer64ListValue(vec![
+                    5000000000, 6000000000
+                ])
             );
         });
     }

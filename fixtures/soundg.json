@@ -1,0 +1,18 @@
+{
+  "features": [
+    {
+      "geometry": {
+        "coordinates": [ -122.4335161,  47.3136322 ],
+        "type": "Point"
+      },
+      "properties": {
+        "a_string_list": [ "a", "list", "of", "strings"],
+        "a_real_list": [ 0.1, 0.2 ],
+        "an_int_list": [ 1, 2 ],
+        "a_long_list": [ 5000000000, 6000000000 ]
+      },
+      "type": "Feature"
+    }
+  ],
+  "type": "FeatureCollection"
+}
