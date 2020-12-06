@@ -164,6 +164,20 @@ impl Dataset {
         Ok(())
     }
 
+    #[cfg(major_ge_3)]
+    pub fn spatial_ref(&self) -> Result<SpatialRef> {
+        unsafe { SpatialRef::from_c_obj(gdal_sys::GDALGetSpatialRef(self.c_dataset)) }
+    }
+
+    #[cfg(major_ge_3)]
+    pub fn set_spatial_ref(&self, spatial_ref: &SpatialRef) -> Result<()> {
+        let rv = unsafe { gdal_sys::GDALSetSpatialRef(self.c_dataset, spatial_ref.to_c_hsrs()) };
+        if rv != CPLErr::CE_None {
+            return Err(_last_cpl_err(rv));
+        }
+        Ok(())
+    }
+
     pub fn create_copy(&self, driver: &Driver, filename: &str) -> Result<Dataset> {
         let c_filename = CString::new(filename)?;
         let c_dataset = unsafe {
@@ -417,7 +431,10 @@ pub struct Transaction<'a> {
 
 impl<'a> Transaction<'a> {
     fn new(dataset: &'a mut Dataset) -> Self {
-        Transaction { dataset, rollback_on_drop: true }
+        Transaction {
+            dataset,
+            rollback_on_drop: true,
+        }
     }
 
     /// Returns a reference to the dataset from which this `Transaction` was created.
