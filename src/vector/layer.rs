@@ -62,6 +62,26 @@ impl<'a> Layer<'a> {
         self.c_layer
     }
 
+    /// Returns the feature with the given feature id `fid`, or `None` if not found.
+    ///
+    /// This function is unaffected by the spatial or attribute filters.
+    ///
+    /// Not all drivers support this efficiently; however, the call should always work if the
+    /// feature exists, as a fallback implementation just scans all the features in the layer
+    /// looking for the desired feature.
+    ///
+    /// **Important**: do not call `feature` while iterating over features using the
+    /// [`features`](Layer::features) function. Even if you don't mutate anything, this can cause
+    /// the the iterator to get interrupted. This is a limitation of the GDAL library.
+    pub fn feature(&self, fid: u64) -> Option<Feature> {
+        let c_feature = unsafe { gdal_sys::OGR_L_GetFeature(self.c_layer, fid as i64) };
+        if c_feature.is_null() {
+            None
+        } else {
+            Some(unsafe { Feature::from_c_feature(self.defn(), c_feature) })
+        }
+    }
+
     /// Iterate over all features in this layer.
     pub fn features(&self) -> FeatureIterator {
         FeatureIterator::_with_layer(self)

@@ -71,11 +71,11 @@ where
     with_layer(name, |layer| f(layer.features()));
 }
 
-fn with_first_feature<F>(name: &str, f: F)
+fn with_feature<F>(name: &str, fid: u64, f: F)
 where
     F: Fn(Feature),
 {
-    with_features(name, |mut features| f(features.next().unwrap()));
+    with_layer(name, |layer| f(layer.feature(fid).unwrap()));
 }
 
 #[cfg(test)]
@@ -98,6 +98,16 @@ mod tests {
     }
 
     #[test]
+    fn test_feature() {
+        with_layer("roads.geojson", |layer| {
+            assert!(layer.feature(236194095).is_some());
+            assert!(layer.feature(23489660).is_some());
+            assert!(layer.feature(0).is_none());
+            assert!(layer.feature(404).is_none());
+        });
+    }
+
+    #[test]
     fn test_iterate_features() {
         with_features("roads.geojson", |features| {
             assert_eq!(features.size_hint(), (21, Some(21)));
@@ -106,13 +116,21 @@ mod tests {
     }
 
     #[test]
+    fn test_fid() {
+        with_feature("roads.geojson", 236194095, |feature| {
+            assert_eq!(feature.fid(), Some(236194095));
+        });
+    }
+
+    #[test]
     fn test_string_field() {
-        with_features("roads.geojson", |mut features| {
-            let feature = features.next().unwrap();
+        with_feature("roads.geojson", 236194095, |feature| {
             assert_eq!(
                 feature.field("highway").unwrap().into_string(),
                 Some("footway".to_string())
             );
+        });
+        with_features("roads.geojson", |features| {
             assert_eq!(
                 features
                     .filter(|field| {
@@ -127,7 +145,7 @@ mod tests {
 
     #[test]
     fn test_float_field() {
-        with_first_feature("roads.geojson", |feature| {
+        with_feature("roads.geojson", 236194095, |feature| {
             assert_almost_eq(
                 feature.field("sort_key").unwrap().into_real().unwrap(),
                 -9.0,
@@ -137,14 +155,14 @@ mod tests {
 
     #[test]
     fn test_missing_field() {
-        with_first_feature("roads.geojson", |feature| {
+        with_feature("roads.geojson", 236194095, |feature| {
             assert!(feature.field("no such field").is_err());
         });
     }
 
     #[test]
     fn test_geom_accessors() {
-        with_first_feature("roads.geojson", |feature| {
+        with_feature("roads.geojson", 236194095, |feature| {
             let geom = feature.geometry();
             assert_eq!(geom.geometry_type(), OGRwkbGeometryType::wkbLineString);
             let coords = geom.get_point_vec();
@@ -171,7 +189,7 @@ mod tests {
 
     #[test]
     fn test_wkt() {
-        with_first_feature("roads.geojson", |feature| {
+        with_feature("roads.geojson", 236194095, |feature| {
             let wkt = feature.geometry().wkt().unwrap();
             let wkt_ok = format!(
                 "{}{}",
@@ -184,7 +202,7 @@ mod tests {
 
     #[test]
     fn test_json() {
-        with_first_feature("roads.geojson", |feature| {
+        with_feature("roads.geojson", 236194095, |feature| {
             let json = feature.geometry().json();
             let json_ok = format!(
                 "{}{}{}{}",
@@ -209,7 +227,6 @@ mod tests {
             .map(|f| (f.name(), f.field_type()))
             .collect::<Vec<_>>();
         let ok_names_types = vec![
-            ("id", OGRFieldType::OFTString),
             ("kind", OGRFieldType::OFTString),
             ("sort_key", OGRFieldType::OFTReal),
             ("is_link", OGRFieldType::OFTString),
