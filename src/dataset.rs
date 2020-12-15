@@ -12,6 +12,7 @@ use libc::{c_double, c_int};
 use ptr::null_mut;
 
 use crate::errors::*;
+use std::convert::TryInto;
 
 pub type GeoTransform = [c_double; 6];
 static START: Once = Once::new();
@@ -239,6 +240,10 @@ impl Dataset {
         Ok(self.child_layer(c_layer))
     }
 
+    pub fn layers(&self) -> LayerIterator {
+        return LayerIterator::with_dataset(self);
+    }
+
     pub fn raster_count(&self) -> isize {
         (unsafe { gdal_sys::GDALGetRasterCount(self.c_dataset) }) as isize
     }
@@ -393,6 +398,43 @@ impl Dataset {
             });
         }
         Ok(Transaction::new(self))
+    }
+}
+
+pub struct LayerIterator<'a> {
+    dataset: &'a Dataset,
+    idx: isize,
+    count: isize
+}
+
+impl<'a> Iterator for LayerIterator<'a> {
+    type Item = Layer<'a>;
+
+    #[inline]
+    fn next(&mut self) -> Option<Layer<'a>> {
+        let idx = self.idx;
+        if idx < self.count {
+            self.idx += 1;
+            let c_layer = unsafe { gdal_sys::OGR_DS_GetLayer(self.dataset.c_dataset, idx as c_int) };
+            if !c_layer.is_null() {
+                let layer = unsafe { Layer::from_c_layer(self.dataset, c_layer) };
+                return Some(layer);
+            }
+        }
+        return None;
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        match Some(self.count).map(|s| s.try_into().ok()).flatten() {
+            Some(size) => (size, Some(size)),
+            None => (0, None),
+        }
+    }
+}
+
+impl<'a> LayerIterator<'a> {
+    pub fn with_dataset(dataset: &'a Dataset) -> LayerIterator<'a> {
+        LayerIterator { dataset, idx: 0, count: dataset.layer_count() }
     }
 }
 
