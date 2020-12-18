@@ -1,7 +1,6 @@
 use crate::dataset::Dataset;
 use crate::utils::_last_cpl_err;
 use gdal_sys::{self, CPLErr, GDALResampleAlg};
-use libc::c_double;
 use std::ptr::{null, null_mut};
 
 use crate::errors::*;
@@ -15,7 +14,7 @@ pub fn reproject(src: &Dataset, dst: &Dataset) -> Result<()> {
             null(),
             GDALResampleAlg::GRA_Bilinear,
             0.0,
-            0.0 as c_double,
+            0.0,
             None,
             null_mut(),
             null_mut(),

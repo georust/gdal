@@ -194,7 +194,7 @@ impl<'a> RasterBand<'a> {
             )
         };
         if rv != CPLErr::CE_None {
-            return Err(_last_cpl_err(rv).into());
+            return Err(_last_cpl_err(rv));
         }
 
         unsafe {

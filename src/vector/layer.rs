@@ -261,7 +261,12 @@ impl<'a> Iterator for FeatureIterator<'a> {
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        match self.layer.try_feature_count().map(|s| s.try_into().ok()).flatten() {
+        match self
+            .layer
+            .try_feature_count()
+            .map(|s| s.try_into().ok())
+            .flatten()
+        {
             Some(size) => (size, Some(size)),
             None => (0, None),
         }

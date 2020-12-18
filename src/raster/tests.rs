@@ -129,12 +129,19 @@ fn test_get_description() {
 fn test_get_metadata_domains() {
     let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
     let mut domains = dataset.metadata_domains();
-    if domains[0] == "" {
+    if domains[0].is_empty() {
         domains.remove(0);
     }
 
-    assert_eq!(domains, vec!("IMAGE_STRUCTURE", "xml:XMP",
-        "DERIVED_SUBDATASETS", "COLOR_PROFILE"));
+    assert_eq!(
+        domains,
+        vec!(
+            "IMAGE_STRUCTURE",
+            "xml:XMP",
+            "DERIVED_SUBDATASETS",
+            "COLOR_PROFILE"
+        )
+    );
 }
 
 #[test]

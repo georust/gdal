@@ -102,7 +102,8 @@ impl<'a> Feature<'a> {
             OGRFieldType::OFTRealList => {
                 let rv = unsafe {
                     let mut len: i32 = 0;
-                    let ptr = gdal_sys::OGR_F_GetFieldAsDoubleList(self.c_feature, field_id, &mut len);
+                    let ptr =
+                        gdal_sys::OGR_F_GetFieldAsDoubleList(self.c_feature, field_id, &mut len);
                     slice::from_raw_parts(ptr, len as usize).to_vec()
                 };
                 Ok(FieldValue::RealListValue(rv))
@@ -114,7 +115,8 @@ impl<'a> Feature<'a> {
             OGRFieldType::OFTIntegerList => {
                 let rv = unsafe {
                     let mut len: i32 = 0;
-                    let ptr = gdal_sys::OGR_F_GetFieldAsIntegerList(self.c_feature, field_id, &mut len);
+                    let ptr =
+                        gdal_sys::OGR_F_GetFieldAsIntegerList(self.c_feature, field_id, &mut len);
                     slice::from_raw_parts(ptr, len as usize).to_vec()
                 };
                 Ok(FieldValue::IntegerListValue(rv))
@@ -126,7 +128,8 @@ impl<'a> Feature<'a> {
             OGRFieldType::OFTInteger64List => {
                 let rv = unsafe {
                     let mut len: i32 = 0;
-                    let ptr = gdal_sys::OGR_F_GetFieldAsInteger64List(self.c_feature, field_id, &mut len);
+                    let ptr =
+                        gdal_sys::OGR_F_GetFieldAsInteger64List(self.c_feature, field_id, &mut len);
                     slice::from_raw_parts(ptr, len as usize).to_vec()
                 };
                 Ok(FieldValue::Integer64ListValue(rv))
@@ -344,7 +347,7 @@ impl<'a> Feature<'a> {
             FieldValue::Integer64Value(value) => self.set_field_integer64(field_name, *value),
 
             #[cfg(feature = "datetime")]
-            FieldValue::DateTimeValue(value) => self.set_field_datetime(field_name, value.clone()),
+            FieldValue::DateTimeValue(value) => self.set_field_datetime(field_name, *value),
 
             #[cfg(feature = "datetime")]
             FieldValue::DateValue(value) => {
@@ -353,7 +356,7 @@ impl<'a> Feature<'a> {
             _ => Err(GdalError::UnhandledFieldType {
                 field_type: value.ogr_field_type(),
                 method_name: "OGR_Fld_GetType",
-            })
+            }),
         }
     }
 
@@ -369,8 +372,7 @@ impl<'a> Feature<'a> {
         Ok(())
     }
     pub fn field_count(&self) -> i32 {
-        let count = unsafe { gdal_sys::OGR_F_GetFieldCount(self.c_feature) };
-        count
+        unsafe { gdal_sys::OGR_F_GetFieldCount(self.c_feature) }
     }
 
     pub fn fields(&self) -> FieldValueIterator {
@@ -386,7 +388,11 @@ pub struct FieldValueIterator<'a> {
 
 impl<'a> FieldValueIterator<'a> {
     pub fn with_feature(feature: &'a Feature<'a>) -> Self {
-        FieldValueIterator { feature, idx: 0, count: feature.field_count() }
+        FieldValueIterator {
+            feature,
+            idx: 0,
+            count: feature.field_count(),
+        }
     }
 }
 
@@ -398,12 +404,17 @@ impl<'a> Iterator for FieldValueIterator<'a> {
         let idx = self.idx;
         if idx < self.count {
             self.idx += 1;
-            let field_defn = unsafe { gdal_sys::OGR_F_GetFieldDefnRef(self.feature.c_feature, idx) };
+            let field_defn =
+                unsafe { gdal_sys::OGR_F_GetFieldDefnRef(self.feature.c_feature, idx) };
             let field_name = unsafe { gdal_sys::OGR_Fld_GetNameRef(field_defn) };
             let name = _string(field_name);
-            let fv: Option<(String, FieldValue)> = self.feature.field_from_id(idx).ok()
+            let fv: Option<(String, FieldValue)> = self
+                .feature
+                .field_from_id(idx)
+                .ok()
                 .map(|field_value| (name, field_value));
-            if let None = fv { //skip unknown types
+            if fv.is_none() {
+                //skip unknown types
                 if self.idx < self.count {
                     return self.next();
                 }
@@ -517,7 +528,7 @@ impl FieldValue {
             FieldValue::DateValue(_) => OGRFieldType::OFTDate,
 
             #[cfg(feature = "datetime")]
-            FieldValue::DateTimeValue(_) => OGRFieldType::OFTDateTime
+            FieldValue::DateTimeValue(_) => OGRFieldType::OFTDateTime,
         }
     }
 }
