@@ -1,6 +1,10 @@
 # Changes
 
 ## 0.6.0 - 0.7.0
+* Dataset layer iteration and FieldValue types
+    * https://github.com/georust/gdal/pull/126
+* Fix i8 ptr instead of c_char ptr passed to OSRImportFromESRI()
+    * <https://github.com/georust/gdal/pull/123>
 * Rename spatial_reference to spatial_ref
     * <https://github.com/georust/gdal/pull/114>
 * Replace get_extent force flag by get_extent and try_get_extent
