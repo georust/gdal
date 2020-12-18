@@ -404,7 +404,7 @@ impl Dataset {
 pub struct LayerIterator<'a> {
     dataset: &'a Dataset,
     idx: isize,
-    count: isize
+    count: isize,
 }
 
 impl<'a> Iterator for LayerIterator<'a> {
@@ -415,7 +415,8 @@ impl<'a> Iterator for LayerIterator<'a> {
         let idx = self.idx;
         if idx < self.count {
             self.idx += 1;
-            let c_layer = unsafe { gdal_sys::OGR_DS_GetLayer(self.dataset.c_dataset, idx as c_int) };
+            let c_layer =
+                unsafe { gdal_sys::OGR_DS_GetLayer(self.dataset.c_dataset, idx as c_int) };
             if !c_layer.is_null() {
                 let layer = unsafe { Layer::from_c_layer(self.dataset, c_layer) };
                 return Some(layer);
@@ -434,7 +435,11 @@ impl<'a> Iterator for LayerIterator<'a> {
 
 impl<'a> LayerIterator<'a> {
     pub fn with_dataset(dataset: &'a Dataset) -> LayerIterator<'a> {
-        LayerIterator { dataset, idx: 0, count: dataset.layer_count() }
+        LayerIterator {
+            dataset,
+            idx: 0,
+            count: dataset.layer_count(),
+        }
     }
 }
 

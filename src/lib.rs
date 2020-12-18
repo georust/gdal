@@ -34,7 +34,7 @@ mod utils;
 pub mod vector;
 pub mod version;
 
-pub use dataset::{Dataset, GeoTransform, Transaction, LayerIterator};
+pub use dataset::{Dataset, GeoTransform, LayerIterator, Transaction};
 pub use driver::Driver;
 pub use metadata::Metadata;
 

@@ -1,6 +1,6 @@
 use crate::utils::{_last_cpl_err, _last_null_pointer_err, _string};
 use gdal_sys::{self, CPLErr, OGRCoordinateTransformationH, OGRErr, OGRSpatialReferenceH};
-use libc::{c_int, c_char};
+use libc::{c_char, c_int};
 use std::ffi::{CStr, CString};
 use std::ptr;
 use std::str::FromStr;

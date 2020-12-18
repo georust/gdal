@@ -133,8 +133,15 @@ fn test_get_metadata_domains() {
         domains.remove(0);
     }
 
-    assert_eq!(domains, vec!("IMAGE_STRUCTURE", "xml:XMP",
-        "DERIVED_SUBDATASETS", "COLOR_PROFILE"));
+    assert_eq!(
+        domains,
+        vec!(
+            "IMAGE_STRUCTURE",
+            "xml:XMP",
+            "DERIVED_SUBDATASETS",
+            "COLOR_PROFILE"
+        )
+    );
 }
 
 #[test]

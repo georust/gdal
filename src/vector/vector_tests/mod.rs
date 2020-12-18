@@ -1,4 +1,6 @@
-use super::{Feature, FeatureIterator, FieldValue, Geometry, Layer, OGRFieldType, OGRwkbGeometryType};
+use super::{
+    Feature, FeatureIterator, FieldValue, Geometry, Layer, OGRFieldType, OGRwkbGeometryType,
+};
 use crate::spatial_ref::SpatialRef;
 use crate::{assert_almost_eq, Dataset, Driver};
 use std::path::Path;
@@ -62,8 +64,8 @@ fn test_layer_spatial_ref() {
 }
 
 fn ds_with_layer<F>(ds_name: &str, layer_name: &str, f: F)
-    where
-        F: Fn(Layer)
+where
+    F: Fn(Layer),
 {
     let mut ds = Dataset::open(fixture!(ds_name)).unwrap();
     let layer = ds.layer_by_name(layer_name).unwrap();
@@ -72,7 +74,7 @@ fn ds_with_layer<F>(ds_name: &str, layer_name: &str, f: F)
 
 fn with_layer<F>(name: &str, f: F)
 where
-    F: Fn(Layer)
+    F: Fn(Layer),
 {
     let mut ds = Dataset::open(fixture!(name)).unwrap();
     let layer = ds.layer(0).unwrap();
@@ -193,10 +195,7 @@ mod tests {
     fn test_field_in_layer() {
         ds_with_layer("three_layer_ds.s3db", "layer_0", |layer| {
             let feature = layer.features().next().unwrap();
-                assert_eq!(
-                    feature.field("id").unwrap(),
-                    FieldValue::IntegerValue(0)
-                );
+            assert_eq!(feature.field("id").unwrap(), FieldValue::IntegerValue(0));
         });
     }
 
@@ -206,9 +205,7 @@ mod tests {
             let feature = features.next().unwrap();
             assert_eq!(
                 feature.field("an_int_list").unwrap(),
-                FieldValue::IntegerListValue(vec![
-                    1, 2
-                ])
+                FieldValue::IntegerListValue(vec![1, 2])
             );
         });
     }
@@ -219,9 +216,7 @@ mod tests {
             let feature = features.next().unwrap();
             assert_eq!(
                 feature.field("a_real_list").unwrap(),
-                FieldValue::RealListValue(vec![
-                    0.1, 0.2
-                ])
+                FieldValue::RealListValue(vec![0.1, 0.2])
             );
         });
     }
@@ -232,9 +227,7 @@ mod tests {
             let feature = features.next().unwrap();
             assert_eq!(
                 feature.field("a_long_list").unwrap(),
-                FieldValue::Integer64ListValue(vec![
-                    5000000000, 6000000000
-                ])
+                FieldValue::Integer64ListValue(vec![5000000000, 6000000000])
             );
         });
     }
