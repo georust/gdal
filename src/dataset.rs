@@ -241,7 +241,7 @@ impl Dataset {
     }
 
     pub fn layers(&self) -> LayerIterator {
-        return LayerIterator::with_dataset(self);
+        LayerIterator::with_dataset(self)
     }
 
     pub fn raster_count(&self) -> isize {
@@ -421,7 +421,7 @@ impl<'a> Iterator for LayerIterator<'a> {
                 return Some(layer);
             }
         }
-        return None;
+        None
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
@@ -564,7 +564,7 @@ mod tests {
             .tempfile()
             .unwrap()
             .into_parts();
-        file.write(&input_data).unwrap();
+        file.write_all(&input_data).unwrap();
         // Close the temporary file so that Dataset can open it safely even if the filesystem uses
         // exclusive locking (Windows?).
         drop(file);

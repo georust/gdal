@@ -38,4 +38,4 @@ pub trait ToGdal {
 }
 
 #[cfg(test)]
-mod tests;
+mod vector_tests;

@@ -344,7 +344,7 @@ impl<'a> Feature<'a> {
             FieldValue::Integer64Value(value) => self.set_field_integer64(field_name, *value),
 
             #[cfg(feature = "datetime")]
-            FieldValue::DateTimeValue(value) => self.set_field_datetime(field_name, value.clone()),
+            FieldValue::DateTimeValue(value) => self.set_field_datetime(field_name, *value),
 
             #[cfg(feature = "datetime")]
             FieldValue::DateValue(value) => {
@@ -369,8 +369,8 @@ impl<'a> Feature<'a> {
         Ok(())
     }
     pub fn field_count(&self) -> i32 {
-        let count = unsafe { gdal_sys::OGR_F_GetFieldCount(self.c_feature) };
-        count
+       unsafe { gdal_sys::OGR_F_GetFieldCount(self.c_feature) }
+        
     }
 
     pub fn fields(&self) -> FieldValueIterator {
@@ -403,7 +403,7 @@ impl<'a> Iterator for FieldValueIterator<'a> {
             let name = _string(field_name);
             let fv: Option<(String, FieldValue)> = self.feature.field_from_id(idx).ok()
                 .map(|field_value| (name, field_value));
-            if let None = fv { //skip unknown types
+            if fv.is_none() { //skip unknown types
                 if self.idx < self.count {
                     return self.next();
                 }
