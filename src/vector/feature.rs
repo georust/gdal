@@ -1,4 +1,4 @@
-use crate::utils::{_last_null_pointer_err, _string};
+use crate::utils::{_last_null_pointer_err, _string, _string_array};
 use crate::vector::geometry::Geometry;
 use crate::vector::layer::Layer;
 use crate::vector::Defn;
@@ -12,6 +12,7 @@ use std::ffi::CString;
 use chrono::{Date, DateTime, Datelike, FixedOffset, TimeZone, Timelike};
 
 use crate::errors::*;
+use std::slice;
 
 /// OGR Feature
 pub struct Feature<'a> {
@@ -53,6 +54,16 @@ impl<'a> Feature<'a> {
             .collect()
     }
 
+    /// Returns the feature identifier, or `None` if none has been assigned.
+    pub fn fid(&self) -> Option<u64> {
+        let fid = unsafe { gdal_sys::OGR_F_GetFID(self.c_feature) };
+        if fid < 0 {
+            None
+        } else {
+            Some(fid as u64)
+        }
+    }
+
     /// Get the value of a named field. If the field exists, it returns a
     /// `FieldValue` wrapper, that you need to unpack to a base type
     /// (string, float, etc). If the field is missing, returns `None`.
@@ -60,11 +71,16 @@ impl<'a> Feature<'a> {
         let c_name = CString::new(name)?;
         let field_id = unsafe { gdal_sys::OGR_F_GetFieldIndex(self.c_feature, c_name.as_ptr()) };
         if field_id == -1 {
-            return Err(GdalError::InvalidFieldName {
+            Err(GdalError::InvalidFieldName {
                 field_name: name.to_string(),
                 method_name: "OGR_F_GetFieldIndex",
-            });
+            })
+        } else {
+            self.field_from_id(field_id)
         }
+    }
+
+    fn field_from_id(&self, field_id: i32) -> Result<FieldValue> {
         let field_defn = unsafe { gdal_sys::OGR_F_GetFieldDefnRef(self.c_feature, field_id) };
         let field_type = unsafe { gdal_sys::OGR_Fld_GetType(field_defn) };
         match field_type {
@@ -72,17 +88,48 @@ impl<'a> Feature<'a> {
                 let rv = unsafe { gdal_sys::OGR_F_GetFieldAsString(self.c_feature, field_id) };
                 Ok(FieldValue::StringValue(_string(rv)))
             }
+            OGRFieldType::OFTStringList => {
+                let rv = unsafe {
+                    let ptr = gdal_sys::OGR_F_GetFieldAsStringList(self.c_feature, field_id);
+                    _string_array(ptr)
+                };
+                Ok(FieldValue::StringListValue(rv))
+            }
             OGRFieldType::OFTReal => {
                 let rv = unsafe { gdal_sys::OGR_F_GetFieldAsDouble(self.c_feature, field_id) };
                 Ok(FieldValue::RealValue(rv as f64))
+            }
+            OGRFieldType::OFTRealList => {
+                let rv = unsafe {
+                    let mut len: i32 = 0;
+                    let ptr = gdal_sys::OGR_F_GetFieldAsDoubleList(self.c_feature, field_id, &mut len);
+                    slice::from_raw_parts(ptr, len as usize).to_vec()
+                };
+                Ok(FieldValue::RealListValue(rv))
             }
             OGRFieldType::OFTInteger => {
                 let rv = unsafe { gdal_sys::OGR_F_GetFieldAsInteger(self.c_feature, field_id) };
                 Ok(FieldValue::IntegerValue(rv as i32))
             }
+            OGRFieldType::OFTIntegerList => {
+                let rv = unsafe {
+                    let mut len: i32 = 0;
+                    let ptr = gdal_sys::OGR_F_GetFieldAsIntegerList(self.c_feature, field_id, &mut len);
+                    slice::from_raw_parts(ptr, len as usize).to_vec()
+                };
+                Ok(FieldValue::IntegerListValue(rv))
+            }
             OGRFieldType::OFTInteger64 => {
                 let rv = unsafe { gdal_sys::OGR_F_GetFieldAsInteger64(self.c_feature, field_id) };
                 Ok(FieldValue::Integer64Value(rv))
+            }
+            OGRFieldType::OFTInteger64List => {
+                let rv = unsafe {
+                    let mut len: i32 = 0;
+                    let ptr = gdal_sys::OGR_F_GetFieldAsInteger64List(self.c_feature, field_id, &mut len);
+                    slice::from_raw_parts(ptr, len as usize).to_vec()
+                };
+                Ok(FieldValue::Integer64ListValue(rv))
             }
             #[cfg(feature = "datetime")]
             OGRFieldType::OFTDateTime => Ok(FieldValue::DateTimeValue(
@@ -290,19 +337,23 @@ impl<'a> Feature<'a> {
     }
 
     pub fn set_field(&self, field_name: &str, value: &FieldValue) -> Result<()> {
-        match *value {
-            FieldValue::RealValue(value) => self.set_field_double(field_name, value),
+        match value {
+            FieldValue::RealValue(value) => self.set_field_double(field_name, *value),
             FieldValue::StringValue(ref value) => self.set_field_string(field_name, value.as_str()),
-            FieldValue::IntegerValue(value) => self.set_field_integer(field_name, value),
-            FieldValue::Integer64Value(value) => self.set_field_integer64(field_name, value),
+            FieldValue::IntegerValue(value) => self.set_field_integer(field_name, *value),
+            FieldValue::Integer64Value(value) => self.set_field_integer64(field_name, *value),
 
             #[cfg(feature = "datetime")]
-            FieldValue::DateTimeValue(value) => self.set_field_datetime(field_name, value),
+            FieldValue::DateTimeValue(value) => self.set_field_datetime(field_name, value.clone()),
 
             #[cfg(feature = "datetime")]
             FieldValue::DateValue(value) => {
                 self.set_field_datetime(field_name, value.and_hms(0, 0, 0))
             }
+            _ => Err(GdalError::UnhandledFieldType {
+                field_type: value.ogr_field_type(),
+                method_name: "OGR_Fld_GetType",
+            })
         }
     }
 
@@ -317,6 +368,58 @@ impl<'a> Feature<'a> {
         self.geometry[0] = geom;
         Ok(())
     }
+    pub fn field_count(&self) -> i32 {
+        let count = unsafe { gdal_sys::OGR_F_GetFieldCount(self.c_feature) };
+        count
+    }
+
+    pub fn fields(&self) -> FieldValueIterator {
+        FieldValueIterator::with_feature(self)
+    }
+}
+
+pub struct FieldValueIterator<'a> {
+    feature: &'a Feature<'a>,
+    idx: i32,
+    count: i32,
+}
+
+impl<'a> FieldValueIterator<'a> {
+    pub fn with_feature(feature: &'a Feature<'a>) -> Self {
+        FieldValueIterator { feature, idx: 0, count: feature.field_count() }
+    }
+}
+
+impl<'a> Iterator for FieldValueIterator<'a> {
+    type Item = (String, FieldValue);
+
+    #[inline]
+    fn next(&mut self) -> Option<(String, FieldValue)> {
+        let idx = self.idx;
+        if idx < self.count {
+            self.idx += 1;
+            let field_defn = unsafe { gdal_sys::OGR_F_GetFieldDefnRef(self.feature.c_feature, idx) };
+            let field_name = unsafe { gdal_sys::OGR_Fld_GetNameRef(field_defn) };
+            let name = _string(field_name);
+            let fv: Option<(String, FieldValue)> = self.feature.field_from_id(idx).ok()
+                .map(|field_value| (name, field_value));
+            if let None = fv { //skip unknown types
+                if self.idx < self.count {
+                    return self.next();
+                }
+            }
+            fv
+        } else {
+            None
+        }
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        match Some(self.count).map(|s| s.try_into().ok()).flatten() {
+            Some(size) => (size, Some(size)),
+            None => (0, None),
+        }
+    }
 }
 
 impl<'a> Drop for Feature<'a> {
@@ -327,11 +430,16 @@ impl<'a> Drop for Feature<'a> {
     }
 }
 
+#[derive(Debug, PartialEq)]
 pub enum FieldValue {
     IntegerValue(i32),
+    IntegerListValue(Vec<i32>),
     Integer64Value(i64),
+    Integer64ListValue(Vec<i64>),
     StringValue(String),
+    StringListValue(Vec<String>),
     RealValue(f64),
+    RealListValue(Vec<f64>),
 
     #[cfg(feature = "datetime")]
     DateValue(Date<FixedOffset>),
@@ -391,6 +499,25 @@ impl FieldValue {
         match self {
             FieldValue::DateTimeValue(rv) => Some(rv),
             _ => None,
+        }
+    }
+
+    pub fn ogr_field_type(&self) -> OGRFieldType::Type {
+        match self {
+            FieldValue::IntegerValue(_) => OGRFieldType::OFTInteger,
+            FieldValue::IntegerListValue(_) => OGRFieldType::OFTIntegerList,
+            FieldValue::Integer64Value(_) => OGRFieldType::OFTInteger64,
+            FieldValue::Integer64ListValue(_) => OGRFieldType::OFTInteger64List,
+            FieldValue::StringValue(_) => OGRFieldType::OFTString,
+            FieldValue::StringListValue(_) => OGRFieldType::OFTStringList,
+            FieldValue::RealValue(_) => OGRFieldType::OFTReal,
+            FieldValue::RealListValue(_) => OGRFieldType::OFTRealList,
+
+            #[cfg(feature = "datetime")]
+            FieldValue::DateValue(_) => OGRFieldType::OFTDate,
+
+            #[cfg(feature = "datetime")]
+            FieldValue::DateTimeValue(_) => OGRFieldType::OFTDateTime
         }
     }
 }
