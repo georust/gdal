@@ -9,6 +9,7 @@ use std::path::{Path, PathBuf};
 #[cfg(feature = "bindgen")]
 pub fn write_bindings(include_paths: Vec<String>, out_path: &Path) {
     let mut builder = bindgen::Builder::default()
+        .size_t_is_usize(true)
         .header("wrapper.h")
         .constified_enum_module(".*")
         .ctypes_prefix("libc")
