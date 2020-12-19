@@ -21,13 +21,13 @@ datetime = ["chrono"]
 thiserror = "1.0"
 libc = "0.2"
 geo-types = "0.6"
-gdal-sys = { path = "gdal-sys", version = "^0.3"}
+gdal-sys = { path = "gdal-sys", version = "^0.3-alpha.0"}
 num-traits = "0.2"
 ndarray = {version = "0.14", optional = true }
 chrono = { version = "0.4", optional = true }
 
 [build-dependencies]
-gdal-sys = { path = "gdal-sys", version = "^0.3"}
+gdal-sys = { path = "gdal-sys", version = "^0.3-alpha.0"}
 semver = "0.11"
 
 [dev-dependencies]
