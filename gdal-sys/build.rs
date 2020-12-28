@@ -57,6 +57,31 @@ fn find_gdal_dll(lib_dir: &Path) -> io::Result<Option<String>> {
 }
 
 fn main() {
+    let out_path = PathBuf::from(env::var("OUT_DIR").unwrap()).join("bindings.rs");
+
+    // Hardcode a prebuilt binding version while generating docs.
+    // Otherwise docs.rs will explode due to not actually having libgdal installed.
+    if let Ok(_) = std::env::var("DOCS_RS") {
+        let version = Version::parse("3.2.0").expect("invalid version for docs.rs");
+        println!(
+            "cargo:rustc-cfg=gdal_sys_{}_{}_{}",
+            version.major, version.minor, version.patch
+        );
+
+        let binding_path = PathBuf::from(format!(
+            "prebuilt-bindings/gdal_{}.{}.rs",
+            version.major, version.minor
+        ));
+
+        if !binding_path.exists() {
+            panic!("Missing bindings for docs.rs (version {})", version);
+        }
+
+        std::fs::copy(&binding_path, &out_path).expect("Can't copy bindings to output directory");
+
+        return;
+    }
+
     println!("cargo:rerun-if-env-changed=GDAL_STATIC");
     println!("cargo:rerun-if-env-changed=GDAL_DYNAMIC");
     println!("cargo:rerun-if-env-changed=GDAL_INCLUDE_DIR");
@@ -153,8 +178,6 @@ fn main() {
 
         need_metadata = false;
     }
-
-    let out_path = PathBuf::from(env::var("OUT_DIR").unwrap()).join("bindings.rs");
 
     let mut include_paths = Vec::new();
     if let Some(ref dir) = include_dir {
