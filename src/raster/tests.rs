@@ -1,8 +1,8 @@
 use crate::dataset::Dataset;
 use crate::metadata::Metadata;
-use crate::raster::ByteBuffer;
+use crate::raster::{get_color_interpretation_by_name, get_color_interpretation_name, ByteBuffer};
 use crate::Driver;
-use gdal_sys::GDALDataType;
+use gdal_sys::{GDALColorInterp, GDALDataType};
 use std::path::Path;
 
 #[cfg(feature = "ndarray")]
@@ -440,4 +440,40 @@ fn test_get_rasterband_actual_block_size() {
     let rasterband = dataset.rasterband(1).unwrap();
     let size = rasterband.actual_block_size((0, 40));
     assert_eq!(size.unwrap(), (100, 1));
+}
+
+#[test]
+fn test_get_rasterband_color_interp() {
+    let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
+    let rasterband = dataset.rasterband(1).unwrap();
+    let band_interp = rasterband.get_color_interpretation();
+    assert_eq!(band_interp, GDALColorInterp::GCI_RedBand);
+}
+
+#[test]
+fn test_set_rasterband_color_interp() {
+    let driver = Driver::get("MEM").unwrap();
+    let dataset = driver.create("", 1, 1, 1).unwrap();
+    let mut rasterband = dataset.rasterband(1).unwrap();
+    rasterband
+        .set_color_interpretation(GDALColorInterp::GCI_AlphaBand)
+        .unwrap();
+    let band_interp = rasterband.get_color_interpretation();
+    assert_eq!(band_interp, GDALColorInterp::GCI_AlphaBand);
+}
+
+#[test]
+fn test_color_interp_names() {
+    assert_eq!(
+        get_color_interpretation_name(GDALColorInterp::GCI_AlphaBand),
+        "Alpha"
+    );
+    assert_eq!(
+        get_color_interpretation_by_name("Alpha").unwrap(),
+        GDALColorInterp::GCI_AlphaBand
+    );
+    assert_eq!(
+        get_color_interpretation_by_name("not a valid name").unwrap(),
+        GDALColorInterp::GCI_Undefined
+    );
 }

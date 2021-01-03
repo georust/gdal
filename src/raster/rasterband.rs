@@ -4,9 +4,10 @@ use crate::dataset::Dataset;
 use crate::gdal_major_object::MajorObject;
 use crate::metadata::Metadata;
 use crate::raster::{GDALDataType, GdalType};
-use crate::utils::_last_cpl_err;
-use gdal_sys::{self, CPLErr, GDALMajorObjectH, GDALRWFlag, GDALRasterBandH};
+use crate::utils::{_last_cpl_err, _string};
+use gdal_sys::{self, CPLErr, GDALColorInterp, GDALMajorObjectH, GDALRWFlag, GDALRasterBandH};
 use libc::c_int;
+use std::ffi::CString;
 
 #[cfg(feature = "ndarray")]
 use ndarray::Array2;
@@ -260,6 +261,18 @@ impl<'a> RasterBand<'a> {
         Ok(())
     }
 
+    pub fn get_color_interpretation(&self) -> GDALColorInterp::Type {
+        unsafe { gdal_sys::GDALGetRasterColorInterpretation(self.c_rasterband) }
+    }
+
+    pub fn set_color_interpretation(&mut self, interp: GDALColorInterp::Type) -> Result<()> {
+        let rv = unsafe { gdal_sys::GDALSetRasterColorInterpretation(self.c_rasterband, interp) };
+        if rv != CPLErr::CE_None {
+            return Err(_last_cpl_err(rv));
+        }
+        Ok(())
+    }
+
     pub fn scale(&self) -> Option<f64> {
         let mut pb_success = 1;
         let scale = unsafe { gdal_sys::GDALGetRasterScale(self.c_rasterband, &mut pb_success) };
@@ -320,3 +333,13 @@ impl<T: GdalType> Buffer<T> {
 }
 
 pub type ByteBuffer = Buffer<u8>;
+
+pub fn get_color_interpretation_name(color_interp: GDALColorInterp::Type) -> String {
+    let rv = unsafe { gdal_sys::GDALGetColorInterpretationName(color_interp) };
+    _string(rv)
+}
+
+pub fn get_color_interpretation_by_name(interp_name: &str) -> Result<GDALColorInterp::Type> {
+    let c_str_interp_name = CString::new(interp_name)?;
+    Ok(unsafe { gdal_sys::GDALGetColorInterpretationByName(c_str_interp_name.as_ptr()) })
+}
