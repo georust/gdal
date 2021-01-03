@@ -27,7 +27,7 @@ ndarray = {version = "0.14", optional = true }
 chrono = { version = "0.4", optional = true }
 
 [build-dependencies]
-gdal-sys = { path = "gdal-sys"}
+gdal-sys = { path = "gdal-sys", version="0.3"}
 semver = "0.11"
 
 [dev-dependencies]
