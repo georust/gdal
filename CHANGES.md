@@ -1,4 +1,7 @@
 # Changes
+## 0.7.1
+* fix docs.rs build for gdal-sys
+    * <https://github.com/georust/gdal/pull/128>
 
 ## 0.6.0 - 0.7.0
 * Dataset layer iteration and FieldValue types
