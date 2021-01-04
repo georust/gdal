@@ -34,3 +34,6 @@ tempfile = "3.1"
 
 [workspace]
 members = ["gdal-sys"]
+
+[package.metadata.docs.rs]
+rustc-args = ["--cfg", "docsrs"]
