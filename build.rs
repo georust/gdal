@@ -1,13 +1,19 @@
 use semver::Version;
 
+#[cfg(docsrs)]
+pub fn gdal_version_info(_key: &str) -> String {
+    "GDAL 3.2.0, released 2222/02/22".to_string()
+}
+
+#[cfg(not(docsrs))]
 pub fn gdal_version_info(key: &str) -> String {
     let c_key = std::ffi::CString::new(key.as_bytes()).unwrap();
-    let version_string = unsafe {
+
+    unsafe {
         let res_ptr = gdal_sys::GDALVersionInfo(c_key.as_ptr());
         let c_res = std::ffi::CStr::from_ptr(res_ptr);
         c_res.to_string_lossy().into_owned()
-    };
-    version_string
+    }
 }
 
 fn main() {
