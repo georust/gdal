@@ -184,13 +184,13 @@ fn main() {
         include_paths.push(dir.as_path().to_str().unwrap().to_string());
     }
 
-    let gdal = Config::new()
+    let gdal_pkg_config = Config::new()
         .statik(prefer_static)
         .cargo_metadata(need_metadata)
         .probe("gdal");
 
-    if let Ok(gdal) = gdal {
-        for dir in gdal.include_paths {
+    if let Ok(gdal) = &gdal_pkg_config {
+        for dir in &gdal.include_paths {
             include_paths.push(dir.to_str().unwrap().to_string());
         }
         if version.is_none() {
@@ -222,7 +222,11 @@ fn main() {
             std::fs::copy(&binding_path, &out_path)
                 .expect("Can't copy bindings to output directory");
         } else {
-            panic!("No GDAL version detected");
+            if let Err(pkg_config_err) = &gdal_pkg_config {
+                panic!("Error while running `pkg-config`: {}", pkg_config_err);
+            } else {
+                panic!("No GDAL version detected");
+            }
         }
     }
 }
