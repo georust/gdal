@@ -223,7 +223,12 @@ fn main() {
                 .expect("Can't copy bindings to output directory");
         } else {
             if let Err(pkg_config_err) = &gdal_pkg_config {
-                panic!("Error while running `pkg-config`: {}", pkg_config_err);
+                // Special case output for this common error
+                if matches!(pkg_config_err, pkg_config::Error::Command { cause, .. } if cause.kind() == std::io::ErrorKind::NotFound) {
+                    panic!("Could not find `pkg-config` in your path. Please install it before building gdal-sys.");
+                } else {
+                    panic!("Error while running `pkg-config`: {}", pkg_config_err);
+                }
             } else {
                 panic!("No GDAL version detected");
             }
