@@ -1,6 +1,14 @@
 # Changes
 
 ## Unreleased
+
+* **Breaking**: Add support to select a resampling algorithm when reading a raster
+    * <https://github.com/georust/gdal/pull/141>
+
+    Now, it is necessary to provide a `Option<ResampleAlg>` when reading a raster.
+    If `None`, it uses `ResampleAlg::NearestNeighbour` which was the
+    default behavior.
+
 * Implement wrapper for `OGR_L_TestCapability`
     * <https://github.com/georust/gdal/pull/160>
 * **Breaking**: Use `DatasetOptions` to pass as `Dataset::open_ex` parameters and
@@ -76,8 +84,11 @@
   `SpatialRef::axis_mapping_strategy` instead.
 * Add support for reading and setting rasterband colour interpretations
     * <https://github.com/georust/gdal/pull/144>
+<<<<<<< HEAD
 * Fixed memory leak in `Geometry::from_wkt`
     * <https://github.com/georust/gdal/pull/172>
+=======
+>>>>>>> Added entry to CHANGES
 
 ## 0.7.1
 * fix docs.rs build for gdal-sys
