@@ -13,7 +13,7 @@ fn main() {
     println!("rasterband type: {:?}", rasterband.band_type());
     println!("rasterband scale: {:?}", rasterband.scale());
     println!("rasterband offset: {:?}", rasterband.offset());
-    if let Ok(rv) = rasterband.read_as::<u8>((20, 30), (2, 3), (2, 3)) {
+    if let Ok(rv) = rasterband.read_as::<u8>((20, 30), (2, 3), (2, 3), None) {
         println!("{:?}", rv.data);
     }
 }

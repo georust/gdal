@@ -2,7 +2,7 @@ use crate::dataset::Dataset;
 use crate::metadata::Metadata;
 use crate::raster::{ByteBuffer, ColorInterpretation};
 use crate::Driver;
-use gdal_sys::GDALDataType;
+use gdal_sys::{GDALDataType, GDALRIOResampleAlg};
 use std::path::Path;
 
 #[cfg(feature = "ndarray")]
@@ -73,15 +73,48 @@ fn test_get_projection() {
 fn test_read_raster() {
     let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
     let rb = dataset.rasterband(1).unwrap();
-    let rv = rb.read_as::<u8>((20, 30), (2, 3), (2, 3)).unwrap();
+    let rv = rb.read_as::<u8>((20, 30), (2, 3), (2, 3), None).unwrap();
     assert_eq!(rv.size.0, 2);
     assert_eq!(rv.size.1, 3);
     assert_eq!(rv.data, vec!(7, 7, 7, 10, 8, 12));
 
     let mut buf = rv;
-    rb.read_into_slice((20, 30), (2, 3), (2, 3), &mut buf.data)
+    rb.read_into_slice((20, 30), (2, 3), (2, 3), &mut buf.data, None)
         .unwrap();
     assert_eq!(buf.data, vec!(7, 7, 7, 10, 8, 12));
+}
+
+#[test]
+fn test_read_raster_with_default_resample() {
+    let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
+    let rb = dataset.rasterband(1).unwrap();
+    let rv = rb.read_as::<u8>((20, 30), (4, 4), (2, 2), None).unwrap();
+    assert_eq!(rv.size.0, 2);
+    assert_eq!(rv.size.1, 2);
+    assert_eq!(rv.data, vec!(10, 4, 6, 11));
+
+    let mut buf = rv;
+    rb.read_into_slice((20, 30), (4, 4), (2, 2), &mut buf.data, None)
+        .unwrap();
+    assert_eq!(buf.data, vec!(10, 4, 6, 11));
+}
+
+#[test]
+fn test_read_raster_with_average_resample() {
+    let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
+    let rb = dataset.rasterband(1).unwrap();
+    let resample_alg = Some(GDALRIOResampleAlg::GRIORA_Average);
+    let rv = rb
+        .read_as::<u8>((20, 30), (4, 4), (2, 2), resample_alg)
+        .unwrap();
+    assert_eq!(rv.size.0, 2);
+    assert_eq!(rv.size.1, 2);
+    assert_eq!(rv.data, vec!(8, 6, 8, 12));
+
+    let mut buf = rv;
+    rb.read_into_slice((20, 30), (4, 4), (2, 2), &mut buf.data, resample_alg)
+        .unwrap();
+    assert_eq!(buf.data, vec!(8, 6, 8, 12));
 }
 
 #[test]
@@ -103,11 +136,11 @@ fn test_write_raster() {
     assert!(res.is_ok());
 
     // read a pixel from the left side
-    let left = rb.read_as::<u8>((5, 5), (1, 1), (1, 1)).unwrap();
+    let left = rb.read_as::<u8>((5, 5), (1, 1), (1, 1), None).unwrap();
     assert_eq!(left.data[0], 50u8);
 
     // read a pixel from the right side
-    let right = rb.read_as::<u8>((15, 5), (1, 1), (1, 1)).unwrap();
+    let right = rb.read_as::<u8>((15, 5), (1, 1), (1, 1), None).unwrap();
     assert_eq!(right.data[0], 20u8);
 }
 
@@ -240,7 +273,7 @@ fn test_get_driver_by_name() {
 fn test_read_raster_as() {
     let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
     let rb = dataset.rasterband(1).unwrap();
-    let rv = rb.read_as::<u8>((20, 30), (2, 3), (2, 3)).unwrap();
+    let rv = rb.read_as::<u8>((20, 30), (2, 3), (2, 3), None).unwrap();
     assert_eq!(rv.data, vec!(7, 7, 7, 10, 8, 12));
     assert_eq!(rv.size.0, 2);
     assert_eq!(rv.size.1, 3);

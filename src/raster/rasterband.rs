@@ -3,7 +3,10 @@ use crate::gdal_major_object::MajorObject;
 use crate::metadata::Metadata;
 use crate::raster::{GDALDataType, GdalType};
 use crate::utils::{_last_cpl_err, _last_null_pointer_err, _string};
-use gdal_sys::{self, CPLErr, GDALColorInterp, GDALMajorObjectH, GDALRWFlag, GDALRasterBandH};
+use gdal_sys::{
+    self, CPLErr, GDALColorInterp, GDALMajorObjectH, GDALRIOResampleAlg, GDALRWFlag,
+    GDALRasterBandH, GDALRasterIOExtraArg,
+};
 use libc::c_int;
 use std::ffi::CString;
 
@@ -11,6 +14,68 @@ use std::ffi::CString;
 use ndarray::Array2;
 
 use crate::errors::*;
+
+/// Extra options used to read a raster.
+///
+/// For documentation, see `gdal_sys::GDALRasterIOExtraArg`.
+#[derive(Debug)]
+pub struct RasterIOExtraArg {
+    pub n_version: libc::c_int,
+    pub e_resample_alg: GDALRIOResampleAlg::Type,
+    pub pfn_progress: gdal_sys::GDALProgressFunc,
+    pub p_progress_data: *mut libc::c_void,
+    pub b_floating_point_window_validity: libc::c_int,
+    pub df_x_off: f64,
+    pub df_y_off: f64,
+    pub df_x_size: f64,
+    pub df_y_size: f64,
+}
+
+impl Default for RasterIOExtraArg {
+    fn default() -> Self {
+        Self {
+            n_version: 1,
+            pfn_progress: None,
+            p_progress_data: std::ptr::null_mut(),
+            e_resample_alg: GDALRIOResampleAlg::GRIORA_NearestNeighbour,
+            b_floating_point_window_validity: 0,
+            df_x_off: 0.0,
+            df_y_off: 0.0,
+            df_x_size: 0.0,
+            df_y_size: 0.0,
+        }
+    }
+}
+
+impl Into<GDALRasterIOExtraArg> for RasterIOExtraArg {
+    fn into(self) -> GDALRasterIOExtraArg {
+        // let opts: GDALRasterIOExtraArg = unsafe { std::mem::transmute(self) };
+        // opts
+        let RasterIOExtraArg {
+            n_version,
+            e_resample_alg,
+            pfn_progress,
+            p_progress_data,
+            b_floating_point_window_validity,
+            df_x_off,
+            df_y_off,
+            df_x_size,
+            df_y_size,
+        } = self;
+
+        GDALRasterIOExtraArg {
+            nVersion: n_version,
+            eResampleAlg: e_resample_alg,
+            pfnProgress: pfn_progress,
+            pProgressData: p_progress_data,
+            bFloatingPointWindowValidity: b_floating_point_window_validity,
+            dfXOff: df_x_off,
+            dfYOff: df_y_off,
+            dfXSize: df_x_size,
+            dfYSize: df_y_size,
+        }
+    }
+}
 
 /// Represents a single band of a dataset.
 ///
@@ -73,19 +138,32 @@ impl<'a> RasterBand<'a> {
     /// * window_size - the window size (GDAL will interpolate data if window_size != buffer_size)
     /// * size - the desired size to read
     /// * buffer - a slice to hold the data (length must equal product of size parameter)
+    /// * e_resample_alg - the resample algorithm used for the interpolation
     pub fn read_into_slice<T: Copy + GdalType>(
         &self,
         window: (isize, isize),
         window_size: (usize, usize),
         size: (usize, usize),
         buffer: &mut [T],
+        e_resample_alg: Option<GDALRIOResampleAlg::Type>,
     ) -> Result<()> {
         let pixels = (size.0 * size.1) as usize;
         assert_eq!(buffer.len(), pixels);
 
+        let resample_alg = e_resample_alg.unwrap_or(GDALRIOResampleAlg::GRIORA_NearestNeighbour);
+
+        // let options: RasterIOExtraArg = Default::default();
+        let mut options: GDALRasterIOExtraArg = RasterIOExtraArg {
+            e_resample_alg: resample_alg,
+            ..Default::default()
+        }
+        .into();
+
+        let options_ptr: *mut GDALRasterIOExtraArg = &mut options;
+
         //let no_data:
         let rv = unsafe {
-            gdal_sys::GDALRasterIO(
+            gdal_sys::GDALRasterIOEx(
                 self.c_rasterband,
                 GDALRWFlag::GF_Read,
                 window.0 as c_int,
@@ -98,6 +176,7 @@ impl<'a> RasterBand<'a> {
                 T::gdal_type(),
                 0,
                 0,
+                options_ptr,
             )
         };
         if rv != CPLErr::CE_None {
@@ -113,11 +192,13 @@ impl<'a> RasterBand<'a> {
     /// * window - the window position from top left
     /// * window_size - the window size (GDAL will interpolate data if window_size != buffer_size)
     /// * buffer_size - the desired size of the 'Buffer'
+    /// * e_resample_alg - the resample algorithm used for the interpolation
     pub fn read_as<T: Copy + GdalType>(
         &self,
         window: (isize, isize),
         window_size: (usize, usize),
         size: (usize, usize),
+        e_resample_alg: Option<GDALRIOResampleAlg::Type>,
     ) -> Result<Buffer<T>> {
         let pixels = (size.0 * size.1) as usize;
 
@@ -131,7 +212,7 @@ impl<'a> RasterBand<'a> {
         unsafe {
             data.set_len(pixels);
         };
-        self.read_into_slice(window, window_size, size, &mut data)?;
+        self.read_into_slice(window, window_size, size, &mut data, e_resample_alg)?;
 
         Ok(Buffer { size, data })
     }
@@ -143,6 +224,7 @@ impl<'a> RasterBand<'a> {
     /// * window - the window position from top left
     /// * window_size - the window size (GDAL will interpolate data if window_size != array_size)
     /// * array_size - the desired size of the 'Array'
+    /// * e_resample_alg - the resample algorithm used for the interpolation
     /// # Docs
     /// The Matrix shape is (rows, cols) and raster shape is (cols in x-axis, rows in y-axis).
     pub fn read_as_array<T: Copy + GdalType>(
@@ -150,8 +232,9 @@ impl<'a> RasterBand<'a> {
         window: (isize, isize),
         window_size: (usize, usize),
         array_size: (usize, usize),
+        e_resample_alg: Option<GDALRIOResampleAlg::Type>,
     ) -> Result<Array2<T>> {
-        let data = self.read_as::<T>(window, window_size, array_size)?;
+        let data = self.read_as::<T>(window, window_size, array_size, e_resample_alg)?;
 
         // Matrix shape is (rows, cols) and raster shape is (cols in x-axis, rows in y-axis)
         Ok(Array2::from_shape_vec(
@@ -169,6 +252,7 @@ impl<'a> RasterBand<'a> {
             (0, 0),
             (size.0 as usize, size.1 as usize),
             (size.0 as usize, size.1 as usize),
+            None,
         )
     }
 
