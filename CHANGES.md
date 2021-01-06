@@ -1,4 +1,7 @@
 # Changes
+## Unreleased
+* Add basic support to read overviews
+
 ## 0.7.1
 * fix docs.rs build for gdal-sys
     * <https://github.com/georust/gdal/pull/128>
