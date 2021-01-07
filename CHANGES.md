@@ -1,5 +1,8 @@
 # Changes
 
+## Unreleased
+* Add support for reading and setting rasterband colour interpretations
+
 ## 0.6.0 - 0.7.0
 * Dataset layer iteration and FieldValue types
     * https://github.com/georust/gdal/pull/126
