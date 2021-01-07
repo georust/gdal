@@ -399,30 +399,6 @@ impl Dataset {
         }
         Ok(Transaction::new(self))
     }
-
-    pub fn overview_count(&self, band_index: isize) -> Result<i32> {
-        unsafe {
-            let c_band = gdal_sys::GDALGetRasterBand(self.c_dataset, band_index as c_int);
-            if c_band.is_null() {
-                return Err(_last_null_pointer_err("GDALGetRasterBand"));
-            }
-            Ok(gdal_sys::GDALGetOverviewCount(c_band))
-        }
-    }
-
-    pub fn overview_get(&self, band_index: isize, overview_index: isize) -> Result<RasterBand> {
-        unsafe {
-            let c_band = gdal_sys::GDALGetRasterBand(self.c_dataset, band_index as c_int);
-            if c_band.is_null() {
-                return Err(_last_null_pointer_err("GDALGetRasterBand"));
-            }
-            let overview = gdal_sys::GDALGetOverview(c_band, overview_index as libc::c_int);
-            if overview.is_null() {
-                return Err(_last_null_pointer_err("GDALGetOverview"));
-            }
-            Ok(RasterBand::from_c_rasterband(self, overview))
-        }
-    }
 }
 
 pub struct LayerIterator<'a> {

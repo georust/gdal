@@ -4,7 +4,7 @@ use crate::dataset::Dataset;
 use crate::gdal_major_object::MajorObject;
 use crate::metadata::Metadata;
 use crate::raster::{GDALDataType, GdalType};
-use crate::utils::_last_cpl_err;
+use crate::utils::{_last_cpl_err, _last_null_pointer_err};
 use gdal_sys::{self, CPLErr, GDALMajorObjectH, GDALRWFlag, GDALRasterBandH};
 use libc::c_int;
 
@@ -297,6 +297,21 @@ impl<'a> RasterBand<'a> {
             return Err(_last_cpl_err(rv));
         }
         Ok((block_size_x as usize, block_size_y as usize))
+    }
+
+    pub fn overview_count(&self) -> Result<i32> {
+        unsafe { Ok(gdal_sys::GDALGetOverviewCount(self.c_rasterband)) }
+    }
+
+    pub fn overview(&self, dataset: &'a Dataset, overview_index: isize) -> Result<RasterBand> {
+        unsafe {
+            let c_band = self.c_rasterband;
+            let overview = gdal_sys::GDALGetOverview(c_band, overview_index as libc::c_int);
+            if overview.is_null() {
+                return Err(_last_null_pointer_err("GDALGetOverview"));
+            }
+            Ok(RasterBand::from_c_rasterband(dataset, overview))
+        }
     }
 }
 

@@ -446,11 +446,11 @@ fn test_get_rasterband_actual_block_size() {
 fn test_read_overviews() {
     let dataset = Dataset::open(fixture!("tinymarble.tif")).unwrap();
     let rasterband = dataset.rasterband(1).unwrap();
-    let overview_count = dataset.overview_count(1).unwrap();
+    let overview_count = rasterband.overview_count().unwrap();
     assert_eq!(overview_count, 2);
 
-    let overview_2 = dataset.overview_get(1, 0).unwrap();
-    let overview_4 = dataset.overview_get(1, 1).unwrap();
+    let overview_2 = rasterband.overview(&dataset, 0).unwrap();
+    let overview_4 = rasterband.overview(&dataset, 1).unwrap();
     assert_eq!(rasterband.size(), (100, 50));
     assert_eq!(overview_2.size(), (50, 25));
     assert_eq!(overview_4.size(), (25, 13));
@@ -459,9 +459,10 @@ fn test_read_overviews() {
 #[test]
 fn test_fail_read_overviews() {
     let dataset = Dataset::open(fixture!("offset_scaled_tinymarble.tif")).unwrap();
-    let overview_count = dataset.overview_count(1).unwrap();
+    let rasterband = dataset.rasterband(1).unwrap();
+    let overview_count = rasterband.overview_count().unwrap();
     assert_eq!(overview_count, 0);
 
-    let overview_2 = dataset.overview_get(1, 0);
+    let overview_2 = rasterband.overview(&dataset, 0);
     assert!(overview_2.is_err());
 }
