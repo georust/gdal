@@ -449,9 +449,10 @@ fn test_read_overviews() {
     let overview_count = rasterband.overview_count().unwrap();
     assert_eq!(overview_count, 2);
 
-    let overview_2 = rasterband.overview(&dataset, 0).unwrap();
-    let overview_4 = rasterband.overview(&dataset, 1).unwrap();
+    let overview_2 = rasterband.overview(0).unwrap();
+    let overview_4 = rasterband.overview(1).unwrap();
     assert_eq!(rasterband.size(), (100, 50));
+
     assert_eq!(overview_2.size(), (50, 25));
     assert_eq!(overview_4.size(), (25, 13));
 }
@@ -463,6 +464,16 @@ fn test_fail_read_overviews() {
     let overview_count = rasterband.overview_count().unwrap();
     assert_eq!(overview_count, 0);
 
-    let overview_2 = rasterband.overview(&dataset, 0);
+    let overview_2 = rasterband.overview(0);
     assert!(overview_2.is_err());
+}
+
+#[test]
+fn test_rasterband_lifetime() {
+    let dataset: Dataset = Dataset::open(fixture!("tinymarble.tif")).unwrap();
+    let rasterband = dataset.rasterband(1).unwrap();
+    let overview = rasterband.overview(0).unwrap();
+
+    drop(rasterband);
+    assert!(overview.no_data_value().is_none());
 }
