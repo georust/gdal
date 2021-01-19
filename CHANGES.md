@@ -1,5 +1,8 @@
 # Changes
 
+## unreleased
+* Add more functions to SpatialRef implementation
+
 ## Unreleased
 * **Breaking**: Change `Feature::field` return type from
   `Result<FieldValue>` to `Result<Option<FieldValue>>`. Fields

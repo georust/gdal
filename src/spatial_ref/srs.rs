@@ -78,6 +78,18 @@ impl CoordTransform {
     }
 }
 
+#[derive(Debug, Clone)]
+pub struct AreaOfUse {
+    pub west_lon_degree: f64,
+    pub south_lat_degree: f64,
+    pub east_lon_degree: f64,
+    pub north_lat_degree: f64,
+    pub name: String,
+}
+
+pub type AxisOrientationType = gdal_sys::OGRAxisOrientation::Type;
+
+
 #[derive(Debug)]
 pub struct SpatialRef(OGRSpatialReferenceH);
 
@@ -304,6 +316,103 @@ impl SpatialRef {
     }
 
     #[cfg(major_ge_3)]
+    pub fn get_name(&self) -> Result<String> {
+        let c_ptr = unsafe { gdal_sys::OSRGetName(self.0) };
+        if c_ptr.is_null() {
+            return Err(_last_null_pointer_err("OSRGetName"));
+        }
+        Ok(_string(c_ptr))
+    }
+
+    pub fn get_angular_units_name(&self) -> Result<String> {
+        let mut c_ptr = ptr::null_mut();
+        unsafe { gdal_sys::OSRGetAngularUnits(self.0, &mut c_ptr) };
+        if c_ptr.is_null() {
+            return Err(_last_null_pointer_err("OSRGetAngularUnits"));
+        }
+        Ok(_string(c_ptr))
+    }
+
+    pub fn get_angular_units(&self) -> f64 {
+        unsafe { gdal_sys::OSRGetAngularUnits(self.0, ptr::null_mut()) }
+    }
+
+    pub fn get_linear_units_name(&self) -> Result<String> {
+        let mut c_ptr = ptr::null_mut();
+        unsafe { gdal_sys::OSRGetLinearUnits(self.0, &mut c_ptr) };
+        if c_ptr.is_null() {
+            return Err(_last_null_pointer_err("OSRGetLinearUnits"));
+        }
+        Ok(_string(c_ptr))
+    }
+
+    pub fn get_linear_units(&self) -> f64 {
+        unsafe { gdal_sys::OSRGetLinearUnits(self.0, ptr::null_mut()) }
+    }
+    
+    #[inline]
+    pub fn is_geographic(&self) -> bool {
+        unsafe { gdal_sys::OSRIsGeographic(self.0) == 1 }
+    }
+
+    #[inline]
+    #[cfg(all(major_ge_3, minor_ge_1))]
+    pub fn is_derived_geographic(&self) -> bool {
+        unsafe { gdal_sys::OSRIsDerivedGeographic(self.0) == 1 }
+    }
+
+    #[inline] 
+    pub fn is_local(&self) -> bool {
+        unsafe { gdal_sys::OSRIsLocal(self.0) == 1 }
+    }
+
+    #[inline]
+    pub fn is_projected(&self) -> bool {
+        unsafe { gdal_sys::OSRIsProjected(self.0) == 1 }
+    }
+
+    #[inline]
+    pub fn is_compound(&self) -> bool {
+        unsafe { gdal_sys::OSRIsCompound(self.0) == 1 }
+    }
+
+    #[inline]
+    pub fn is_geocentric(&self) -> bool {
+        unsafe { gdal_sys::OSRIsGeocentric(self.0) == 1 }
+    }
+
+    #[inline]
+    pub fn is_vertical(&self) -> bool {
+        unsafe { gdal_sys::OSRIsVertical(self.0)  == 1 }
+    }
+
+    pub fn get_axis_orientation(&self, target_key: &str, axis: i32 ) -> AxisOrientationType {
+        // We can almost safely assume that if we fail to build a CString then the input 
+        // is not a valide key. 
+        let mut orientation = gdal_sys::OGRAxisOrientation::OAO_Other;
+        if let Ok(c_str) =  CString::new(target_key) {
+            unsafe { gdal_sys::OSRGetAxis(self.0, c_str.as_ptr(), axis as c_int, &mut orientation) };
+        }
+        orientation
+    }
+
+    pub fn get_axis_name(&self, target_key: &str, axis: i32 ) -> Option<String> {
+        // See get_axis_orientation
+        if let Ok(c_str) = CString::new(target_key) {
+            let c_ptr = unsafe { gdal_sys::OSRGetAxis(self.0, c_str.as_ptr(), axis as c_int, ptr::null_mut()) };
+            // null ptr indicate a failure (but no CPLError) see Gdal documentation.
+            if c_ptr.is_null() { None } else { Some(_string(c_ptr)) }
+        } else {
+            None
+        }
+    }
+
+    #[cfg(all(major_ge_3, minor_ge_1))]
+    pub fn get_axes_count(&self) -> i32 {
+        unsafe { gdal_sys::OSRGetAxesCount(self.0) } 
+    }
+
+    #[cfg(major_ge_3)]
     pub fn set_axis_mapping_strategy(&self, strategy: gdal_sys::OSRAxisMappingStrategy::Type) {
         unsafe {
             gdal_sys::OSRSetAxisMappingStrategy(self.0, strategy);
@@ -313,6 +422,33 @@ impl SpatialRef {
     #[cfg(major_ge_3)]
     pub fn get_axis_mapping_strategy(&self) -> gdal_sys::OSRAxisMappingStrategy::Type {
         unsafe { gdal_sys::OSRGetAxisMappingStrategy(self.0) }
+    }
+
+    #[cfg(major_ge_3)]
+    pub fn get_area_of_use(&self) -> Option<AreaOfUse> {
+        let mut c_area_name: *const libc::c_char = ptr::null_mut();
+        let (mut w_long, mut s_lat, mut e_long, mut n_lat): (f64, f64, f64, f64) = (0.0,0.0,0.0,0.0);
+        let ret_val = unsafe {
+            gdal_sys::OSRGetAreaOfUse(
+                self.0,
+                &mut w_long,
+                &mut s_lat,
+                &mut e_long,
+                &mut n_lat,
+                &mut c_area_name
+            ) == 1 
+        };
+
+        if ret_val {
+            Some(AreaOfUse {
+                west_lon_degree: w_long,
+                south_lat_degree: s_lat,
+                east_lon_degree: e_long,
+                north_lat_degree: n_lat,
+                name: _string(c_area_name) })
+        } else {
+            None
+        }
     }
 
     // TODO: should this take self instead of &self?
