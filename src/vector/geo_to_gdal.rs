@@ -1,11 +1,11 @@
 use crate::errors::*;
 use crate::vector::{Geometry, ToGdal};
 use gdal_sys::OGRwkbGeometryType;
-use num_traits::Float;
+use geo_types::CoordFloat;
 
 impl<T> ToGdal for geo_types::Point<T>
 where
-    T: Float,
+    T: CoordFloat,
 {
     fn to_gdal(&self) -> Result<Geometry> {
         let mut geom = Geometry::empty(OGRwkbGeometryType::wkbPoint)?;
@@ -23,7 +23,7 @@ where
 
 impl<T> ToGdal for geo_types::MultiPoint<T>
 where
-    T: Float,
+    T: CoordFloat,
 {
     fn to_gdal(&self) -> Result<Geometry> {
         let mut geom = Geometry::empty(OGRwkbGeometryType::wkbMultiPoint)?;
@@ -40,7 +40,7 @@ fn geometry_with_points<T>(
     points: &geo_types::LineString<T>,
 ) -> Result<Geometry>
 where
-    T: Float,
+    T: CoordFloat,
 {
     let mut geom = Geometry::empty(wkb_type)?;
     let &geo_types::LineString(ref linestring) = points;
@@ -58,7 +58,7 @@ where
 
 impl<T> ToGdal for geo_types::Line<T>
 where
-    T: Float,
+    T: CoordFloat,
 {
     fn to_gdal(&self) -> Result<Geometry> {
         let mut geom = Geometry::empty(OGRwkbGeometryType::wkbLineString)?;
@@ -82,7 +82,7 @@ where
 
 impl<T> ToGdal for geo_types::LineString<T>
 where
-    T: Float,
+    T: CoordFloat,
 {
     fn to_gdal(&self) -> Result<Geometry> {
         geometry_with_points(OGRwkbGeometryType::wkbLineString, self)
@@ -91,7 +91,7 @@ where
 
 impl<T> ToGdal for geo_types::MultiLineString<T>
 where
-    T: Float,
+    T: CoordFloat,
 {
     fn to_gdal(&self) -> Result<Geometry> {
         let mut geom = Geometry::empty(OGRwkbGeometryType::wkbMultiLineString)?;
@@ -105,7 +105,7 @@ where
 
 impl<T> ToGdal for geo_types::Polygon<T>
 where
-    T: Float,
+    T: CoordFloat,
 {
     fn to_gdal(&self) -> Result<Geometry> {
         let mut geom = Geometry::empty(OGRwkbGeometryType::wkbPolygon)?;
@@ -127,7 +127,7 @@ where
 
 impl<T> ToGdal for geo_types::MultiPolygon<T>
 where
-    T: Float,
+    T: CoordFloat,
 {
     fn to_gdal(&self) -> Result<Geometry> {
         let mut geom = Geometry::empty(OGRwkbGeometryType::wkbMultiPolygon)?;
@@ -141,7 +141,7 @@ where
 
 impl<T> ToGdal for geo_types::GeometryCollection<T>
 where
-    T: Float,
+    T: CoordFloat,
 {
     fn to_gdal(&self) -> Result<Geometry> {
         let mut geom = Geometry::empty(OGRwkbGeometryType::wkbGeometryCollection)?;
@@ -155,7 +155,7 @@ where
 
 impl<T> ToGdal for geo_types::Rect<T>
 where
-    T: Float,
+    T: CoordFloat,
 {
     fn to_gdal(&self) -> Result<Geometry> {
         self.to_polygon().to_gdal()
@@ -164,7 +164,7 @@ where
 
 impl<T> ToGdal for geo_types::Triangle<T>
 where
-    T: Float,
+    T: CoordFloat,
 {
     fn to_gdal(&self) -> Result<Geometry> {
         self.to_polygon().to_gdal()
@@ -173,7 +173,7 @@ where
 
 impl<T> ToGdal for geo_types::Geometry<T>
 where
-    T: Float,
+    T: CoordFloat,
 {
     fn to_gdal(&self) -> Result<Geometry> {
         match *self {
