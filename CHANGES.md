@@ -1,4 +1,11 @@
 # Changes
+
+## UNRELEASED
+
+* BREAKING: update geo-types to 0.7.0. geo-types Coordinate<T> now implement
+  `Debug`
+  * <https://github.com/georust/gdal/pull/146>
+
 ## 0.7.1
 * fix docs.rs build for gdal-sys
     * <https://github.com/georust/gdal/pull/128>
