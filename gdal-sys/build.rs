@@ -224,7 +224,8 @@ fn main() {
         } else {
             if let Err(pkg_config_err) = &gdal_pkg_config {
                 // Special case output for this common error
-                if matches!(pkg_config_err, pkg_config::Error::Command { cause, .. } if cause.kind() == std::io::ErrorKind::NotFound) {
+                if matches!(pkg_config_err, pkg_config::Error::Command { cause, .. } if cause.kind() == std::io::ErrorKind::NotFound)
+                {
                     panic!("Could not find `pkg-config` in your path. Please install it before building gdal-sys.");
                 } else {
                     panic!("Error while running `pkg-config`: {}", pkg_config_err);
