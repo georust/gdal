@@ -8,15 +8,16 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-jobs:
 
-  strategy:
-    matrix:
-      features: ["", "--all-features"]
+jobs:
 
   ubuntu_20_04:
     name: "ci ubuntu-20.04"
     runs-on: "ubuntu-20.04"
+    
+    strategy:
+      matrix:
+        features: ["", "--all-features"]
 
     steps:
       - name: Checkout code
