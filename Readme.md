@@ -1,7 +1,7 @@
 # gdal
 
 [![Documentation](https://docs.rs/gdal/badge.svg)](https://docs.rs/gdal)
-[![Build Status](https://travis-ci.org/georust/gdal.png?branch=master)](https://travis-ci.org/georust/gdal)
+[![Build Status](https://github.com/georust/gdal/workflows/CI/badge.svg)]
 
 [GDAL](http://gdal.org/) bindings for [Rust](http://www.rust-lang.org/).
 
