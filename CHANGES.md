@@ -1,6 +1,9 @@
 # Changes
 ## Unreleased
 * Add basic support to read overviews
+* BREAKING: update geo-types to 0.7.0. geo-types Coordinate<T> now implement
+  `Debug`
+  * <https://github.com/georust/gdal/pull/146>
 
 ## 0.7.1
 * fix docs.rs build for gdal-sys
