@@ -228,10 +228,10 @@ fn axis_mapping_strategy() {
 fn get_area_of_use() {
     let spatial_ref = SpatialRef::from_epsg(4326).unwrap();
     let area_of_use = spatial_ref.get_area_of_use().unwrap();
-    assert_eq!(area_of_use.west_lon_degree, -180.0);
-    assert_eq!(area_of_use.south_lat_degree, -90.0);
-    assert_eq!(area_of_use.east_lon_degree, 180.0);
-    assert_eq!(area_of_use.north_lat_degree, 90.0);
+    assert_almost_eq(area_of_use.west_lon_degree, -180.0);
+    assert_almost_eq(area_of_use.south_lat_degree, -90.0);
+    assert_almost_eq(area_of_use.east_lon_degree, 180.0);
+    assert_almost_eq(area_of_use.north_lat_degree, 90.0);
 }
 
 #[cfg(major_ge_3)]
@@ -239,9 +239,8 @@ fn get_area_of_use() {
 fn get_name() {
     let spatial_ref = SpatialRef::from_epsg(4326).unwrap();
     let name = spatial_ref.get_name().unwrap();
-    assert_eq!(name,"WGS 84");
+    assert_eq!(name, "WGS 84");
 }
-
 
 #[test]
 fn get_units_epsg4326() {
@@ -287,24 +286,23 @@ fn predicats_epsg2154() {
 
     #[cfg(all(major_ge_3, minor_ge_1))]
     assert!(!spatial_ref_2154.is_derived_geographic());
-} 
+}
 
 //XXX Gdal 2 implementation is partial
-#[cfg(major_ge_3)] 
+#[cfg(major_ge_3)]
 #[test]
 fn crs_axis() {
     let spatial_ref = SpatialRef::from_epsg(4326).unwrap();
 
     #[cfg(all(major_ge_3, minor_ge_1))]
-    assert_eq!(spatial_ref.get_axes_count(),2);
-    
-    let orientation = spatial_ref.get_axis_orientation("GEOGCS",0);
-    assert_eq!(orientation,gdal_sys::OGRAxisOrientation::OAO_North);
+    assert_eq!(spatial_ref.get_axes_count(), 2);
 
-    assert!(spatial_ref.get_axis_name("GEOGCS",0).is_some());
-    assert!(spatial_ref.get_axis_name("DO_NO_EXISTS",0).is_none());
+    let orientation = spatial_ref.get_axis_orientation("GEOGCS", 0);
+    assert_eq!(orientation, gdal_sys::OGRAxisOrientation::OAO_North);
 
-    let orientation = spatial_ref.get_axis_orientation("DO_NO_EXISTS",0);
+    assert!(spatial_ref.get_axis_name("GEOGCS", 0).is_some());
+    assert!(spatial_ref.get_axis_name("DO_NO_EXISTS", 0).is_none());
+
+    let orientation = spatial_ref.get_axis_orientation("DO_NO_EXISTS", 0);
     assert_eq!(orientation, gdal_sys::OGRAxisOrientation::OAO_Other);
 }
-

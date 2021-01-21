@@ -1,9 +1,8 @@
 # Changes
 
-## unreleased
-* Add more functions to SpatialRef implementation
-
 ## Unreleased
+* Add more functions to SpatialRef implementation
+    * <https://github.com/georust/gdal/pull/145>   
 * **Breaking**: Change `Feature::field` return type from
   `Result<FieldValue>` to `Result<Option<FieldValue>>`. Fields
   can be null. Before this change, if a field was null, the value
