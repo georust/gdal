@@ -158,7 +158,7 @@ mod tests {
     fn test_string_field() {
         with_feature("roads.geojson", 236194095, |feature| {
             assert_eq!(
-                feature.field("highway").unwrap().into_string(),
+                feature.field("highway").unwrap().unwrap().into_string(),
                 Some("footway".to_string())
             );
         });
@@ -166,7 +166,7 @@ mod tests {
             assert_eq!(
                 features
                     .filter(|field| {
-                        let highway = field.field("highway").unwrap().into_string();
+                        let highway = field.field("highway").unwrap().unwrap().into_string();
                         highway == Some("residential".to_string())
                     })
                     .count(),
@@ -176,11 +176,23 @@ mod tests {
     }
 
     #[test]
+    fn test_null_field() {
+        with_features("null_feature_fields.geojson", |mut features| {
+            let feature = features.next().unwrap();
+            assert_eq!(
+                feature.field("some_int").unwrap(),
+                Some(FieldValue::IntegerValue(0))
+            );
+            assert_eq!(feature.field("some_string").unwrap(), None);
+        });
+    }
+
+    #[test]
     fn test_string_list_field() {
         with_features("soundg.json", |mut features| {
             let feature = features.next().unwrap();
             assert_eq!(
-                feature.field("a_string_list").unwrap(),
+                feature.field("a_string_list").unwrap().unwrap(),
                 FieldValue::StringListValue(vec![
                     String::from("a"),
                     String::from("list"),
@@ -195,7 +207,7 @@ mod tests {
     fn test_field_in_layer() {
         ds_with_layer("three_layer_ds.s3db", "layer_0", |layer| {
             let feature = layer.features().next().unwrap();
-            assert_eq!(feature.field("id").unwrap(), FieldValue::IntegerValue(0));
+            assert_eq!(feature.field("id").unwrap(), None);
         });
     }
 
@@ -204,7 +216,7 @@ mod tests {
         with_features("soundg.json", |mut features| {
             let feature = features.next().unwrap();
             assert_eq!(
-                feature.field("an_int_list").unwrap(),
+                feature.field("an_int_list").unwrap().unwrap(),
                 FieldValue::IntegerListValue(vec![1, 2])
             );
         });
@@ -215,7 +227,7 @@ mod tests {
         with_features("soundg.json", |mut features| {
             let feature = features.next().unwrap();
             assert_eq!(
-                feature.field("a_real_list").unwrap(),
+                feature.field("a_real_list").unwrap().unwrap(),
                 FieldValue::RealListValue(vec![0.1, 0.2])
             );
         });
@@ -226,7 +238,7 @@ mod tests {
         with_features("soundg.json", |mut features| {
             let feature = features.next().unwrap();
             assert_eq!(
-                feature.field("a_long_list").unwrap(),
+                feature.field("a_long_list").unwrap().unwrap(),
                 FieldValue::Integer64ListValue(vec![5000000000, 6000000000])
             );
         });
@@ -236,7 +248,12 @@ mod tests {
     fn test_float_field() {
         with_feature("roads.geojson", 236194095, |feature| {
             assert_almost_eq(
-                feature.field("sort_key").unwrap().into_real().unwrap(),
+                feature
+                    .field("sort_key")
+                    .unwrap()
+                    .unwrap()
+                    .into_real()
+                    .unwrap(),
                 -9.0,
             );
         });
@@ -468,10 +485,10 @@ mod tests {
         let ft = layer.features().next().unwrap();
         assert_eq!(ft.geometry().wkt().unwrap(), "POINT (1 2)");
         assert_eq!(
-            ft.field("Name").unwrap().into_string(),
+            ft.field("Name").unwrap().unwrap().into_string(),
             Some("Feature 1".to_string())
         );
-        assert_eq!(ft.field("Value").unwrap().into_real(), Some(45.78));
-        assert_eq!(ft.field("Int_value").unwrap().into_int(), Some(1));
+        assert_eq!(ft.field("Value").unwrap().unwrap().into_real(), Some(45.78));
+        assert_eq!(ft.field("Int_value").unwrap().unwrap().into_int(), Some(1));
     }
 }
