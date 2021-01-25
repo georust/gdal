@@ -57,4 +57,9 @@ pub enum GdalError {
         to: String,
         msg: Option<String>,
     },
+    #[error("Axis not found for key '{key}' in method '{method_name}'")]
+    AxisNotFoundError {
+        key: String,
+        method_name: &'static str,
+    },
 }

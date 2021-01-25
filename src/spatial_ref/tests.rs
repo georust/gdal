@@ -297,12 +297,9 @@ fn crs_axis() {
     #[cfg(all(major_ge_3, minor_ge_1))]
     assert_eq!(spatial_ref.get_axes_count(), 2);
 
-    let orientation = spatial_ref.get_axis_orientation("GEOGCS", 0);
+    let orientation = spatial_ref.get_axis_orientation("GEOGCS", 0).unwrap();
     assert_eq!(orientation, gdal_sys::OGRAxisOrientation::OAO_North);
-
-    assert!(spatial_ref.get_axis_name("GEOGCS", 0).is_some());
-    assert!(spatial_ref.get_axis_name("DO_NO_EXISTS", 0).is_none());
-
-    let orientation = spatial_ref.get_axis_orientation("DO_NO_EXISTS", 0);
-    assert_eq!(orientation, gdal_sys::OGRAxisOrientation::OAO_Other);
+    assert!(spatial_ref.get_axis_name("GEOGCS", 0).is_ok());
+    assert!(spatial_ref.get_axis_name("DO_NO_EXISTS", 0).is_err());
+    assert!(spatial_ref.get_axis_orientation("DO_NO_EXISTS", 0).is_err());
 }

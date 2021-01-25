@@ -385,32 +385,44 @@ impl SpatialRef {
         unsafe { gdal_sys::OSRIsVertical(self.0) == 1 }
     }
 
-    pub fn get_axis_orientation(&self, target_key: &str, axis: i32) -> AxisOrientationType {
-        // We can almost safely assume that if we fail to build a CString then the input
-        // is not a valide key.
+    pub fn get_axis_orientation(&self, target_key: &str, axis: i32) -> Result<AxisOrientationType> {
         let mut orientation = gdal_sys::OGRAxisOrientation::OAO_Other;
-        if let Ok(c_str) = CString::new(target_key) {
-            unsafe {
-                gdal_sys::OSRGetAxis(self.0, c_str.as_ptr(), axis as c_int, &mut orientation)
-            };
+        let c_ptr = unsafe {
+            gdal_sys::OSRGetAxis(
+                self.0,
+                CString::new(target_key)?.as_ptr(),
+                axis as c_int,
+                &mut orientation,
+            )
+        };
+        // null ptr indicate a failure (but no CPLError) see Gdal documentation.
+        if c_ptr.is_null() {
+            Err(GdalError::AxisNotFoundError {
+                key: target_key.into(),
+                method_name: "OSRGetAxis",
+            })
+        } else {
+            Ok(orientation)
         }
-        orientation
     }
 
-    pub fn get_axis_name(&self, target_key: &str, axis: i32) -> Option<String> {
+    pub fn get_axis_name(&self, target_key: &str, axis: i32) -> Result<String> {
         // See get_axis_orientation
-        if let Ok(c_str) = CString::new(target_key) {
-            let c_ptr = unsafe {
-                gdal_sys::OSRGetAxis(self.0, c_str.as_ptr(), axis as c_int, ptr::null_mut())
-            };
-            // null ptr indicate a failure (but no CPLError) see Gdal documentation.
-            if c_ptr.is_null() {
-                None
-            } else {
-                Some(_string(c_ptr))
-            }
+        let c_ptr = unsafe {
+            gdal_sys::OSRGetAxis(
+                self.0,
+                CString::new(target_key)?.as_ptr(),
+                axis as c_int,
+                ptr::null_mut(),
+            )
+        };
+        if c_ptr.is_null() {
+            Err(GdalError::AxisNotFoundError {
+                key: target_key.into(),
+                method_name: "OSRGetAxis",
+            })
         } else {
-            None
+            Ok(_string(c_ptr))
         }
     }
 
