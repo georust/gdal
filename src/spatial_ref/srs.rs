@@ -315,7 +315,7 @@ impl SpatialRef {
     }
 
     #[cfg(major_ge_3)]
-    pub fn get_name(&self) -> Result<String> {
+    pub fn name(&self) -> Result<String> {
         let c_ptr = unsafe { gdal_sys::OSRGetName(self.0) };
         if c_ptr.is_null() {
             return Err(_last_null_pointer_err("OSRGetName"));
@@ -323,7 +323,7 @@ impl SpatialRef {
         Ok(_string(c_ptr))
     }
 
-    pub fn get_angular_units_name(&self) -> Result<String> {
+    pub fn angular_units_name(&self) -> Result<String> {
         let mut c_ptr = ptr::null_mut();
         unsafe { gdal_sys::OSRGetAngularUnits(self.0, &mut c_ptr) };
         if c_ptr.is_null() {
@@ -332,11 +332,11 @@ impl SpatialRef {
         Ok(_string(c_ptr))
     }
 
-    pub fn get_angular_units(&self) -> f64 {
+    pub fn angular_units(&self) -> f64 {
         unsafe { gdal_sys::OSRGetAngularUnits(self.0, ptr::null_mut()) }
     }
 
-    pub fn get_linear_units_name(&self) -> Result<String> {
+    pub fn linear_units_name(&self) -> Result<String> {
         let mut c_ptr = ptr::null_mut();
         unsafe { gdal_sys::OSRGetLinearUnits(self.0, &mut c_ptr) };
         if c_ptr.is_null() {
@@ -345,7 +345,7 @@ impl SpatialRef {
         Ok(_string(c_ptr))
     }
 
-    pub fn get_linear_units(&self) -> f64 {
+    pub fn linear_units(&self) -> f64 {
         unsafe { gdal_sys::OSRGetLinearUnits(self.0, ptr::null_mut()) }
     }
 
@@ -385,7 +385,7 @@ impl SpatialRef {
         unsafe { gdal_sys::OSRIsVertical(self.0) == 1 }
     }
 
-    pub fn get_axis_orientation(&self, target_key: &str, axis: i32) -> Result<AxisOrientationType> {
+    pub fn axis_orientation(&self, target_key: &str, axis: i32) -> Result<AxisOrientationType> {
         let mut orientation = gdal_sys::OGRAxisOrientation::OAO_Other;
         let c_ptr = unsafe {
             gdal_sys::OSRGetAxis(
@@ -406,7 +406,7 @@ impl SpatialRef {
         }
     }
 
-    pub fn get_axis_name(&self, target_key: &str, axis: i32) -> Result<String> {
+    pub fn axis_name(&self, target_key: &str, axis: i32) -> Result<String> {
         // See get_axis_orientation
         let c_ptr = unsafe {
             gdal_sys::OSRGetAxis(
@@ -427,7 +427,7 @@ impl SpatialRef {
     }
 
     #[cfg(all(major_ge_3, minor_ge_1))]
-    pub fn get_axes_count(&self) -> i32 {
+    pub fn axes_count(&self) -> i32 {
         unsafe { gdal_sys::OSRGetAxesCount(self.0) }
     }
 
@@ -439,12 +439,18 @@ impl SpatialRef {
     }
 
     #[cfg(major_ge_3)]
+    #[deprecated(note = "use `axis_mapping_strategy` instead")]
     pub fn get_axis_mapping_strategy(&self) -> gdal_sys::OSRAxisMappingStrategy::Type {
+        self.axis_mapping_strategy()
+    }
+
+    #[cfg(major_ge_3)]
+    pub fn axis_mapping_strategy(&self) -> gdal_sys::OSRAxisMappingStrategy::Type {
         unsafe { gdal_sys::OSRGetAxisMappingStrategy(self.0) }
     }
 
     #[cfg(major_ge_3)]
-    pub fn get_area_of_use(&self) -> Option<AreaOfUse> {
+    pub fn area_of_use(&self) -> Option<AreaOfUse> {
         let mut c_area_name: *const libc::c_char = ptr::null_mut();
         let (mut w_long, mut s_lat, mut e_long, mut n_lat): (f64, f64, f64, f64) =
             (0.0, 0.0, 0.0, 0.0);
