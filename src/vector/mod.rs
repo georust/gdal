@@ -22,6 +22,7 @@ mod geo_to_gdal;
 mod geometry;
 mod layer;
 mod ops;
+pub mod sql;
 
 pub use defn::{Defn, Field, FieldIterator};
 pub use feature::{Feature, FieldValue, FieldValueIterator};

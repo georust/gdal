@@ -3,13 +3,14 @@ use super::{
 };
 use crate::spatial_ref::SpatialRef;
 use crate::{assert_almost_eq, Dataset, Driver};
-use std::path::Path;
 
 mod convert_geo;
+mod sql;
 
+#[macro_export]
 macro_rules! fixture {
     ($name:expr) => {
-        Path::new(file!())
+        std::path::Path::new(file!())
             .parent()
             .unwrap()
             .parent()

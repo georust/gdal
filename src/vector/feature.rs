@@ -15,6 +15,7 @@ use crate::errors::*;
 use std::slice;
 
 /// OGR Feature
+#[derive(Debug)]
 pub struct Feature<'a> {
     _defn: &'a Defn,
     c_feature: OGRFeatureH,
@@ -72,12 +73,16 @@ impl<'a> Feature<'a> {
     /// If the field has an unsupported type, returns a [`GdalError::UnhandledFieldType`].
     ///
     /// If the field is null, returns `None`.
-    pub fn field(&self, name: &str) -> Result<Option<FieldValue>> {
-        let c_name = CString::new(name)?;
+    pub fn field<S: AsRef<str>>(&self, name: S) -> Result<Option<FieldValue>> {
+        let c_name = CString::new(name.as_ref())?;
+        self._field(c_name)
+    }
+
+    fn _field(&self, c_name: CString) -> Result<Option<FieldValue>> {
         let field_id = unsafe { gdal_sys::OGR_F_GetFieldIndex(self.c_feature, c_name.as_ptr()) };
         if field_id == -1 {
             Err(GdalError::InvalidFieldName {
-                field_name: name.to_string(),
+                field_name: c_name.into_string()?,
                 method_name: "OGR_F_GetFieldIndex",
             })
         } else {

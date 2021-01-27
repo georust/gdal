@@ -11,6 +11,7 @@ use crate::errors::*;
 /// Layer definition
 ///
 /// Defines the fields available for features in a layer.
+#[derive(Debug)]
 pub struct Defn {
     c_defn: OGRFeatureDefnH,
 }

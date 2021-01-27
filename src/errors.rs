@@ -9,6 +9,8 @@ pub type Result<T> = std::result::Result<T, GdalError>;
 pub enum GdalError {
     #[error("FfiNulError")]
     FfiNulError(#[from] std::ffi::NulError),
+    #[error("FfiIntoStringError")]
+    FfiIntoStringError(#[from] std::ffi::IntoStringError),
     #[error("StrUtf8Error")]
     StrUtf8Error(#[from] std::str::Utf8Error),
     #[cfg(feature = "ndarray")]
