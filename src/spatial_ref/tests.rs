@@ -212,22 +212,22 @@ fn auto_identify() {
 fn axis_mapping_strategy() {
     let spatial_ref = SpatialRef::from_epsg(4326).unwrap();
     assert_eq!(
-        spatial_ref.get_axis_mapping_strategy(),
+        spatial_ref.axis_mapping_strategy(),
         gdal_sys::OSRAxisMappingStrategy::OAMS_AUTHORITY_COMPLIANT
     );
     spatial_ref
         .set_axis_mapping_strategy(gdal_sys::OSRAxisMappingStrategy::OAMS_TRADITIONAL_GIS_ORDER);
     assert_eq!(
-        spatial_ref.get_axis_mapping_strategy(),
+        spatial_ref.axis_mapping_strategy(),
         gdal_sys::OSRAxisMappingStrategy::OAMS_TRADITIONAL_GIS_ORDER
     );
 }
 
 #[cfg(major_ge_3)]
 #[test]
-fn get_area_of_use() {
+fn area_of_use() {
     let spatial_ref = SpatialRef::from_epsg(4326).unwrap();
-    let area_of_use = spatial_ref.get_area_of_use().unwrap();
+    let area_of_use = spatial_ref.area_of_use().unwrap();
     assert_almost_eq(area_of_use.west_lon_degree, -180.0);
     assert_almost_eq(area_of_use.south_lat_degree, -90.0);
     assert_almost_eq(area_of_use.east_lon_degree, 180.0);
@@ -238,7 +238,7 @@ fn get_area_of_use() {
 #[test]
 fn get_name() {
     let spatial_ref = SpatialRef::from_epsg(4326).unwrap();
-    let name = spatial_ref.get_name().unwrap();
+    let name = spatial_ref.name().unwrap();
     assert_eq!(name, "WGS 84");
 }
 
@@ -246,18 +246,18 @@ fn get_name() {
 fn get_units_epsg4326() {
     let spatial_ref = SpatialRef::from_epsg(4326).unwrap();
 
-    let angular_units_name = spatial_ref.get_angular_units_name().unwrap();
+    let angular_units_name = spatial_ref.angular_units_name().unwrap();
     assert_eq!(angular_units_name.to_lowercase(), "degree");
-    let to_radians = spatial_ref.get_angular_units();
+    let to_radians = spatial_ref.angular_units();
     assert_almost_eq(to_radians, 0.01745329);
 }
 
 #[test]
 fn get_units_epsg2154() {
     let spatial_ref = SpatialRef::from_epsg(2154).unwrap();
-    let linear_units_name = spatial_ref.get_linear_units_name().unwrap();
+    let linear_units_name = spatial_ref.linear_units_name().unwrap();
     assert_eq!(linear_units_name.to_lowercase(), "metre");
-    let to_meters = spatial_ref.get_linear_units();
+    let to_meters = spatial_ref.linear_units();
     assert_almost_eq(to_meters, 1.0);
 }
 
@@ -295,11 +295,11 @@ fn crs_axis() {
     let spatial_ref = SpatialRef::from_epsg(4326).unwrap();
 
     #[cfg(all(major_ge_3, minor_ge_1))]
-    assert_eq!(spatial_ref.get_axes_count(), 2);
+    assert_eq!(spatial_ref.axes_count(), 2);
 
-    let orientation = spatial_ref.get_axis_orientation("GEOGCS", 0).unwrap();
+    let orientation = spatial_ref.axis_orientation("GEOGCS", 0).unwrap();
     assert_eq!(orientation, gdal_sys::OGRAxisOrientation::OAO_North);
-    assert!(spatial_ref.get_axis_name("GEOGCS", 0).is_ok());
-    assert!(spatial_ref.get_axis_name("DO_NO_EXISTS", 0).is_err());
-    assert!(spatial_ref.get_axis_orientation("DO_NO_EXISTS", 0).is_err());
+    assert!(spatial_ref.axis_name("GEOGCS", 0).is_ok());
+    assert!(spatial_ref.axis_name("DO_NO_EXISTS", 0).is_err());
+    assert!(spatial_ref.axis_orientation("DO_NO_EXISTS", 0).is_err());
 }
