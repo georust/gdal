@@ -1,6 +1,35 @@
 # Changes
 
 ## Unreleased
+* **Breaking**: Use `DatasetOptions` to pass as `Dataset::open_ex` parameters and
+    add support for extended open flags.
+
+    ```rust
+        use gdal::{ Dataset, DatasetOptions }
+
+        let dataset = Dataset::open_ex(
+            "roads.geojson",
+            DatasetOptions { 
+                open_flags: GdalOpenFlags::GDAL_OF_UPDATE|GdalOpenFlags::GDAL_OF_VECTOR,
+                ..DatasetOptions::default()
+            }
+        )
+        .unwrap();
+    ```
+
+    `GDALAccess` values are supported usinf [`From`] implementation
+
+    ```rust
+        Dataset::open_ex(
+            "roads.geojson",
+            DatasetOptions {
+                open_flags: GDALAccess::GA_Update.into(),
+                ..DatasetOptions::default()
+            },
+        )
+        .unwrap();
+    ```
+
 * Add more functions to SpatialRef implementation
     * <https://github.com/georust/gdal/pull/145>   
 * **Breaking**: Change `Feature::field` return type from

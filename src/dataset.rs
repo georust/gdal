@@ -8,11 +8,13 @@ use crate::{
 use gdal_sys::{
     self, CPLErr, GDALAccess, GDALDatasetH, GDALMajorObjectH, OGRErr, OGRLayerH, OGRwkbGeometryType,
 };
-use libc::{c_double, c_int};
+use libc::{c_double, c_int, c_uint};
 use ptr::null_mut;
 
 use crate::errors::*;
 use std::convert::TryInto;
+
+use bitflags::bitflags;
 
 pub type GeoTransform = [c_double; 6];
 static START: Once = Once::new();
@@ -28,6 +30,73 @@ pub fn _register_drivers() {
             gdal_sys::GDALAllRegister();
         });
     }
+}
+
+// GDal extended open flags, skipped by bindgen
+//
+// Note that the `GDAL_OF_SHARED` option is removed from the set
+// of allowed option because it subverts the [`Send`] implementation
+// that allow passing the dataset the another thread.
+// See https://github.com/georust/gdal/issues/154.
+#[cfg(major_ge_2)]
+bitflags! {
+    pub struct GdalOpenFlags: c_uint {
+        const GDAL_OF_READONLY = 0x00;
+        // Open in update mode.
+        const GDAL_OF_UPDATE = 0x01;
+        // Allow raster and vector drivers to be used.
+        const GDAL_OF_ALL = 0x00;
+        // Allow raster drivers to be used.
+        const GDAL_OF_RASTER = 0x02;
+        // Allow vector drivers to be used.
+        const GDAL_OF_VECTOR = 0x04;
+        // Allow gnm drivers to be used.
+        #[cfg(all(major_ge_2,minor_ge_1))]
+        const GDAL_OF_GNM = 0x08;
+        // Allow multidimensional raster drivers to be used.
+        #[cfg(all(major_ge_3,minor_ge_1))]
+        const GDAL_OF_MULTIDIM_RASTER = 0x10;
+        // Emit error message in case of failed open.
+        const GDAL_OF_VERBOSE_ERROR = 0x40;
+        // Open as internal dataset. Such dataset isn't registered in the global list
+        // of opened dataset. Cannot be used with GDAL_OF_SHARED.
+        const GDAL_OF_INTERNAL = 0x80;
+        // Let GDAL decide if a array-based or hashset-based storage strategy for
+        // cached blocks must be used.
+        // GDAL_OF_DEFAULT_BLOCK_ACCESS, GDAL_OF_ARRAY_BLOCK_ACCESS and
+        // GDAL_OF_HASHSET_BLOCK_ACCESS are mutually exclusive.
+        #[cfg(all(major_ge_2,minor_ge_1))]
+        const GDAL_OF_DEFAULT_BLOCK_ACCESS = 0;
+        #[cfg(all(major_ge_2,minor_ge_1))]
+        const GDAL_OF_ARRAY_BLOCK_ACCESS = 0x100;
+        #[cfg(all(major_ge_2,minor_ge_1))]
+        const GDAL_OF_HASHSET_BLOCK_ACCESS = 0x200;
+    }
+}
+
+impl Default for GdalOpenFlags {
+    fn default() -> GdalOpenFlags {
+        GdalOpenFlags::GDAL_OF_READONLY
+    }
+}
+
+impl From<GDALAccess::Type> for GdalOpenFlags {
+    fn from(val: GDALAccess::Type) -> GdalOpenFlags {
+        if val == GDALAccess::GA_Update {
+            GdalOpenFlags::GDAL_OF_UPDATE
+        } else {
+            GdalOpenFlags::GDAL_OF_READONLY
+        }
+    }
+}
+
+// Open parameters
+#[derive(Debug, Default)]
+pub struct DatasetOptions<'a> {
+    pub open_flags: GdalOpenFlags,
+    pub allowed_drivers: Option<&'a [&'a str]>,
+    pub open_options: Option<&'a [&'a str]>,
+    pub sibling_files: Option<&'a [&'a str]>,
 }
 
 // GDAL Docs state: The returned dataset should only be accessed by one thread at a time.
@@ -47,24 +116,18 @@ impl Dataset {
     }
 
     pub fn open(path: &Path) -> Result<Dataset> {
-        Self::open_ex(path, None, None, None, None)
+        Self::open_ex(path, DatasetOptions::default())
     }
 
-    pub fn open_ex(
-        path: &Path,
-        open_flags: Option<GDALAccess::Type>,
-        allowed_drivers: Option<&[&str]>, // TODO: use parameters
-        open_options: Option<&[&str]>,
-        sibling_files: Option<&[&str]>,
-    ) -> Result<Dataset> {
+    pub fn open_ex(path: &Path, options: DatasetOptions) -> Result<Dataset> {
         _register_drivers();
         let filename = path.to_string_lossy();
         let c_filename = CString::new(filename.as_ref())?;
-        let c_open_flags = open_flags.unwrap_or(GDALAccess::GA_ReadOnly); // This defaults to GdalAccess::GA_ReadOnly
+        let c_open_flags = options.open_flags.bits;
 
         // handle driver params:
         // we need to keep the CStrings and the pointers around
-        let c_allowed_drivers = allowed_drivers.map(|d| {
+        let c_allowed_drivers = options.allowed_drivers.map(|d| {
             d.iter()
                 .map(|&s| CString::new(s))
                 .collect::<std::result::Result<Vec<CString>, NulError>>()
@@ -77,7 +140,7 @@ impl Dataset {
         let mut c_drivers_ptrs = c_drivers_vec.iter().map(|s| s.as_ptr()).collect::<Vec<_>>();
         c_drivers_ptrs.push(ptr::null());
 
-        let c_drivers_ptr = if allowed_drivers.is_some() {
+        let c_drivers_ptr = if options.allowed_drivers.is_some() {
             c_drivers_ptrs.as_ptr()
         } else {
             ptr::null()
@@ -85,7 +148,7 @@ impl Dataset {
 
         // handle open options params:
         // we need to keep the CStrings and the pointers around
-        let c_open_options = open_options.map(|d| {
+        let c_open_options = options.open_options.map(|d| {
             d.iter()
                 .map(|&s| CString::new(s))
                 .collect::<std::result::Result<Vec<CString>, NulError>>()
@@ -101,7 +164,7 @@ impl Dataset {
             .collect::<Vec<_>>();
         c_open_options_ptrs.push(ptr::null());
 
-        let c_open_options_ptr = if open_options.is_some() {
+        let c_open_options_ptr = if options.open_options.is_some() {
             c_open_options_ptrs.as_ptr()
         } else {
             ptr::null()
@@ -109,7 +172,7 @@ impl Dataset {
 
         // handle sibling files params:
         // we need to keep the CStrings and the pointers around
-        let c_sibling_files = sibling_files.map(|d| {
+        let c_sibling_files = options.sibling_files.map(|d| {
             d.iter()
                 .map(|&s| CString::new(s))
                 .collect::<std::result::Result<Vec<CString>, NulError>>()
@@ -125,7 +188,7 @@ impl Dataset {
             .collect::<Vec<_>>();
         c_sibling_files_ptrs.push(ptr::null());
 
-        let c_sibling_files_ptr = if sibling_files.is_some() {
+        let c_sibling_files_ptr = if options.sibling_files.is_some() {
             c_sibling_files_ptrs.as_ptr()
         } else {
             ptr::null()
@@ -576,10 +639,11 @@ mod tests {
 
         let ds = Dataset::open_ex(
             &temp_path,
-            Some(GDALAccess::GA_Update),
-            Some(&["GPKG"]),
-            None,
-            None,
+            DatasetOptions {
+                open_flags: GDALAccess::GA_Update.into(),
+                allowed_drivers: Some(&["GPKG"]),
+                ..DatasetOptions::default()
+            },
         )
         .unwrap();
         (temp_path, ds)
@@ -598,10 +662,10 @@ mod tests {
     fn test_open_ex_ro_vector() {
         Dataset::open_ex(
             fixture!("roads.geojson"),
-            Some(GDALAccess::GA_ReadOnly),
-            None,
-            None,
-            None,
+            DatasetOptions {
+                open_flags: GDALAccess::GA_ReadOnly.into(),
+                ..DatasetOptions::default()
+            },
         )
         .unwrap();
     }
@@ -610,10 +674,10 @@ mod tests {
     fn test_open_ex_update_vector() {
         Dataset::open_ex(
             fixture!("roads.geojson"),
-            Some(GDALAccess::GA_Update),
-            None,
-            None,
-            None,
+            DatasetOptions {
+                open_flags: GDALAccess::GA_Update.into(),
+                ..DatasetOptions::default()
+            },
         )
         .unwrap();
     }
@@ -622,29 +686,60 @@ mod tests {
     fn test_open_ex_allowed_driver_vector() {
         Dataset::open_ex(
             fixture!("roads.geojson"),
-            None,
-            Some(&["GeoJSON"]),
-            None,
-            None,
+            DatasetOptions {
+                allowed_drivers: Some(&["GeoJSON"]),
+                ..DatasetOptions::default()
+            },
         )
         .unwrap();
     }
 
     #[test]
     fn test_open_ex_allowed_driver_vector_fail() {
-        Dataset::open_ex(fixture!("roads.geojson"), None, Some(&["TIFF"]), None, None).unwrap_err();
+        Dataset::open_ex(
+            fixture!("roads.geojson"),
+            DatasetOptions {
+                allowed_drivers: Some(&["TIFF"]),
+                ..DatasetOptions::default()
+            },
+        )
+        .unwrap_err();
     }
 
     #[test]
     fn test_open_ex_open_option() {
         Dataset::open_ex(
             fixture!("roads.geojson"),
-            None,
-            None,
-            Some(&["FLATTEN_NESTED_ATTRIBUTES=YES"]),
-            None,
+            DatasetOptions {
+                open_options: Some(&["FLATTEN_NESTED_ATTRIBUTES=YES"]),
+                ..DatasetOptions::default()
+            },
         )
         .unwrap();
+    }
+
+    #[test]
+    fn test_open_ex_extended_flags_vector() {
+        Dataset::open_ex(
+            fixture!("roads.geojson"),
+            DatasetOptions {
+                open_flags: GdalOpenFlags::GDAL_OF_UPDATE | GdalOpenFlags::GDAL_OF_VECTOR,
+                ..DatasetOptions::default()
+            },
+        )
+        .unwrap();
+    }
+
+    #[test]
+    fn test_open_ex_extended_flags_vector_fail() {
+        Dataset::open_ex(
+            fixture!("roads.geojson"),
+            DatasetOptions {
+                open_flags: GdalOpenFlags::GDAL_OF_UPDATE | GdalOpenFlags::GDAL_OF_RASTER,
+                ..DatasetOptions::default()
+            },
+        )
+        .unwrap_err();
     }
 
     #[test]
