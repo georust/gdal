@@ -87,11 +87,11 @@ impl<'a> Layer<'a> {
         FeatureIterator::_with_layer(self)
     }
 
-    pub fn set_spatial_filter(&self, geometry: &Geometry) {
+    pub fn set_spatial_filter(&mut self, geometry: &Geometry) {
         unsafe { gdal_sys::OGR_L_SetSpatialFilter(self.c_layer, geometry.c_geometry()) };
     }
 
-    pub fn clear_spatial_filter(&self) {
+    pub fn clear_spatial_filter(&mut self) {
         unsafe { gdal_sys::OGR_L_SetSpatialFilter(self.c_layer, null_mut()) };
     }
 
