@@ -202,7 +202,7 @@ impl<'a> RasterBand<'a> {
         Array2::from_shape_vec((size.1, size.0), data).map_err(Into::into)
     }
 
-    // Write a 'Buffer<T>' into a 'Dataset'.
+    /// Write a 'Buffer<T>' into a 'Dataset'.
     /// # Arguments
     /// * band_index - the band_index
     /// * window - the window position from top left
@@ -236,10 +236,12 @@ impl<'a> RasterBand<'a> {
         Ok(())
     }
 
+    /// Returns the pixel datatype of this band.
     pub fn band_type(&self) -> GDALDataType::Type {
         unsafe { gdal_sys::GDALGetRasterDataType(self.c_rasterband) }
     }
 
+    /// Returns the no data value of this band.
     pub fn no_data_value(&self) -> Option<f64> {
         let mut pb_success = 1;
         let no_data =
@@ -250,6 +252,7 @@ impl<'a> RasterBand<'a> {
         None
     }
 
+    /// Set the no data value of this band.
     pub fn set_no_data_value(&self, no_data: f64) -> Result<()> {
         let rv = unsafe { gdal_sys::GDALSetRasterNoDataValue(self.c_rasterband, no_data) };
         if rv != CPLErr::CE_None {
@@ -258,6 +261,7 @@ impl<'a> RasterBand<'a> {
         Ok(())
     }
 
+    /// Returns the scale of this band if set.
     pub fn scale(&self) -> Option<f64> {
         let mut pb_success = 1;
         let scale = unsafe { gdal_sys::GDALGetRasterScale(self.c_rasterband, &mut pb_success) };
@@ -267,6 +271,7 @@ impl<'a> RasterBand<'a> {
         None
     }
 
+    /// Returns the offset of this band if set.
     pub fn offset(&self) -> Option<f64> {
         let mut pb_success = 1;
         let offset = unsafe { gdal_sys::GDALGetRasterOffset(self.c_rasterband, &mut pb_success) };
