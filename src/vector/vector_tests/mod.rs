@@ -39,7 +39,7 @@ fn test_many_layer_count() {
 
 #[test]
 fn test_layer_get_extent() {
-    let mut ds = Dataset::open(fixture!("roads.geojson")).unwrap();
+    let ds = Dataset::open(fixture!("roads.geojson")).unwrap();
     let layer = ds.layer(0).unwrap();
     let extent = layer.get_extent().unwrap();
     assert_almost_eq(extent.MinX, 26.100768);
@@ -50,14 +50,14 @@ fn test_layer_get_extent() {
 
 #[test]
 fn test_layer_try_get_extent() {
-    let mut ds = Dataset::open(fixture!("roads.geojson")).unwrap();
+    let ds = Dataset::open(fixture!("roads.geojson")).unwrap();
     let layer = ds.layer(0).unwrap();
     assert!(layer.try_get_extent().unwrap().is_none());
 }
 
 #[test]
 fn test_layer_spatial_ref() {
-    let mut ds = Dataset::open(fixture!("roads.geojson")).unwrap();
+    let ds = Dataset::open(fixture!("roads.geojson")).unwrap();
     let layer = ds.layer(0).unwrap();
     let srs = layer.spatial_ref().unwrap();
     assert_eq!(srs.auth_code().unwrap(), 4326);
@@ -67,7 +67,7 @@ fn ds_with_layer<F>(ds_name: &str, layer_name: &str, f: F)
 where
     F: Fn(Layer),
 {
-    let mut ds = Dataset::open(fixture!(ds_name)).unwrap();
+    let ds = Dataset::open(fixture!(ds_name)).unwrap();
     let layer = ds.layer_by_name(layer_name).unwrap();
     f(layer);
 }
@@ -76,7 +76,7 @@ fn with_layer<F>(name: &str, f: F)
 where
     F: Fn(Layer),
 {
-    let mut ds = Dataset::open(fixture!(name)).unwrap();
+    let ds = Dataset::open(fixture!(name)).unwrap();
     let layer = ds.layer(0).unwrap();
     f(layer);
 }
@@ -323,7 +323,7 @@ mod tests {
 
     #[test]
     fn test_schema() {
-        let mut ds = Dataset::open(fixture!("roads.geojson")).unwrap();
+        let ds = Dataset::open(fixture!("roads.geojson")).unwrap();
         let layer = ds.layer(0).unwrap();
         // The layer name is "roads" in GDAL 2.2
         assert!(layer.name() == "OGRGeoJSON" || layer.name() == "roads");
@@ -349,7 +349,7 @@ mod tests {
 
     #[test]
     fn test_geom_fields() {
-        let mut ds = Dataset::open(fixture!("roads.geojson")).unwrap();
+        let ds = Dataset::open(fixture!("roads.geojson")).unwrap();
         let layer = ds.layer(0).unwrap();
         let name_list = layer
             .defn()
@@ -372,7 +372,7 @@ mod tests {
 
     #[test]
     fn test_get_layer_by_name() {
-        let mut ds = Dataset::open(fixture!("roads.geojson")).unwrap();
+        let ds = Dataset::open(fixture!("roads.geojson")).unwrap();
         // The layer name is "roads" in GDAL 2.2
         if let Ok(layer) = ds.layer_by_name("OGRGeoJSON") {
             assert_eq!(layer.name(), "OGRGeoJSON");
@@ -390,8 +390,8 @@ mod tests {
 
     #[test]
     fn test_spatial_filter() {
-        let mut ds = Dataset::open(fixture!("roads.geojson")).unwrap();
-        let layer = ds.layer(0).unwrap();
+        let ds = Dataset::open(fixture!("roads.geojson")).unwrap();
+        let mut layer = ds.layer(0).unwrap();
         assert_eq!(layer.features().count(), 21);
 
         let bbox = Geometry::bbox(26.1017, 44.4297, 26.1025, 44.4303).unwrap();
@@ -479,7 +479,7 @@ mod tests {
             // dataset is closed here
         }
 
-        let mut ds = Dataset::open(fixture!("output.geojson")).unwrap();
+        let ds = Dataset::open(fixture!("output.geojson")).unwrap();
         fs::remove_file(fixture!("output.geojson")).unwrap();
         let layer = ds.layer(0).unwrap();
         let ft = layer.features().next().unwrap();
