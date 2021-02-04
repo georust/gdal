@@ -19,8 +19,8 @@ use crate::errors::*;
 /// use std::path::Path;
 /// use gdal::Dataset;
 ///
-/// let mut dataset = Dataset::open(Path::new("fixtures/roads.geojson")).unwrap();
-/// let layer = dataset.layer(0).unwrap();
+/// let dataset = Dataset::open(Path::new("fixtures/roads.geojson")).unwrap();
+/// let mut layer = dataset.layer(0).unwrap();
 /// for feature in layer.features() {
 ///     // do something with each feature
 /// }
@@ -83,7 +83,7 @@ impl<'a> Layer<'a> {
     }
 
     /// Iterate over all features in this layer.
-    pub fn features(&self) -> FeatureIterator {
+    pub fn features(&mut self) -> FeatureIterator {
         FeatureIterator::_with_layer(self)
     }
 
@@ -244,7 +244,9 @@ impl<'a> Layer<'a> {
 }
 
 pub struct FeatureIterator<'a> {
-    layer: &'a Layer<'a>,
+    defn: &'a Defn,
+    c_layer: OGRLayerH,
+    size_hint: Option<usize>,
 }
 
 impl<'a> Iterator for FeatureIterator<'a> {
@@ -252,21 +254,16 @@ impl<'a> Iterator for FeatureIterator<'a> {
 
     #[inline]
     fn next(&mut self) -> Option<Feature<'a>> {
-        let c_feature = unsafe { gdal_sys::OGR_L_GetNextFeature(self.layer.c_layer) };
+        let c_feature = unsafe { gdal_sys::OGR_L_GetNextFeature(self.c_layer) };
         if c_feature.is_null() {
             None
         } else {
-            Some(unsafe { Feature::from_c_feature(self.layer.defn(), c_feature) })
+            Some(unsafe { Feature::from_c_feature(self.defn, c_feature) })
         }
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        match self
-            .layer
-            .try_feature_count()
-            .map(|s| s.try_into().ok())
-            .flatten()
-        {
+        match self.size_hint {
             Some(size) => (size, Some(size)),
             None => (0, None),
         }
@@ -275,7 +272,12 @@ impl<'a> Iterator for FeatureIterator<'a> {
 
 impl<'a> FeatureIterator<'a> {
     pub fn _with_layer(layer: &'a Layer) -> FeatureIterator<'a> {
-        FeatureIterator { layer }
+        let defn = layer.defn();
+        let size_hint = layer
+            .try_feature_count()
+            .map(|s| s.try_into().ok())
+            .flatten();
+        FeatureIterator { c_layer: layer.c_layer, size_hint, defn }
     }
 }
 

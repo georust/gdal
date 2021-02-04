@@ -7,7 +7,7 @@ use std::path::Path;
 
 fn run() -> Result<()> {
     let dataset_a = Dataset::open(Path::new("fixtures/roads.geojson"))?;
-    let layer_a = dataset_a.layer(0)?;
+    let mut layer_a = dataset_a.layer(0)?;
     let fields_defn = layer_a
         .defn()
         .fields()

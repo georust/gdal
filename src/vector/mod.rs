@@ -6,8 +6,8 @@
 //! use std::path::Path;
 //! use gdal::Dataset;
 //!
-//! let mut dataset = Dataset::open(Path::new("fixtures/roads.geojson")).unwrap();
-//! let layer = dataset.layer(0).unwrap();
+//! let dataset = Dataset::open(Path::new("fixtures/roads.geojson")).unwrap();
+//! let mut layer = dataset.layer(0).unwrap();
 //! for feature in layer.features() {
 //!     let highway_field = feature.field("highway").unwrap().unwrap();
 //!     let geometry = feature.geometry();

@@ -85,7 +85,7 @@ fn with_features<F>(name: &str, f: F)
 where
     F: Fn(FeatureIterator),
 {
-    with_layer(name, |layer| f(layer.features()));
+    with_layer(name, |mut layer| f(layer.features()));
 }
 
 fn with_feature<F>(name: &str, fid: u64, f: F)
@@ -205,7 +205,7 @@ mod tests {
 
     #[test]
     fn test_field_in_layer() {
-        ds_with_layer("three_layer_ds.s3db", "layer_0", |layer| {
+        ds_with_layer("three_layer_ds.s3db", "layer_0", |mut layer| {
             let feature = layer.features().next().unwrap();
             assert_eq!(feature.field("id").unwrap(), None);
         });
@@ -481,7 +481,7 @@ mod tests {
 
         let ds = Dataset::open(fixture!("output.geojson")).unwrap();
         fs::remove_file(fixture!("output.geojson")).unwrap();
-        let layer = ds.layer(0).unwrap();
+        let mut layer = ds.layer(0).unwrap();
         let ft = layer.features().next().unwrap();
         assert_eq!(ft.geometry().wkt().unwrap(), "POINT (1 2)");
         assert_eq!(
@@ -491,4 +491,20 @@ mod tests {
         assert_eq!(ft.field("Value").unwrap().unwrap().into_real(), Some(45.78));
         assert_eq!(ft.field("Int_value").unwrap().unwrap().into_int(), Some(1));
     }
+
+    // A compilation test that should fail.
+    //
+    // It tries to iterate over a layer's features, while
+    // also trying to read the layer's definition. The
+    // features iterator borrows layer as a mutable ref as
+    // it increments the internal state of the layer.
+    //
+    // fn test_features_mut_lifetime_enforce() {
+    //     with_layer("roads.geojson", |mut layer| {
+    //         for _ in layer.features() {
+    //             let _ = layer.defn();
+    //         }
+    //     });
+    // }
+
 }
