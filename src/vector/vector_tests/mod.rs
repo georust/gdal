@@ -495,12 +495,8 @@ mod tests {
     #[test]
     fn test_features_reset() {
         with_layer("roads.geojson", |mut layer| {
-            assert_eq!(
-                layer.features().count(),
-                layer.features().count(),
-            );
+            assert_eq!(layer.features().count(), layer.features().count(),);
         });
-
     }
 
     // A compilation test that should fail.
@@ -517,5 +513,4 @@ mod tests {
     //         }
     //     });
     // }
-
 }

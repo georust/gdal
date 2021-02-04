@@ -284,7 +284,11 @@ impl<'a> FeatureIterator<'a> {
             .try_feature_count()
             .map(|s| s.try_into().ok())
             .flatten();
-        FeatureIterator { c_layer: layer.c_layer, size_hint, defn }
+        FeatureIterator {
+            c_layer: layer.c_layer,
+            size_hint,
+            defn,
+        }
     }
 }
 
