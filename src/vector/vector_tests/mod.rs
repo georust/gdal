@@ -1,5 +1,6 @@
 use super::{
-    Feature, FeatureIterator, FieldValue, Geometry, Layer, OGRFieldType, OGRwkbGeometryType,
+    Feature, FeatureIterator, FieldValue, Geometry, Layer, LayerCaps::*, OGRFieldType,
+    OGRwkbGeometryType,
 };
 use crate::spatial_ref::SpatialRef;
 use crate::{assert_almost_eq, Dataset, Driver};
@@ -61,6 +62,18 @@ fn test_layer_spatial_ref() {
     let layer = ds.layer(0).unwrap();
     let srs = layer.spatial_ref().unwrap();
     assert_eq!(srs.auth_code().unwrap(), 4326);
+}
+
+#[test]
+fn test_layer_capabilities() {
+    let mut ds = Dataset::open(fixture!("roads.geojson")).unwrap();
+    let layer = ds.layer(0).unwrap();
+
+    assert_eq!(layer.has_capability(OLCFastSpatialFilter).unwrap(), false);
+    assert_eq!(layer.has_capability(OLCFastFeatureCount).unwrap(), true);
+    assert_eq!(layer.has_capability(OLCFastGetExtent).unwrap(), false);
+    assert_eq!(layer.has_capability(OLCRandomRead).unwrap(), true);
+    assert_eq!(layer.has_capability(OLCStringsAsUTF8).unwrap(), true);
 }
 
 fn ds_with_layer<F>(ds_name: &str, layer_name: &str, f: F)

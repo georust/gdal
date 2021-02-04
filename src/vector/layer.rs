@@ -13,6 +13,51 @@ use std::{convert::TryInto, ffi::CString, marker::PhantomData};
 
 use crate::errors::*;
 
+/// Layer capabilities, map GDAL defines
+#[allow(non_upper_case_globals)]
+#[allow(non_snake_case)]
+pub mod LayerCaps {
+
+    pub type Type = &'static str;
+
+    /// Layer capability for random read
+    pub const OLCRandomRead: Type = "RandomRead";
+    /// Layer capability for sequential write
+    pub const OLCSequentialWrite: Type = "SequentialWrite";
+    /// Layer capability for random write
+    pub const OLCRandomWrite: Type = "RandomWrite";
+    /// Layer capability for fast spatial filter
+    pub const OLCFastSpatialFilter: Type = "FastSpatialFilter";
+    /// Layer capability for fast feature count retrieval
+    pub const OLCFastFeatureCount: Type = "FastFeatureCount";
+    /// Layer capability for fast extent retrieval
+    pub const OLCFastGetExtent: Type = "FastGetExtent";
+    /// Layer capability for field creation
+    pub const OLCCreateField: Type = "CreateField";
+    /// Layer capability for field deletion
+    pub const OLCDeleteField: Type = "DeleteField";
+    /// Layer capability for field reordering
+    pub const OLCReorderFields: Type = "ReorderFields";
+    /// Layer capability for field alteration
+    pub const OLCAlterFieldDefn: Type = "AlterFieldDefn";
+    /// Layer capability for transactions
+    pub const OLCTransactions: Type = "Transactions";
+    /// Layer capability for feature deletiond
+    pub const OLCDeleteFeature: Type = "DeleteFeature";
+    /// Layer capability for setting next feature index
+    pub const OLCFastSetNextByIndex: Type = "FastSetNextByIndex";
+    /// Layer capability for strings returned with UTF-8 encoding
+    pub const OLCStringsAsUTF8: Type = "StringsAsUTF8";
+    /// Layer capability for field ignoring
+    pub const OLCIgnoreFields: Type = "IgnoreFields";
+    /// Layer capability for geometry field creation
+    pub const OLCCreateGeomField: Type = "CreateGeomField";
+    /// Layer capability for curve geometries support
+    pub const OLCCurveGeometries: Type = "CurveGeometries";
+    /// Layer capability for measured geometries support
+    pub const OLCMeasuredGeometries: Type = "MeasuredGeometries";
+}
+
 /// Layer in a vector dataset
 ///
 /// ```
@@ -99,6 +144,13 @@ impl<'a> Layer<'a> {
     pub fn name(&self) -> String {
         let rv = unsafe { gdal_sys::OGR_L_GetName(self.c_layer) };
         _string(rv)
+    }
+
+    pub fn has_capability(&self, capability: LayerCaps::Type) -> Result<bool> {
+        let rv = unsafe {
+            gdal_sys::OGR_L_TestCapability(self.c_layer, CString::new(capability)?.as_ptr()) == 1
+        };
+        Ok(rv)
     }
 
     pub fn defn(&self) -> &Defn {
