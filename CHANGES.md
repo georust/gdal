@@ -1,6 +1,27 @@
 # Changes
 
 ## Unreleased
+
+* **Breaking**: Make `Layer::features` iterator reset to
+  beginning, and borrow mutably.
+  * closes <https://github.com/georust/gdal/issues/159>
+
+* **Breaking**: [Enforce borrow
+  semantics](https://github.com/georust/gdal/pull/161) on
+  methods of `Dataset`, `RasterBand`, and `Layer`.
+  1. Methods that do not modify the underlying structure take `&self`.
+  1. Methods that modify the underlying structure take `&mut self`.
+
+  ```rust
+  let ds = Dataset::open(...);
+
+  // ds need not be mutable to open layer
+  let mut band = ds.rasterband(1)?;
+
+  // band needs to be mutable to set no-data value
+  band.set_no_data_value(0.0)?;
+  ```
+
 * **Breaking**: Use `DatasetOptions` to pass as `Dataset::open_ex` parameters and
     add support for extended open flags.
 
@@ -9,7 +30,7 @@
 
         let dataset = Dataset::open_ex(
             "roads.geojson",
-            DatasetOptions { 
+            DatasetOptions {
                 open_flags: GdalOpenFlags::GDAL_OF_UPDATE|GdalOpenFlags::GDAL_OF_VECTOR,
                 ..DatasetOptions::default()
             }
@@ -17,7 +38,7 @@
         .unwrap();
     ```
 
-    `GDALAccess` values are supported usinf [`From`] implementation
+    `GDALAccess` values are supported using [`From`] implementation
 
     ```rust
         Dataset::open_ex(
@@ -31,7 +52,7 @@
     ```
 
 * Add more functions to SpatialRef implementation
-    * <https://github.com/georust/gdal/pull/145>   
+    * <https://github.com/georust/gdal/pull/145>
 * **Breaking**: Change `Feature::field` return type from
   `Result<FieldValue>` to `Result<Option<FieldValue>>`. Fields
   can be null. Before this change, if a field was null, the value
