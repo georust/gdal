@@ -13,6 +13,73 @@ use std::{convert::TryInto, ffi::CString, marker::PhantomData};
 
 use crate::errors::*;
 
+/// Layer capabilities
+pub enum LayerCaps {
+    /// Layer capability for random read
+    OLCRandomRead,
+    /// Layer capability for sequential write
+    OLCSequentialWrite,
+    /// Layer capability for random write
+    OLCRandomWrite,
+    /// Layer capability for fast spatial filter
+    OLCFastSpatialFilter,
+    /// Layer capability for fast feature count retrieval
+    OLCFastFeatureCount,
+    /// Layer capability for fast extent retrieval
+    OLCFastGetExtent,
+    /// Layer capability for field creation
+    OLCCreateField,
+    /// Layer capability for field deletion
+    OLCDeleteField,
+    /// Layer capability for field reordering
+    OLCReorderFields,
+    /// Layer capability for field alteration
+    OLCAlterFieldDefn,
+    /// Layer capability for transactions
+    OLCTransactions,
+    /// Layer capability for feature deletiond
+    OLCDeleteFeature,
+    /// Layer capability for setting next feature index
+    OLCFastSetNextByIndex,
+    /// Layer capability for strings returned with UTF-8 encoding
+    OLCStringsAsUTF8,
+    /// Layer capability for field ignoring
+    OLCIgnoreFields,
+    /// Layer capability for geometry field creation
+    OLCCreateGeomField,
+    /// Layer capability for curve geometries support
+    OLCCurveGeometries,
+    /// Layer capability for measured geometries support
+    OLCMeasuredGeometries,
+}
+
+// Manage conversion to Gdal values
+impl LayerCaps {
+    fn into_cstring(self) -> CString {
+        CString::new(match self {
+            Self::OLCRandomRead => "RandomRead",
+            Self::OLCSequentialWrite => "SequentialWrite",
+            Self::OLCRandomWrite => "RandomWrite",
+            Self::OLCFastSpatialFilter => "FastSpatialFilter",
+            Self::OLCFastFeatureCount => "FastFeatureCount",
+            Self::OLCFastGetExtent => "FastGetExtent",
+            Self::OLCCreateField => "CreateField",
+            Self::OLCDeleteField => "DeleteField",
+            Self::OLCReorderFields => "ReorderFields",
+            Self::OLCAlterFieldDefn => "AlterFieldDefn",
+            Self::OLCTransactions => "Transactions",
+            Self::OLCDeleteFeature => "DeleteFeature",
+            Self::OLCFastSetNextByIndex => "FastSetNextByIndex",
+            Self::OLCStringsAsUTF8 => "StringsAsUTF8",
+            Self::OLCIgnoreFields => "IgnoreFields",
+            Self::OLCCreateGeomField => "CreateGeomField",
+            Self::OLCCurveGeometries => "CurveGeometries",
+            Self::OLCMeasuredGeometries => "MeasuredGeometries",
+        })
+        .unwrap()
+    }
+}
+
 /// Layer in a vector dataset
 ///
 /// ```
@@ -99,6 +166,12 @@ impl<'a> Layer<'a> {
     pub fn name(&self) -> String {
         let rv = unsafe { gdal_sys::OGR_L_GetName(self.c_layer) };
         _string(rv)
+    }
+
+    pub fn has_capability(&self, capability: LayerCaps) -> bool {
+        unsafe {
+            gdal_sys::OGR_L_TestCapability(self.c_layer, capability.into_cstring().as_ptr()) == 1
+        }
     }
 
     pub fn defn(&self) -> &Defn {
