@@ -69,10 +69,6 @@ impl<'a> Layer<'a> {
     /// Not all drivers support this efficiently; however, the call should always work if the
     /// feature exists, as a fallback implementation just scans all the features in the layer
     /// looking for the desired feature.
-    ///
-    /// **Important**: do not call `feature` while iterating over features using the
-    /// [`features`](Layer::features) function. Even if you don't mutate anything, this can cause
-    /// the the iterator to get interrupted. This is a limitation of the GDAL library.
     pub fn feature(&self, fid: u64) -> Option<Feature> {
         let c_feature = unsafe { gdal_sys::OGR_L_GetFeature(self.c_layer, fid as i64) };
         if c_feature.is_null() {
@@ -82,16 +78,24 @@ impl<'a> Layer<'a> {
         }
     }
 
-    /// Iterate over all features in this layer.
+    /// Returns iterator over the features in this layer.
+    ///
+    /// **Note.** This method resets the current index to
+    /// the beginning before iteration. It also borrows the
+    /// layer mutably, preventing any overlapping borrows.
     pub fn features(&mut self) -> FeatureIterator {
         self.reset_feature_reading();
         FeatureIterator::_with_layer(self)
     }
 
+    /// Set a spatial filter on this layer.
+    ///
+    /// Refer [OGR_L_SetSpatialFilter](https://gdal.org/doxygen/classOGRLayer.html#a75c06b4993f8eb76b569f37365cd19ab)
     pub fn set_spatial_filter(&mut self, geometry: &Geometry) {
         unsafe { gdal_sys::OGR_L_SetSpatialFilter(self.c_layer, geometry.c_geometry()) };
     }
 
+    /// Clear spatial filters set on this layer.
     pub fn clear_spatial_filter(&mut self) {
         unsafe { gdal_sys::OGR_L_SetSpatialFilter(self.c_layer, null_mut()) };
     }
@@ -235,6 +239,9 @@ impl<'a> Layer<'a> {
         }
     }
 
+    /// Fetch the spatial reference system for this layer.
+    ///
+    /// Refer [OGR_L_GetSpatialRef](https://gdal.org/doxygen/classOGRLayer.html#a75c06b4993f8eb76b569f37365cd19ab)
     pub fn spatial_ref(&self) -> Result<SpatialRef> {
         let c_obj = unsafe { gdal_sys::OGR_L_GetSpatialRef(self.c_layer) };
         if c_obj.is_null() {

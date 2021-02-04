@@ -499,8 +499,12 @@ mod tests {
         });
     }
 
-    // A compilation test that should fail.
-    //
+    #[test]
+    fn test_features_aliasing_compile_fail() {
+        let t = trybuild::TestCases::new(); // A compilation test that should fail.
+        t.compile_fail("tests/ui/01-features-aliasing-errors.rs");
+    }
+
     // It tries to iterate over a layer's features, while
     // also trying to read the layer's definition. The
     // features iterator borrows layer as a mutable ref as
