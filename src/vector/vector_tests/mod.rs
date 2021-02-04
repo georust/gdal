@@ -492,6 +492,17 @@ mod tests {
         assert_eq!(ft.field("Int_value").unwrap().unwrap().into_int(), Some(1));
     }
 
+    #[test]
+    fn test_features_reset() {
+        with_layer("roads.geojson", |mut layer| {
+            assert_eq!(
+                layer.features().count(),
+                layer.features().count(),
+            );
+        });
+
+    }
+
     // A compilation test that should fail.
     //
     // It tries to iterate over a layer's features, while

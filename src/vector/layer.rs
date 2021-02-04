@@ -84,6 +84,7 @@ impl<'a> Layer<'a> {
 
     /// Iterate over all features in this layer.
     pub fn features(&mut self) -> FeatureIterator {
+        self.reset_feature_reading();
         FeatureIterator::_with_layer(self)
     }
 
@@ -240,6 +241,12 @@ impl<'a> Layer<'a> {
             return Err(_last_null_pointer_err("OGR_L_GetSpatialRef"));
         }
         SpatialRef::from_c_obj(c_obj)
+    }
+
+    fn reset_feature_reading(&mut self) {
+        unsafe {
+            gdal_sys::OGR_L_ResetReading(self.c_layer);
+        }
     }
 }
 
