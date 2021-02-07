@@ -3,7 +3,7 @@ use crate::gdal_major_object::MajorObject;
 use crate::metadata::Metadata;
 use crate::raster::{GDALDataType, GdalType};
 use crate::utils::{_last_cpl_err, _last_null_pointer_err, _string};
-use gdal_sys::{self, CPLErr, GDALColorInterp, GDALMajorObjectH, GDALRWFlag, GDALRasterBandH};]
+use gdal_sys::{self, CPLErr, GDALColorInterp, GDALMajorObjectH, GDALRWFlag, GDALRasterBandH};
 use libc::c_int;
 use std::ffi::CString;
 

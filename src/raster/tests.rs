@@ -2,7 +2,7 @@ use crate::dataset::Dataset;
 use crate::metadata::Metadata;
 use crate::raster::{ByteBuffer, ColorInterpretation};
 use crate::Driver;
-use gdal_sys::{GDALColorInterp, GDALDataType};
+use gdal_sys::GDALDataType;
 use std::path::Path;
 
 #[cfg(feature = "ndarray")]
