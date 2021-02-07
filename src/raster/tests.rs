@@ -1,6 +1,6 @@
 use crate::dataset::Dataset;
 use crate::metadata::Metadata;
-use crate::raster::{get_color_interpretation_by_name, get_color_interpretation_name, ByteBuffer};
+use crate::raster::{ByteBuffer, ColorInterpretation};
 use crate::Driver;
 use gdal_sys::{GDALColorInterp, GDALDataType};
 use std::path::Path;
@@ -446,8 +446,8 @@ fn test_get_rasterband_actual_block_size() {
 fn test_get_rasterband_color_interp() {
     let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
     let rasterband = dataset.rasterband(1).unwrap();
-    let band_interp = rasterband.get_color_interpretation();
-    assert_eq!(band_interp, GDALColorInterp::GCI_RedBand);
+    let band_interp = rasterband.color_interpretation();
+    assert_eq!(band_interp, ColorInterpretation::RedBand);
 }
 
 #[test]
@@ -456,24 +456,21 @@ fn test_set_rasterband_color_interp() {
     let dataset = driver.create("", 1, 1, 1).unwrap();
     let mut rasterband = dataset.rasterband(1).unwrap();
     rasterband
-        .set_color_interpretation(GDALColorInterp::GCI_AlphaBand)
+        .set_color_interpretation(ColorInterpretation::AlphaBand)
         .unwrap();
-    let band_interp = rasterband.get_color_interpretation();
-    assert_eq!(band_interp, GDALColorInterp::GCI_AlphaBand);
+    let band_interp = rasterband.color_interpretation();
+    assert_eq!(band_interp, ColorInterpretation::AlphaBand);
 }
 
 #[test]
 fn test_color_interp_names() {
+    assert_eq!(ColorInterpretation::AlphaBand.name(), "Alpha");
     assert_eq!(
-        get_color_interpretation_name(GDALColorInterp::GCI_AlphaBand),
-        "Alpha"
+        ColorInterpretation::from_name("Alpha").unwrap(),
+        ColorInterpretation::AlphaBand
     );
     assert_eq!(
-        get_color_interpretation_by_name("Alpha").unwrap(),
-        GDALColorInterp::GCI_AlphaBand
-    );
-    assert_eq!(
-        get_color_interpretation_by_name("not a valid name").unwrap(),
-        GDALColorInterp::GCI_Undefined
+        ColorInterpretation::from_name("not a valid name").unwrap(),
+        ColorInterpretation::Undefined
     );
 }
