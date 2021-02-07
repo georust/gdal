@@ -1,7 +1,78 @@
 # Changes
 
 ## Unreleased
+* **Breaking**: Use `DatasetOptions` to pass as `Dataset::open_ex` parameters and
+    add support for extended open flags.
+
+    ```rust
+        use gdal::{ Dataset, DatasetOptions }
+
+        let dataset = Dataset::open_ex(
+            "roads.geojson",
+            DatasetOptions { 
+                open_flags: GdalOpenFlags::GDAL_OF_UPDATE|GdalOpenFlags::GDAL_OF_VECTOR,
+                ..DatasetOptions::default()
+            }
+        )
+        .unwrap();
+    ```
+
+    `GDALAccess` values are supported usinf [`From`] implementation
+
+    ```rust
+        Dataset::open_ex(
+            "roads.geojson",
+            DatasetOptions {
+                open_flags: GDALAccess::GA_Update.into(),
+                ..DatasetOptions::default()
+            },
+        )
+        .unwrap();
+    ```
+
+* Add more functions to SpatialRef implementation
+    * <https://github.com/georust/gdal/pull/145>   
+* **Breaking**: Change `Feature::field` return type from
+  `Result<FieldValue>` to `Result<Option<FieldValue>>`. Fields
+  can be null. Before this change, if a field was null, the value
+  returned was the default value for the underlying type.
+  However, this made it impossible to distinguish between null
+  fields and legitimate values which happen to be default value,
+  for example, an Integer field that is absent (null) from a 0,
+  which can be a valid value. After this change, if a field is
+  null, `None` is returned, rather than the default value.
+
+  If you happened to rely on this behavior, you can fix your code
+  by explicitly choosing a default value when the field is null.
+  For example, if you had this before:
+
+  ```rust
+  let str_var = feature.field("string_field")?
+      .into_string()
+      .unwrap();
+  ```
+
+  You could maintain the old behavior with:
+
+  ```rust
+  use gdal::vector::FieldValue;
+
+  let str_var = feature.field("string_field")?
+      .unwrap_or(FieldValue::StringValue("".into()))
+      .into_string()
+      .unwrap();
+  ```
+    * <https://github.com/georust/gdal/pull/134>
+* Add basic support to read overviews
+* BREAKING: update geo-types to 0.7.0. geo-types Coordinate<T> now implement `Debug`
+  * <https://github.com/georust/gdal/pull/146>
+* Deprecated `SpatialRef::get_axis_mapping_strategy` - migrate to
+  `SpatialRef::axis_mapping_strategy` instead.
 * Add support for reading and setting rasterband colour interpretations
+    * <https://github.com/georust/gdal/pull/144>
+## 0.7.1
+* fix docs.rs build for gdal-sys
+    * <https://github.com/georust/gdal/pull/128>
 
 ## 0.6.0 - 0.7.0
 * Dataset layer iteration and FieldValue types

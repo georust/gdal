@@ -1,11 +1,9 @@
-use std::marker::PhantomData;
-
 use crate::dataset::Dataset;
 use crate::gdal_major_object::MajorObject;
 use crate::metadata::Metadata;
 use crate::raster::{GDALDataType, GdalType};
-use crate::utils::{_last_cpl_err, _string};
-use gdal_sys::{self, CPLErr, GDALColorInterp, GDALMajorObjectH, GDALRWFlag, GDALRasterBandH};
+use crate::utils::{_last_cpl_err, _last_null_pointer_err, _string};
+use gdal_sys::{self, CPLErr, GDALColorInterp, GDALMajorObjectH, GDALRWFlag, GDALRasterBandH};]
 use libc::c_int;
 use std::ffi::CString;
 
@@ -21,7 +19,7 @@ use crate::errors::*;
 /// from being dropped before the band.
 pub struct RasterBand<'a> {
     c_rasterband: GDALRasterBandH,
-    phantom: PhantomData<&'a Dataset>,
+    dataset: &'a Dataset,
 }
 
 impl<'a> RasterBand<'a> {
@@ -29,10 +27,10 @@ impl<'a> RasterBand<'a> {
     ///
     /// # Safety
     /// This method operates on a raw C pointer
-    pub unsafe fn from_c_rasterband(_: &'a Dataset, c_rasterband: GDALRasterBandH) -> Self {
+    pub unsafe fn from_c_rasterband(dataset: &'a Dataset, c_rasterband: GDALRasterBandH) -> Self {
         RasterBand {
             c_rasterband,
-            phantom: PhantomData,
+            dataset,
         }
     }
 
@@ -205,7 +203,7 @@ impl<'a> RasterBand<'a> {
         Array2::from_shape_vec((size.1, size.0), data).map_err(Into::into)
     }
 
-    // Write a 'Buffer<T>' into a 'Dataset'.
+    /// Write a 'Buffer<T>' into a 'Dataset'.
     /// # Arguments
     /// * band_index - the band_index
     /// * window - the window position from top left
@@ -239,10 +237,12 @@ impl<'a> RasterBand<'a> {
         Ok(())
     }
 
+    /// Returns the pixel datatype of this band.
     pub fn band_type(&self) -> GDALDataType::Type {
         unsafe { gdal_sys::GDALGetRasterDataType(self.c_rasterband) }
     }
 
+    /// Returns the no data value of this band.
     pub fn no_data_value(&self) -> Option<f64> {
         let mut pb_success = 1;
         let no_data =
@@ -253,6 +253,7 @@ impl<'a> RasterBand<'a> {
         None
     }
 
+    /// Set the no data value of this band.
     pub fn set_no_data_value(&self, no_data: f64) -> Result<()> {
         let rv = unsafe { gdal_sys::GDALSetRasterNoDataValue(self.c_rasterband, no_data) };
         if rv != CPLErr::CE_None {
@@ -278,6 +279,7 @@ impl<'a> RasterBand<'a> {
         Ok(())
     }
 
+    /// Returns the scale of this band if set.
     pub fn scale(&self) -> Option<f64> {
         let mut pb_success = 1;
         let scale = unsafe { gdal_sys::GDALGetRasterScale(self.c_rasterband, &mut pb_success) };
@@ -287,6 +289,7 @@ impl<'a> RasterBand<'a> {
         None
     }
 
+    /// Returns the offset of this band if set.
     pub fn offset(&self) -> Option<f64> {
         let mut pb_success = 1;
         let offset = unsafe { gdal_sys::GDALGetRasterOffset(self.c_rasterband, &mut pb_success) };
@@ -315,6 +318,21 @@ impl<'a> RasterBand<'a> {
             return Err(_last_cpl_err(rv));
         }
         Ok((block_size_x as usize, block_size_y as usize))
+    }
+
+    pub fn overview_count(&self) -> Result<i32> {
+        unsafe { Ok(gdal_sys::GDALGetOverviewCount(self.c_rasterband)) }
+    }
+
+    pub fn overview(&self, overview_index: isize) -> Result<RasterBand<'a>> {
+        unsafe {
+            let c_band = self.c_rasterband;
+            let overview = gdal_sys::GDALGetOverview(c_band, overview_index as libc::c_int);
+            if overview.is_null() {
+                return Err(_last_null_pointer_err("GDALGetOverview"));
+            }
+            Ok(RasterBand::from_c_rasterband(self.dataset, overview))
+        }
     }
 }
 

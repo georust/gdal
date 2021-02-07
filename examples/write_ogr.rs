@@ -5,9 +5,10 @@ use std::fs;
 
 /// Example 1, the detailed way:
 fn example_1() -> Result<()> {
-    let _ = fs::remove_file("/tmp/output1.geojson");
+    let path = std::env::temp_dir().join("output1.geojson");
+    let _ = fs::remove_file(&path);
     let drv = Driver::get("GeoJSON")?;
-    let mut ds = drv.create_vector_only("/tmp/output1.geojson")?;
+    let mut ds = drv.create_vector_only(path.to_str().unwrap())?;
 
     let lyr = ds.create_layer_blank()?;
 
@@ -49,9 +50,10 @@ fn example_1() -> Result<()> {
 
 /// Example 2, same output, shortened way:
 fn example_2() -> Result<()> {
-    let _ = fs::remove_file("/tmp/output2.geojson");
+    let path = std::env::temp_dir().join("output2.geojson");
+    let _ = fs::remove_file(&path);
     let driver = Driver::get("GeoJSON")?;
-    let mut ds = driver.create_vector_only("/tmp/output2.geojson")?;
+    let mut ds = driver.create_vector_only(path.to_str().unwrap())?;
     let mut layer = ds.create_layer_blank()?;
 
     layer.create_defn_fields(&[

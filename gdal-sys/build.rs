@@ -61,7 +61,7 @@ fn main() {
 
     // Hardcode a prebuilt binding version while generating docs.
     // Otherwise docs.rs will explode due to not actually having libgdal installed.
-    if let Ok(_) = std::env::var("DOCS_RS") {
+    if std::env::var("DOCS_RS").is_ok() {
         let version = Version::parse("3.2.0").expect("invalid version for docs.rs");
         println!(
             "cargo:rustc-cfg=gdal_sys_{}_{}_{}",
@@ -184,13 +184,13 @@ fn main() {
         include_paths.push(dir.as_path().to_str().unwrap().to_string());
     }
 
-    let gdal = Config::new()
+    let gdal_pkg_config = Config::new()
         .statik(prefer_static)
         .cargo_metadata(need_metadata)
         .probe("gdal");
 
-    if let Ok(gdal) = gdal {
-        for dir in gdal.include_paths {
+    if let Ok(gdal) = &gdal_pkg_config {
+        for dir in &gdal.include_paths {
             include_paths.push(dir.to_str().unwrap().to_string());
         }
         if version.is_none() {
@@ -221,6 +221,14 @@ fn main() {
 
             std::fs::copy(&binding_path, &out_path)
                 .expect("Can't copy bindings to output directory");
+        } else if let Err(pkg_config_err) = &gdal_pkg_config {
+            // Special case output for this common error
+            if matches!(pkg_config_err, pkg_config::Error::Command { cause, .. } if cause.kind() == std::io::ErrorKind::NotFound)
+            {
+                panic!("Could not find `pkg-config` in your path. Please install it before building gdal-sys.");
+            } else {
+                panic!("Error while running `pkg-config`: {}", pkg_config_err);
+            }
         } else {
             panic!("No GDAL version detected");
         }

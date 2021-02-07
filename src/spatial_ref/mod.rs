@@ -1,7 +1,7 @@
 mod srs;
 
-pub use srs::CoordTransform;
-pub use srs::SpatialRef;
+pub use gdal_sys::OGRAxisOrientation;
+pub use srs::{AxisOrientationType, CoordTransform, SpatialRef};
 
 #[cfg(test)]
 mod tests;

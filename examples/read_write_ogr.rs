@@ -15,9 +15,10 @@ fn run() -> Result<()> {
         .collect::<Vec<_>>();
 
     // Create a new dataset:
-    let _ = fs::remove_file("/tmp/abcde.shp");
+    let path = std::env::temp_dir().join("abcde.shp");
+    let _ = fs::remove_file(&path);
     let drv = Driver::get("ESRI Shapefile")?;
-    let mut ds = drv.create_vector_only("/tmp/abcde.shp")?;
+    let mut ds = drv.create_vector_only(path.to_str().unwrap())?;
     let lyr = ds.create_layer_blank()?;
 
     // Copy the origin layer shema to the destination layer:
@@ -47,7 +48,9 @@ fn run() -> Result<()> {
         ft.set_geometry(new_geom)?;
         // copy each field value of the feature:
         for fd in &fields_defn {
-            ft.set_field(&fd.0, &feature_a.field(&fd.0)?)?;
+            if let Some(value) = feature_a.field(&fd.0)? {
+                ft.set_field(&fd.0, &value)?;
+            }
         }
         // Add the feature to the layer:
         ft.create(&lyr)?;

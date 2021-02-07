@@ -64,10 +64,15 @@ impl<'a> Feature<'a> {
         }
     }
 
-    /// Get the value of a named field. If the field exists, it returns a
-    /// `FieldValue` wrapper, that you need to unpack to a base type
-    /// (string, float, etc). If the field is missing, returns `None`.
-    pub fn field(&self, name: &str) -> Result<FieldValue> {
+    /// Get the value of a named field. If the field exists, it returns a [`FieldValue`] wrapper,
+    /// that you need to unpack to a base type (string, float, etc).
+    ///
+    /// If the field is missing, returns [`GdalError::InvalidFieldName`].
+    ///
+    /// If the field has an unsupported type, returns a [`GdalError::UnhandledFieldType`].
+    ///
+    /// If the field is null, returns `None`.
+    pub fn field(&self, name: &str) -> Result<Option<FieldValue>> {
         let c_name = CString::new(name)?;
         let field_id = unsafe { gdal_sys::OGR_F_GetFieldIndex(self.c_feature, c_name.as_ptr()) };
         if field_id == -1 {
@@ -80,24 +85,34 @@ impl<'a> Feature<'a> {
         }
     }
 
-    fn field_from_id(&self, field_id: i32) -> Result<FieldValue> {
+    /// Get the value of a named field. If the field exists, it returns a [`FieldValue`] wrapper,
+    /// that you need to unpack to a base type (string, float, etc).
+    ///
+    /// If the field has an unhandled type, returns a [`GdalError::UnhandledFieldType`].
+    ///
+    /// If the field is null, returns `None`.
+    fn field_from_id(&self, field_id: i32) -> Result<Option<FieldValue>> {
+        if unsafe { gdal_sys::OGR_F_IsFieldNull(self.c_feature, field_id) } != 0 {
+            return Ok(None);
+        }
+
         let field_defn = unsafe { gdal_sys::OGR_F_GetFieldDefnRef(self.c_feature, field_id) };
         let field_type = unsafe { gdal_sys::OGR_Fld_GetType(field_defn) };
         match field_type {
             OGRFieldType::OFTString => {
                 let rv = unsafe { gdal_sys::OGR_F_GetFieldAsString(self.c_feature, field_id) };
-                Ok(FieldValue::StringValue(_string(rv)))
+                Ok(Some(FieldValue::StringValue(_string(rv))))
             }
             OGRFieldType::OFTStringList => {
                 let rv = unsafe {
                     let ptr = gdal_sys::OGR_F_GetFieldAsStringList(self.c_feature, field_id);
                     _string_array(ptr)
                 };
-                Ok(FieldValue::StringListValue(rv))
+                Ok(Some(FieldValue::StringListValue(rv)))
             }
             OGRFieldType::OFTReal => {
                 let rv = unsafe { gdal_sys::OGR_F_GetFieldAsDouble(self.c_feature, field_id) };
-                Ok(FieldValue::RealValue(rv as f64))
+                Ok(Some(FieldValue::RealValue(rv as f64)))
             }
             OGRFieldType::OFTRealList => {
                 let rv = unsafe {
@@ -106,11 +121,11 @@ impl<'a> Feature<'a> {
                         gdal_sys::OGR_F_GetFieldAsDoubleList(self.c_feature, field_id, &mut len);
                     slice::from_raw_parts(ptr, len as usize).to_vec()
                 };
-                Ok(FieldValue::RealListValue(rv))
+                Ok(Some(FieldValue::RealListValue(rv)))
             }
             OGRFieldType::OFTInteger => {
                 let rv = unsafe { gdal_sys::OGR_F_GetFieldAsInteger(self.c_feature, field_id) };
-                Ok(FieldValue::IntegerValue(rv as i32))
+                Ok(Some(FieldValue::IntegerValue(rv as i32)))
             }
             OGRFieldType::OFTIntegerList => {
                 let rv = unsafe {
@@ -119,11 +134,11 @@ impl<'a> Feature<'a> {
                         gdal_sys::OGR_F_GetFieldAsIntegerList(self.c_feature, field_id, &mut len);
                     slice::from_raw_parts(ptr, len as usize).to_vec()
                 };
-                Ok(FieldValue::IntegerListValue(rv))
+                Ok(Some(FieldValue::IntegerListValue(rv)))
             }
             OGRFieldType::OFTInteger64 => {
                 let rv = unsafe { gdal_sys::OGR_F_GetFieldAsInteger64(self.c_feature, field_id) };
-                Ok(FieldValue::Integer64Value(rv))
+                Ok(Some(FieldValue::Integer64Value(rv)))
             }
             OGRFieldType::OFTInteger64List => {
                 let rv = unsafe {
@@ -132,16 +147,16 @@ impl<'a> Feature<'a> {
                         gdal_sys::OGR_F_GetFieldAsInteger64List(self.c_feature, field_id, &mut len);
                     slice::from_raw_parts(ptr, len as usize).to_vec()
                 };
-                Ok(FieldValue::Integer64ListValue(rv))
+                Ok(Some(FieldValue::Integer64ListValue(rv)))
             }
             #[cfg(feature = "datetime")]
-            OGRFieldType::OFTDateTime => Ok(FieldValue::DateTimeValue(
+            OGRFieldType::OFTDateTime => Ok(Some(FieldValue::DateTimeValue(
                 self.get_field_datetime(field_id)?,
-            )),
+            ))),
             #[cfg(feature = "datetime")]
-            OGRFieldType::OFTDate => Ok(FieldValue::DateValue(
+            OGRFieldType::OFTDate => Ok(Some(FieldValue::DateValue(
                 self.get_field_datetime(field_id)?.date(),
-            )),
+            ))),
             _ => Err(GdalError::UnhandledFieldType {
                 field_type,
                 method_name: "OGR_Fld_GetType",
@@ -397,10 +412,10 @@ impl<'a> FieldValueIterator<'a> {
 }
 
 impl<'a> Iterator for FieldValueIterator<'a> {
-    type Item = (String, FieldValue);
+    type Item = (String, Option<FieldValue>);
 
     #[inline]
-    fn next(&mut self) -> Option<(String, FieldValue)> {
+    fn next(&mut self) -> Option<(String, Option<FieldValue>)> {
         let idx = self.idx;
         if idx < self.count {
             self.idx += 1;
@@ -408,16 +423,14 @@ impl<'a> Iterator for FieldValueIterator<'a> {
                 unsafe { gdal_sys::OGR_F_GetFieldDefnRef(self.feature.c_feature, idx) };
             let field_name = unsafe { gdal_sys::OGR_Fld_GetNameRef(field_defn) };
             let name = _string(field_name);
-            let fv: Option<(String, FieldValue)> = self
+            let fv: Option<(String, Option<FieldValue>)> = self
                 .feature
                 .field_from_id(idx)
                 .ok()
                 .map(|field_value| (name, field_value));
+            //skip unknown types
             if fv.is_none() {
-                //skip unknown types
-                if self.idx < self.count {
-                    return self.next();
-                }
+                return self.next();
             }
             fv
         } else {

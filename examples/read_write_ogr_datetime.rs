@@ -14,9 +14,10 @@ fn run() -> Result<()> {
     let layer_a = dataset_a.layer(0)?;
 
     // Create a new dataset:
-    let _ = std::fs::remove_file("/tmp/later.geojson");
+    let path = std::env::temp_dir().join("later.geojson");
+    let _ = std::fs::remove_file(&path);
     let drv = Driver::get("GeoJSON")?;
-    let mut ds = drv.create_vector_only("/tmp/later.geojson")?;
+    let mut ds = drv.create_vector_only(path.to_str().unwrap())?;
     let lyr = ds.create_layer_blank()?;
 
     // Copy the origin layer shema to the destination layer:
@@ -36,7 +37,7 @@ fn run() -> Result<()> {
         for field in defn.fields() {
             ft.set_field(
                 &field.name(),
-                &match feature_a.field(&field.name())? {
+                &match feature_a.field(&field.name())?.unwrap() {
                     // add one day to dates
                     FieldValue::DateValue(value) => {
                         println!("{} = {}", field.name(), value);
