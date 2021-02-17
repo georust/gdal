@@ -146,7 +146,9 @@ impl Dataset {
     }
 
     /// Open a dataset with extended options. See
-    /// [GDALOpenEx].
+    /// [`GDALOpenEx`].
+    ///
+    /// [`GDALOpenEx`]: https://gdal.org/doxygen/gdal_8h.html#a9cb8585d0b3c16726b08e25bcc94274a
     pub fn open_ex(path: &Path, options: DatasetOptions) -> Result<Dataset> {
         _register_drivers();
         let filename = path.to_string_lossy();
@@ -315,12 +317,14 @@ impl Dataset {
         }
     }
 
-    /// Builds overviews for the current `Dataset`.
+    /// Builds overviews for the current `Dataset`. See [`GDALBuildOverviews`].
     ///
     /// # Arguments
-    /// * resampling - resampling method, as accepted by GDAL, e.g. `"CUBIC"`
-    /// * overviews - list of overview decimation factors, e.g. `&[2, 4, 8, 16, 32]`
-    /// * bands - list of bands to build the overviews for, or empty for all bands
+    /// * `resampling` - resampling method, as accepted by GDAL, e.g. `"CUBIC"`
+    /// * `overviews` - list of overview decimation factors, e.g. `&[2, 4, 8, 16, 32]`
+    /// * `bands` - list of bands to build the overviews for, or empty for all bands
+    ///
+    /// [`GDALBuildOverviews`]: https://gdal.org/doxygen/gdal_8h.html#a767f4456a6249594ee18ea53f68b7e80
     pub fn build_overviews(
         &self,
         resampling: &str,
