@@ -315,6 +315,37 @@ impl Dataset {
         }
     }
 
+    /// Builds overviews for the current `Dataset`.
+    ///
+    /// # Arguments
+    /// * resampling - resampling method, as accepted by GDAL, e.g. `"CUBIC"`
+    /// * overviews - list of overview decimation factors, e.g. `&[2, 4, 8, 16, 32]`
+    /// * bands - list of bands to build the overviews for, or empty for all bands
+    pub fn build_overviews(
+        &self,
+        resampling: &str,
+        overviews: &[i32],
+        bands: &[i32],
+    ) -> Result<()> {
+        let c_resampling = CString::new(resampling)?;
+        let rv = unsafe {
+            gdal_sys::GDALBuildOverviews(
+                self.c_dataset,
+                c_resampling.as_ptr(),
+                overviews.len() as i32,
+                overviews.as_ptr() as *mut i32,
+                bands.len() as i32,
+                bands.as_ptr() as *mut i32,
+                None,
+                null_mut(),
+            )
+        };
+        if rv != CPLErr::CE_None {
+            return Err(_last_cpl_err(rv));
+        }
+        Ok(())
+    }
+
     fn child_layer(&self, c_layer: OGRLayerH) -> Layer {
         unsafe { Layer::from_c_layer(self, c_layer) }
     }
