@@ -326,7 +326,7 @@ impl Dataset {
     ///
     /// [`GDALBuildOverviews`]: https://gdal.org/doxygen/gdal_8h.html#a767f4456a6249594ee18ea53f68b7e80
     pub fn build_overviews(
-        &self,
+        &mut self,
         resampling: &str,
         overviews: &[i32],
         bands: &[i32],
