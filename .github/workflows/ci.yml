@@ -55,7 +55,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: build
-          args: ${{ matrix.features }} --verbose --target x86_64-unknown-linux-gnu
+          args: ${{ matrix.features }} --verbose -Zbuild-std --target x86_64-unknown-linux-gnu -Zsanitizer-track-origins
       - name: Run tests
         uses: actions-rs/cargo@v1
         with:
