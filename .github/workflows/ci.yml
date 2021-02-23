@@ -40,7 +40,7 @@ jobs:
         with:
           toolchain: nightly
           default: true
-          components: "clippy, rustfmt"
+          components: "clippy, rustfmt, rust-src"
       - name: Check with Rustfmt
         uses: actions-rs/cargo@v1
         with:
