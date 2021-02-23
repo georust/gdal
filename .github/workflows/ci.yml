@@ -49,11 +49,11 @@ jobs:
         with:
           command: fmt
           args: --all -- --check
-#       - name: Check with Clippy
-#         uses: actions-rs/clippy-check@v1
-#         with:
-#           token: ${{ secrets.GITHUB_TOKEN }}
-#           args: --all-targets ${{ matrix.features }} -- -D warnings
+      - name: Check with Clippy
+        uses: actions-rs/clippy-check@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          args: --all-targets ${{ matrix.features }} -- -D warnings
       - name: Build
         uses: actions-rs/cargo@v1
         with:
