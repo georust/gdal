@@ -55,7 +55,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: build
-          args: ${{ matrix.features }} --verbose
+          args: ${{ matrix.features }} --verbose --target x86_64-unknown-linux-gnu
       - name: Run tests
         uses: actions-rs/cargo@v1
         with:
