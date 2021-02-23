@@ -44,18 +44,22 @@ jobs:
         with:
           command: fmt
           args: --all -- --check
+          toolchain: nightly
       - name: Check with Clippy
         uses: actions-rs/clippy-check@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           args: --all-targets ${{ matrix.features }} -- -D warnings
+          toolchain: nightly
       - name: Build
         uses: actions-rs/cargo@v1
         with:
           command: build
           args: ${{ matrix.features }} --verbose
+          toolchain: nightly
       - name: Run tests
         uses: actions-rs/cargo@v1
         with:
           command: test
           args: ${{ matrix.features }} --verbose
+          toolchain: nightly
