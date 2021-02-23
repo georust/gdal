@@ -15,8 +15,8 @@ jobs:
     name: "ci ubuntu-20.04"
     runs-on: "ubuntu-20.04"
     env:
-      RUSTFLAGS: "-Zsanitizer=address"
-      RUSTDOCFLAGS: "-Zsanitizer=address"
+      RUSTFLAGS: "-Zsanitizer=address -Zbuild-std "
+      RUSTDOCFLAGS: "-Zsanitizer=address -Zbuild-std "
     
     strategy:
       matrix:
@@ -55,7 +55,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: build
-          args: ${{ matrix.features }} --verbose -Zbuild-std --target x86_64-unknown-linux-gnu -Zsanitizer-track-origins
+          args: ${{ matrix.features }} --verbose --target x86_64-unknown-linux-gnu
       - name: Run tests
         uses: actions-rs/cargo@v1
         with:
