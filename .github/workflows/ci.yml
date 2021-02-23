@@ -15,7 +15,8 @@ jobs:
     name: "ci ubuntu-20.04"
     runs-on: "ubuntu-20.04"
     env:
-      RUSTFLAGS: "-Zsanitizer=address RUSTDOCFLAGS=-Zsanitizer=address"
+      RUSTFLAGS: "-Zsanitizer=address"
+      RUSTDOCFLAGS: "-Zsanitizer=address"
     
     strategy:
       matrix:
