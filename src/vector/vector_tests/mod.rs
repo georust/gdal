@@ -502,7 +502,7 @@ mod tests {
     #[test]
     fn test_features_aliasing_compile_fail() {
         let t = trybuild::TestCases::new(); // A compilation test that should fail.
-        t.compile_fail("tests/ui/01-features-aliasing-errors.rs");
+        t.compile_fail("tests/compile-tests/01-features-aliasing-errors.rs");
     }
 
     // It tries to iterate over a layer's features, while
