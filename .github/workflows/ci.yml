@@ -14,6 +14,8 @@ jobs:
   ubuntu_20_04:
     name: "ci ubuntu-20.04"
     runs-on: "ubuntu-20.04"
+    env:
+      RUSTFLAGS: "-Zsanitizer=address RUSTDOCFLAGS=-Zsanitizer=address"
     
     strategy:
       matrix:
@@ -33,6 +35,9 @@ jobs:
         run: |
           export CC="clang-9"
           export CXX="clang++-9"
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
       - name: Check with Rustfmt
         uses: actions-rs/cargo@v1
         with:
