@@ -16,7 +16,8 @@ jobs:
     runs-on: "ubuntu-20.04"
     env:
       RUSTFLAGS: "-Zsanitizer=address "
-      RUSTDOCFLAGS: "-Zsanitizer=address"
+      RUSTDOCFLAGS: "-Zsanitizer=address "
+      ASAN_OPTIONS: "detect_leaks=1"
     
     strategy:
       matrix:
