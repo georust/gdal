@@ -17,6 +17,8 @@ jobs:
     env:
       RUSTFLAGS: "-Zsanitizer=address "
       RUSTDOCFLAGS: "-Zsanitizer=address "
+      # Because we don't build GDAL with sanitizers, we need to turn off
+      # leak detection, otherwise it'll report memory leak false positives
       ASAN_OPTIONS: "detect_leaks=0"
     
     strategy:
