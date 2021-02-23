@@ -146,7 +146,9 @@ impl Dataset {
     }
 
     /// Open a dataset with extended options. See
-    /// [GDALOpenEx].
+    /// [`GDALOpenEx`].
+    ///
+    /// [`GDALOpenEx`]: https://gdal.org/doxygen/gdal_8h.html#a9cb8585d0b3c16726b08e25bcc94274a
     pub fn open_ex(path: &Path, options: DatasetOptions) -> Result<Dataset> {
         _register_drivers();
         let filename = path.to_string_lossy();
@@ -313,6 +315,39 @@ impl Dataset {
             }
             Ok(RasterBand::from_c_rasterband(self, c_band))
         }
+    }
+
+    /// Builds overviews for the current `Dataset`. See [`GDALBuildOverviews`].
+    ///
+    /// # Arguments
+    /// * `resampling` - resampling method, as accepted by GDAL, e.g. `"CUBIC"`
+    /// * `overviews` - list of overview decimation factors, e.g. `&[2, 4, 8, 16, 32]`
+    /// * `bands` - list of bands to build the overviews for, or empty for all bands
+    ///
+    /// [`GDALBuildOverviews`]: https://gdal.org/doxygen/gdal_8h.html#a767f4456a6249594ee18ea53f68b7e80
+    pub fn build_overviews(
+        &mut self,
+        resampling: &str,
+        overviews: &[i32],
+        bands: &[i32],
+    ) -> Result<()> {
+        let c_resampling = CString::new(resampling)?;
+        let rv = unsafe {
+            gdal_sys::GDALBuildOverviews(
+                self.c_dataset,
+                c_resampling.as_ptr(),
+                overviews.len() as i32,
+                overviews.as_ptr() as *mut i32,
+                bands.len() as i32,
+                bands.as_ptr() as *mut i32,
+                None,
+                null_mut(),
+            )
+        };
+        if rv != CPLErr::CE_None {
+            return Err(_last_cpl_err(rv));
+        }
+        Ok(())
     }
 
     fn child_layer(&self, c_layer: OGRLayerH) -> Layer {

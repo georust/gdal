@@ -9,7 +9,7 @@
 
         let dataset = Dataset::open_ex(
             "roads.geojson",
-            DatasetOptions { 
+            DatasetOptions {
                 open_flags: GdalOpenFlags::GDAL_OF_UPDATE|GdalOpenFlags::GDAL_OF_VECTOR,
                 ..DatasetOptions::default()
             }
@@ -31,7 +31,7 @@
     ```
 
 * Add more functions to SpatialRef implementation
-    * <https://github.com/georust/gdal/pull/145>   
+    * <https://github.com/georust/gdal/pull/145>
 * **Breaking**: Change `Feature::field` return type from
   `Result<FieldValue>` to `Result<Option<FieldValue>>`. Fields
   can be null. Before this change, if a field was null, the value
@@ -64,6 +64,8 @@
   ```
     * <https://github.com/georust/gdal/pull/134>
 * Add basic support to read overviews
+* Added a `Dataset::build_overviews` method
+    * <https://github.com/georust/gdal/pull/164>
 * BREAKING: update geo-types to 0.7.0. geo-types Coordinate<T> now implement `Debug`
   * <https://github.com/georust/gdal/pull/146>
 * Deprecated `SpatialRef::get_axis_mapping_strategy` - migrate to
