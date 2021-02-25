@@ -1,4 +1,4 @@
-use std::{ffi::CString, ffi::NulError, path::Path, ptr, sync::Once};
+use std::{ffi::CString, ffi::NulError, path::Path, ptr};
 
 use crate::utils::{_last_cpl_err, _last_null_pointer_err, _string};
 use crate::{
@@ -21,7 +21,6 @@ use bitflags::bitflags;
 ///
 /// [GDALGetGeoTransform]: https://gdal.org/api/gdaldataset_cpp.html#classGDALDataset_1a5101119705f5fa2bc1344ab26f66fd1d
 pub type GeoTransform = [c_double; 6];
-static START: Once = Once::new();
 
 /// Wrapper around a [`GDALDataset`][GDALDataset] object.
 ///
@@ -36,14 +35,6 @@ static START: Once = Once::new();
 #[derive(Debug)]
 pub struct Dataset {
     c_dataset: GDALDatasetH,
-}
-
-pub fn _register_drivers() {
-    unsafe {
-        START.call_once(|| {
-            gdal_sys::GDALAllRegister();
-        });
-    }
 }
 
 // These are skipped by bindgen and manually updated.
@@ -150,7 +141,8 @@ impl Dataset {
     ///
     /// [`GDALOpenEx`]: https://gdal.org/doxygen/gdal_8h.html#a9cb8585d0b3c16726b08e25bcc94274a
     pub fn open_ex(path: &Path, options: DatasetOptions) -> Result<Dataset> {
-        _register_drivers();
+        crate::driver::_register_drivers();
+
         let filename = path.to_string_lossy();
         let c_filename = CString::new(filename.as_ref())?;
         let c_open_flags = options.open_flags.bits;

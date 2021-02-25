@@ -63,6 +63,8 @@
       .unwrap();
   ```
     * <https://github.com/georust/gdal/pull/134>
+* Fixed potential race condition wrt. GDAL driver initialization
+    * <https://github.com/georust/gdal/pull/166>
 * Add basic support to read overviews
 * Added a `Dataset::build_overviews` method
     * <https://github.com/georust/gdal/pull/164>
