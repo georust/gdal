@@ -1,6 +1,6 @@
 use crate::dataset::Dataset;
 use crate::metadata::Metadata;
-use crate::raster::ByteBuffer;
+use crate::raster::{ByteBuffer, ColorInterpretation};
 use crate::Driver;
 use gdal_sys::GDALDataType;
 use std::path::Path;
@@ -476,4 +476,37 @@ fn test_rasterband_lifetime() {
 
     drop(rasterband);
     assert!(overview.no_data_value().is_none());
+}
+
+#[test]
+fn test_get_rasterband_color_interp() {
+    let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
+    let rasterband = dataset.rasterband(1).unwrap();
+    let band_interp = rasterband.color_interpretation();
+    assert_eq!(band_interp, ColorInterpretation::RedBand);
+}
+
+#[test]
+fn test_set_rasterband_color_interp() {
+    let driver = Driver::get("MEM").unwrap();
+    let dataset = driver.create("", 1, 1, 1).unwrap();
+    let mut rasterband = dataset.rasterband(1).unwrap();
+    rasterband
+        .set_color_interpretation(ColorInterpretation::AlphaBand)
+        .unwrap();
+    let band_interp = rasterband.color_interpretation();
+    assert_eq!(band_interp, ColorInterpretation::AlphaBand);
+}
+
+#[test]
+fn test_color_interp_names() {
+    assert_eq!(ColorInterpretation::AlphaBand.name(), "Alpha");
+    assert_eq!(
+        ColorInterpretation::from_name("Alpha").unwrap(),
+        ColorInterpretation::AlphaBand
+    );
+    assert_eq!(
+        ColorInterpretation::from_name("not a valid name").unwrap(),
+        ColorInterpretation::Undefined
+    );
 }

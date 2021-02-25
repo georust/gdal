@@ -72,7 +72,8 @@
   * <https://github.com/georust/gdal/pull/146>
 * Deprecated `SpatialRef::get_axis_mapping_strategy` - migrate to
   `SpatialRef::axis_mapping_strategy` instead.
-
+* Add support for reading and setting rasterband colour interpretations
+    * <https://github.com/georust/gdal/pull/144>
 ## 0.7.1
 * fix docs.rs build for gdal-sys
     * <https://github.com/georust/gdal/pull/128>
