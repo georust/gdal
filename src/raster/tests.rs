@@ -294,6 +294,7 @@ fn test_read_raster_as_array() {
             (left, top),
             (window_size_x, window_size_y),
             (array_size_x, array_size_y),
+            None,
         )
         .unwrap();
 
