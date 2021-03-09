@@ -21,6 +21,9 @@
   // band needs to be mutable to set no-data value
   band.set_no_data_value(0.0)?;
   ```
+  
+* Implement wrapper for `OGR_L_TestCapability`
+    * <https://github.com/georust/gdal/pull/160>
 
 * **Breaking**: Use `DatasetOptions` to pass as `Dataset::open_ex` parameters and
     add support for extended open flags.
@@ -84,12 +87,17 @@
       .unwrap();
   ```
     * <https://github.com/georust/gdal/pull/134>
+* Fixed potential race condition wrt. GDAL driver initialization
+    * <https://github.com/georust/gdal/pull/166>
 * Add basic support to read overviews
+* Added a `Dataset::build_overviews` method
+    * <https://github.com/georust/gdal/pull/164>
 * BREAKING: update geo-types to 0.7.0. geo-types Coordinate<T> now implement `Debug`
   * <https://github.com/georust/gdal/pull/146>
 * Deprecated `SpatialRef::get_axis_mapping_strategy` - migrate to
   `SpatialRef::axis_mapping_strategy` instead.
-
+* Add support for reading and setting rasterband colour interpretations
+    * <https://github.com/georust/gdal/pull/144>
 ## 0.7.1
 * fix docs.rs build for gdal-sys
     * <https://github.com/georust/gdal/pull/128>

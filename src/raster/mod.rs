@@ -4,7 +4,7 @@ mod rasterband;
 mod types;
 mod warp;
 
-pub use rasterband::{Buffer, ByteBuffer, RasterBand};
+pub use rasterband::{Buffer, ByteBuffer, ColorInterpretation, RasterBand};
 pub use types::{GDALDataType, GdalType};
 pub use warp::reproject;
 

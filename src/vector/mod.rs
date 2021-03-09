@@ -22,12 +22,13 @@ mod geo_to_gdal;
 mod geometry;
 mod layer;
 mod ops;
+pub mod sql;
 
 pub use defn::{Defn, Field, FieldIterator};
 pub use feature::{Feature, FieldValue, FieldValueIterator};
 pub use gdal_sys::{OGRFieldType, OGRwkbGeometryType};
 pub use geometry::Geometry;
-pub use layer::{FeatureIterator, FieldDefn, Layer};
+pub use layer::{FeatureIterator, FieldDefn, Layer, LayerCaps};
 pub use ops::GeometryIntersection;
 
 use crate::errors::Result;

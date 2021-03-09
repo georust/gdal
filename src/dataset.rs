@@ -1,18 +1,25 @@
-use std::{ffi::CString, ffi::NulError, path::Path, ptr, sync::Once};
+use ptr::null_mut;
+use std::convert::TryInto;
+use std::{
+    ffi::NulError,
+    ffi::{CStr, CString},
+    path::Path,
+    ptr,
+};
 
+use crate::errors::*;
 use crate::utils::{_last_cpl_err, _last_null_pointer_err, _string};
+use crate::vector::sql;
+use crate::vector::Geometry;
 use crate::{
     gdal_major_object::MajorObject, raster::RasterBand, spatial_ref::SpatialRef, vector::Layer,
     Driver, Metadata,
 };
+use gdal_sys::OGRGeometryH;
 use gdal_sys::{
     self, CPLErr, GDALAccess, GDALDatasetH, GDALMajorObjectH, OGRErr, OGRLayerH, OGRwkbGeometryType,
 };
 use libc::{c_double, c_int, c_uint};
-use ptr::null_mut;
-
-use crate::errors::*;
-use std::convert::TryInto;
 
 use bitflags::bitflags;
 
@@ -21,7 +28,6 @@ use bitflags::bitflags;
 ///
 /// [GDALGetGeoTransform]: https://gdal.org/api/gdaldataset_cpp.html#classGDALDataset_1a5101119705f5fa2bc1344ab26f66fd1d
 pub type GeoTransform = [c_double; 6];
-static START: Once = Once::new();
 
 /// Wrapper around a [`GDALDataset`][GDALDataset] object.
 ///
@@ -36,14 +42,6 @@ static START: Once = Once::new();
 #[derive(Debug)]
 pub struct Dataset {
     c_dataset: GDALDatasetH,
-}
-
-pub fn _register_drivers() {
-    unsafe {
-        START.call_once(|| {
-            gdal_sys::GDALAllRegister();
-        });
-    }
 }
 
 // These are skipped by bindgen and manually updated.
@@ -146,9 +144,12 @@ impl Dataset {
     }
 
     /// Open a dataset with extended options. See
-    /// [GDALOpenEx].
+    /// [`GDALOpenEx`].
+    ///
+    /// [`GDALOpenEx`]: https://gdal.org/doxygen/gdal_8h.html#a9cb8585d0b3c16726b08e25bcc94274a
     pub fn open_ex(path: &Path, options: DatasetOptions) -> Result<Dataset> {
-        _register_drivers();
+        crate::driver::_register_drivers();
+
         let filename = path.to_string_lossy();
         let c_filename = CString::new(filename.as_ref())?;
         let c_open_flags = options.open_flags.bits;
@@ -313,6 +314,39 @@ impl Dataset {
             }
             Ok(RasterBand::from_c_rasterband(self, c_band))
         }
+    }
+
+    /// Builds overviews for the current `Dataset`. See [`GDALBuildOverviews`].
+    ///
+    /// # Arguments
+    /// * `resampling` - resampling method, as accepted by GDAL, e.g. `"CUBIC"`
+    /// * `overviews` - list of overview decimation factors, e.g. `&[2, 4, 8, 16, 32]`
+    /// * `bands` - list of bands to build the overviews for, or empty for all bands
+    ///
+    /// [`GDALBuildOverviews`]: https://gdal.org/doxygen/gdal_8h.html#a767f4456a6249594ee18ea53f68b7e80
+    pub fn build_overviews(
+        &mut self,
+        resampling: &str,
+        overviews: &[i32],
+        bands: &[i32],
+    ) -> Result<()> {
+        let c_resampling = CString::new(resampling)?;
+        let rv = unsafe {
+            gdal_sys::GDALBuildOverviews(
+                self.c_dataset,
+                c_resampling.as_ptr(),
+                overviews.len() as i32,
+                overviews.as_ptr() as *mut i32,
+                bands.len() as i32,
+                bands.as_ptr() as *mut i32,
+                None,
+                null_mut(),
+            )
+        };
+        if rv != CPLErr::CE_None {
+            return Err(_last_cpl_err(rv));
+        }
+        Ok(())
     }
 
     fn child_layer(&self, c_layer: OGRLayerH) -> Layer {
@@ -507,6 +541,107 @@ impl Dataset {
             });
         }
         Ok(Transaction::new(self))
+    }
+
+    /// Execute a SQL query against the Dataset. It is equivalent to calling
+    /// [`GDALDatasetExecuteSQL`](https://gdal.org/api/raster_c_api.html#_CPPv421GDALDatasetExecuteSQL12GDALDatasetHPKc12OGRGeometryHPKc).
+    /// Returns a [`sql::ResultSet`], which can be treated just as any other [`Layer`].
+    ///
+    /// Queries such as `ALTER TABLE`, `CREATE INDEX`, etc. have no [`sql::ResultSet`], and return
+    /// `None`, which is distinct from an empty [`sql::ResultSet`].
+    ///
+    /// # Arguments
+    ///
+    /// * `query`: The SQL query
+    /// * `spatial_filter`: Limit results of the query to features that intersect the given
+    ///   [`Geometry`]
+    /// * `dialect`: The dialect of SQL to use. See
+    ///   <https://gdal.org/user/ogr_sql_sqlite_dialect.html>
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use gdal::Dataset;
+    /// # use std::path::Path;
+    /// use gdal::vector::sql;
+    ///
+    /// let ds = Dataset::open(Path::new("fixtures/roads.geojson")).unwrap();
+    /// let query = "SELECT kind, is_bridge, highway FROM roads WHERE highway = 'pedestrian'";
+    /// let result_set = ds.execute_sql(query, None, sql::Dialect::DEFAULT).unwrap().unwrap();
+    ///
+    /// assert_eq!(10, result_set.feature_count());
+    ///
+    /// for feature in result_set.features() {
+    ///     let highway = feature
+    ///         .field("highway")
+    ///         .unwrap()
+    ///         .unwrap()
+    ///         .into_string()
+    ///         .unwrap();
+    ///
+    ///     assert_eq!("pedestrian", highway);
+    /// }
+    /// ```
+    pub fn execute_sql<S: AsRef<str>>(
+        &self,
+        query: S,
+        spatial_filter: Option<&Geometry>,
+        dialect: sql::Dialect,
+    ) -> Result<Option<sql::ResultSet>> {
+        let query = CString::new(query.as_ref())?;
+
+        let dialect_c_str = match dialect {
+            sql::Dialect::DEFAULT => None,
+            sql::Dialect::OGR => Some(unsafe { CStr::from_bytes_with_nul_unchecked(sql::OGRSQL) }),
+            sql::Dialect::SQLITE => {
+                Some(unsafe { CStr::from_bytes_with_nul_unchecked(sql::SQLITE) })
+            }
+        };
+
+        self._execute_sql(query, spatial_filter, dialect_c_str)
+    }
+
+    fn _execute_sql(
+        &self,
+        query: CString,
+        spatial_filter: Option<&Geometry>,
+        dialect_c_str: Option<&CStr>,
+    ) -> Result<Option<sql::ResultSet>> {
+        let mut filter_geom: OGRGeometryH = std::ptr::null_mut();
+
+        let dialect_ptr = match dialect_c_str {
+            None => std::ptr::null(),
+            Some(ref d) => d.as_ptr(),
+        };
+
+        if let Some(spatial_filter) = spatial_filter {
+            filter_geom = unsafe { spatial_filter.c_geometry() };
+        }
+
+        let c_dataset = unsafe { self.c_dataset() };
+
+        unsafe { gdal_sys::CPLErrorReset() };
+
+        let c_layer = unsafe {
+            gdal_sys::GDALDatasetExecuteSQL(c_dataset, query.as_ptr(), filter_geom, dialect_ptr)
+        };
+
+        let cpl_err = unsafe { gdal_sys::CPLGetLastErrorType() };
+
+        if cpl_err != CPLErr::CE_None {
+            return Err(_last_cpl_err(cpl_err));
+        }
+
+        if c_layer.is_null() {
+            return Ok(None);
+        }
+
+        let layer = unsafe { Layer::from_c_layer(self, c_layer) };
+
+        Ok(Some(sql::ResultSet {
+            layer,
+            dataset: c_dataset,
+        }))
     }
 }
 

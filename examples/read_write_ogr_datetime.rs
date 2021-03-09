@@ -1,7 +1,5 @@
-use gdal::errors::Result;
-
 #[cfg(feature = "datetime")]
-fn run() -> Result<()> {
+fn run() -> gdal::errors::Result<()> {
     use chrono::Duration;
     use gdal::vector::{Defn, Feature, FieldDefn, FieldValue};
     use gdal::{Dataset, Driver};
@@ -60,11 +58,13 @@ fn run() -> Result<()> {
 }
 
 #[cfg(not(feature = "datetime"))]
-fn run() -> Result<()> {
+fn run() {
     println!("gdal crate was build without datetime support");
-    Ok(())
 }
 
 fn main() {
+    #[cfg(feature = "datetime")]
     run().unwrap();
+    #[cfg(not(feature = "datetime"))]
+    run();
 }

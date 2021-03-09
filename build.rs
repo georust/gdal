@@ -26,10 +26,10 @@ fn main() {
     let detected_version = Version::parse(semver_substring).expect("Could not parse gdal version!");
 
     if detected_version.major < 2 {
-        panic!(format!(
+        panic!(
             "The GDAL crate requires a GDAL version >= 2.0.0. Found {}",
             detected_version.to_string()
-        ));
+        );
     }
 
     println!("cargo:rustc-cfg=gdal_{}", detected_version.major);
