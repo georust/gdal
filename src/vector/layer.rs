@@ -25,6 +25,7 @@ use crate::errors::*;
 ///     // do something with each feature
 /// }
 /// ```
+#[derive(Debug)]
 pub struct Layer<'a> {
     c_layer: OGRLayerH,
     defn: Defn,
