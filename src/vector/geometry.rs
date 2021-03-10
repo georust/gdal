@@ -1,7 +1,7 @@
 use crate::spatial_ref::{CoordTransform, SpatialRef};
 use crate::utils::{_last_null_pointer_err, _string};
 use gdal_sys::{self, OGRErr, OGRGeometryH, OGRwkbGeometryType};
-use libc::{c_double, c_int, c_void};
+use libc::{c_char, c_double, c_int, c_void};
 use std::cell::RefCell;
 use std::ffi::CString;
 use std::fmt::{self, Debug};
@@ -75,7 +75,9 @@ impl Geometry {
     /// [WKT](https://en.wikipedia.org/wiki/Well-known_text) string.
     pub fn from_wkt(wkt: &str) -> Result<Geometry> {
         let c_wkt = CString::new(wkt)?;
-        let mut c_wkt_ptr = c_wkt.into_raw();
+        // OGR_G_CreateFromWkt does not write to the pointed-to memory, but this is not reflected
+        // in its signature (`char**` instead of `char const**`), so we need a scary looking cast.
+        let mut c_wkt_ptr = c_wkt.as_ptr() as *mut c_char;
         let mut c_geom = null_mut();
         let rv = unsafe { gdal_sys::OGR_G_CreateFromWkt(&mut c_wkt_ptr, null_mut(), &mut c_geom) };
         if rv != OGRErr::OGRERR_NONE {

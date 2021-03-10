@@ -76,6 +76,9 @@
   `SpatialRef::axis_mapping_strategy` instead.
 * Add support for reading and setting rasterband colour interpretations
     * <https://github.com/georust/gdal/pull/144>
+* Fixed memory leak in `Geometry::from_wkt`
+    * <https://github.com/georust/gdal/pull/172>
+
 ## 0.7.1
 * fix docs.rs build for gdal-sys
     * <https://github.com/georust/gdal/pull/128>
