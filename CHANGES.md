@@ -76,6 +76,10 @@
   `SpatialRef::axis_mapping_strategy` instead.
 * Add support for reading and setting rasterband colour interpretations
     * <https://github.com/georust/gdal/pull/144>
+* Add `Geometry::from_wkb` and `Geometry::wkb` functions to convert from/to
+  Well-Known Binary
+    * <https://github.com/georust/gdal/pull/173>
+
 ## 0.7.1
 * fix docs.rs build for gdal-sys
     * <https://github.com/georust/gdal/pull/128>
