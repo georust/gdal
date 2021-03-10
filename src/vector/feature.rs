@@ -385,7 +385,7 @@ impl<'a> Feature<'a> {
         if rv != OGRErr::OGRERR_NONE {
             return Err(GdalError::OgrError {
                 err: rv,
-                method_name: "OGR_G_SetGeometry",
+                method_name: "OGR_F_SetGeometry",
             });
         }
         self.geometry[0] = geom;
