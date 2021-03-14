@@ -1,6 +1,8 @@
 # Changes
 
 ## Unreleased
+* Add GEOS based predicate methods
+    Add build test for GEOS availability
 * **Breaking**: Upgrade to `ndarray 0.15`
     * <https://github.com/georust/gdal/pull/175>
 * Implement wrapper for `OGR_L_TestCapability`

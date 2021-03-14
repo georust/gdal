@@ -1,3 +1,4 @@
+use libc::c_char;
 use semver::Version;
 
 #[cfg(docsrs)]
@@ -13,6 +14,37 @@ pub fn gdal_version_info(key: &str) -> String {
         let res_ptr = gdal_sys::GDALVersionInfo(c_key.as_ptr());
         let c_res = std::ffi::CStr::from_ptr(res_ptr);
         c_res.to_string_lossy().into_owned()
+    }
+}
+
+#[cfg(not(docsrs))]
+pub fn _gdal_create_geometry(wkt: &str) -> gdal_sys::OGRGeometryH {
+    let c_wkt = std::ffi::CString::new(wkt).expect("Ooops, cannot create CString !");
+    let mut c_wkt_ptr = c_wkt.as_ptr() as *mut c_char;
+    let mut c_geom = std::ptr::null_mut();
+    let rv =
+        unsafe { gdal_sys::OGR_G_CreateFromWkt(&mut c_wkt_ptr, std::ptr::null_mut(), &mut c_geom) };
+    if rv != gdal_sys::OGRErr::OGRERR_NONE {
+        panic!(format!("Failed to create geometry from {}", wkt));
+    }
+    c_geom
+}
+
+#[cfg(not(docsrs))]
+pub fn gdal_have_geos() -> bool {
+    // Indirect way to test that gdal has geos
+    // If gdal is not built with geos the function will fail with CPLE_NotSupported.
+    // and return a null pointer
+    let pnt1 = _gdal_create_geometry("POINT(10 20)");
+    let pnt2 = _gdal_create_geometry("POINT(30 20)");
+    let c_result = unsafe { gdal_sys::OGR_G_Union(pnt1, pnt2) };
+    unsafe { gdal_sys::OGR_G_DestroyGeometry(pnt1) };
+    unsafe { gdal_sys::OGR_G_DestroyGeometry(pnt2) };
+    if !c_result.is_null() {
+        unsafe { gdal_sys::OGR_G_DestroyGeometry(c_result) };
+        true
+    } else {
+        false
     }
 }
 
@@ -57,5 +89,9 @@ fn main() {
 
     for patch in 0..=detected_version.patch {
         println!("cargo:rustc-cfg=patch_ge_{}", patch);
+    }
+
+    if gdal_have_geos() {
+        println!("cargo:rustc-cfg=have_geos");
     }
 }

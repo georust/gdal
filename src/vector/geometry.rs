@@ -1,6 +1,8 @@
 use crate::spatial_ref::{CoordTransform, SpatialRef};
-use crate::utils::{_last_null_pointer_err, _string};
-use gdal_sys::{self, OGRErr, OGRGeometryH, OGRwkbGeometryType};
+use crate::utils::{_last_cpl_err, _last_null_pointer_err, _string};
+use gdal_sys::{
+    self, CPLErr, OGREnvelope, OGREnvelope3D, OGRErr, OGRGeometryH, OGRwkbGeometryType,
+};
 use libc::{c_char, c_double, c_int, c_void};
 use std::cell::RefCell;
 use std::ffi::CString;
@@ -341,6 +343,152 @@ impl Geometry {
             gdal_sys::OGR_G_AssignSpatialReference(self.c_geometry(), spatial_ref.to_c_hsrs())
         };
     }
+
+    /// Computes and returns the bounding envelope for this geometry
+    pub fn envelope(&self) -> gdal_sys::OGREnvelope {
+        let mut envelope = OGREnvelope {
+            MinX: 0.0,
+            MaxX: 0.0,
+            MinY: 0.0,
+            MaxY: 0.0,
+        };
+        unsafe { gdal_sys::OGR_G_GetEnvelope(self.c_geometry(), &mut envelope) };
+        envelope
+    }
+
+    /// Computes and returns the bounding envelope (3D) for this geometry
+    pub fn envelope3d(&self) -> gdal_sys::OGREnvelope3D {
+        let mut envelope = OGREnvelope3D {
+            MinX: 0.0,
+            MaxX: 0.0,
+            MinY: 0.0,
+            MaxY: 0.0,
+            MinZ: 0.0,
+            MaxZ: 0.0,
+        };
+        unsafe { gdal_sys::OGR_G_GetEnvelope3D(self.c_geometry(), &mut envelope) };
+        envelope
+    }
+
+    /// Determines whether two geometries intersect.
+    /// If GEOS is enabled, then this is done in rigorous fashion otherwise TRUE is returned if the envelopes (bounding boxes)
+    /// of the two geometries overlap.
+    pub fn intersects(&self, other: &Geometry) -> bool {
+        unsafe { gdal_sys::OGR_G_Intersects(self.c_geometry(), other.c_geometry()) == 1 }
+    }
+
+    /// Tests if this geometry and the other geometry are disjoint.
+    /// Geometry validity is not checked. In case you are unsure of the validity of the input geometries,
+    /// call [`is_valid()`] before, otherwise the result might be wrong.
+    ///
+    /// This function is built on the GEOS library, check it for the definition of the geometry operation.
+    /// If OGR is built without the GEOS library, this function will return an Error
+    pub fn disjoint(&self, other: &Geometry) -> Result<bool> {
+        unsafe { gdal_sys::CPLErrorReset() };
+        let rv = unsafe { gdal_sys::OGR_G_Disjoint(self.c_geometry(), other.c_geometry()) == 1 };
+        if !rv {
+            let cpl_err = unsafe { gdal_sys::CPLGetLastErrorType() };
+            if cpl_err != CPLErr::CE_None {
+                return Err(_last_cpl_err(cpl_err));
+            }
+        }
+        Ok(rv)
+    }
+
+    /// Tests if this geometry and the other geometry are touching.
+    ///
+    /// Geometry validity is not checked. In case you are unsure of the validity of the input geometries,
+    /// call [`is_valid()`] before, otherwise the result might be wrong.
+    ///
+    /// This function is built on the GEOS library, check it for the definition of the geometry operation.
+    /// If OGR is built without the GEOS library, this function will return an Error
+    pub fn touches(&self, other: &Geometry) -> Result<bool> {
+        unsafe { gdal_sys::CPLErrorReset() };
+        let rv = unsafe { gdal_sys::OGR_G_Touches(self.c_geometry(), other.c_geometry()) == 1 };
+        if !rv {
+            let cpl_err = unsafe { gdal_sys::CPLGetLastErrorType() };
+            if cpl_err != CPLErr::CE_None {
+                return Err(_last_cpl_err(cpl_err));
+            }
+        }
+        Ok(rv)
+    }
+
+    /// Tests if this geometry and the other geometry are crossing.
+    ///
+    /// Geometry validity is not checked. In case you are unsure of the validity of the input geometries,
+    /// call [`is_valid()`] before, otherwise the result might be wrong.
+    ///
+    /// This function is built on the GEOS library, check it for the definition of the geometry operation.
+    /// If OGR is built without the GEOS library, this function will return an Error
+    pub fn crosses(&self, other: &Geometry) -> Result<bool> {
+        unsafe { gdal_sys::CPLErrorReset() };
+        let rv = unsafe { gdal_sys::OGR_G_Crosses(self.c_geometry(), other.c_geometry()) == 1 };
+        if !rv {
+            let cpl_err = unsafe { gdal_sys::CPLGetLastErrorType() };
+            if cpl_err != CPLErr::CE_None {
+                return Err(_last_cpl_err(cpl_err));
+            }
+        }
+        Ok(rv)
+    }
+
+    /// Tests if this geometry is within the other geometry.
+    ///
+    /// Geometry validity is not checked. In case you are unsure of the validity of the input geometries,
+    /// call [`is_valid()`] before, otherwise the result might be wrong.
+    ///
+    /// This function is built on the GEOS library, check it for the definition of the geometry operation.
+    /// If OGR is built without the GEOS library, this function will return an Error
+    pub fn within(&self, other: &Geometry) -> Result<bool> {
+        unsafe { gdal_sys::CPLErrorReset() };
+        let rv = unsafe { gdal_sys::OGR_G_Within(self.c_geometry(), other.c_geometry()) == 1 };
+        if !rv {
+            let cpl_err = unsafe { gdal_sys::CPLGetLastErrorType() };
+            if cpl_err != CPLErr::CE_None {
+                return Err(_last_cpl_err(cpl_err));
+            }
+        }
+        Ok(rv)
+    }
+
+    /// Tests if this geometry contains the other geometry.
+    ///
+    /// Geometry validity is not checked. In case you are unsure of the validity of the input geometries,
+    /// call [`is_valid()`] before, otherwise the result might be wrong.
+    ///
+    /// This function is built on the GEOS library, check it for the definition of the geometry operation.
+    /// If OGR is built without the GEOS library, this function will return an Error
+    pub fn contains(&self, other: &Geometry) -> Result<bool> {
+        unsafe { gdal_sys::CPLErrorReset() };
+        let rv = unsafe { gdal_sys::OGR_G_Contains(self.c_geometry(), other.c_geometry()) == 1 };
+        if !rv {
+            let cpl_err = unsafe { gdal_sys::CPLGetLastErrorType() };
+            if cpl_err != CPLErr::CE_None {
+                return Err(_last_cpl_err(cpl_err));
+            }
+        }
+        Ok(rv)
+    }
+
+    /// Tests if this geometry and the other geometry overlap, that is their intersection has a non-zero area.
+    ///
+    /// Geometry validity is not checked. In case you are unsure of the validity of the input geometries,
+    /// call [`is_valid()`] before, otherwise the result might be wrong.
+    ///
+    /// This function is built on the GEOS library, check it for the definition of the geometry operation.
+    /// If OGR is built without the GEOS library, this function will return an Error
+    pub fn overlaps(&self, other: &Geometry) -> Result<bool> {
+        unsafe { gdal_sys::CPLErrorReset() };
+        let rv = unsafe { gdal_sys::OGR_G_Overlaps(self.c_geometry(), other.c_geometry()) == 1 };
+        if !rv {
+            let cpl_err = unsafe { gdal_sys::CPLGetLastErrorType() };
+            if cpl_err != CPLErr::CE_None {
+                return Err(_last_cpl_err(cpl_err));
+            }
+        }
+        Ok(rv)
+    }
 }
 
 impl Drop for Geometry {
@@ -381,6 +529,7 @@ impl Eq for Geometry {}
 #[cfg(test)]
 mod tests {
     use super::Geometry;
+    use crate::assert_almost_eq;
     use crate::spatial_ref::SpatialRef;
 
     #[test]
@@ -459,5 +608,106 @@ mod tests {
         let srs = SpatialRef::from_epsg(4326).unwrap();
         geom.set_spatial_ref(srs);
         assert!(geom.spatial_ref().is_some());
+    }
+
+    #[test]
+    fn test_enveloppe() {
+        let geom = Geometry::from_wkt("MULTIPOINT((1.0 2.0), (2.0 4.0))").unwrap();
+        let envelope = geom.envelope();
+        assert_almost_eq(envelope.MinX, 1.0);
+        assert_almost_eq(envelope.MaxX, 2.0);
+        assert_almost_eq(envelope.MinY, 2.0);
+        assert_almost_eq(envelope.MaxY, 4.0);
+    }
+
+    #[test]
+    fn test_enveloppe3d() {
+        let geom = Geometry::from_wkt("MULTIPOINT((1.0 2.0 3.0), (2.0 4.0 5.0))").unwrap();
+        let envelope = geom.envelope3d();
+        assert_almost_eq(envelope.MinX, 1.0);
+        assert_almost_eq(envelope.MaxX, 2.0);
+        assert_almost_eq(envelope.MinY, 2.0);
+        assert_almost_eq(envelope.MaxY, 4.0);
+        assert_almost_eq(envelope.MinZ, 3.0);
+        assert_almost_eq(envelope.MaxZ, 5.0);
+    }
+
+    #[test]
+    #[cfg(have_geos)]
+    fn test_intersects() {
+        let g1 = Geometry::from_wkt("LINESTRING(0 0, 10 10)").unwrap();
+        let g2 = Geometry::from_wkt("LINESTRING(10 0, 0 10)").unwrap();
+        assert!(g1.intersects(&g2));
+
+        let g1 = Geometry::from_wkt("LINESTRING(0 0, 10 10)").unwrap();
+        let g2 = Geometry::from_wkt("POLYGON((20 20, 20 30, 30 20, 20 20))").unwrap();
+        assert!(!g1.intersects(&g2));
+    }
+
+    #[test]
+    #[cfg(have_geos)]
+    fn test_geos_disjoint() {
+        let g1 = Geometry::from_wkt("LINESTRING(0 0, 10 10)").unwrap();
+        let g2 = Geometry::from_wkt("LINESTRING(10 0, 0 10)").unwrap();
+        assert!(!g1.disjoint(&g2).unwrap());
+
+        let g1 = Geometry::from_wkt("LINESTRING(0 0, 10 10)").unwrap();
+        let g2 = Geometry::from_wkt("POLYGON((20 20, 20 30, 30 20, 20 20))").unwrap();
+        assert!(g1.disjoint(&g2).unwrap());
+    }
+
+    #[test]
+    #[cfg(have_geos)]
+    fn test_geos_touches() {
+        let g1 = Geometry::from_wkt("LINESTRING(0 0, 10 10)").unwrap();
+        let g2 = Geometry::from_wkt("LINESTRING(0 0, 0 10)").unwrap();
+        assert!(g1.touches(&g2).unwrap());
+
+        let g1 = Geometry::from_wkt("LINESTRING(0 0, 10 10)").unwrap();
+        let g2 = Geometry::from_wkt("POLYGON((20 20, 20 30, 30 20, 20 20))").unwrap();
+        assert!(!g1.touches(&g2).unwrap());
+    }
+
+    #[test]
+    #[cfg(have_geos)]
+    fn test_geos_crosses() {
+        let g1 = Geometry::from_wkt("LINESTRING(0 0, 10 10)").unwrap();
+        let g2 = Geometry::from_wkt("LINESTRING(10 0, 0 10)").unwrap();
+        assert!(g1.crosses(&g2).unwrap());
+
+        let g1 = Geometry::from_wkt("LINESTRING(0 0, 10 10)").unwrap();
+        let g2 = Geometry::from_wkt("LINESTRING(0 0, 0 10)").unwrap();
+        assert!(!g1.crosses(&g2).unwrap());
+    }
+
+    #[test]
+    #[cfg(have_geos)]
+    fn test_geos_within() {
+        let g1 = Geometry::from_wkt("POLYGON((0 0, 10 10, 10 0, 0 0))").unwrap();
+        let g2 = Geometry::from_wkt("POLYGON((-90 -90, -90 90, 190 -90, -90 -90))").unwrap();
+        assert!(g1.within(&g2).unwrap());
+        assert!(!g2.within(&g1).unwrap());
+    }
+
+    #[test]
+    #[cfg(have_geos)]
+    fn test_geos_contains() {
+        let g1 = Geometry::from_wkt("POLYGON((0 0, 10 10, 10 0, 0 0))").unwrap();
+        let g2 = Geometry::from_wkt("POLYGON((-90 -90, -90 90, 190 -90, -90 -90))").unwrap();
+        assert!(g2.contains(&g1).unwrap());
+        assert!(!g1.contains(&g2).unwrap());
+    }
+
+    #[test]
+    #[cfg(have_geos)]
+    fn test_geos_overlaps() {
+        let g1 = Geometry::from_wkt("POLYGON((0 0, 10 10, 10 0, 0 0))").unwrap();
+        let g2 = Geometry::from_wkt("POLYGON((-90 -90, -90 90, 190 -90, -90 -90))").unwrap();
+        // g1 and g2 intersect, but their intersection is equal to g1
+        assert!(!g2.overlaps(&g1).unwrap());
+
+        let g1 = Geometry::from_wkt("POLYGON((0 0, 10 10, 10 0, 0 0))").unwrap();
+        let g2 = Geometry::from_wkt("POLYGON((0 -5,10 5,10 -5,0 -5))").unwrap();
+        assert!(g2.overlaps(&g1).unwrap());
     }
 }
