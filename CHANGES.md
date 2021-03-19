@@ -1,6 +1,8 @@
 # Changes
 
 ## Unreleased
+* Added wrapper for Transformer (currently only implementing GCP Transformer)
+* Added wrapper for GDALCreateAndReprojectImage
 * **Breaking**: Upgrade to `ndarray 0.15`
     * <https://github.com/georust/gdal/pull/175>
 * Implement wrapper for `OGR_L_TestCapability`
