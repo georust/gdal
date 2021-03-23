@@ -4,8 +4,8 @@ use crate::metadata::Metadata;
 use crate::raster::{GDALDataType, GdalType};
 use crate::utils::{_last_cpl_err, _last_null_pointer_err, _string};
 use gdal_sys::{
-    self, CPLErr, GDALColorInterp, GDALMajorObjectH, GDALRIOResampleAlg, GDALRWFlag,
-    GDALRasterBandH, GDALRasterIOExtraArg,
+    self, CPLErr, GDALColorInterp, GDALMajorObjectH, GDALRWFlag, GDALRasterBandH,
+    GDALRasterIOExtraArg,
 };
 use libc::c_int;
 use std::ffi::CString;
@@ -15,16 +15,50 @@ use ndarray::Array2;
 
 use crate::errors::*;
 
+/// Resampling algorithms, map GDAL defines
+#[derive(Debug, Copy, Clone)]
+pub enum ResampleAlg {
+    /// Nearest neighbour
+    NearestNeighbour,
+    /// Bilinear (2x2 kernel)
+    Bilinear,
+    /// Cubic Convolution Approximation (4x4 kernel)
+    Cubic,
+    /// Cubic B-Spline Approximation (4x4 kernel)
+    CubicSpline,
+    /// Lanczos windowed sinc interpolation (6x6 kernel)
+    Lanczos,
+    /// Average
+    Average,
+    /// Mode (selects the value which appears most often of all the sampled points)
+    Mode,
+    /// Gauss blurring
+    Gauss,
+}
+
+fn map_resample_alg(alg: &ResampleAlg) -> u32 {
+    match alg {
+        ResampleAlg::NearestNeighbour => 0,
+        ResampleAlg::Bilinear => 1,
+        ResampleAlg::Cubic => 2,
+        ResampleAlg::CubicSpline => 3,
+        ResampleAlg::Lanczos => 4,
+        ResampleAlg::Average => 5,
+        ResampleAlg::Mode => 6,
+        ResampleAlg::Gauss => 7,
+    }
+}
+
 /// Extra options used to read a raster.
 ///
 /// For documentation, see `gdal_sys::GDALRasterIOExtraArg`.
 #[derive(Debug)]
 pub struct RasterIOExtraArg {
-    pub n_version: libc::c_int,
-    pub e_resample_alg: GDALRIOResampleAlg::Type,
+    pub n_version: usize,
+    pub e_resample_alg: ResampleAlg,
     pub pfn_progress: gdal_sys::GDALProgressFunc,
-    pub p_progress_data: *mut libc::c_void,
-    pub b_floating_point_window_validity: libc::c_int,
+    p_progress_data: *mut libc::c_void,
+    pub b_floating_point_window_validity: usize,
     pub df_x_off: f64,
     pub df_y_off: f64,
     pub df_x_size: f64,
@@ -37,7 +71,7 @@ impl Default for RasterIOExtraArg {
             n_version: 1,
             pfn_progress: None,
             p_progress_data: std::ptr::null_mut(),
-            e_resample_alg: GDALRIOResampleAlg::GRIORA_NearestNeighbour,
+            e_resample_alg: ResampleAlg::NearestNeighbour,
             b_floating_point_window_validity: 0,
             df_x_off: 0.0,
             df_y_off: 0.0,
@@ -49,8 +83,6 @@ impl Default for RasterIOExtraArg {
 
 impl Into<GDALRasterIOExtraArg> for RasterIOExtraArg {
     fn into(self) -> GDALRasterIOExtraArg {
-        // let opts: GDALRasterIOExtraArg = unsafe { std::mem::transmute(self) };
-        // opts
         let RasterIOExtraArg {
             n_version,
             e_resample_alg,
@@ -64,11 +96,11 @@ impl Into<GDALRasterIOExtraArg> for RasterIOExtraArg {
         } = self;
 
         GDALRasterIOExtraArg {
-            nVersion: n_version,
-            eResampleAlg: e_resample_alg,
+            nVersion: n_version as c_int,
+            eResampleAlg: map_resample_alg(&e_resample_alg),
             pfnProgress: pfn_progress,
             pProgressData: p_progress_data,
-            bFloatingPointWindowValidity: b_floating_point_window_validity,
+            bFloatingPointWindowValidity: b_floating_point_window_validity as c_int,
             dfXOff: df_x_off,
             dfYOff: df_y_off,
             dfXSize: df_x_size,
@@ -145,14 +177,13 @@ impl<'a> RasterBand<'a> {
         window_size: (usize, usize),
         size: (usize, usize),
         buffer: &mut [T],
-        e_resample_alg: Option<GDALRIOResampleAlg::Type>,
+        e_resample_alg: Option<ResampleAlg>,
     ) -> Result<()> {
         let pixels = (size.0 * size.1) as usize;
         assert_eq!(buffer.len(), pixels);
 
-        let resample_alg = e_resample_alg.unwrap_or(GDALRIOResampleAlg::GRIORA_NearestNeighbour);
+        let resample_alg = e_resample_alg.unwrap_or(ResampleAlg::NearestNeighbour);
 
-        // let options: RasterIOExtraArg = Default::default();
         let mut options: GDALRasterIOExtraArg = RasterIOExtraArg {
             e_resample_alg: resample_alg,
             ..Default::default()
@@ -161,7 +192,6 @@ impl<'a> RasterBand<'a> {
 
         let options_ptr: *mut GDALRasterIOExtraArg = &mut options;
 
-        //let no_data:
         let rv = unsafe {
             gdal_sys::GDALRasterIOEx(
                 self.c_rasterband,
@@ -198,7 +228,7 @@ impl<'a> RasterBand<'a> {
         window: (isize, isize),
         window_size: (usize, usize),
         size: (usize, usize),
-        e_resample_alg: Option<GDALRIOResampleAlg::Type>,
+        e_resample_alg: Option<ResampleAlg>,
     ) -> Result<Buffer<T>> {
         let pixels = (size.0 * size.1) as usize;
 
@@ -232,7 +262,7 @@ impl<'a> RasterBand<'a> {
         window: (isize, isize),
         window_size: (usize, usize),
         array_size: (usize, usize),
-        e_resample_alg: Option<GDALRIOResampleAlg::Type>,
+        e_resample_alg: Option<ResampleAlg>,
     ) -> Result<Array2<T>> {
         let data = self.read_as::<T>(window, window_size, array_size, e_resample_alg)?;
 
