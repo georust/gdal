@@ -1,6 +1,8 @@
 # Changes
 
 ## Unreleased
+* **Breaking**: Upgrade to `ndarray 0.15`
+    * <https://github.com/georust/gdal/pull/175>
 * Implement wrapper for `OGR_L_TestCapability`
     * <https://github.com/georust/gdal/pull/160>
 * **Breaking**: Use `DatasetOptions` to pass as `Dataset::open_ex` parameters and
