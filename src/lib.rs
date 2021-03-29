@@ -22,6 +22,7 @@
 
 pub use version::version_info;
 
+pub mod alg;
 pub mod config;
 mod dataset;
 mod driver;
