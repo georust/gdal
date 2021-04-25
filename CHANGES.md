@@ -116,7 +116,6 @@
   - <https://github.com/georust/gdal/pull/144>
 - Fixed memory leak in `Geometry::from_wkt`
   - <https://github.com/georust/gdal/pull/172>
-    > > > > > > > dba29c99c99c590caa906912fdbb56273c717897
 
 ## 0.7.1
 
