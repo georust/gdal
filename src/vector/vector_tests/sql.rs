@@ -10,7 +10,7 @@ use crate::{
 fn test_sql() {
     let ds = Dataset::open(fixture!("roads.geojson")).unwrap();
     let query = "SELECT kind, is_bridge, highway FROM roads WHERE highway = 'pedestrian'";
-    let result_set = ds
+    let mut result_set = ds
         .execute_sql(query, None, sql::Dialect::DEFAULT)
         .unwrap()
         .unwrap();
@@ -46,7 +46,7 @@ fn test_sql_with_spatial_filter() {
     let query = "SELECT * FROM roads WHERE highway = 'pedestrian'";
     let ds = Dataset::open(fixture!("roads.geojson")).unwrap();
     let bbox = Geometry::bbox(26.1017, 44.4297, 26.1025, 44.4303).unwrap();
-    let result_set = ds
+    let mut result_set = ds
         .execute_sql(query, Some(&bbox), sql::Dialect::DEFAULT)
         .unwrap()
         .unwrap();
@@ -77,7 +77,7 @@ fn test_sql_with_dialect() {
     let query = "SELECT * FROM roads WHERE highway = 'pedestrian' and NumPoints(GEOMETRY) = 3";
     let ds = Dataset::open(fixture!("roads.geojson")).unwrap();
     let bbox = Geometry::bbox(26.1017, 44.4297, 26.1025, 44.4303).unwrap();
-    let result_set = ds
+    let mut result_set = ds
         .execute_sql(query, Some(&bbox), sql::Dialect::SQLITE)
         .unwrap()
         .unwrap();
@@ -99,7 +99,7 @@ fn test_sql_with_dialect() {
 fn test_sql_empty_result() {
     let ds = Dataset::open(fixture!("roads.geojson")).unwrap();
     let query = "SELECT kind, is_bridge, highway FROM roads WHERE highway = 'jazz hands 👐'";
-    let result_set = ds
+    let mut result_set = ds
         .execute_sql(query, None, sql::Dialect::DEFAULT)
         .unwrap()
         .unwrap();

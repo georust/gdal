@@ -1,4 +1,4 @@
-use std::ops::Deref;
+use std::ops::{Deref, DerefMut};
 
 use gdal_sys::GDALDatasetH;
 
@@ -18,6 +18,12 @@ impl<'a> Deref for ResultSet<'a> {
 
     fn deref(&self) -> &Self::Target {
         &self.layer
+    }
+}
+
+impl<'a> DerefMut for ResultSet<'a> {
+    fn deref_mut(&mut self) -> &mut <Self as Deref>::Target {
+        &mut self.layer
     }
 }
 

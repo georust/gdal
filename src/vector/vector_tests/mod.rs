@@ -67,7 +67,7 @@ fn test_layer_spatial_ref() {
 
 #[test]
 fn test_layer_capabilities() {
-    let mut ds = Dataset::open(fixture!("roads.geojson")).unwrap();
+    let ds = Dataset::open(fixture!("roads.geojson")).unwrap();
     let layer = ds.layer(0).unwrap();
 
     assert!(!layer.has_capability(OLCFastSpatialFilter));

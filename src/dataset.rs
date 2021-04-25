@@ -567,7 +567,7 @@ impl Dataset {
     ///
     /// let ds = Dataset::open(Path::new("fixtures/roads.geojson")).unwrap();
     /// let query = "SELECT kind, is_bridge, highway FROM roads WHERE highway = 'pedestrian'";
-    /// let result_set = ds.execute_sql(query, None, sql::Dialect::DEFAULT).unwrap().unwrap();
+    /// let mut result_set = ds.execute_sql(query, None, sql::Dialect::DEFAULT).unwrap().unwrap();
     ///
     /// assert_eq!(10, result_set.feature_count());
     ///
