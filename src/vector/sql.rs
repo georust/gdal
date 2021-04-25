@@ -29,6 +29,7 @@ impl<'a> Drop for ResultSet<'a> {
 
 /// Represents valid SQL dialects to use in SQL queries. See
 /// <https://gdal.org/user/ogr_sql_sqlite_dialect.html>
+#[allow(clippy::upper_case_acronyms)]
 pub enum Dialect {
     /// Use the default dialect. This is OGR SQL unless the underlying driver has a native dialect,
     /// such as MySQL, Postgres, Oracle, etc.

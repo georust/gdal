@@ -48,7 +48,7 @@ impl Geometry {
     /// This method operates on a raw C pointer    
     pub unsafe fn set_c_geometry(&self, c_geometry: OGRGeometryH) {
         assert!(!self.has_gdal_ptr());
-        assert_eq!(self.owned, false);
+        assert!(!self.owned);
         *(self.c_geometry_ref.borrow_mut()) = Some(c_geometry);
     }
 

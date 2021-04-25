@@ -70,11 +70,11 @@ fn test_layer_capabilities() {
     let mut ds = Dataset::open(fixture!("roads.geojson")).unwrap();
     let layer = ds.layer(0).unwrap();
 
-    assert_eq!(layer.has_capability(OLCFastSpatialFilter), false);
-    assert_eq!(layer.has_capability(OLCFastFeatureCount), true);
-    assert_eq!(layer.has_capability(OLCFastGetExtent), false);
-    assert_eq!(layer.has_capability(OLCRandomRead), true);
-    assert_eq!(layer.has_capability(OLCStringsAsUTF8), true);
+    assert!(!layer.has_capability(OLCFastSpatialFilter));
+    assert!(layer.has_capability(OLCFastFeatureCount));
+    assert!(!layer.has_capability(OLCFastGetExtent));
+    assert!(layer.has_capability(OLCRandomRead));
+    assert!(layer.has_capability(OLCStringsAsUTF8));
 }
 
 fn ds_with_layer<F>(ds_name: &str, layer_name: &str, f: F)
