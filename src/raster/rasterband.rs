@@ -53,6 +53,7 @@ fn map_resample_alg(alg: &ResampleAlg) -> u32 {
 ///
 /// For documentation, see `gdal_sys::GDALRasterIOExtraArg`.
 #[derive(Debug)]
+#[allow(clippy::upper_case_acronyms)]
 pub struct RasterIOExtraArg {
     pub n_version: usize,
     pub e_resample_alg: ResampleAlg,
