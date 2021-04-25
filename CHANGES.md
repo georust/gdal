@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- **Breaking**: Add support to select a resampling algorithm when reading a raster
+
+  - <https://github.com/georust/gdal/pull/141>
+
+  Now, it is necessary to provide a `Option<ResampleAlg>` when reading a raster.
+  If `None`, it uses `ResampleAlg::NearestNeighbour` which was the
+  default behavior.
+
 - **Breaking**: Make `Layer::features` iterator reset to
   beginning, and borrow mutably.
 
@@ -103,6 +111,7 @@
   - <https://github.com/georust/gdal/pull/146>
 - Deprecated `SpatialRef::get_axis_mapping_strategy` - migrate to
   `SpatialRef::axis_mapping_strategy` instead.
+
 - Add support for reading and setting rasterband colour interpretations
   - <https://github.com/georust/gdal/pull/144>
 - Fixed memory leak in `Geometry::from_wkt`
