@@ -111,13 +111,6 @@
   - <https://github.com/georust/gdal/pull/146>
 - Deprecated `SpatialRef::get_axis_mapping_strategy` - migrate to
   `SpatialRef::axis_mapping_strategy` instead.
-  <<<<<<< HEAD
-
-* Add support for reading and setting rasterband colour interpretations \* <https://github.com/georust/gdal/pull/144>
-  <<<<<<< HEAD
-* Fixed memory leak in `Geometry::from_wkt` \* <https://github.com/georust/gdal/pull/172>
-  =======
-  > > > > > > > # Added entry to CHANGES
 
 - Add support for reading and setting rasterband colour interpretations
   - <https://github.com/georust/gdal/pull/144>
