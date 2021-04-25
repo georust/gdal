@@ -3,7 +3,10 @@ use crate::gdal_major_object::MajorObject;
 use crate::metadata::Metadata;
 use crate::raster::{GDALDataType, GdalType};
 use crate::utils::{_last_cpl_err, _last_null_pointer_err, _string};
-use gdal_sys::{self, CPLErr, GDALColorInterp, GDALMajorObjectH, GDALRWFlag, GDALRasterBandH};
+use gdal_sys::{
+    self, CPLErr, GDALColorInterp, GDALMajorObjectH, GDALRWFlag, GDALRasterBandH,
+    GDALRasterIOExtraArg,
+};
 use libc::c_int;
 use std::ffi::CString;
 
@@ -11,6 +14,101 @@ use std::ffi::CString;
 use ndarray::Array2;
 
 use crate::errors::*;
+
+/// Resampling algorithms, map GDAL defines
+#[derive(Debug, Copy, Clone)]
+pub enum ResampleAlg {
+    /// Nearest neighbour
+    NearestNeighbour,
+    /// Bilinear (2x2 kernel)
+    Bilinear,
+    /// Cubic Convolution Approximation (4x4 kernel)
+    Cubic,
+    /// Cubic B-Spline Approximation (4x4 kernel)
+    CubicSpline,
+    /// Lanczos windowed sinc interpolation (6x6 kernel)
+    Lanczos,
+    /// Average
+    Average,
+    /// Mode (selects the value which appears most often of all the sampled points)
+    Mode,
+    /// Gauss blurring
+    Gauss,
+}
+
+fn map_resample_alg(alg: &ResampleAlg) -> u32 {
+    match alg {
+        ResampleAlg::NearestNeighbour => 0,
+        ResampleAlg::Bilinear => 1,
+        ResampleAlg::Cubic => 2,
+        ResampleAlg::CubicSpline => 3,
+        ResampleAlg::Lanczos => 4,
+        ResampleAlg::Average => 5,
+        ResampleAlg::Mode => 6,
+        ResampleAlg::Gauss => 7,
+    }
+}
+
+/// Extra options used to read a raster.
+///
+/// For documentation, see `gdal_sys::GDALRasterIOExtraArg`.
+#[derive(Debug)]
+#[allow(clippy::upper_case_acronyms)]
+pub struct RasterIOExtraArg {
+    pub n_version: usize,
+    pub e_resample_alg: ResampleAlg,
+    pub pfn_progress: gdal_sys::GDALProgressFunc,
+    p_progress_data: *mut libc::c_void,
+    pub b_floating_point_window_validity: usize,
+    pub df_x_off: f64,
+    pub df_y_off: f64,
+    pub df_x_size: f64,
+    pub df_y_size: f64,
+}
+
+impl Default for RasterIOExtraArg {
+    fn default() -> Self {
+        Self {
+            n_version: 1,
+            pfn_progress: None,
+            p_progress_data: std::ptr::null_mut(),
+            e_resample_alg: ResampleAlg::NearestNeighbour,
+            b_floating_point_window_validity: 0,
+            df_x_off: 0.0,
+            df_y_off: 0.0,
+            df_x_size: 0.0,
+            df_y_size: 0.0,
+        }
+    }
+}
+
+impl From<RasterIOExtraArg> for GDALRasterIOExtraArg {
+    fn from(arg: RasterIOExtraArg) -> Self {
+        let RasterIOExtraArg {
+            n_version,
+            e_resample_alg,
+            pfn_progress,
+            p_progress_data,
+            b_floating_point_window_validity,
+            df_x_off,
+            df_y_off,
+            df_x_size,
+            df_y_size,
+        } = arg;
+
+        GDALRasterIOExtraArg {
+            nVersion: n_version as c_int,
+            eResampleAlg: map_resample_alg(&e_resample_alg),
+            pfnProgress: pfn_progress,
+            pProgressData: p_progress_data,
+            bFloatingPointWindowValidity: b_floating_point_window_validity as c_int,
+            dfXOff: df_x_off,
+            dfYOff: df_y_off,
+            dfXSize: df_x_size,
+            dfYSize: df_y_size,
+        }
+    }
+}
 
 /// Represents a single band of a dataset.
 ///
@@ -73,19 +171,30 @@ impl<'a> RasterBand<'a> {
     /// * window_size - the window size (GDAL will interpolate data if window_size != buffer_size)
     /// * size - the desired size to read
     /// * buffer - a slice to hold the data (length must equal product of size parameter)
+    /// * e_resample_alg - the resample algorithm used for the interpolation
     pub fn read_into_slice<T: Copy + GdalType>(
         &self,
         window: (isize, isize),
         window_size: (usize, usize),
         size: (usize, usize),
         buffer: &mut [T],
+        e_resample_alg: Option<ResampleAlg>,
     ) -> Result<()> {
         let pixels = (size.0 * size.1) as usize;
         assert_eq!(buffer.len(), pixels);
 
-        //let no_data:
+        let resample_alg = e_resample_alg.unwrap_or(ResampleAlg::NearestNeighbour);
+
+        let mut options: GDALRasterIOExtraArg = RasterIOExtraArg {
+            e_resample_alg: resample_alg,
+            ..Default::default()
+        }
+        .into();
+
+        let options_ptr: *mut GDALRasterIOExtraArg = &mut options;
+
         let rv = unsafe {
-            gdal_sys::GDALRasterIO(
+            gdal_sys::GDALRasterIOEx(
                 self.c_rasterband,
                 GDALRWFlag::GF_Read,
                 window.0 as c_int,
@@ -98,6 +207,7 @@ impl<'a> RasterBand<'a> {
                 T::gdal_type(),
                 0,
                 0,
+                options_ptr,
             )
         };
         if rv != CPLErr::CE_None {
@@ -113,11 +223,13 @@ impl<'a> RasterBand<'a> {
     /// * window - the window position from top left
     /// * window_size - the window size (GDAL will interpolate data if window_size != buffer_size)
     /// * buffer_size - the desired size of the 'Buffer'
+    /// * e_resample_alg - the resample algorithm used for the interpolation
     pub fn read_as<T: Copy + GdalType>(
         &self,
         window: (isize, isize),
         window_size: (usize, usize),
         size: (usize, usize),
+        e_resample_alg: Option<ResampleAlg>,
     ) -> Result<Buffer<T>> {
         let pixels = (size.0 * size.1) as usize;
 
@@ -131,7 +243,7 @@ impl<'a> RasterBand<'a> {
         unsafe {
             data.set_len(pixels);
         };
-        self.read_into_slice(window, window_size, size, &mut data)?;
+        self.read_into_slice(window, window_size, size, &mut data, e_resample_alg)?;
 
         Ok(Buffer { size, data })
     }
@@ -143,6 +255,7 @@ impl<'a> RasterBand<'a> {
     /// * window - the window position from top left
     /// * window_size - the window size (GDAL will interpolate data if window_size != array_size)
     /// * array_size - the desired size of the 'Array'
+    /// * e_resample_alg - the resample algorithm used for the interpolation
     /// # Docs
     /// The Matrix shape is (rows, cols) and raster shape is (cols in x-axis, rows in y-axis).
     pub fn read_as_array<T: Copy + GdalType>(
@@ -150,8 +263,9 @@ impl<'a> RasterBand<'a> {
         window: (isize, isize),
         window_size: (usize, usize),
         array_size: (usize, usize),
+        e_resample_alg: Option<ResampleAlg>,
     ) -> Result<Array2<T>> {
-        let data = self.read_as::<T>(window, window_size, array_size)?;
+        let data = self.read_as::<T>(window, window_size, array_size, e_resample_alg)?;
 
         // Matrix shape is (rows, cols) and raster shape is (cols in x-axis, rows in y-axis)
         Ok(Array2::from_shape_vec(
@@ -169,6 +283,7 @@ impl<'a> RasterBand<'a> {
             (0, 0),
             (size.0 as usize, size.1 as usize),
             (size.0 as usize, size.1 as usize),
+            None,
         )
     }
 
@@ -209,7 +324,7 @@ impl<'a> RasterBand<'a> {
     /// * window - the window position from top left
     /// * window_size - the window size (GDAL will interpolate data if window_size != Buffer.size)
     pub fn write<T: GdalType + Copy>(
-        &self,
+        &mut self,
         window: (isize, isize),
         window_size: (usize, usize),
         buffer: &Buffer<T>,
@@ -254,7 +369,7 @@ impl<'a> RasterBand<'a> {
     }
 
     /// Set the no data value of this band.
-    pub fn set_no_data_value(&self, no_data: f64) -> Result<()> {
+    pub fn set_no_data_value(&mut self, no_data: f64) -> Result<()> {
         let rv = unsafe { gdal_sys::GDALSetRasterNoDataValue(self.c_rasterband, no_data) };
         if rv != CPLErr::CE_None {
             return Err(_last_cpl_err(rv));

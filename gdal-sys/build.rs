@@ -13,12 +13,12 @@ pub fn write_bindings(include_paths: Vec<String>, out_path: &Path) {
         .header("wrapper.h")
         .constified_enum_module(".*")
         .ctypes_prefix("libc")
-        .whitelist_function("CPL.*")
-        .whitelist_function("GDAL.*")
-        .whitelist_function("OGR.*")
-        .whitelist_function("OSR.*")
-        .whitelist_function("OCT.*")
-        .whitelist_function("VSI.*");
+        .allowlist_function("CPL.*")
+        .allowlist_function("GDAL.*")
+        .allowlist_function("OGR.*")
+        .allowlist_function("OSR.*")
+        .allowlist_function("OCT.*")
+        .allowlist_function("VSI.*");
 
     for path in include_paths {
         builder = builder.clang_arg("-I");

@@ -41,7 +41,7 @@ fn test_many_layer_count() {
 
 #[test]
 fn test_layer_get_extent() {
-    let mut ds = Dataset::open(fixture!("roads.geojson")).unwrap();
+    let ds = Dataset::open(fixture!("roads.geojson")).unwrap();
     let layer = ds.layer(0).unwrap();
     let extent = layer.get_extent().unwrap();
     assert_almost_eq(extent.MinX, 26.100768);
@@ -52,14 +52,14 @@ fn test_layer_get_extent() {
 
 #[test]
 fn test_layer_try_get_extent() {
-    let mut ds = Dataset::open(fixture!("roads.geojson")).unwrap();
+    let ds = Dataset::open(fixture!("roads.geojson")).unwrap();
     let layer = ds.layer(0).unwrap();
     assert!(layer.try_get_extent().unwrap().is_none());
 }
 
 #[test]
 fn test_layer_spatial_ref() {
-    let mut ds = Dataset::open(fixture!("roads.geojson")).unwrap();
+    let ds = Dataset::open(fixture!("roads.geojson")).unwrap();
     let layer = ds.layer(0).unwrap();
     let srs = layer.spatial_ref().unwrap();
     assert_eq!(srs.auth_code().unwrap(), 4326);
@@ -67,21 +67,21 @@ fn test_layer_spatial_ref() {
 
 #[test]
 fn test_layer_capabilities() {
-    let mut ds = Dataset::open(fixture!("roads.geojson")).unwrap();
+    let ds = Dataset::open(fixture!("roads.geojson")).unwrap();
     let layer = ds.layer(0).unwrap();
 
-    assert_eq!(layer.has_capability(OLCFastSpatialFilter), false);
-    assert_eq!(layer.has_capability(OLCFastFeatureCount), true);
-    assert_eq!(layer.has_capability(OLCFastGetExtent), false);
-    assert_eq!(layer.has_capability(OLCRandomRead), true);
-    assert_eq!(layer.has_capability(OLCStringsAsUTF8), true);
+    assert!(!layer.has_capability(OLCFastSpatialFilter));
+    assert!(layer.has_capability(OLCFastFeatureCount));
+    assert!(!layer.has_capability(OLCFastGetExtent));
+    assert!(layer.has_capability(OLCRandomRead));
+    assert!(layer.has_capability(OLCStringsAsUTF8));
 }
 
 fn ds_with_layer<F>(ds_name: &str, layer_name: &str, f: F)
 where
     F: Fn(Layer),
 {
-    let mut ds = Dataset::open(fixture!(ds_name)).unwrap();
+    let ds = Dataset::open(fixture!(ds_name)).unwrap();
     let layer = ds.layer_by_name(layer_name).unwrap();
     f(layer);
 }
@@ -90,7 +90,7 @@ fn with_layer<F>(name: &str, f: F)
 where
     F: Fn(Layer),
 {
-    let mut ds = Dataset::open(fixture!(name)).unwrap();
+    let ds = Dataset::open(fixture!(name)).unwrap();
     let layer = ds.layer(0).unwrap();
     f(layer);
 }
@@ -99,7 +99,7 @@ fn with_features<F>(name: &str, f: F)
 where
     F: Fn(FeatureIterator),
 {
-    with_layer(name, |layer| f(layer.features()));
+    with_layer(name, |mut layer| f(layer.features()));
 }
 
 fn with_feature<F>(name: &str, fid: u64, f: F)
@@ -219,7 +219,7 @@ mod tests {
 
     #[test]
     fn test_field_in_layer() {
-        ds_with_layer("three_layer_ds.s3db", "layer_0", |layer| {
+        ds_with_layer("three_layer_ds.s3db", "layer_0", |mut layer| {
             let feature = layer.features().next().unwrap();
             assert_eq!(feature.field("id").unwrap(), None);
         });
@@ -337,7 +337,7 @@ mod tests {
 
     #[test]
     fn test_schema() {
-        let mut ds = Dataset::open(fixture!("roads.geojson")).unwrap();
+        let ds = Dataset::open(fixture!("roads.geojson")).unwrap();
         let layer = ds.layer(0).unwrap();
         // The layer name is "roads" in GDAL 2.2
         assert!(layer.name() == "OGRGeoJSON" || layer.name() == "roads");
@@ -363,7 +363,7 @@ mod tests {
 
     #[test]
     fn test_geom_fields() {
-        let mut ds = Dataset::open(fixture!("roads.geojson")).unwrap();
+        let ds = Dataset::open(fixture!("roads.geojson")).unwrap();
         let layer = ds.layer(0).unwrap();
         let name_list = layer
             .defn()
@@ -386,7 +386,7 @@ mod tests {
 
     #[test]
     fn test_get_layer_by_name() {
-        let mut ds = Dataset::open(fixture!("roads.geojson")).unwrap();
+        let ds = Dataset::open(fixture!("roads.geojson")).unwrap();
         // The layer name is "roads" in GDAL 2.2
         if let Ok(layer) = ds.layer_by_name("OGRGeoJSON") {
             assert_eq!(layer.name(), "OGRGeoJSON");
@@ -404,8 +404,8 @@ mod tests {
 
     #[test]
     fn test_spatial_filter() {
-        let mut ds = Dataset::open(fixture!("roads.geojson")).unwrap();
-        let layer = ds.layer(0).unwrap();
+        let ds = Dataset::open(fixture!("roads.geojson")).unwrap();
+        let mut layer = ds.layer(0).unwrap();
         assert_eq!(layer.features().count(), 21);
 
         let bbox = Geometry::bbox(26.1017, 44.4297, 26.1025, 44.4303).unwrap();
@@ -493,9 +493,9 @@ mod tests {
             // dataset is closed here
         }
 
-        let mut ds = Dataset::open(fixture!("output.geojson")).unwrap();
+        let ds = Dataset::open(fixture!("output.geojson")).unwrap();
         fs::remove_file(fixture!("output.geojson")).unwrap();
-        let layer = ds.layer(0).unwrap();
+        let mut layer = ds.layer(0).unwrap();
         let ft = layer.features().next().unwrap();
         assert_eq!(ft.geometry().wkt().unwrap(), "POINT (1 2)");
         assert_eq!(
@@ -505,4 +505,30 @@ mod tests {
         assert_eq!(ft.field("Value").unwrap().unwrap().into_real(), Some(45.78));
         assert_eq!(ft.field("Int_value").unwrap().unwrap().into_int(), Some(1));
     }
+
+    #[test]
+    fn test_features_reset() {
+        with_layer("roads.geojson", |mut layer| {
+            assert_eq!(layer.features().count(), layer.features().count(),);
+        });
+    }
+
+    #[test]
+    fn test_features_aliasing_compile_fail() {
+        let t = trybuild::TestCases::new(); // A compilation test that should fail.
+        t.compile_fail("tests/compile-tests/01-features-aliasing-errors.rs");
+    }
+
+    // It tries to iterate over a layer's features, while
+    // also trying to read the layer's definition. The
+    // features iterator borrows layer as a mutable ref as
+    // it increments the internal state of the layer.
+    //
+    // fn test_features_mut_lifetime_enforce() {
+    //     with_layer("roads.geojson", |mut layer| {
+    //         for _ in layer.features() {
+    //             let _ = layer.defn();
+    //         }
+    //     });
+    // }
 }

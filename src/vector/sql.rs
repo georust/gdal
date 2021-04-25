@@ -1,4 +1,4 @@
-use std::ops::Deref;
+use std::ops::{Deref, DerefMut};
 
 use gdal_sys::GDALDatasetH;
 
@@ -21,6 +21,12 @@ impl<'a> Deref for ResultSet<'a> {
     }
 }
 
+impl<'a> DerefMut for ResultSet<'a> {
+    fn deref_mut(&mut self) -> &mut <Self as Deref>::Target {
+        &mut self.layer
+    }
+}
+
 impl<'a> Drop for ResultSet<'a> {
     fn drop(&mut self) {
         unsafe { gdal_sys::GDALDatasetReleaseResultSet(self.dataset, self.layer.c_layer()) };
@@ -29,6 +35,7 @@ impl<'a> Drop for ResultSet<'a> {
 
 /// Represents valid SQL dialects to use in SQL queries. See
 /// <https://gdal.org/user/ogr_sql_sqlite_dialect.html>
+#[allow(clippy::upper_case_acronyms)]
 pub enum Dialect {
     /// Use the default dialect. This is OGR SQL unless the underlying driver has a native dialect,
     /// such as MySQL, Postgres, Oracle, etc.

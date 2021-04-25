@@ -1,5 +1,6 @@
 use crate::dataset::Dataset;
 use crate::metadata::Metadata;
+use crate::raster::rasterband::ResampleAlg;
 use crate::raster::{ByteBuffer, ColorInterpretation};
 use crate::Driver;
 use gdal_sys::GDALDataType;
@@ -73,15 +74,48 @@ fn test_get_projection() {
 fn test_read_raster() {
     let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
     let rb = dataset.rasterband(1).unwrap();
-    let rv = rb.read_as::<u8>((20, 30), (2, 3), (2, 3)).unwrap();
+    let rv = rb.read_as::<u8>((20, 30), (2, 3), (2, 3), None).unwrap();
     assert_eq!(rv.size.0, 2);
     assert_eq!(rv.size.1, 3);
     assert_eq!(rv.data, vec!(7, 7, 7, 10, 8, 12));
 
     let mut buf = rv;
-    rb.read_into_slice((20, 30), (2, 3), (2, 3), &mut buf.data)
+    rb.read_into_slice((20, 30), (2, 3), (2, 3), &mut buf.data, None)
         .unwrap();
     assert_eq!(buf.data, vec!(7, 7, 7, 10, 8, 12));
+}
+
+#[test]
+fn test_read_raster_with_default_resample() {
+    let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
+    let rb = dataset.rasterband(1).unwrap();
+    let rv = rb.read_as::<u8>((20, 30), (4, 4), (2, 2), None).unwrap();
+    assert_eq!(rv.size.0, 2);
+    assert_eq!(rv.size.1, 2);
+    assert_eq!(rv.data, vec!(10, 4, 6, 11));
+
+    let mut buf = rv;
+    rb.read_into_slice((20, 30), (4, 4), (2, 2), &mut buf.data, None)
+        .unwrap();
+    assert_eq!(buf.data, vec!(10, 4, 6, 11));
+}
+
+#[test]
+fn test_read_raster_with_average_resample() {
+    let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
+    let rb = dataset.rasterband(1).unwrap();
+    let resample_alg = ResampleAlg::Average;
+    let rv = rb
+        .read_as::<u8>((20, 30), (4, 4), (2, 2), Some(resample_alg))
+        .unwrap();
+    assert_eq!(rv.size.0, 2);
+    assert_eq!(rv.size.1, 2);
+    assert_eq!(rv.data, vec!(8, 6, 8, 12));
+
+    let mut buf = rv;
+    rb.read_into_slice((20, 30), (4, 4), (2, 2), &mut buf.data, Some(resample_alg))
+        .unwrap();
+    assert_eq!(buf.data, vec!(8, 6, 8, 12));
 }
 
 #[test]
@@ -96,18 +130,18 @@ fn test_write_raster() {
     };
 
     // epand it to fill the image (20x10)
-    let rb = dataset.rasterband(1).unwrap();
+    let mut rb = dataset.rasterband(1).unwrap();
 
     let res = rb.write((0, 0), (20, 10), &raster);
 
     assert!(res.is_ok());
 
     // read a pixel from the left side
-    let left = rb.read_as::<u8>((5, 5), (1, 1), (1, 1)).unwrap();
+    let left = rb.read_as::<u8>((5, 5), (1, 1), (1, 1), None).unwrap();
     assert_eq!(left.data[0], 50u8);
 
     // read a pixel from the right side
-    let right = rb.read_as::<u8>((15, 5), (1, 1), (1, 1)).unwrap();
+    let right = rb.read_as::<u8>((15, 5), (1, 1), (1, 1), None).unwrap();
     assert_eq!(right.data[0], 20u8);
 }
 
@@ -218,7 +252,7 @@ fn test_create_copy() {
 #[allow(clippy::float_cmp)]
 fn test_geo_transform() {
     let driver = Driver::get("MEM").unwrap();
-    let dataset = driver.create("", 20, 10, 1).unwrap();
+    let mut dataset = driver.create("", 20, 10, 1).unwrap();
     let transform = [0., 1., 0., 0., 0., 1.];
     assert!(dataset.set_geo_transform(&transform).is_ok());
     assert_eq!(dataset.geo_transform().unwrap(), transform);
@@ -240,7 +274,7 @@ fn test_get_driver_by_name() {
 fn test_read_raster_as() {
     let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
     let rb = dataset.rasterband(1).unwrap();
-    let rv = rb.read_as::<u8>((20, 30), (2, 3), (2, 3)).unwrap();
+    let rv = rb.read_as::<u8>((20, 30), (2, 3), (2, 3), None).unwrap();
     assert_eq!(rv.data, vec!(7, 7, 7, 10, 8, 12));
     assert_eq!(rv.size.0, 2);
     assert_eq!(rv.size.1, 3);
@@ -261,6 +295,7 @@ fn test_read_raster_as_array() {
             (left, top),
             (window_size_x, window_size_y),
             (array_size_x, array_size_y),
+            None,
         )
         .unwrap();
 
@@ -360,7 +395,7 @@ fn test_get_no_data_value() {
 fn test_set_no_data_value() {
     let driver = Driver::get("MEM").unwrap();
     let dataset = driver.create("", 20, 10, 1).unwrap();
-    let rasterband = dataset.rasterband(1).unwrap();
+    let mut rasterband = dataset.rasterband(1).unwrap();
     assert_eq!(rasterband.no_data_value(), None);
     assert!(rasterband.set_no_data_value(1.23).is_ok());
     assert_eq!(rasterband.no_data_value(), Some(1.23));
