@@ -14,6 +14,7 @@ use std::{convert::TryInto, ffi::CString, marker::PhantomData};
 use crate::errors::*;
 
 /// Layer capabilities
+#[allow(clippy::upper_case_acronyms)]
 pub enum LayerCaps {
     /// Layer capability for random read
     OLCRandomRead,
@@ -86,8 +87,8 @@ impl LayerCaps {
 /// use std::path::Path;
 /// use gdal::Dataset;
 ///
-/// let mut dataset = Dataset::open(Path::new("fixtures/roads.geojson")).unwrap();
-/// let layer = dataset.layer(0).unwrap();
+/// let dataset = Dataset::open(Path::new("fixtures/roads.geojson")).unwrap();
+/// let mut layer = dataset.layer(0).unwrap();
 /// for feature in layer.features() {
 ///     // do something with each feature
 /// }
@@ -137,10 +138,6 @@ impl<'a> Layer<'a> {
     /// Not all drivers support this efficiently; however, the call should always work if the
     /// feature exists, as a fallback implementation just scans all the features in the layer
     /// looking for the desired feature.
-    ///
-    /// **Important**: do not call `feature` while iterating over features using the
-    /// [`features`](Layer::features) function. Even if you don't mutate anything, this can cause
-    /// the the iterator to get interrupted. This is a limitation of the GDAL library.
     pub fn feature(&self, fid: u64) -> Option<Feature> {
         let c_feature = unsafe { gdal_sys::OGR_L_GetFeature(self.c_layer, fid as i64) };
         if c_feature.is_null() {
@@ -150,16 +147,25 @@ impl<'a> Layer<'a> {
         }
     }
 
-    /// Iterate over all features in this layer.
-    pub fn features(&self) -> FeatureIterator {
+    /// Returns iterator over the features in this layer.
+    ///
+    /// **Note.** This method resets the current index to
+    /// the beginning before iteration. It also borrows the
+    /// layer mutably, preventing any overlapping borrows.
+    pub fn features(&mut self) -> FeatureIterator {
+        self.reset_feature_reading();
         FeatureIterator::_with_layer(self)
     }
 
-    pub fn set_spatial_filter(&self, geometry: &Geometry) {
+    /// Set a spatial filter on this layer.
+    ///
+    /// Refer [OGR_L_SetSpatialFilter](https://gdal.org/doxygen/classOGRLayer.html#a75c06b4993f8eb76b569f37365cd19ab)
+    pub fn set_spatial_filter(&mut self, geometry: &Geometry) {
         unsafe { gdal_sys::OGR_L_SetSpatialFilter(self.c_layer, geometry.c_geometry()) };
     }
 
-    pub fn clear_spatial_filter(&self) {
+    /// Clear spatial filters set on this layer.
+    pub fn clear_spatial_filter(&mut self) {
         unsafe { gdal_sys::OGR_L_SetSpatialFilter(self.c_layer, null_mut()) };
     }
 
@@ -308,6 +314,9 @@ impl<'a> Layer<'a> {
         }
     }
 
+    /// Fetch the spatial reference system for this layer.
+    ///
+    /// Refer [OGR_L_GetSpatialRef](https://gdal.org/doxygen/classOGRLayer.html#a75c06b4993f8eb76b569f37365cd19ab)
     pub fn spatial_ref(&self) -> Result<SpatialRef> {
         let c_obj = unsafe { gdal_sys::OGR_L_GetSpatialRef(self.c_layer) };
         if c_obj.is_null() {
@@ -315,10 +324,18 @@ impl<'a> Layer<'a> {
         }
         SpatialRef::from_c_obj(c_obj)
     }
+
+    fn reset_feature_reading(&mut self) {
+        unsafe {
+            gdal_sys::OGR_L_ResetReading(self.c_layer);
+        }
+    }
 }
 
 pub struct FeatureIterator<'a> {
-    layer: &'a Layer<'a>,
+    defn: &'a Defn,
+    c_layer: OGRLayerH,
+    size_hint: Option<usize>,
 }
 
 impl<'a> Iterator for FeatureIterator<'a> {
@@ -326,21 +343,16 @@ impl<'a> Iterator for FeatureIterator<'a> {
 
     #[inline]
     fn next(&mut self) -> Option<Feature<'a>> {
-        let c_feature = unsafe { gdal_sys::OGR_L_GetNextFeature(self.layer.c_layer) };
+        let c_feature = unsafe { gdal_sys::OGR_L_GetNextFeature(self.c_layer) };
         if c_feature.is_null() {
             None
         } else {
-            Some(unsafe { Feature::from_c_feature(self.layer.defn(), c_feature) })
+            Some(unsafe { Feature::from_c_feature(self.defn, c_feature) })
         }
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        match self
-            .layer
-            .try_feature_count()
-            .map(|s| s.try_into().ok())
-            .flatten()
-        {
+        match self.size_hint {
             Some(size) => (size, Some(size)),
             None => (0, None),
         }
@@ -349,7 +361,16 @@ impl<'a> Iterator for FeatureIterator<'a> {
 
 impl<'a> FeatureIterator<'a> {
     pub fn _with_layer(layer: &'a Layer) -> FeatureIterator<'a> {
-        FeatureIterator { layer }
+        let defn = layer.defn();
+        let size_hint = layer
+            .try_feature_count()
+            .map(|s| s.try_into().ok())
+            .flatten();
+        FeatureIterator {
+            c_layer: layer.c_layer,
+            size_hint,
+            defn,
+        }
     }
 }
 

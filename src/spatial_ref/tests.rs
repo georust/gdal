@@ -58,10 +58,10 @@ fn comparison() {
     let spatial_ref4 = SpatialRef::from_proj4("+proj=longlat +datum=WGS84 +no_defs ").unwrap();
     let spatial_ref5 = SpatialRef::from_esri("GEOGCS[\"GCS_WGS_1984\",DATUM[\"D_WGS_1984\",SPHEROID[\"WGS_1984\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.017453292519943295]]").unwrap();
 
-    assert_eq!(true, spatial_ref1 == spatial_ref2);
-    assert_eq!(false, spatial_ref2 == spatial_ref3);
-    assert_eq!(true, spatial_ref4 == spatial_ref2);
-    assert_eq!(true, spatial_ref5 == spatial_ref4);
+    assert!(spatial_ref1 == spatial_ref2);
+    assert!(spatial_ref2 != spatial_ref3);
+    assert!(spatial_ref4 == spatial_ref2);
+    assert!(spatial_ref5 == spatial_ref4);
 }
 
 #[test]
@@ -155,7 +155,7 @@ fn failing_transformation() {
 
     let trafo = CoordTransform::new(&wgs84, &dhd_2).unwrap();
     let r = trafo.transform_coords(&mut x, &mut y, &mut z);
-    assert_eq!(r.is_err(), true);
+    assert!(r.is_err());
 
     let wgs84 = SpatialRef::from_epsg(4326).unwrap();
     let webmercator = SpatialRef::from_epsg(3857).unwrap();
@@ -174,7 +174,7 @@ fn failing_transformation() {
     let trafo = CoordTransform::new(&wgs84, &webmercator).unwrap();
     let r = trafo.transform_coords(&mut x, &mut y, &mut z);
 
-    assert_eq!(r.is_err(), true);
+    assert!(r.is_err());
     if let GdalError::InvalidCoordinateRange { .. } = r.unwrap_err() {
         // assert_eq!(msg, &Some("latitude or longitude exceeded limits".into()));
     } else {
