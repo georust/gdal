@@ -81,8 +81,8 @@ impl Default for RasterIOExtraArg {
     }
 }
 
-impl Into<GDALRasterIOExtraArg> for RasterIOExtraArg {
-    fn into(self) -> GDALRasterIOExtraArg {
+impl From<RasterIOExtraArg> for GDALRasterIOExtraArg {
+    fn from(arg: RasterIOExtraArg) -> Self {
         let RasterIOExtraArg {
             n_version,
             e_resample_alg,
@@ -93,7 +93,7 @@ impl Into<GDALRasterIOExtraArg> for RasterIOExtraArg {
             df_y_off,
             df_x_size,
             df_y_size,
-        } = self;
+        } = arg;
 
         GDALRasterIOExtraArg {
             nVersion: n_version as c_int,
