@@ -14,6 +14,7 @@ use std::{convert::TryInto, ffi::CString, marker::PhantomData};
 use crate::errors::*;
 
 /// Layer capabilities
+#[allow(clippy::upper_case_acronyms)]
 pub enum LayerCaps {
     /// Layer capability for random read
     OLCRandomRead,
