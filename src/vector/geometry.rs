@@ -89,6 +89,28 @@ impl Geometry {
         Ok(unsafe { Geometry::with_c_geometry(c_geom, true) })
     }
 
+    /// Creates a geometry by parsing a slice of bytes in
+    /// [WKB](https://en.wikipedia.org/wiki/Well-known_text_representation_of_geometry#Well-known_binary)
+    /// (Well-Known Binary) format.
+    pub fn from_wkb(wkb: &[u8]) -> Result<Geometry> {
+        let mut c_geom = null_mut();
+        let rv = unsafe {
+            gdal_sys::OGR_G_CreateFromWkb(
+                wkb.as_ptr() as *const std::ffi::c_void,
+                null_mut(),
+                &mut c_geom,
+                wkb.len() as i32,
+            )
+        };
+        if rv != gdal_sys::OGRErr::OGRERR_NONE {
+            return Err(GdalError::OgrError {
+                err: rv,
+                method_name: "OGR_G_CreateFromWkb",
+            });
+        }
+        Ok(unsafe { Geometry::with_c_geometry(c_geom, true) })
+    }
+
     /// Create a rectangular geometry from West, South, East and North values.
     pub fn bbox(w: f64, s: f64, e: f64, n: f64) -> Result<Geometry> {
         Geometry::from_wkt(&format!(
@@ -121,6 +143,26 @@ impl Geometry {
         let wkt = _string(c_wkt);
         unsafe { gdal_sys::OGRFree(c_wkt as *mut c_void) };
         Ok(wkt)
+    }
+
+    /// Serializes the geometry to
+    /// [WKB](https://en.wikipedia.org/wiki/Well-known_text_representation_of_geometry#Well-known_binary)
+    /// (Well-Known Binary) format.
+    pub fn wkb(&self) -> Result<Vec<u8>> {
+        let wkb_size = unsafe { gdal_sys::OGR_G_WkbSize(self.c_geometry()) as usize };
+        // We default to little-endian for now. A WKB string explicitly indicates the byte
+        // order, so this is not a problem for interoperability.
+        let byte_order = gdal_sys::OGRwkbByteOrder::wkbNDR;
+        let mut wkb = vec![0; wkb_size];
+        let rv =
+            unsafe { gdal_sys::OGR_G_ExportToWkb(self.c_geometry(), byte_order, wkb.as_mut_ptr()) };
+        if rv != gdal_sys::OGRErr::OGRERR_NONE {
+            return Err(GdalError::OgrError {
+                err: rv,
+                method_name: "OGR_G_ExportToWkb",
+            });
+        }
+        Ok(wkb)
     }
 
     /// Returns a C pointer to the wrapped Geometry
@@ -459,5 +501,14 @@ mod tests {
         let srs = SpatialRef::from_epsg(4326).unwrap();
         geom.set_spatial_ref(srs);
         assert!(geom.spatial_ref().is_some());
+    }
+
+    #[test]
+    pub fn test_wkb() {
+        let wkt = "POLYGON ((45.0 45.0, 45.0 50.0, 50.0 50.0, 50.0 45.0, 45.0 45.0))";
+        let orig_geom = Geometry::from_wkt(wkt).unwrap();
+        let wkb = orig_geom.wkb().unwrap();
+        let new_geom = Geometry::from_wkb(&wkb).unwrap();
+        assert_eq!(new_geom, orig_geom);
     }
 }

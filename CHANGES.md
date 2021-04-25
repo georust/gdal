@@ -111,11 +111,14 @@
   - <https://github.com/georust/gdal/pull/146>
 - Deprecated `SpatialRef::get_axis_mapping_strategy` - migrate to
   `SpatialRef::axis_mapping_strategy` instead.
-
 - Add support for reading and setting rasterband colour interpretations
   - <https://github.com/georust/gdal/pull/144>
+- Add `Geometry::from_wkb` and `Geometry::wkb` functions to convert from/to
+  Well-Known Binary
+  - <https://github.com/georust/gdal/pull/173>
 - Fixed memory leak in `Geometry::from_wkt`
   - <https://github.com/georust/gdal/pull/172>
+
 
 ## 0.7.1
 
