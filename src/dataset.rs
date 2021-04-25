@@ -253,7 +253,7 @@ impl Dataset {
     }
 
     /// Set the projection reference string for this dataset.
-    pub fn set_projection(&self, projection: &str) -> Result<()> {
+    pub fn set_projection(&mut self, projection: &str) -> Result<()> {
         let c_projection = CString::new(projection)?;
         unsafe { gdal_sys::GDALSetProjection(self.c_dataset, c_projection.as_ptr()) };
         Ok(())
@@ -267,7 +267,7 @@ impl Dataset {
 
     #[cfg(major_ge_3)]
     /// Set the spatial reference system for this dataset.
-    pub fn set_spatial_ref(&self, spatial_ref: &SpatialRef) -> Result<()> {
+    pub fn set_spatial_ref(&mut self, spatial_ref: &SpatialRef) -> Result<()> {
         let rv = unsafe { gdal_sys::GDALSetSpatialRef(self.c_dataset, spatial_ref.to_c_hsrs()) };
         if rv != CPLErr::CE_None {
             return Err(_last_cpl_err(rv));
@@ -362,7 +362,7 @@ impl Dataset {
     ///
     /// Applies to vector datasets, and fetches by the given
     /// _0-based_ index.
-    pub fn layer(&mut self, idx: isize) -> Result<Layer> {
+    pub fn layer(&self, idx: isize) -> Result<Layer> {
         let c_layer = unsafe { gdal_sys::OGR_DS_GetLayer(self.c_dataset, idx as c_int) };
         if c_layer.is_null() {
             return Err(_last_null_pointer_err("OGR_DS_GetLayer"));
@@ -371,7 +371,7 @@ impl Dataset {
     }
 
     /// Fetch a layer by name.
-    pub fn layer_by_name(&mut self, name: &str) -> Result<Layer> {
+    pub fn layer_by_name(&self, name: &str) -> Result<Layer> {
         let c_name = CString::new(name)?;
         let c_layer = unsafe { gdal_sys::OGR_DS_GetLayerByName(self.c_dataset(), c_name.as_ptr()) };
         if c_layer.is_null() {
@@ -437,7 +437,7 @@ impl Dataset {
     /// y-coordinate of the top-left corner pixel
     /// column rotation (typically zero)
     /// height of a pixel (y-resolution, typically negative)
-    pub fn set_geo_transform(&self, transformation: &GeoTransform) -> Result<()> {
+    pub fn set_geo_transform(&mut self, transformation: &GeoTransform) -> Result<()> {
         assert_eq!(transformation.len(), 6);
         let rv = unsafe {
             gdal_sys::GDALSetGeoTransform(self.c_dataset, transformation.as_ptr() as *mut f64)
@@ -567,7 +567,7 @@ impl Dataset {
     ///
     /// let ds = Dataset::open(Path::new("fixtures/roads.geojson")).unwrap();
     /// let query = "SELECT kind, is_bridge, highway FROM roads WHERE highway = 'pedestrian'";
-    /// let result_set = ds.execute_sql(query, None, sql::Dialect::DEFAULT).unwrap().unwrap();
+    /// let mut result_set = ds.execute_sql(query, None, sql::Dialect::DEFAULT).unwrap().unwrap();
     ///
     /// assert_eq!(10, result_set.feature_count());
     ///

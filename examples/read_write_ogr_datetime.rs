@@ -8,8 +8,8 @@ fn run() -> gdal::errors::Result<()> {
 
     println!("gdal crate was build with datetime support");
 
-    let mut dataset_a = Dataset::open(Path::new("fixtures/points_with_datetime.json"))?;
-    let layer_a = dataset_a.layer(0)?;
+    let dataset_a = Dataset::open(Path::new("fixtures/points_with_datetime.json"))?;
+    let mut layer_a = dataset_a.layer(0)?;
 
     // Create a new dataset:
     let path = std::env::temp_dir().join("later.geojson");

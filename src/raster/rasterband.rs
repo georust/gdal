@@ -209,7 +209,7 @@ impl<'a> RasterBand<'a> {
     /// * window - the window position from top left
     /// * window_size - the window size (GDAL will interpolate data if window_size != Buffer.size)
     pub fn write<T: GdalType + Copy>(
-        &self,
+        &mut self,
         window: (isize, isize),
         window_size: (usize, usize),
         buffer: &Buffer<T>,
@@ -254,7 +254,7 @@ impl<'a> RasterBand<'a> {
     }
 
     /// Set the no data value of this band.
-    pub fn set_no_data_value(&self, no_data: f64) -> Result<()> {
+    pub fn set_no_data_value(&mut self, no_data: f64) -> Result<()> {
         let rv = unsafe { gdal_sys::GDALSetRasterNoDataValue(self.c_rasterband, no_data) };
         if rv != CPLErr::CE_None {
             return Err(_last_cpl_err(rv));
