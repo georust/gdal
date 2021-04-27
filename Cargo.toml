@@ -2,7 +2,7 @@
 name = "gdal"
 description = "GDAL bindings for Rust"
 license = "MIT"
-version = "0.7.2"
+version = "0.8.0"
 authors = [
     "Alex Morega <alex@grep.ro>",
     "Johannes Drönner <droenner@informatik.uni-marburg.de>"
