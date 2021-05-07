@@ -19,7 +19,7 @@ fn run() -> Result<()> {
     let _ = fs::remove_file(&path);
     let drv = Driver::get("ESRI Shapefile")?;
     let mut ds = drv.create_vector_only(path.to_str().unwrap())?;
-    let lyr = ds.create_layer_blank()?;
+    let lyr = ds.create_layer(Default::default())?;
 
     // Copy the origin layer shema to the destination layer:
     for fd in &fields_defn {

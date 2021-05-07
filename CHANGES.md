@@ -119,6 +119,30 @@
 - Fixed memory leak in `Geometry::from_wkt`
   - <https://github.com/georust/gdal/pull/172>
 
+- **Breaking**: Changed `Dataset::create_layer` to take a new `LayerOptions`
+  struct instead of separate arguments.
+
+  Before:
+
+  ```rust
+  ds.create_layer("roads", None, wkbLineString)
+  ```
+
+  After (all fields have usable default values):
+
+  ```rust
+  use gdal::LayerOptions;
+  ds.create_layer(LayerOptions {
+    name: "roads",
+    ty: wkbLineString,
+    ..Default::default()
+  });
+  ```
+
+  This change also removed `Dataset::create_layer_blank()`. Use
+  `Dataset::create_layer(Default::default())` instead.
+
+  - <https://github.com/georust/gdal/pull/186>
 
 ## 0.7.1
 

@@ -121,6 +121,33 @@ pub struct DatasetOptions<'a> {
     pub sibling_files: Option<&'a [&'a str]>,
 }
 
+/// Parameters for [`Dataset::create_layer`].
+#[derive(Clone, Debug)]
+pub struct LayerOptions<'a> {
+    /// The name of the newly created layer. May be an empty string.
+    pub name: &'a str,
+    /// The SRS of the newly created layer, or `None` for no SRS.
+    pub srs: Option<&'a SpatialRef>,
+    /// The type of geometry for the new layer.
+    pub ty: OGRwkbGeometryType::Type,
+    /// Additional driver-specific options to pass to GDAL, in the form `name=value`.
+    pub options: Option<&'a [&'a str]>,
+}
+
+const EMPTY_LAYER_NAME: &str = "";
+
+impl<'a> Default for LayerOptions<'a> {
+    /// Returns creation options for a new layer with no name, no SRS and unknown geometry type.
+    fn default() -> Self {
+        LayerOptions {
+            name: EMPTY_LAYER_NAME,
+            srs: None,
+            ty: OGRwkbGeometryType::wkbUnknown,
+            options: None,
+        }
+    }
+}
+
 // GDAL Docs state: The returned dataset should only be accessed by one thread at a time.
 // See: https://gdal.org/api/raster_c_api.html#_CPPv48GDALOpenPKc10GDALAccess
 // Additionally, VRT Datasets are not safe before GDAL 2.3.
@@ -397,26 +424,72 @@ impl Dataset {
         (size_x, size_y)
     }
 
-    /// Create a new layer with a blank name, no `SpatialRef`, and without (wkbUnknown) geometry type.
-    pub fn create_layer_blank(&mut self) -> Result<Layer> {
-        self.create_layer("", None, OGRwkbGeometryType::wkbUnknown)
-    }
-
-    /// Create a new layer with a name, an optional `SpatialRef`, and a geometry type.
-    pub fn create_layer(
-        &mut self,
-        name: &str,
-        srs: Option<&SpatialRef>,
-        ty: OGRwkbGeometryType::Type,
-    ) -> Result<Layer> {
-        let c_name = CString::new(name)?;
-        let c_srs = match srs {
+    /// Creates a new layer. The [`LayerOptions`] struct implements `Default`, so you only need to
+    /// specify those options that deviate from the default.
+    ///
+    /// # Examples
+    ///
+    /// Create a new layer with an empty name, no spatial reference, and unknown geometry type:
+    ///
+    /// ```
+    /// # use gdal::Driver;
+    /// # let driver = Driver::get("GPKG").unwrap();
+    /// # let mut dataset = driver.create_vector_only("/vsimem/example.gpkg").unwrap();
+    /// let blank_layer = dataset.create_layer(Default::default()).unwrap();
+    /// ```
+    ///
+    /// Create a new named line string layer using WGS84:
+    ///
+    /// ```
+    /// # use gdal::{Driver, LayerOptions};
+    /// # use gdal::spatial_ref::SpatialRef;
+    /// # let driver = Driver::get("GPKG").unwrap();
+    /// # let mut dataset = driver.create_vector_only("/vsimem/example.gpkg").unwrap();
+    /// let roads = dataset.create_layer(LayerOptions {
+    ///     name: "roads",
+    ///     srs: Some(&SpatialRef::from_epsg(4326).unwrap()),
+    ///     ty: gdal_sys::OGRwkbGeometryType::wkbLineString,
+    ///     ..Default::default()
+    /// }).unwrap();
+    /// ```
+    pub fn create_layer<'a>(&mut self, options: LayerOptions<'a>) -> Result<Layer> {
+        let c_name = CString::new(options.name)?;
+        let c_srs = match options.srs {
             Some(srs) => srs.to_c_hsrs(),
             None => null_mut(),
         };
 
+        // Handle string options: we need to keep the CStrings and the pointers around.
+        let c_options = options.options.map(|d| {
+            d.iter()
+                .map(|&s| CString::new(s))
+                .collect::<std::result::Result<Vec<CString>, NulError>>()
+        });
+        let c_options_vec = match c_options {
+            Some(Err(e)) => return Err(e.into()),
+            Some(Ok(c_options_vec)) => c_options_vec,
+            None => Vec::from([]),
+        };
+        let mut c_options_ptrs = c_options_vec.iter().map(|s| s.as_ptr()).collect::<Vec<_>>();
+        c_options_ptrs.push(ptr::null());
+
+        let c_options_ptr = if options.options.is_some() {
+            c_options_ptrs.as_ptr()
+        } else {
+            ptr::null()
+        };
+
         let c_layer = unsafe {
-            gdal_sys::OGR_DS_CreateLayer(self.c_dataset, c_name.as_ptr(), c_srs, ty, null_mut())
+            // The C function takes `char **papszOptions` without mention of `const`, and this is
+            // propagated to the gdal_sys wrapper. The lack of `const` seems like a mistake in the
+            // GDAL API, so we just do a cast here.
+            gdal_sys::OGR_DS_CreateLayer(
+                self.c_dataset,
+                c_name.as_ptr(),
+                c_srs,
+                options.ty,
+                c_options_ptr as *mut *mut i8,
+            )
         };
         if c_layer.is_null() {
             return Err(_last_null_pointer_err("OGR_DS_CreateLayer"));
@@ -501,7 +574,7 @@ impl Dataset {
     /// Example:
     ///
     /// ```
-    /// # use gdal::Dataset;
+    /// # use gdal::{Dataset, LayerOptions};
     /// #
     /// fn create_point_grid(dataset: &mut Dataset) -> gdal::errors::Result<()> {
     ///     use gdal::vector::Geometry;
@@ -509,8 +582,11 @@ impl Dataset {
     ///     // Start the transaction.
     ///     let mut txn = dataset.start_transaction()?;
     ///
-    ///     let mut layer = txn.dataset_mut()
-    ///         .create_layer("grid", None, gdal_sys::OGRwkbGeometryType::wkbPoint)?;
+    ///     let mut layer = txn.dataset_mut().create_layer(LayerOptions {
+    ///         name: "grid",
+    ///         ty: gdal_sys::OGRwkbGeometryType::wkbPoint,
+    ///         ..Default::default()
+    ///     })?;
     ///     for y in 0..100 {
     ///         for x in 0..100 {
     ///             let wkt = format!("POINT ({} {})", x, y);
@@ -933,6 +1009,21 @@ mod tests {
     fn test_raster_count_on_vector() {
         let ds = Dataset::open(fixture!("roads.geojson")).unwrap();
         assert_eq!(ds.raster_count(), 0);
+    }
+
+    #[test]
+    fn test_create_layer_options() {
+        use gdal_sys::OGRwkbGeometryType::wkbPoint;
+        let (_temp_path, mut ds) = open_gpkg_for_update(fixture!("poly.gpkg"));
+        let mut options = LayerOptions {
+            name: "new",
+            ty: wkbPoint,
+            ..Default::default()
+        };
+        ds.create_layer(options.clone()).unwrap();
+        assert!(ds.create_layer(options.clone()).is_err());
+        options.options = Some(&["OVERWRITE=YES"]);
+        assert!(ds.create_layer(options).is_ok());
     }
 
     #[test]

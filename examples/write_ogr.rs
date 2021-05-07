@@ -10,7 +10,7 @@ fn example_1() -> Result<()> {
     let drv = Driver::get("GeoJSON")?;
     let mut ds = drv.create_vector_only(path.to_str().unwrap())?;
 
-    let lyr = ds.create_layer_blank()?;
+    let lyr = ds.create_layer(Default::default())?;
 
     let field_defn = FieldDefn::new("Name", OGRFieldType::OFTString)?;
     field_defn.set_width(80);
@@ -54,7 +54,7 @@ fn example_2() -> Result<()> {
     let _ = fs::remove_file(&path);
     let driver = Driver::get("GeoJSON")?;
     let mut ds = driver.create_vector_only(path.to_str().unwrap())?;
-    let mut layer = ds.create_layer_blank()?;
+    let mut layer = ds.create_layer(Default::default())?;
 
     layer.create_defn_fields(&[
         ("Name", OGRFieldType::OFTString),
