@@ -47,6 +47,14 @@ impl<'a> Feature<'a> {
         }
     }
 
+    /// Returns the C wrapped pointer
+    ///
+    /// # Safety
+    /// This method returns a raw C pointer
+    pub unsafe fn c_feature(&self) -> OGRFeatureH {
+        self.c_feature
+    }
+
     pub fn _lazy_feature_geometries(defn: &'a Defn) -> Vec<Geometry> {
         let geom_field_count =
             unsafe { gdal_sys::OGR_FD_GetGeomFieldCount(defn.c_defn()) } as isize;
