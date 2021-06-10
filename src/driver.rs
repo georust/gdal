@@ -4,7 +4,7 @@ use crate::metadata::Metadata;
 use crate::raster::GdalType;
 use crate::utils::{_last_null_pointer_err, _string};
 use gdal_sys::{self, GDALDriverH, GDALMajorObjectH};
-use libc::c_int;
+use libc::{c_int, c_char};
 use std::ffi::CString;
 use std::ptr::null_mut;
 use std::sync::Once;
@@ -24,6 +24,20 @@ pub fn _register_drivers() {
 #[allow(missing_copy_implementations)]
 pub struct Driver {
     c_driver: GDALDriverH,
+}
+
+type CSLConstList = *mut *mut c_char;
+
+extern "C" {
+    fn CSLSetNameValue(
+        papszOptions: CSLConstList,
+        pszName: *const libc::c_char,
+        pszValue: *const libc::c_char) -> *mut *mut libc::c_char;
+}
+
+pub struct RasterCreationOption<'a>{
+    key : &'a str,
+    value : &'a str,
 }
 
 impl Driver {
@@ -97,6 +111,44 @@ impl Driver {
         };
         Ok(unsafe { Dataset::from_c_dataset(c_dataset) })
     }
+
+    pub fn create_with_band_type_with_options<T: GdalType>(
+        &self,
+        filename: &str,
+        size_x: isize,
+        size_y: isize,
+        bands: isize,
+        options: Vec<RasterCreationOption>,
+    ) -> Result<Dataset> {
+
+        // process options:
+        let mut options_c = null_mut();
+        for option in options{
+            let psz_name  = CString::new(option.key)?;
+            let psz_value = CString::new(option.value)?;
+            unsafe{
+                options_c = CSLSetNameValue(options_c, psz_name.as_ptr(), psz_value.as_ptr());
+            }
+        }
+
+        let c_filename = CString::new(filename)?;
+        let c_dataset = unsafe {
+            gdal_sys::GDALCreate(
+                self.c_driver,
+                c_filename.as_ptr(),
+                size_x as c_int,
+                size_y as c_int,
+                bands as c_int,
+                T::gdal_type(),
+                options_c as *mut *mut i8,
+            )
+        };
+        if c_dataset.is_null() {
+            return Err(_last_null_pointer_err("GDALCreate"));
+        };
+        Ok(unsafe { Dataset::from_c_dataset(c_dataset) })
+    }
+
 
     pub fn create_vector_only(&self, filename: &str) -> Result<Dataset> {
         self.create_with_band_type::<u8>(filename, 0, 0, 0)
