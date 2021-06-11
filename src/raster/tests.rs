@@ -249,6 +249,7 @@ fn test_create_with_band_type_with_options() {
         RasterCreationOption{key:"BLOCKYSIZE", value: "64"},
         RasterCreationOption{key:"COMPRESS", value:"LZW"} ,
         RasterCreationOption{key:"INTERLEAVE", value:"BAND"} ,
+        
         ] ;
 
     let dataset = driver.create_with_band_type_with_options::<u8>("/tmp/test.tif",
@@ -267,26 +268,11 @@ fn test_create_with_band_type_with_options() {
     let domain = "IMAGE_STRUCTURE";
     let meta = dataset.metadata_item(key, domain);
     assert_eq!(meta, Some(String::from("BAND")));
-
     let key = "COMPRESS";
     let domain = "IMAGE_STRUCTURE";
     let meta = dataset.metadata_item(key, domain);
     assert_eq!(meta, Some(String::from("LZW")));   
-    
-    // > gdalinfo /tmp/test.tif 
-    // Driver: GTiff/GeoTIFF
-    // Files: /tmp/test.tif
-    // Size is 256, 256
-    // Image Structure Metadata:
-    //   COMPRESSION=LZW
-    //   INTERLEAVE=BAND
-    // Corner Coordinates:
-    // Upper Left  (    0.0,    0.0)
-    // Lower Left  (    0.0,  256.0)
-    // Upper Right (  256.0,    0.0)
-    // Lower Right (  256.0,  256.0)
-    // Center      (  128.0,  128.0)
-    // Band 1 Block=128x64 Type=Byte, ColorInterp=Gray
+
         }
 
 #[test]
