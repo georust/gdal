@@ -1,4 +1,5 @@
 use crate::dataset::Dataset;
+use crate::driver::RasterCreationOption;
 use crate::metadata::Metadata;
 use crate::raster::rasterband::ResampleAlg;
 use crate::raster::{ByteBuffer, ColorInterpretation};
@@ -238,6 +239,55 @@ fn test_create_with_band_type() {
     let rb = dataset.rasterband(1).unwrap();
     assert_eq!(rb.band_type(), GDALDataType::GDT_Float32)
 }
+
+#[test]
+fn test_create_with_band_type_with_options() {
+    let driver = Driver::get("GTiff").unwrap();
+    let options = vec![
+        RasterCreationOption{key:"TILED", value: "YES"},
+        RasterCreationOption{key:"BLOCKXSIZE", value: "128"},
+        RasterCreationOption{key:"BLOCKYSIZE", value: "64"},
+        RasterCreationOption{key:"COMPRESS", value:"LZW"} ,
+        RasterCreationOption{key:"INTERLEAVE", value:"BAND"} ,
+        ] ;
+
+    let dataset = driver.create_with_band_type_with_options::<u8>("/tmp/test.tif",
+                     256,
+                      256,
+                      1,
+                     options).unwrap();
+
+    
+    let rasterband = dataset.rasterband(1).unwrap();
+    let block_size = rasterband.block_size();
+    assert_eq!(block_size, (128,64));
+
+    
+    let key = "INTERLEAVE";
+    let domain = "IMAGE_STRUCTURE";
+    let meta = dataset.metadata_item(key, domain);
+    assert_eq!(meta, Some(String::from("BAND")));
+
+    let key = "COMPRESS";
+    let domain = "IMAGE_STRUCTURE";
+    let meta = dataset.metadata_item(key, domain);
+    assert_eq!(meta, Some(String::from("LZW")));   
+    
+    // > gdalinfo /tmp/test.tif 
+    // Driver: GTiff/GeoTIFF
+    // Files: /tmp/test.tif
+    // Size is 256, 256
+    // Image Structure Metadata:
+    //   COMPRESSION=LZW
+    //   INTERLEAVE=BAND
+    // Corner Coordinates:
+    // Upper Left  (    0.0,    0.0)
+    // Lower Left  (    0.0,  256.0)
+    // Upper Right (  256.0,    0.0)
+    // Lower Right (  256.0,  256.0)
+    // Center      (  128.0,  128.0)
+    // Band 1 Block=128x64 Type=Byte, ColorInterp=Gray
+        }
 
 #[test]
 fn test_create_copy() {

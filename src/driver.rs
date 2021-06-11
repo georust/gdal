@@ -34,10 +34,10 @@ extern "C" {
         pszName: *const libc::c_char,
         pszValue: *const libc::c_char) -> *mut *mut libc::c_char;
 }
-
+#[derive(Debug)]
 pub struct RasterCreationOption<'a>{
-    key : &'a str,
-    value : &'a str,
+    pub key : &'a str,
+    pub value : &'a str,
 }
 
 impl Driver {
@@ -76,6 +76,7 @@ impl Driver {
         let rv = unsafe { gdal_sys::GDALGetDriverLongName(self.c_driver) };
         _string(rv)
     }
+
 
     pub fn create(
         &self,
