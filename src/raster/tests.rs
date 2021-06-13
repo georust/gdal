@@ -244,25 +244,36 @@ fn test_create_with_band_type() {
 fn test_create_with_band_type_with_options() {
     let driver = Driver::get("GTiff").unwrap();
     let options = vec![
-        RasterCreationOption{key:"TILED", value: "YES"},
-        RasterCreationOption{key:"BLOCKXSIZE", value: "128"},
-        RasterCreationOption{key:"BLOCKYSIZE", value: "64"},
-        RasterCreationOption{key:"COMPRESS", value:"LZW"} ,
-        RasterCreationOption{key:"INTERLEAVE", value:"BAND"} ,
-        
-        ] ;
+        RasterCreationOption {
+            key: "TILED",
+            value: "YES",
+        },
+        RasterCreationOption {
+            key: "BLOCKXSIZE",
+            value: "128",
+        },
+        RasterCreationOption {
+            key: "BLOCKYSIZE",
+            value: "64",
+        },
+        RasterCreationOption {
+            key: "COMPRESS",
+            value: "LZW",
+        },
+        RasterCreationOption {
+            key: "INTERLEAVE",
+            value: "BAND",
+        },
+    ];
 
     let tmp_filename = "/tmp/test.tif";
-    let dataset = driver.create_with_band_type_with_options::<u8>(tmp_filename,
-                     256,
-                      256,
-                      1,
-                     options).unwrap();
+    let dataset = driver
+        .create_with_band_type_with_options::<u8>(tmp_filename, 256, 256, 1, options)
+        .unwrap();
 
-    
     let rasterband = dataset.rasterband(1).unwrap();
     let block_size = rasterband.block_size();
-    assert_eq!(block_size, (128,64));
+    assert_eq!(block_size, (128, 64));
 
     drop(dataset);
     let dataset = Dataset::open(Path::new(tmp_filename)).unwrap();
@@ -273,9 +284,8 @@ fn test_create_with_band_type_with_options() {
     let key = "COMPRESSION";
     let domain = "IMAGE_STRUCTURE";
     let meta = dataset.metadata_item(key, domain);
-    assert_eq!(meta, Some(String::from("LZW")));   
-
-        }
+    assert_eq!(meta, Some(String::from("LZW")));
+}
 
 #[test]
 fn test_create_copy() {
