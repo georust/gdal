@@ -1,10 +1,10 @@
 use crate::dataset::Dataset;
 use crate::gdal_major_object::MajorObject;
 use crate::metadata::Metadata;
-use crate::raster::GdalType;
+use crate::raster::{GdalType, RasterCreationOption};
 use crate::utils::{_last_null_pointer_err, _string};
 use gdal_sys::{self, GDALDriverH, GDALMajorObjectH};
-use libc::{c_int, c_char};
+use libc::{c_char, c_int};
 use std::ffi::CString;
 use std::ptr::null_mut;
 use std::sync::Once;
@@ -32,13 +32,10 @@ extern "C" {
     fn CSLSetNameValue(
         papszOptions: CSLConstList,
         pszName: *const libc::c_char,
-        pszValue: *const libc::c_char) -> *mut *mut libc::c_char;
+        pszValue: *const libc::c_char,
+    ) -> *mut *mut libc::c_char;
 }
-#[derive(Debug)]
-pub struct RasterCreationOption<'a>{
-    pub key : &'a str,
-    pub value : &'a str,
-}
+
 
 impl Driver {
     pub fn get(name: &str) -> Result<Driver> {
@@ -76,7 +73,6 @@ impl Driver {
         let rv = unsafe { gdal_sys::GDALGetDriverLongName(self.c_driver) };
         _string(rv)
     }
-
 
     pub fn create(
         &self,
@@ -121,13 +117,12 @@ impl Driver {
         bands: isize,
         options: Vec<RasterCreationOption>,
     ) -> Result<Dataset> {
-
         // process options:
         let mut options_c = null_mut();
-        for option in options{
-            let psz_name  = CString::new(option.key)?;
+        for option in options {
+            let psz_name = CString::new(option.key)?;
             let psz_value = CString::new(option.value)?;
-            unsafe{
+            unsafe {
                 options_c = CSLSetNameValue(options_c, psz_name.as_ptr(), psz_value.as_ptr());
             }
         }
@@ -149,7 +144,6 @@ impl Driver {
         };
         Ok(unsafe { Dataset::from_c_dataset(c_dataset) })
     }
-
 
     pub fn create_vector_only(&self, filename: &str) -> Result<Dataset> {
         self.create_with_band_type::<u8>(filename, 0, 0, 0)
