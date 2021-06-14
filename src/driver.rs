@@ -36,7 +36,6 @@ extern "C" {
     ) -> *mut *mut libc::c_char;
 }
 
-
 impl Driver {
     pub fn get(name: &str) -> Result<Driver> {
         _register_drivers();
