@@ -266,15 +266,16 @@ fn test_create_with_band_type_with_options() {
     ];
 
     let tmp_filename = "/tmp/test.tif";
-    let dataset = driver
-        .create_with_band_type_with_options::<u8>(tmp_filename, 256, 256, 1, &options)
-        .unwrap();
+    {
+        let dataset = driver
+            .create_with_band_type_with_options::<u8>(tmp_filename, 256, 256, 1, &options)
+            .unwrap();
+    
+        let rasterband = dataset.rasterband(1).unwrap();
+        let block_size = rasterband.block_size();
+        assert_eq!(block_size, (128, 64));
+    }
 
-    let rasterband = dataset.rasterband(1).unwrap();
-    let block_size = rasterband.block_size();
-    assert_eq!(block_size, (128, 64));
-
-    drop(dataset);
     let dataset = Dataset::open(Path::new(tmp_filename)).unwrap();
     let key = "INTERLEAVE";
     let domain = "IMAGE_STRUCTURE";
