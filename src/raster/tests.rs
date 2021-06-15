@@ -1,8 +1,7 @@
 use crate::dataset::Dataset;
-use crate::driver::RasterCreationOption;
 use crate::metadata::Metadata;
 use crate::raster::rasterband::ResampleAlg;
-use crate::raster::{ByteBuffer, ColorInterpretation};
+use crate::raster::{ByteBuffer, ColorInterpretation, RasterCreationOption};
 use crate::Driver;
 use gdal_sys::GDALDataType;
 use std::path::Path;
@@ -243,7 +242,7 @@ fn test_create_with_band_type() {
 #[test]
 fn test_create_with_band_type_with_options() {
     let driver = Driver::get("GTiff").unwrap();
-    let options = vec![
+    let options = [
         RasterCreationOption {
             key: "TILED",
             value: "YES",
@@ -268,7 +267,7 @@ fn test_create_with_band_type_with_options() {
 
     let tmp_filename = "/tmp/test.tif";
     let dataset = driver
-        .create_with_band_type_with_options::<u8>(tmp_filename, 256, 256, 1, options)
+        .create_with_band_type_with_options::<u8>(tmp_filename, 256, 256, 1, &options)
         .unwrap();
 
     let rasterband = dataset.rasterband(1).unwrap();

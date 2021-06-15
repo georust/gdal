@@ -114,7 +114,7 @@ impl Driver {
         size_x: isize,
         size_y: isize,
         bands: isize,
-        options: Vec<RasterCreationOption>,
+        options: &[RasterCreationOption],
     ) -> Result<Dataset> {
         // process options:
         let mut options_c = null_mut();
