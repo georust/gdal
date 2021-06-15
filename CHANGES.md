@@ -5,13 +5,20 @@
 - Add support for raster dataset creation options. A new struct (`RasterCreationOption`) and function (`driver.create_with_band_type_with_options()`) are now available for this.
 
 ```rust
-    let driver = Driver::get("GTiff").unwrap();
-    let options = [RasterCreationOption{key:"COMPRESS", value:"LZW"} ,
-                   RasterCreationOption{key:"TILED", value: "YES"}] ;
-    let mut dataset = driver
-          .create_with_band_type_with_options::<u8>("testing.tif",2048,2048,1,&options)
-          .unwrap();
-```
+let driver = Driver::get("GTiff").unwrap();
+let options = &[
+    RasterCreationOption {
+        key: "COMPRESS",
+        value: "LZW",
+    },
+    RasterCreationOption {
+        key: "TILED",
+        value: "YES",
+    },
+];
+let mut dataset = driver
+    .create_with_band_type_with_options::<u8>("testing.tif", 2048, 2048, 1, options)
+    .unwrap();
 
 - **Breaking**: Add support to select a resampling algorithm when reading a raster
 
