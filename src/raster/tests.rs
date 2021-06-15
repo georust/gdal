@@ -280,11 +280,11 @@ fn test_create_with_band_type_with_options() {
     let key = "INTERLEAVE";
     let domain = "IMAGE_STRUCTURE";
     let meta = dataset.metadata_item(key, domain);
-    assert_eq!(meta, Some(String::from("BAND")));
+    assert_eq!(meta.as_deref(), Some("BAND"));
     let key = "COMPRESSION";
     let domain = "IMAGE_STRUCTURE";
     let meta = dataset.metadata_item(key, domain);
-    assert_eq!(meta, Some(String::from("LZW")));
+    assert_eq!(meta.as_deref(), Some("LZW"));
 }
 
 #[test]
