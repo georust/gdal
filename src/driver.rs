@@ -116,7 +116,6 @@ impl Driver {
         bands: isize,
         options: &[RasterCreationOption],
     ) -> Result<Dataset> {
-        // process options:
         let mut options_c = null_mut();
         for option in options {
             let psz_name = CString::new(option.key)?;
