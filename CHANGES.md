@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Add support to define creation options for raster datasets. To support this a new struct to store a creation option key and value pair  (`RasterCreationOption`) and and function (`driver.create_with_band_type_with_options()`) were created.
+- Add support for raster dataset creation options. A new struct (`RasterCreationOption`) and function (`driver.create_with_band_type_with_options()`) are now available for this.
 
 ```rust
 let driver = Driver::get("GTiff").unwrap();
