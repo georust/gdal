@@ -2,18 +2,14 @@
 
 ## Unreleased
 
-- Add support to define creation options for raster datasets. To support this a new struct to store a creation option key and value pair  (`RasterCreationOption`) and and function (`driver.create_with_band_type_with_options()`) were created.
+- Add support for raster dataset creation options. A new struct (`RasterCreationOption`) and function (`driver.create_with_band_type_with_options()`) are now available for this.
 
 ```rust
     let driver = Driver::get("GTiff").unwrap();
-    let options = vec![RasterCreationOption{key:"COMPRESS", value:"LZW"} ,
-                       RasterCreationOption{key:"TILED", value: "YES"}] ;
+    let options = [RasterCreationOption{key:"COMPRESS", value:"LZW"} ,
+                   RasterCreationOption{key:"TILED", value: "YES"}] ;
     let mut dataset = driver
-          .create_with_band_type_with_options::<u8>("testing.tif",
-             2048,
-             2048,
-             1,
-             options)
+          .create_with_band_type_with_options::<u8>("testing.tif",2048,2048,1,&options)
           .unwrap();
 ```
 
