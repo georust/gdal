@@ -270,7 +270,6 @@ fn test_create_with_band_type_with_options() {
         let dataset = driver
             .create_with_band_type_with_options::<u8>(tmp_filename, 256, 256, 1, &options)
             .unwrap();
-
         let rasterband = dataset.rasterband(1).unwrap();
         let block_size = rasterband.block_size();
         assert_eq!(block_size, (128, 64));
