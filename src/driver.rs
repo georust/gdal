@@ -90,22 +90,8 @@ impl Driver {
         size_y: isize,
         bands: isize,
     ) -> Result<Dataset> {
-        let c_filename = CString::new(filename)?;
-        let c_dataset = unsafe {
-            gdal_sys::GDALCreate(
-                self.c_driver,
-                c_filename.as_ptr(),
-                size_x as c_int,
-                size_y as c_int,
-                bands as c_int,
-                T::gdal_type(),
-                null_mut(),
-            )
-        };
-        if c_dataset.is_null() {
-            return Err(_last_null_pointer_err("GDALCreate"));
-        };
-        Ok(unsafe { Dataset::from_c_dataset(c_dataset) })
+        let options = [];
+        self.create_with_band_type_with_options::<T>(filename, size_x, size_y, bands, &options)
     }
 
     pub fn create_with_band_type_with_options<T: GdalType>(
