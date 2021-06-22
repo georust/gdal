@@ -1,10 +1,10 @@
 use crate::dataset::Dataset;
 use crate::gdal_major_object::MajorObject;
 use crate::metadata::Metadata;
-use crate::raster::GdalType;
+use crate::raster::{GdalType, RasterCreationOption};
 use crate::utils::{_last_null_pointer_err, _string};
 use gdal_sys::{self, GDALDriverH, GDALMajorObjectH};
-use libc::c_int;
+use libc::{c_char, c_int};
 use std::ffi::CString;
 use std::ptr::null_mut;
 use std::sync::Once;
@@ -24,6 +24,16 @@ pub fn _register_drivers() {
 #[allow(missing_copy_implementations)]
 pub struct Driver {
     c_driver: GDALDriverH,
+}
+
+type CSLConstList = *mut *mut c_char;
+
+extern "C" {
+    fn CSLSetNameValue(
+        papszOptions: CSLConstList,
+        pszName: *const libc::c_char,
+        pszValue: *const libc::c_char,
+    ) -> *mut *mut libc::c_char;
 }
 
 impl Driver {
@@ -80,6 +90,27 @@ impl Driver {
         size_y: isize,
         bands: isize,
     ) -> Result<Dataset> {
+        let options = [];
+        self.create_with_band_type_with_options::<T>(filename, size_x, size_y, bands, &options)
+    }
+
+    pub fn create_with_band_type_with_options<T: GdalType>(
+        &self,
+        filename: &str,
+        size_x: isize,
+        size_y: isize,
+        bands: isize,
+        options: &[RasterCreationOption],
+    ) -> Result<Dataset> {
+        let mut options_c = null_mut();
+        for option in options {
+            let psz_name = CString::new(option.key)?;
+            let psz_value = CString::new(option.value)?;
+            unsafe {
+                options_c = CSLSetNameValue(options_c, psz_name.as_ptr(), psz_value.as_ptr());
+            }
+        }
+
         let c_filename = CString::new(filename)?;
         let c_dataset = unsafe {
             gdal_sys::GDALCreate(
@@ -89,7 +120,7 @@ impl Driver {
                 size_y as c_int,
                 bands as c_int,
                 T::gdal_type(),
-                null_mut(),
+                options_c as *mut *mut i8,
             )
         };
         if c_dataset.is_null() {
