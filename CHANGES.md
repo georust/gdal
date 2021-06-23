@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Add wrapper for `OGR_G_Buffer`.
 - Add support for raster dataset creation options. A new struct (`RasterCreationOption`) and function (`driver.create_with_band_type_with_options()`) are now available for this.
 
   - <https://github.com/georust/gdal/pull/193>
