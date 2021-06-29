@@ -1,13 +1,15 @@
-use crate::spatial_ref::{CoordTransform, SpatialRef};
-use crate::utils::{_last_null_pointer_err, _string};
-use gdal_sys::{self, OGRErr, OGRGeometryH, OGRwkbGeometryType};
-use libc::{c_char, c_double, c_int, c_void};
 use std::cell::RefCell;
 use std::ffi::CString;
 use std::fmt::{self, Debug};
 use std::ptr::null_mut;
 
+use libc::{c_char, c_double, c_int, c_void};
+
+use gdal_sys::{self, OGRErr, OGRGeometryH, OGRwkbGeometryType};
+
 use crate::errors::*;
+use crate::spatial_ref::{CoordTransform, SpatialRef};
+use crate::utils::{_last_null_pointer_err, _string};
 
 /// OGR Geometry
 pub struct Geometry {
@@ -263,6 +265,21 @@ impl Geometry {
         Ok(unsafe { Geometry::with_c_geometry(c_geom, true) })
     }
 
+    /// Compute buffer of geometry
+    ///
+    /// The `distance` parameter the buffer distance to be applied. Should be expressed into
+    /// the same unit as the coordinates of the geometry. `n_quad_segs` specifies the number
+    /// of segments used to approximate a 90 degree (quadrant) of curvature.
+    pub fn buffer(&self, distance: f64, n_quad_segs: u32) -> Result<Self> {
+        let c_geom =
+            unsafe { gdal_sys::OGR_G_Buffer(self.c_geometry(), distance, n_quad_segs as i32) };
+        if c_geom.is_null() {
+            return Err(_last_null_pointer_err("OGR_G_Buffer"));
+        };
+
+        Ok(unsafe { Geometry::with_c_geometry(c_geom, true) })
+    }
+
     pub fn simplify_preserve_topology(&self, tolerance: f64) -> Result<Self> {
         let c_geom =
             unsafe { gdal_sys::OGR_G_SimplifyPreserveTopology(self.c_geometry(), tolerance) };
@@ -422,8 +439,9 @@ impl Eq for Geometry {}
 
 #[cfg(test)]
 mod tests {
-    use super::Geometry;
     use crate::spatial_ref::SpatialRef;
+
+    use super::Geometry;
 
     #[test]
     #[allow(clippy::float_cmp)]
@@ -510,5 +528,16 @@ mod tests {
         let wkb = orig_geom.wkb().unwrap();
         let new_geom = Geometry::from_wkb(&wkb).unwrap();
         assert_eq!(new_geom, orig_geom);
+    }
+
+    #[test]
+    pub fn test_buffer() {
+        let geom = Geometry::from_wkt("POINT(0 0)").unwrap();
+        let buffered = geom.buffer(10.0, 2).unwrap();
+        assert_eq!(
+            buffered.geometry_type(),
+            ::gdal_sys::OGRwkbGeometryType::wkbPolygon
+        );
+        assert!(buffered.area() > 10.0);
     }
 }
