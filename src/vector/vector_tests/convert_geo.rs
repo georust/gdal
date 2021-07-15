@@ -1,3 +1,5 @@
+use std::convert::TryFrom;
+
 use crate::vector::{Geometry, ToGdal};
 
 #[test]
@@ -7,7 +9,7 @@ fn test_import_export_point() {
     let geo = geo_types::Geometry::Point(geo_types::Point(coord));
 
     assert_eq!(
-        geo_types::Geometry::<_>::from(Geometry::from_wkt(wkt).unwrap()),
+        geo_types::Geometry::<_>::try_from(Geometry::from_wkt(wkt).unwrap()).unwrap(),
         geo
     );
     assert_eq!(geo.to_gdal().unwrap().wkt().unwrap(), wkt);
@@ -24,7 +26,7 @@ fn test_import_export_multipoint() {
     let geo = geo_types::Geometry::MultiPoint(geo_types::MultiPoint(coord));
 
     assert_eq!(
-        geo_types::Geometry::<_>::from(Geometry::from_wkt(wkt).unwrap()),
+        geo_types::Geometry::<_>::try_from(Geometry::from_wkt(wkt).unwrap()).unwrap(),
         geo
     );
     assert_eq!(geo.to_gdal().unwrap().wkt().unwrap(), wkt);
@@ -41,7 +43,7 @@ fn test_import_export_linestring() {
     let geo = geo_types::Geometry::LineString(geo_types::LineString(coord));
 
     assert_eq!(
-        geo_types::Geometry::<_>::from(Geometry::from_wkt(wkt).unwrap()),
+        geo_types::Geometry::<_>::try_from(Geometry::from_wkt(wkt).unwrap()).unwrap(),
         geo
     );
     assert_eq!(geo.to_gdal().unwrap().wkt().unwrap(), wkt);
@@ -65,7 +67,7 @@ fn test_import_export_multilinestring() {
     let geo = geo_types::Geometry::MultiLineString(geo_types::MultiLineString(strings));
 
     assert_eq!(
-        geo_types::Geometry::<_>::from(Geometry::from_wkt(wkt).unwrap()),
+        geo_types::Geometry::<_>::try_from(Geometry::from_wkt(wkt).unwrap()).unwrap(),
         geo
     );
     assert_eq!(geo.to_gdal().unwrap().wkt().unwrap(), wkt);
@@ -106,7 +108,7 @@ fn test_import_export_polygon() {
     let geo = geo_types::Geometry::Polygon(geo_types::Polygon::new(outer, holes));
 
     assert_eq!(
-        geo_types::Geometry::<_>::from(Geometry::from_wkt(wkt).unwrap()),
+        geo_types::Geometry::<_>::try_from(Geometry::from_wkt(wkt).unwrap()).unwrap(),
         geo
     );
     assert_eq!(geo.to_gdal().unwrap().wkt().unwrap(), wkt);
@@ -135,7 +137,7 @@ fn test_import_export_multipolygon() {
     let geo = geo_types::Geometry::MultiPolygon(multipolygon);
 
     assert_eq!(
-        geo_types::Geometry::<_>::from(Geometry::from_wkt(wkt).unwrap()),
+        geo_types::Geometry::<_>::try_from(Geometry::from_wkt(wkt).unwrap()).unwrap(),
         geo
     );
     assert_eq!(geo.to_gdal().unwrap().wkt().unwrap(), wkt);
@@ -156,7 +158,7 @@ fn test_import_export_geometrycollection() {
     let geo = geo_types::Geometry::GeometryCollection(collection);
 
     assert_eq!(
-        geo_types::Geometry::<_>::from(Geometry::from_wkt(wkt).unwrap()),
+        geo_types::Geometry::<_>::try_from(Geometry::from_wkt(wkt).unwrap()).unwrap(),
         geo
     );
     assert_eq!(geo.to_gdal().unwrap().wkt().unwrap(), wkt);
