@@ -218,6 +218,38 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::float_cmp)]
+    fn test_get_field_as() {
+        with_features("roads.geojson", |mut features| {
+            let feature = features.next().unwrap();
+
+            assert_eq!(
+                feature.get_field_string("highway").unwrap().unwrap(),
+                "footway"
+            );
+
+            assert_eq!(feature.get_field_string("sort_key").unwrap().unwrap(), "-9");
+            assert_eq!(feature.get_field_integer("sort_key").unwrap().unwrap(), -9);
+            assert_eq!(
+                feature.get_field_integer64("sort_key").unwrap().unwrap(),
+                -9
+            );
+            assert_eq!(feature.get_field_double("sort_key").unwrap().unwrap(), -9.);
+
+            // test failed conversions
+            assert_eq!(feature.get_field_integer("highway").unwrap().unwrap(), 0);
+            assert_eq!(feature.get_field_integer64("highway").unwrap().unwrap(), 0);
+            assert_eq!(feature.get_field_double("highway").unwrap().unwrap(), 0.);
+
+            // test nulls
+            assert_eq!(feature.get_field_string("railway").unwrap(), None);
+            assert_eq!(feature.get_field_integer("railway").unwrap(), None);
+            assert_eq!(feature.get_field_integer64("railway").unwrap(), None);
+            assert_eq!(feature.get_field_double("railway").unwrap(), None);
+        });
+    }
+
+    #[test]
     fn test_field_in_layer() {
         ds_with_layer("three_layer_ds.s3db", "layer_0", |mut layer| {
             let feature = layer.features().next().unwrap();
