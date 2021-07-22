@@ -112,7 +112,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::errors::Result;
+    use crate::errors::{GdalError, Result};
 
     #[test]
     fn test_feature_count() {
@@ -219,30 +219,160 @@ mod tests {
 
     #[test]
     #[allow(clippy::float_cmp)]
-    fn test_get_field_as() {
+    fn test_get_field_as_x_by_name() {
         with_features("roads.geojson", |mut features| {
             let feature = features.next().unwrap();
 
             assert_eq!(
-                feature.field_as_string("highway").unwrap().unwrap(),
-                "footway"
+                feature.field_as_string_by_name("highway").unwrap(),
+                Some("footway".to_owned())
             );
 
-            assert_eq!(feature.field_as_string("sort_key").unwrap().unwrap(), "-9");
-            assert_eq!(feature.field_as_integer("sort_key").unwrap().unwrap(), -9);
-            assert_eq!(feature.field_as_integer64("sort_key").unwrap().unwrap(), -9);
-            assert_eq!(feature.field_as_double("sort_key").unwrap().unwrap(), -9.);
+            assert_eq!(
+                feature.field_as_string_by_name("sort_key").unwrap(),
+                Some("-9".to_owned())
+            );
+            assert_eq!(
+                feature.field_as_integer_by_name("sort_key").unwrap(),
+                Some(-9)
+            );
+            assert_eq!(
+                feature.field_as_integer64_by_name("sort_key").unwrap(),
+                Some(-9)
+            );
+            assert_eq!(
+                feature.field_as_double_by_name("sort_key").unwrap(),
+                Some(-9.)
+            );
 
             // test failed conversions
-            assert_eq!(feature.field_as_integer("highway").unwrap().unwrap(), 0);
-            assert_eq!(feature.field_as_integer64("highway").unwrap().unwrap(), 0);
-            assert_eq!(feature.field_as_double("highway").unwrap().unwrap(), 0.);
+            assert_eq!(
+                feature.field_as_integer_by_name("highway").unwrap(),
+                Some(0)
+            );
+            assert_eq!(
+                feature.field_as_integer64_by_name("highway").unwrap(),
+                Some(0)
+            );
+            assert_eq!(
+                feature.field_as_double_by_name("highway").unwrap(),
+                Some(0.)
+            );
 
             // test nulls
-            assert_eq!(feature.field_as_string("railway").unwrap(), None);
-            assert_eq!(feature.field_as_integer("railway").unwrap(), None);
-            assert_eq!(feature.field_as_integer64("railway").unwrap(), None);
-            assert_eq!(feature.field_as_double("railway").unwrap(), None);
+            assert_eq!(feature.field_as_string_by_name("railway").unwrap(), None);
+            assert_eq!(feature.field_as_integer_by_name("railway").unwrap(), None);
+            assert_eq!(feature.field_as_integer64_by_name("railway").unwrap(), None);
+            assert_eq!(feature.field_as_double_by_name("railway").unwrap(), None);
+
+            // test error
+            assert_eq!(
+                feature.field_as_string_by_name("not_a_field"),
+                Err(GdalError::InvalidFieldName {
+                    field_name: "not_a_field".to_owned(),
+                    method_name: "OGR_F_GetFieldIndex",
+                })
+            );
+        });
+    }
+
+    #[test]
+    #[allow(clippy::float_cmp)]
+    fn test_get_field_as_x() {
+        with_features("roads.geojson", |mut features| {
+            let feature = features.next().unwrap();
+
+            let highway_field = 6;
+            let railway_field = 5;
+            let sort_key_field = 1;
+
+            assert_eq!(
+                feature.field_as_string(highway_field).unwrap(),
+                Some("footway".to_owned())
+            );
+
+            assert_eq!(
+                feature.field_as_string(sort_key_field).unwrap(),
+                Some("-9".to_owned())
+            );
+            assert_eq!(feature.field_as_integer(sort_key_field).unwrap(), Some(-9));
+            assert_eq!(
+                feature.field_as_integer64(sort_key_field).unwrap(),
+                Some(-9)
+            );
+            assert_eq!(feature.field_as_double(sort_key_field).unwrap(), Some(-9.));
+
+            // test failed conversions
+            assert_eq!(feature.field_as_integer(highway_field).unwrap(), Some(0));
+            assert_eq!(feature.field_as_integer64(highway_field).unwrap(), Some(0));
+            assert_eq!(feature.field_as_double(highway_field).unwrap(), Some(0.));
+
+            // test nulls
+            assert_eq!(feature.field_as_string(railway_field).unwrap(), None);
+            assert_eq!(feature.field_as_integer(railway_field).unwrap(), None);
+            assert_eq!(feature.field_as_integer64(railway_field).unwrap(), None);
+            assert_eq!(feature.field_as_double(railway_field).unwrap(), None);
+
+            // test error
+            assert_eq!(
+                feature.field_as_string(23),
+                Err(GdalError::InvalidFieldIndex {
+                    index: 23,
+                    method_name: "field_as_string",
+                })
+            );
+        });
+    }
+
+    #[test]
+    #[cfg(feature = "datetime")]
+    fn test_get_field_as_datetime() {
+        use chrono::{FixedOffset, TimeZone};
+
+        let hour_secs = 3600;
+
+        with_features("points_with_datetime.json", |mut features| {
+            let feature = features.next().unwrap();
+
+            let dt = FixedOffset::east(-5 * hour_secs)
+                .ymd(2011, 7, 14)
+                .and_hms(19, 43, 37);
+
+            let d = FixedOffset::east(0).ymd(2018, 1, 4).and_hms(0, 0, 0);
+
+            assert_eq!(feature.field_as_datetime_by_name("dt").unwrap(), Some(dt));
+
+            assert_eq!(feature.field_as_datetime(0).unwrap(), Some(dt));
+
+            assert_eq!(feature.field_as_datetime_by_name("d").unwrap(), Some(d));
+
+            assert_eq!(feature.field_as_datetime(1).unwrap(), Some(d));
+        });
+
+        with_features("roads.geojson", |mut features| {
+            let feature = features.next().unwrap();
+
+            let railway_field = 5;
+
+            // test null
+            assert_eq!(feature.field_as_datetime_by_name("railway").unwrap(), None);
+            assert_eq!(feature.field_as_datetime(railway_field).unwrap(), None);
+
+            // test error
+            assert_eq!(
+                feature.field_as_datetime_by_name("not_a_field"),
+                Err(GdalError::InvalidFieldName {
+                    field_name: "not_a_field".to_owned(),
+                    method_name: "OGR_F_GetFieldIndex",
+                })
+            );
+            assert_eq!(
+                feature.field_as_datetime(23),
+                Err(GdalError::InvalidFieldIndex {
+                    index: 23,
+                    method_name: "field_as_datetime",
+                })
+            );
         });
     }
 

@@ -164,11 +164,11 @@ impl<'a> Feature<'a> {
             }
             #[cfg(feature = "datetime")]
             OGRFieldType::OFTDateTime => Ok(Some(FieldValue::DateTimeValue(
-                self.get_field_datetime(field_id)?,
+                self._field_as_datetime(field_id)?,
             ))),
             #[cfg(feature = "datetime")]
             OGRFieldType::OFTDate => Ok(Some(FieldValue::DateValue(
-                self.get_field_datetime(field_id)?.date(),
+                self._field_as_datetime(field_id)?.date(),
             ))),
             _ => Err(GdalError::UnhandledFieldType {
                 field_type,
@@ -197,12 +197,36 @@ impl<'a> Feature<'a> {
 
     /// Get the value of the specified field as a [`i32`].
     ///
+    /// If the field is missing, returns [`GdalError::InvalidFieldIndex`].
+    ///
+    /// Returns `Ok(None)` if the field is null.
+    /// Returns `Ok(Some(0))` on other kinds of errors.
+    ///
+    pub fn field_as_integer(&self, field_idx: i32) -> Result<Option<i32>> {
+        if field_idx >= self.field_count() {
+            return Err(GdalError::InvalidFieldIndex {
+                index: field_idx as usize,
+                method_name: "field_as_integer",
+            });
+        }
+
+        if unsafe { gdal_sys::OGR_F_IsFieldNull(self.c_feature, field_idx) } != 0 {
+            return Ok(None);
+        }
+
+        let value = unsafe { gdal_sys::OGR_F_GetFieldAsInteger(self.c_feature, field_idx) };
+
+        Ok(Some(value))
+    }
+
+    /// Get the value of the specified field as a [`i32`].
+    ///
     /// If the field is missing, returns [`GdalError::InvalidFieldName`].
     ///
     /// Returns `Ok(None)` if the field is null.
     /// Returns `Ok(Some(0))` on other kinds of errors.
     ///
-    pub fn field_as_integer(&self, field_name: &str) -> Result<Option<i32>> {
+    pub fn field_as_integer_by_name(&self, field_name: &str) -> Result<Option<i32>> {
         let field_idx = self.field_idx_from_name(field_name)?;
 
         if unsafe { gdal_sys::OGR_F_IsFieldNull(self.c_feature, field_idx) } != 0 {
@@ -221,8 +245,32 @@ impl<'a> Feature<'a> {
     /// Returns `Ok(None)` if the field is null.
     /// Returns `Ok(Some(0))` on other kinds of errors.
     ///
-    pub fn field_as_integer64(&self, field_name: &str) -> Result<Option<i64>> {
+    pub fn field_as_integer64_by_name(&self, field_name: &str) -> Result<Option<i64>> {
         let field_idx = self.field_idx_from_name(field_name)?;
+
+        if unsafe { gdal_sys::OGR_F_IsFieldNull(self.c_feature, field_idx) } != 0 {
+            return Ok(None);
+        }
+
+        let value = unsafe { gdal_sys::OGR_F_GetFieldAsInteger64(self.c_feature, field_idx) };
+
+        Ok(Some(value))
+    }
+
+    /// Get the value of the specified field as a [`i64`].
+    ///
+    /// If the field is missing, returns [`GdalError::InvalidFieldIndex`].
+    ///
+    /// Returns `Ok(None)` if the field is null.
+    /// Returns `Ok(Some(0))` on other kinds of errors.
+    ///
+    pub fn field_as_integer64(&self, field_idx: i32) -> Result<Option<i64>> {
+        if field_idx >= self.field_count() {
+            return Err(GdalError::InvalidFieldIndex {
+                index: field_idx as usize,
+                method_name: "field_as_integer64",
+            });
+        }
 
         if unsafe { gdal_sys::OGR_F_IsFieldNull(self.c_feature, field_idx) } != 0 {
             return Ok(None);
@@ -240,8 +288,32 @@ impl<'a> Feature<'a> {
     /// Returns `Ok(None)` if the field is null.
     /// Returns `Ok(Some(0.))` on other kinds of errors.
     ///
-    pub fn field_as_double(&self, field_name: &str) -> Result<Option<f64>> {
+    pub fn field_as_double_by_name(&self, field_name: &str) -> Result<Option<f64>> {
         let field_idx = self.field_idx_from_name(field_name)?;
+
+        if unsafe { gdal_sys::OGR_F_IsFieldNull(self.c_feature, field_idx) } != 0 {
+            return Ok(None);
+        }
+
+        let value = unsafe { gdal_sys::OGR_F_GetFieldAsDouble(self.c_feature, field_idx) };
+
+        Ok(Some(value))
+    }
+
+    /// Get the value of the specified field as a [`f64`].
+    ///
+    /// If the field is missing, returns [`GdalError::InvalidFieldIndex`].
+    ///
+    /// Returns `Ok(None)` if the field is null.
+    /// Returns `Ok(Some(0.))` on other kinds of errors.
+    ///
+    pub fn field_as_double(&self, field_idx: i32) -> Result<Option<f64>> {
+        if field_idx >= self.field_count() {
+            return Err(GdalError::InvalidFieldIndex {
+                index: field_idx as usize,
+                method_name: "field_as_double",
+            });
+        }
 
         if unsafe { gdal_sys::OGR_F_IsFieldNull(self.c_feature, field_idx) } != 0 {
             return Ok(None);
@@ -258,7 +330,7 @@ impl<'a> Feature<'a> {
     ///
     /// Returns `Ok(None)` if the field is null.
     ///
-    pub fn field_as_string(&self, field_name: &str) -> Result<Option<String>> {
+    pub fn field_as_string_by_name(&self, field_name: &str) -> Result<Option<String>> {
         let field_idx = self.field_idx_from_name(field_name)?;
 
         if unsafe { gdal_sys::OGR_F_IsFieldNull(self.c_feature, field_idx) } != 0 {
@@ -270,8 +342,77 @@ impl<'a> Feature<'a> {
         Ok(Some(value))
     }
 
+    /// Get the value of the specified field as a [`String`].
+    ///
+    /// If the field is missing, returns [`GdalError::InvalidFieldIndex`].
+    ///
+    /// Returns `Ok(None)` if the field is null.
+    ///
+    pub fn field_as_string(&self, field_idx: i32) -> Result<Option<String>> {
+        if field_idx >= self.field_count() {
+            return Err(GdalError::InvalidFieldIndex {
+                index: field_idx as usize,
+                method_name: "field_as_string",
+            });
+        }
+
+        if unsafe { gdal_sys::OGR_F_IsFieldNull(self.c_feature, field_idx) } != 0 {
+            return Ok(None);
+        }
+
+        let value = _string(unsafe { gdal_sys::OGR_F_GetFieldAsString(self.c_feature, field_idx) });
+
+        Ok(Some(value))
+    }
+
+    /// Get the value of the specified field as a [`DateTime<FixedOffset>`].
+    ///
+    /// If the field is missing, returns [`GdalError::InvalidFieldName`].
+    ///
+    /// Returns `Ok(None)` if the field is null.
+    ///
     #[cfg(feature = "datetime")]
-    fn get_field_datetime(&self, field_id: c_int) -> Result<DateTime<FixedOffset>> {
+    pub fn field_as_datetime_by_name(
+        &self,
+        field_name: &str,
+    ) -> Result<Option<DateTime<FixedOffset>>> {
+        let field_idx = self.field_idx_from_name(field_name)?;
+
+        if unsafe { gdal_sys::OGR_F_IsFieldNull(self.c_feature, field_idx) } != 0 {
+            return Ok(None);
+        }
+
+        let value = self._field_as_datetime(field_idx)?;
+
+        Ok(Some(value))
+    }
+
+    /// Get the value of the specified field as a [`DateTime<FixedOffset>`].
+    ///
+    /// If the field is missing, returns [`GdalError::InvalidFieldIndex`].
+    ///
+    /// Returns `Ok(None)` if the field is null.
+    ///
+    #[cfg(feature = "datetime")]
+    pub fn field_as_datetime(&self, field_idx: i32) -> Result<Option<DateTime<FixedOffset>>> {
+        if field_idx >= self.field_count() {
+            return Err(GdalError::InvalidFieldIndex {
+                index: field_idx as usize,
+                method_name: "field_as_datetime",
+            });
+        }
+
+        if unsafe { gdal_sys::OGR_F_IsFieldNull(self.c_feature, field_idx) } != 0 {
+            return Ok(None);
+        }
+
+        let value = self._field_as_datetime(field_idx)?;
+
+        Ok(Some(value))
+    }
+
+    #[cfg(feature = "datetime")]
+    fn _field_as_datetime(&self, field_id: c_int) -> Result<DateTime<FixedOffset>> {
         let mut year: c_int = 0;
         let mut month: c_int = 0;
         let mut day: c_int = 0;
