@@ -200,7 +200,7 @@ impl<'a> Feature<'a> {
     /// If the field is missing, returns [`GdalError::InvalidFieldName`].
     ///
     /// Returns `Ok(None)` if the field is null.
-    /// Returns `Ok(0)` on other kinds of errors.
+    /// Returns `Ok(Some(0))` on other kinds of errors.
     ///
     pub fn get_field_integer(&self, field_name: &str) -> Result<Option<i32>> {
         let field_idx = self.field_idx_from_name(field_name)?;
@@ -219,7 +219,7 @@ impl<'a> Feature<'a> {
     /// If the field is missing, returns [`GdalError::InvalidFieldName`].
     ///
     /// Returns `Ok(None)` if the field is null.
-    /// Returns `Ok(0)` on other kinds of errors.
+    /// Returns `Ok(Some(0))` on other kinds of errors.
     ///
     pub fn get_field_integer64(&self, field_name: &str) -> Result<Option<i64>> {
         let field_idx = self.field_idx_from_name(field_name)?;
@@ -238,7 +238,7 @@ impl<'a> Feature<'a> {
     /// If the field is missing, returns [`GdalError::InvalidFieldName`].
     ///
     /// Returns `Ok(None)` if the field is null.
-    /// Returns `Ok(0.)` on other kinds of errors.
+    /// Returns `Ok(Some(0.))` on other kinds of errors.
     ///
     pub fn get_field_double(&self, field_name: &str) -> Result<Option<f64>> {
         let field_idx = self.field_idx_from_name(field_name)?;
