@@ -3,6 +3,8 @@
 ## Unreleased
 
 - **Breaking**: Implement `TryFrom` instead of `From` to convert from gdal geometries to `geo-types`. This avoids a possible panic on unsupported geometries and returns an error instead.
+- Add `Feature::c_feature` that returns the OGR feature handle.
+  - <https://github.com/georust/gdal/pull/192>
 - Add wrapper for `OGR_G_Buffer`.
 - Add support for raster dataset creation options. A new struct (`RasterCreationOption`) and function (`driver.create_with_band_type_with_options()`) are now available for this.
 
