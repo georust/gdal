@@ -224,28 +224,25 @@ mod tests {
             let feature = features.next().unwrap();
 
             assert_eq!(
-                feature.get_field_string("highway").unwrap().unwrap(),
+                feature.field_as_string("highway").unwrap().unwrap(),
                 "footway"
             );
 
-            assert_eq!(feature.get_field_string("sort_key").unwrap().unwrap(), "-9");
-            assert_eq!(feature.get_field_integer("sort_key").unwrap().unwrap(), -9);
-            assert_eq!(
-                feature.get_field_integer64("sort_key").unwrap().unwrap(),
-                -9
-            );
-            assert_eq!(feature.get_field_double("sort_key").unwrap().unwrap(), -9.);
+            assert_eq!(feature.field_as_string("sort_key").unwrap().unwrap(), "-9");
+            assert_eq!(feature.field_as_integer("sort_key").unwrap().unwrap(), -9);
+            assert_eq!(feature.field_as_integer64("sort_key").unwrap().unwrap(), -9);
+            assert_eq!(feature.field_as_double("sort_key").unwrap().unwrap(), -9.);
 
             // test failed conversions
-            assert_eq!(feature.get_field_integer("highway").unwrap().unwrap(), 0);
-            assert_eq!(feature.get_field_integer64("highway").unwrap().unwrap(), 0);
-            assert_eq!(feature.get_field_double("highway").unwrap().unwrap(), 0.);
+            assert_eq!(feature.field_as_integer("highway").unwrap().unwrap(), 0);
+            assert_eq!(feature.field_as_integer64("highway").unwrap().unwrap(), 0);
+            assert_eq!(feature.field_as_double("highway").unwrap().unwrap(), 0.);
 
             // test nulls
-            assert_eq!(feature.get_field_string("railway").unwrap(), None);
-            assert_eq!(feature.get_field_integer("railway").unwrap(), None);
-            assert_eq!(feature.get_field_integer64("railway").unwrap(), None);
-            assert_eq!(feature.get_field_double("railway").unwrap(), None);
+            assert_eq!(feature.field_as_string("railway").unwrap(), None);
+            assert_eq!(feature.field_as_integer("railway").unwrap(), None);
+            assert_eq!(feature.field_as_integer64("railway").unwrap(), None);
+            assert_eq!(feature.field_as_double("railway").unwrap(), None);
         });
     }
 

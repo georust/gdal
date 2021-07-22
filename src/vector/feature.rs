@@ -202,7 +202,7 @@ impl<'a> Feature<'a> {
     /// Returns `Ok(None)` if the field is null.
     /// Returns `Ok(Some(0))` on other kinds of errors.
     ///
-    pub fn get_field_integer(&self, field_name: &str) -> Result<Option<i32>> {
+    pub fn field_as_integer(&self, field_name: &str) -> Result<Option<i32>> {
         let field_idx = self.field_idx_from_name(field_name)?;
 
         if unsafe { gdal_sys::OGR_F_IsFieldNull(self.c_feature, field_idx) } != 0 {
@@ -221,7 +221,7 @@ impl<'a> Feature<'a> {
     /// Returns `Ok(None)` if the field is null.
     /// Returns `Ok(Some(0))` on other kinds of errors.
     ///
-    pub fn get_field_integer64(&self, field_name: &str) -> Result<Option<i64>> {
+    pub fn field_as_integer64(&self, field_name: &str) -> Result<Option<i64>> {
         let field_idx = self.field_idx_from_name(field_name)?;
 
         if unsafe { gdal_sys::OGR_F_IsFieldNull(self.c_feature, field_idx) } != 0 {
@@ -240,7 +240,7 @@ impl<'a> Feature<'a> {
     /// Returns `Ok(None)` if the field is null.
     /// Returns `Ok(Some(0.))` on other kinds of errors.
     ///
-    pub fn get_field_double(&self, field_name: &str) -> Result<Option<f64>> {
+    pub fn field_as_double(&self, field_name: &str) -> Result<Option<f64>> {
         let field_idx = self.field_idx_from_name(field_name)?;
 
         if unsafe { gdal_sys::OGR_F_IsFieldNull(self.c_feature, field_idx) } != 0 {
@@ -258,7 +258,7 @@ impl<'a> Feature<'a> {
     ///
     /// Returns `Ok(None)` if the field is null.
     ///
-    pub fn get_field_string(&self, field_name: &str) -> Result<Option<String>> {
+    pub fn field_as_string(&self, field_name: &str) -> Result<Option<String>> {
         let field_idx = self.field_idx_from_name(field_name)?;
 
         if unsafe { gdal_sys::OGR_F_IsFieldNull(self.c_feature, field_idx) } != 0 {
