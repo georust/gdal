@@ -1,7 +1,7 @@
 use libc::c_int;
-
-use gdal_sys::{CPLErr, OGRErr, OGRFieldType};
 use thiserror::Error;
+
+use gdal_sys::{CPLErr, OGRErr, OGRFieldType, OGRwkbGeometryType};
 
 pub type Result<T> = std::result::Result<T, GdalError>;
 
@@ -64,4 +64,6 @@ pub enum GdalError {
         key: String,
         method_name: &'static str,
     },
+    #[error("Unsupported GDAL geometry type")]
+    UnsupportedGdalGeometryType(OGRwkbGeometryType::Type),
 }
