@@ -142,6 +142,7 @@ let mut dataset = driver
   Well-Known Binary
   - <https://github.com/georust/gdal/pull/173>
 - Fixed memory leak in `Geometry::from_wkt`
+
   - <https://github.com/georust/gdal/pull/172>
 
 - **Breaking**: Changed `Dataset::create_layer` to take a new `LayerOptions`
@@ -168,6 +169,9 @@ let mut dataset = driver
   `Dataset::create_layer(Default::default())` instead.
 
   - <https://github.com/georust/gdal/pull/186>
+
+  - Wrapper functions for `OGR_F_GetFieldAs…` methods
+    - <https://github.com/georust/gdal/pull/199>
 
 ## 0.7.1
 
