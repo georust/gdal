@@ -690,4 +690,38 @@ mod tests {
     //         }
     //     });
     // }
+
+    #[test]
+    fn test_set_attribute_filter() {
+        with_layer("roads.geojson", |mut layer| {
+            // check number without calling any function
+            assert_eq!(layer.features().count(), 21);
+
+            // check if resetting does not corrupt anything
+            layer.set_attribute_filter(None).unwrap();
+            assert_eq!(layer.features().count(), 21);
+
+            // apply actual filter
+            layer
+                .set_attribute_filter(Some("highway = 'primary'"))
+                .unwrap();
+
+            assert_eq!(layer.features().count(), 1);
+            assert_eq!(
+                layer
+                    .features()
+                    .next()
+                    .unwrap()
+                    .field_as_string_by_name("highway")
+                    .unwrap()
+                    .unwrap(),
+                "primary"
+            );
+
+            // reset and check again
+            layer.set_attribute_filter(None).unwrap();
+
+            assert_eq!(layer.features().count(), 21);
+        });
+    }
 }

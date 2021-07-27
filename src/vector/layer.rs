@@ -330,6 +330,29 @@ impl<'a> Layer<'a> {
             gdal_sys::OGR_L_ResetReading(self.c_layer);
         }
     }
+
+    /// Set a new attribute query that restricts features when using the feature iterator.
+    ///
+    /// Parameters:
+    /// - `psz_query` `Some(query)` in restricted SQL WHERE format, or `None` to clear the current query.
+    ///
+    pub fn set_attribute_filter(&self, psz_query: Option<&str>) -> Result<()> {
+        let rv = if let Some(query) = psz_query {
+            let c_str = CString::new(query)?;
+            unsafe { gdal_sys::OGR_L_SetAttributeFilter(self.c_layer, c_str.as_ptr()) }
+        } else {
+            unsafe { gdal_sys::OGR_L_SetAttributeFilter(self.c_layer, std::ptr::null()) }
+        };
+
+        if rv != OGRErr::OGRERR_NONE {
+            return Err(GdalError::OgrError {
+                err: rv,
+                method_name: "OGR_L_SetAttributeFilter",
+            });
+        }
+
+        Ok(())
+    }
 }
 
 pub struct FeatureIterator<'a> {
