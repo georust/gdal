@@ -164,6 +164,11 @@ impl<'a> Layer<'a> {
         unsafe { gdal_sys::OGR_L_SetSpatialFilter(self.c_layer, geometry.c_geometry()) };
     }
 
+    /// Set a spatial rectangle filter on this layer by specifying the bounds of a rectangle.
+    pub fn set_spatial_filter_rect(&mut self, min_x: f64, min_y: f64, max_x: f64, max_y: f64) {
+        unsafe { gdal_sys::OGR_L_SetSpatialFilterRect(self.c_layer, min_x, min_y, max_x, max_y) };
+    }
+
     /// Clear spatial filters set on this layer.
     pub fn clear_spatial_filter(&mut self) {
         unsafe { gdal_sys::OGR_L_SetSpatialFilter(self.c_layer, null_mut()) };

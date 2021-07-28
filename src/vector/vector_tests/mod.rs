@@ -573,6 +573,10 @@ mod tests {
 
         layer.clear_spatial_filter();
         assert_eq!(layer.features().count(), 21);
+
+        // test filter as rectangle
+        layer.set_spatial_filter_rect(26.1017, 44.4297, 26.1025, 44.4303);
+        assert_eq!(layer.features().count(), 7);
     }
 
     #[test]
