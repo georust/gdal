@@ -573,6 +573,10 @@ mod tests {
 
         layer.clear_spatial_filter();
         assert_eq!(layer.features().count(), 21);
+
+        // test filter as rectangle
+        layer.set_spatial_filter_rect(26.1017, 44.4297, 26.1025, 44.4303);
+        assert_eq!(layer.features().count(), 7);
     }
 
     #[test]
@@ -690,4 +694,45 @@ mod tests {
     //         }
     //     });
     // }
+
+    #[test]
+    fn test_set_attribute_filter() {
+        with_layer("roads.geojson", |mut layer| {
+            // check number without calling any function
+            assert_eq!(layer.features().count(), 21);
+
+            // check if clearing does not corrupt anything
+            layer.clear_attribute_filter();
+            assert_eq!(layer.features().count(), 21);
+
+            // apply actual filter
+            layer.set_attribute_filter("highway = 'primary'").unwrap();
+
+            assert_eq!(layer.features().count(), 1);
+            assert_eq!(
+                layer
+                    .features()
+                    .next()
+                    .unwrap()
+                    .field_as_string_by_name("highway")
+                    .unwrap()
+                    .unwrap(),
+                "primary"
+            );
+
+            // clearing and check again
+            layer.clear_attribute_filter();
+
+            assert_eq!(layer.features().count(), 21);
+
+            // force error
+            assert_eq!(
+                layer.set_attribute_filter("foo = bar"),
+                Err(GdalError::OgrError {
+                    err: gdal_sys::OGRErr::OGRERR_CORRUPT_DATA,
+                    method_name: "OGR_L_SetAttributeFilter",
+                })
+            );
+        });
+    }
 }

@@ -170,8 +170,13 @@ let mut dataset = driver
 
   - <https://github.com/georust/gdal/pull/186>
 
-  - Wrapper functions for `OGR_F_GetFieldAs…` methods
-    - <https://github.com/georust/gdal/pull/199>
+- Wrapper functions for `OGR_F_GetFieldAs…` methods
+
+  - <https://github.com/georust/gdal/pull/199>
+
+- Wrapper functions for `OGR_L_SetAttributeFilter` and `OGR_L_SetSpatialFilterRect`
+
+  - <https://github.com/georust/gdal/pull/200>
 
 ## 0.7.1
 

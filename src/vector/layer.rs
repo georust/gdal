@@ -164,6 +164,11 @@ impl<'a> Layer<'a> {
         unsafe { gdal_sys::OGR_L_SetSpatialFilter(self.c_layer, geometry.c_geometry()) };
     }
 
+    /// Set a spatial rectangle filter on this layer by specifying the bounds of a rectangle.
+    pub fn set_spatial_filter_rect(&mut self, min_x: f64, min_y: f64, max_x: f64, max_y: f64) {
+        unsafe { gdal_sys::OGR_L_SetSpatialFilterRect(self.c_layer, min_x, min_y, max_x, max_y) };
+    }
+
     /// Clear spatial filters set on this layer.
     pub fn clear_spatial_filter(&mut self) {
         unsafe { gdal_sys::OGR_L_SetSpatialFilter(self.c_layer, null_mut()) };
@@ -328,6 +333,32 @@ impl<'a> Layer<'a> {
     fn reset_feature_reading(&mut self) {
         unsafe {
             gdal_sys::OGR_L_ResetReading(self.c_layer);
+        }
+    }
+
+    /// Set a new attribute query that restricts features when using the feature iterator.
+    ///
+    /// Parameters:
+    /// - `query` in restricted SQL WHERE format
+    ///
+    pub fn set_attribute_filter(&self, query: &str) -> Result<()> {
+        let c_str = CString::new(query)?;
+        let rv = unsafe { gdal_sys::OGR_L_SetAttributeFilter(self.c_layer, c_str.as_ptr()) };
+
+        if rv != OGRErr::OGRERR_NONE {
+            return Err(GdalError::OgrError {
+                err: rv,
+                method_name: "OGR_L_SetAttributeFilter",
+            });
+        }
+
+        Ok(())
+    }
+
+    /// Clear the attribute filter set on this layer
+    pub fn clear_attribute_filter(&self) {
+        unsafe {
+            gdal_sys::OGR_L_SetAttributeFilter(self.c_layer, null_mut());
         }
     }
 }
