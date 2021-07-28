@@ -180,6 +180,8 @@ let mut dataset = driver
 
 - Wrappers for `CPLSetThreadLocalConfigOption` and `CPLGetThreadLocalConfigOption`
 
+  - <https://github.com/georust/gdal/pull/201>
+
 ## 0.7.1
 
 - fix docs.rs build for gdal-sys
