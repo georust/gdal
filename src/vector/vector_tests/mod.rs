@@ -697,14 +697,12 @@ mod tests {
             // check number without calling any function
             assert_eq!(layer.features().count(), 21);
 
-            // check if resetting does not corrupt anything
-            layer.set_attribute_filter(None).unwrap();
+            // check if clearing does not corrupt anything
+            layer.clear_attribute_filter();
             assert_eq!(layer.features().count(), 21);
 
             // apply actual filter
-            layer
-                .set_attribute_filter(Some("highway = 'primary'"))
-                .unwrap();
+            layer.set_attribute_filter("highway = 'primary'").unwrap();
 
             assert_eq!(layer.features().count(), 1);
             assert_eq!(
@@ -718,10 +716,19 @@ mod tests {
                 "primary"
             );
 
-            // reset and check again
-            layer.set_attribute_filter(None).unwrap();
+            // clearing and check again
+            layer.clear_attribute_filter();
 
             assert_eq!(layer.features().count(), 21);
+
+            // force error
+            assert_eq!(
+                layer.set_attribute_filter("foo = bar"),
+                Err(GdalError::OgrError {
+                    err: gdal_sys::OGRErr::OGRERR_CORRUPT_DATA,
+                    method_name: "OGR_L_SetAttributeFilter",
+                })
+            );
         });
     }
 }
