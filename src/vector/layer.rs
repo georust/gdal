@@ -339,10 +339,10 @@ impl<'a> Layer<'a> {
     /// Set a new attribute query that restricts features when using the feature iterator.
     ///
     /// Parameters:
-    /// - `psz_query` in restricted SQL WHERE format
+    /// - `query` in restricted SQL WHERE format
     ///
-    pub fn set_attribute_filter(&self, psz_query: &str) -> Result<()> {
-        let c_str = CString::new(psz_query)?;
+    pub fn set_attribute_filter(&self, query: &str) -> Result<()> {
+        let c_str = CString::new(query)?;
         let rv = unsafe { gdal_sys::OGR_L_SetAttributeFilter(self.c_layer, c_str.as_ptr()) };
 
         if rv != OGRErr::OGRERR_NONE {
