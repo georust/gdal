@@ -1,5 +1,6 @@
 use std::ffi::CString;
 use std::marker::PhantomData;
+use std::mem::ManuallyDrop;
 
 use gdal_sys::{VSIFCloseL, VSIFileFromMemBuffer, VSIFree, VSIGetMemFileBuffer, VSIUnlink};
 
@@ -7,8 +8,11 @@ use crate::errors::{GdalError, Result};
 use crate::utils::_last_null_pointer_err;
 
 /// Creates a new VSIMemFile from a given buffer.
-pub fn create_mem_file(file_name: &str, mut data: Vec<u8>) -> Result<()> {
+pub fn create_mem_file(file_name: &str, data: Vec<u8>) -> Result<()> {
     let file_name = CString::new(file_name)?;
+
+    // ownership will be given to GDAL, so it should not be automaticly dropped
+    let mut data = ManuallyDrop::new(data);
 
     let handle = unsafe {
         VSIFileFromMemBuffer(
@@ -19,10 +23,9 @@ pub fn create_mem_file(file_name: &str, mut data: Vec<u8>) -> Result<()> {
         )
     };
 
-    // ownership was given to GDAL
-    std::mem::forget(data);
-
     if handle.is_null() {
+        // on error, allow dropping the data again
+        ManuallyDrop::into_inner(data);
         return Err(_last_null_pointer_err("VSIGetMemFileBuffer"));
     }
 
@@ -227,5 +230,25 @@ mod tests {
         unlink_mem_file(file_name).unwrap();
 
         drop(ref_handle);
+    }
+
+    #[test]
+    fn unable_to_create() {
+        let file_name = "";
+
+        assert_eq!(
+            create_mem_file(file_name, vec![1_u8, 2, 3, 4]),
+            Err(GdalError::NullPointer {
+                method_name: "VSIGetMemFileBuffer",
+                msg: "".to_string(),
+            })
+        );
+
+        assert_eq!(
+            unlink_mem_file(file_name),
+            Err(GdalError::UnlinkMemFile {
+                file_name: "".to_string()
+            })
+        );
     }
 }
