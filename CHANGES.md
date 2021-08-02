@@ -182,6 +182,10 @@ let mut dataset = driver
 
   - <https://github.com/georust/gdal/pull/201>
 
+- Wrappers for `VSIFileFromMemBuffer`, `VSIUnlink` and `VSIGetMemFileBuffer`
+
+  - <https://github.com/georust/gdal/pull/203>
+
 ## 0.7.1
 
 - fix docs.rs build for gdal-sys
