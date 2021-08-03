@@ -33,6 +33,7 @@ pub mod spatial_ref;
 mod utils;
 pub mod vector;
 pub mod version;
+pub mod vsi;
 
 pub use dataset::{
     Dataset, DatasetOptions, GdalOpenFlags, GeoTransform, LayerIterator, LayerOptions, Transaction,
