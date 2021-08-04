@@ -27,6 +27,7 @@ pub trait Metadata: MajorObject {
                 domains.push(_string(p));
             }
         }
+        unsafe { gdal_sys::CSLDestroy(c_res) };
 
         domains
     }

@@ -198,16 +198,18 @@ impl<'a> Layer<'a> {
         Ok(())
     }
     pub fn create_feature(&mut self, geometry: Geometry) -> Result<()> {
-        let c_feature = unsafe { gdal_sys::OGR_F_Create(self.defn.c_defn()) };
+
+        let feature = Feature::new(&self.defn)?;
+
         let c_geometry = unsafe { geometry.into_c_geometry() };
-        let rv = unsafe { gdal_sys::OGR_F_SetGeometryDirectly(c_feature, c_geometry) };
+        let rv = unsafe { gdal_sys::OGR_F_SetGeometryDirectly(feature.c_feature(), c_geometry) };
         if rv != OGRErr::OGRERR_NONE {
             return Err(GdalError::OgrError {
                 err: rv,
                 method_name: "OGR_F_SetGeometryDirectly",
             });
         }
-        let rv = unsafe { gdal_sys::OGR_L_CreateFeature(self.c_layer, c_feature) };
+        let rv = unsafe { gdal_sys::OGR_L_CreateFeature(self.c_layer, feature.c_feature()) };
         if rv != OGRErr::OGRERR_NONE {
             return Err(GdalError::OgrError {
                 err: rv,

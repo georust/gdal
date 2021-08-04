@@ -203,14 +203,16 @@ impl SpatialRef {
     pub fn to_wkt(&self) -> Result<String> {
         let mut c_wkt = ptr::null_mut();
         let rv = unsafe { gdal_sys::OSRExportToWkt(self.0, &mut c_wkt) };
-        if rv != OGRErr::OGRERR_NONE {
+        let res = if rv != OGRErr::OGRERR_NONE {
             Err(GdalError::OgrError {
                 err: rv,
                 method_name: "OSRExportToWkt",
             })
         } else {
             Ok(_string(c_wkt))
-        }
+        };
+        unsafe { gdal_sys::VSIFree(c_wkt.cast::<std::ffi::c_void>()) };
+        res
     }
 
     pub fn morph_to_esri(&self) -> Result<()> {
@@ -227,40 +229,48 @@ impl SpatialRef {
     pub fn to_pretty_wkt(&self) -> Result<String> {
         let mut c_wkt = ptr::null_mut();
         let rv = unsafe { gdal_sys::OSRExportToPrettyWkt(self.0, &mut c_wkt, false as c_int) };
-        if rv != OGRErr::OGRERR_NONE {
+        let res = if rv != OGRErr::OGRERR_NONE {
             Err(GdalError::OgrError {
                 err: rv,
                 method_name: "OSRExportToPrettyWkt",
             })
         } else {
             Ok(_string(c_wkt))
-        }
+        };
+        unsafe { gdal_sys::VSIFree(c_wkt.cast::<std::ffi::c_void>()) };
+        res
     }
 
     pub fn to_xml(&self) -> Result<String> {
         let mut c_raw_xml = ptr::null_mut();
         let rv = unsafe { gdal_sys::OSRExportToXML(self.0, &mut c_raw_xml, ptr::null()) };
-        if rv != OGRErr::OGRERR_NONE {
+        let res = if rv != OGRErr::OGRERR_NONE {
             Err(GdalError::OgrError {
                 err: rv,
                 method_name: "OSRExportToXML",
             })
         } else {
             Ok(_string(c_raw_xml))
-        }
+        };
+        unsafe { gdal_sys::VSIFree(c_raw_xml.cast::<std::ffi::c_void>()) };
+        res
+
     }
 
     pub fn to_proj4(&self) -> Result<String> {
         let mut c_proj4str = ptr::null_mut();
         let rv = unsafe { gdal_sys::OSRExportToProj4(self.0, &mut c_proj4str) };
-        if rv != OGRErr::OGRERR_NONE {
+        let res = if rv != OGRErr::OGRERR_NONE {
             Err(GdalError::OgrError {
                 err: rv,
                 method_name: "OSRExportToProj4",
             })
         } else {
             Ok(_string(c_proj4str))
-        }
+        };
+        unsafe { gdal_sys::VSIFree(c_proj4str.cast::<std::ffi::c_void>()) };
+        res
+
     }
 
     pub fn auth_name(&self) -> Result<String> {
