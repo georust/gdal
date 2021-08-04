@@ -198,7 +198,6 @@ impl<'a> Layer<'a> {
         Ok(())
     }
     pub fn create_feature(&mut self, geometry: Geometry) -> Result<()> {
-
         let feature = Feature::new(&self.defn)?;
 
         let c_geometry = unsafe { geometry.into_c_geometry() };

@@ -123,7 +123,7 @@ impl Driver {
                 options_c as *mut *mut i8,
             )
         };
-        unsafe { gdal_sys::CSLDestroy(options_c)};
+        unsafe { gdal_sys::CSLDestroy(options_c) };
 
         if c_dataset.is_null() {
             return Err(_last_null_pointer_err("GDALCreate"));

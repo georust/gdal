@@ -254,7 +254,6 @@ impl SpatialRef {
         };
         unsafe { gdal_sys::VSIFree(c_raw_xml.cast::<std::ffi::c_void>()) };
         res
-
     }
 
     pub fn to_proj4(&self) -> Result<String> {
@@ -270,7 +269,6 @@ impl SpatialRef {
         };
         unsafe { gdal_sys::VSIFree(c_proj4str.cast::<std::ffi::c_void>()) };
         res
-
     }
 
     pub fn auth_name(&self) -> Result<String> {
