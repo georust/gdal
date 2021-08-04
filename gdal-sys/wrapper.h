@@ -1,3 +1,7 @@
+/**
+ *  includes as in gdal/autotest/cpp/test_include_from_c_file.c
+ */
+
 #include "cpl_atomic_ops.h"
 #include "cpl_conv.h"
 #include "cpl_csv.h"
@@ -16,6 +20,11 @@
 #include "ogr_api.h"
 #include "ogr_core.h"
 #include "ogr_srs_api.h"
+
+/**
+ *  extra includes
+ */
+#include "gdalwarper.h"
 
 /**
  * Type for a OGR error
