@@ -1,7 +1,7 @@
 # gdal
 
 [![Documentation](https://docs.rs/gdal/badge.svg)](https://docs.rs/gdal)
-[![Build Status](https://github.com/georust/gdal/workflows/CI/badge.svg)]
+![Build Status](https://github.com/georust/gdal/workflows/CI/badge.svg)
 
 [GDAL](http://gdal.org/) bindings for [Rust](http://www.rust-lang.org/).
 
