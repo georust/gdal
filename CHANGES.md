@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- **Breaking**: Drop pre-build bindings for GDAL versions < 2.4. The bindgen feature can be used to generate bindings for older versions.
+- Fix memory leaks reported by Valgrind. This required re-generation of the pre-build bindings.
+  - <https://github.com/georust/gdal/pull/205>
+
 - **Breaking**: Implement `TryFrom` instead of `From` to convert from gdal geometries to `geo-types`. This avoids a possible panic on unsupported geometries and returns an error instead.
 - Add `Feature::c_feature` that returns the OGR feature handle.
   - <https://github.com/georust/gdal/pull/192>

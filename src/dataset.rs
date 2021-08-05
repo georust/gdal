@@ -687,7 +687,7 @@ impl Dataset {
 
         let dialect_ptr = match dialect_c_str {
             None => std::ptr::null(),
-            Some(ref d) => d.as_ptr(),
+            Some(d) => d.as_ptr(),
         };
 
         if let Some(spatial_filter) = spatial_filter {

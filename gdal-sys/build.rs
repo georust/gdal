@@ -14,6 +14,7 @@ pub fn write_bindings(include_paths: Vec<String>, out_path: &Path) {
         .constified_enum_module(".*")
         .ctypes_prefix("libc")
         .allowlist_function("CPL.*")
+        .allowlist_function("CSL.*")
         .allowlist_function("GDAL.*")
         .allowlist_function("OGR.*")
         .allowlist_function("OSR.*")
