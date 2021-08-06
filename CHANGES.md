@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Make `set_attribute_filter` and `clear_attribute_filter` take `&mut self`
+  - <https://github.com/georust/gdal/pull/209/>
+
 - **Breaking**: Drop pre-build bindings for GDAL versions < 2.4. The bindgen feature can be used to generate bindings for older versions.
 - Fix memory leaks reported by Valgrind. This required re-generation of the pre-build bindings.
   - <https://github.com/georust/gdal/pull/205>
