@@ -101,7 +101,7 @@ fn main() {
     let home_dir = env_dir("GDAL_HOME");
     let mut version = env::var_os("GDAL_VERSION")
         .map(|vs| vs.to_string_lossy().to_string())
-        .and_then(|vs| Version::parse(&vs).ok());
+        .and_then(|vs| Version::parse(vs.trim()).ok());
 
     let mut found = false;
     if cfg!(windows) {
@@ -195,7 +195,7 @@ fn main() {
             include_paths.push(dir.to_str().unwrap().to_string());
         }
         if version.is_none() {
-            if let Ok(pkg_version) = Version::parse(&gdal.version) {
+            if let Ok(pkg_version) = Version::parse(gdal.version.trim()) {
                 version.replace(pkg_version);
             }
         }
