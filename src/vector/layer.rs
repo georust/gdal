@@ -339,10 +339,12 @@ impl<'a> Layer<'a> {
 
     /// Set a new attribute query that restricts features when using the feature iterator.
     ///
+    /// From the GDAL docs: Note that installing a query string will generally result in resetting the current reading position
+    ///
     /// Parameters:
     /// - `query` in restricted SQL WHERE format
     ///
-    pub fn set_attribute_filter(&self, query: &str) -> Result<()> {
+    pub fn set_attribute_filter(&mut self, query: &str) -> Result<()> {
         let c_str = CString::new(query)?;
         let rv = unsafe { gdal_sys::OGR_L_SetAttributeFilter(self.c_layer, c_str.as_ptr()) };
 
@@ -357,7 +359,10 @@ impl<'a> Layer<'a> {
     }
 
     /// Clear the attribute filter set on this layer
-    pub fn clear_attribute_filter(&self) {
+    ///
+    /// From the GDAL docs: Note that installing a query string will generally result in resetting the current reading position
+    ///
+    pub fn clear_attribute_filter(&mut self) {
         unsafe {
             gdal_sys::OGR_L_SetAttributeFilter(self.c_layer, null_mut());
         }
