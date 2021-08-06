@@ -3,7 +3,7 @@
 ## Unreleased
 
 - Upgrade `semver` to 1.0 and trim gdal version output in `build.rs`.
-  - <https://github.com/georust/gdal/pull/210/>
+  - <https://github.com/georust/gdal/pull/211/>
 
 - **Breaking**: Make `set_attribute_filter` and `clear_attribute_filter` take `&mut self`
   - <https://github.com/georust/gdal/pull/209/>
