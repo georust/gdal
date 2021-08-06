@@ -275,8 +275,6 @@ impl<'a> RasterBand<'a> {
     }
 
     /// Read the full band as a 'Buffer<T>'.
-    /// # Arguments
-    /// * band_index - the band_index
     pub fn read_band_as<T: Copy + GdalType>(&self) -> Result<Buffer<T>> {
         let size = self.size();
         self.read_as::<T>(
@@ -320,9 +318,9 @@ impl<'a> RasterBand<'a> {
 
     /// Write a 'Buffer<T>' into a 'Dataset'.
     /// # Arguments
-    /// * band_index - the band_index
     /// * window - the window position from top left
     /// * window_size - the window size (GDAL will interpolate data if window_size != Buffer.size)
+    /// * buffer - the data to write into the window
     pub fn write<T: GdalType + Copy>(
         &mut self,
         window: (isize, isize),
