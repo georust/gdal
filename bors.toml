@@ -1,3 +1,5 @@
 status = [
-    "ci result",
+    "ci ubuntu-20.04",
+    "ci ubuntu-20.04 (--all-features)",
+    "clippy"
 ]
