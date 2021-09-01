@@ -196,7 +196,13 @@ let mut dataset = driver
 
   - <https://github.com/georust/gdal/pull/203>
 
+- Add `set_description` to the `Metadata` trait
+
+  - <https://github.com/georust/gdal/pull/212>
+  
 - Wrappers for `GDALRasterizeGeometries` provided in a new `rasters::rasterize` function
+
+  - <https://github.com/georust/gdal/pull/213>
 
 ## 0.7.1
 

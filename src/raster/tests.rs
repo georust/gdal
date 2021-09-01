@@ -220,6 +220,19 @@ fn test_set_metadata_item() {
 }
 
 #[test]
+fn test_set_description() {
+    let driver = Driver::get("MEM").unwrap();
+    let dataset = driver.create("", 1, 1, 1).unwrap();
+    let mut band = dataset.rasterband(1).unwrap();
+
+    let description = "A merry and cheerful band description";
+    assert_eq!(band.description().unwrap(), "");
+
+    band.set_description(description).unwrap();
+    assert_eq!(band.description().unwrap(), description);
+}
+
+#[test]
 fn test_create() {
     let driver = Driver::get("MEM").unwrap();
     let dataset = driver.create("", 10, 20, 3).unwrap();
