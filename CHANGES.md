@@ -198,6 +198,8 @@ let mut dataset = driver
 
 - Add `set_description` to the `Metadata` trait
 
+  - <https://github.com/georust/gdal/pull/212>
+
 
 ## 0.7.1
 
