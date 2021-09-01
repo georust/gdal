@@ -93,4 +93,14 @@ pub trait Metadata: MajorObject {
         }
         Ok(())
     }
+
+    fn set_description(&mut self, description: &str) -> Result<()> {
+        // For Datasets this sets the dataset name; normally
+        // application code should not set the "description" for
+        // GDALDatasets. For RasterBands it is actually a description
+        // (if supported) or "".
+        let c_description = CString::new(description.to_owned())?;
+        unsafe { gdal_sys::GDALSetDescription(self.gdal_object_ptr(), c_description.as_ptr()) };
+        Ok(())
+    }
 }
