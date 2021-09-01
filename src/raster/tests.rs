@@ -592,3 +592,26 @@ fn test_color_interp_names() {
         ColorInterpretation::Undefined
     );
 }
+
+#[test]
+fn test_rasterize() {
+    let wkt = "POLYGON ((2 2, 2 4.25, 4.25 4.25, 4.25 2, 2 2))";
+    let poly = crate::vector::Geometry::from_wkt(&wkt).unwrap();
+
+    let rows = 5;
+    let cols = 5;
+    let driver = Driver::get("MEM").unwrap();
+    let mut dataset = driver.create("", rows, cols, 1).unwrap();
+
+    let bands = [1];
+    let geometries = [poly];
+    let burn_values = [1.0];
+    super::rasterize(&mut dataset, &bands, &geometries, &burn_values, None).unwrap();
+
+    let rb = dataset.rasterband(1).unwrap();
+    let values = rb.read_as::<u8>((0, 0), (5, 5), (5, 5), None).unwrap();
+    assert_eq!(
+        values.data,
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0,]
+    );
+}

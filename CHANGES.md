@@ -196,6 +196,8 @@ let mut dataset = driver
 
   - <https://github.com/georust/gdal/pull/203>
 
+- Wrappers for `GDALRasterizeGeometries` provided in a new `rasters::rasterize` function
+
 ## 0.7.1
 
 - fix docs.rs build for gdal-sys
