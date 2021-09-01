@@ -609,7 +609,7 @@ fn test_color_interp_names() {
 #[test]
 fn test_rasterize() {
     let wkt = "POLYGON ((2 2, 2 4.25, 4.25 4.25, 4.25 2, 2 2))";
-    let poly = crate::vector::Geometry::from_wkt(&wkt).unwrap();
+    let poly = crate::vector::Geometry::from_wkt(wkt).unwrap();
 
     let rows = 5;
     let cols = 5;
