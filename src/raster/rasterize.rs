@@ -172,7 +172,7 @@ pub fn rasterize(
     burn_values: &[f64],
     options: Option<RasterizeOptions>,
 ) -> Result<()> {
-    assert!(bands.len() > 0);
+    assert!(!bands.is_empty());
     assert_eq!(burn_values.len(), geometries.len());
 
     let bands: Vec<i32> = bands.iter().map(|&band| band as i32).collect();
