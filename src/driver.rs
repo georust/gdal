@@ -120,7 +120,7 @@ impl Driver {
                 size_y as c_int,
                 bands as c_int,
                 T::gdal_type(),
-                options_c as *mut *mut i8,
+                options_c as gdal_sys::CSLConstList,
             )
         };
         unsafe { gdal_sys::CSLDestroy(options_c) };
