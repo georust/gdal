@@ -167,6 +167,9 @@ pub fn rasterize(
 ) -> Result<()> {
     assert!(!bands.is_empty());
     assert_eq!(burn_values.len(), geometries.len());
+    for band in bands {
+        assert!(*band > 0 && *band <= dataset.raster_count());
+    }
 
     let bands: Vec<i32> = bands.iter().map(|&band| band as i32).collect();
     let options = options.unwrap_or_default();
