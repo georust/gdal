@@ -7,7 +7,6 @@ use std::{convert::TryFrom, ffi::CString, ptr};
 
 use crate::errors::*;
 
-// Values taken from `gdal_alg_priv.h`
 #[derive(Copy, Clone, Debug)]
 pub enum BurnSource {
     /// Use whatever `burn_values` argument is supplied to
@@ -20,22 +19,10 @@ pub enum BurnSource {
     // `M` is defined but seemingly not allowed for rasterization
 }
 
-impl Default for BurnSource {
-    fn default() -> Self {
-        BurnSource::UserSupplied
-    }
-}
-
 #[derive(Copy, Clone, Debug)]
 pub enum MergeAlgorithm {
     Replace,
     Add,
-}
-
-impl Default for MergeAlgorithm {
-    fn default() -> Self {
-        MergeAlgorithm::Replace
-    }
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -45,14 +32,8 @@ pub enum OptimizeMode {
     Vector,
 }
 
-impl Default for OptimizeMode {
-    fn default() -> Self {
-        OptimizeMode::Automatic
-    }
-}
-
 /// Options that specify how to rasterize geometries.
-#[derive(Default, Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct RasterizeOptions {
     /// Set to `true` to set all pixels touched by the line or
     /// polygons, not just those whose center is within the polygon or
@@ -84,6 +65,18 @@ pub struct RasterizeOptions {
     pub chunk_y_size: usize,
 
     pub optimize: OptimizeMode,
+}
+
+impl Default for RasterizeOptions {
+    fn default() -> Self {
+        RasterizeOptions {
+            all_touched: false,
+            source: BurnSource::UserSupplied,
+            merge_algorithm: MergeAlgorithm::Replace,
+            chunk_y_size: 0,
+            optimize: OptimizeMode::Automatic,
+        }
+    }
 }
 
 /// An internal wrapper to simplify constructing **papszOptions. The
