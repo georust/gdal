@@ -169,7 +169,7 @@ fn failing_transformation() {
 
     let mut x = [1000000.0];
     let mut y = [1000000.0];
-    let mut z = [0.0, 0.0];
+    let mut z = [0.0];
 
     let trafo = CoordTransform::new(&wgs84, &webmercator).unwrap();
     let r = trafo.transform_coords(&mut x, &mut y, &mut z);
