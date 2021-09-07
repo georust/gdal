@@ -28,7 +28,7 @@ use libc::{c_char, c_void};
 
 use crate::errors::Result;
 use crate::utils::_string;
-use lazy_static::lazy_static;
+use once_cell::sync::Lazy;
 use std::ffi::CString;
 use std::sync::Mutex;
 
@@ -127,10 +127,9 @@ type CallbackType = dyn FnMut(CplErr, i32, &str) + 'static;
 static mut ERROR_CALLBACK: Option<Box<CallbackType>> = None;
 
 type CallbackTypeThreadSafe = dyn FnMut(CplErr, i32, &str) + 'static + Send;
-lazy_static! {
-    static ref ERROR_CALLBACK_THREAD_SAFE: Mutex<Option<Box<CallbackTypeThreadSafe>>> =
-        Mutex::new(None);
-}
+
+static ERROR_CALLBACK_THREAD_SAFE: Lazy<Mutex<Option<Box<CallbackTypeThreadSafe>>>> =
+    Lazy::new(Default::default);
 
 /// Set a custom error handler for GDAL.
 /// Could be overwritten by setting a thread-local error handler.
