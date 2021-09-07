@@ -23,9 +23,14 @@
 //! Refer to [GDAL `ConfigOptions`](https://trac.osgeo.org/gdal/wiki/ConfigOptions) for
 //! a full list of options.
 
+use gdal_sys::{CPLErr, CPLErrorNum, CPLGetErrorHandlerUserData};
+use libc::{c_char, c_void};
+
 use crate::errors::Result;
 use crate::utils::_string;
+use lazy_static::lazy_static;
 use std::ffi::CString;
+use std::sync::Mutex;
 
 /// Set a GDAL library configuration option
 ///
@@ -108,9 +113,202 @@ pub fn clear_thread_local_config_option(key: &str) -> Result<()> {
     Ok(())
 }
 
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[repr(C)]
+pub enum CplErr {
+    None = 0,
+    Debug = 1,
+    Warning = 2,
+    Failure = 3,
+    Fatal = 4,
+}
+
+type CallbackType = dyn FnMut(CplErr, i32, &str) + 'static;
+static mut ERROR_CALLBACK: Option<Box<CallbackType>> = None;
+
+type CallbackTypeThreadSafe = dyn FnMut(CplErr, i32, &str) + 'static + Send;
+lazy_static! {
+    static ref ERROR_CALLBACK_THREAD_SAFE: Mutex<Option<Box<CallbackTypeThreadSafe>>> =
+        Mutex::new(None);
+}
+
+/// Set a custom error handler for GDAL.
+/// Could be overwritten by setting a thread-local error handler.
+///
+/// *This method is not thread safe.*
+///
+/// Note:
+/// Stores the callback in the static variable [`ERROR_CALLBACK`].
+/// Internally, it passes a pointer to the callback to GDAL as `pUserData`.
+///
+pub fn set_error_handler<F>(callback: F)
+where
+    F: FnMut(CplErr, i32, &str) + 'static,
+{
+    unsafe extern "C" fn error_handler(
+        error_type: CPLErr::Type,
+        error_num: CPLErrorNum,
+        error_msg_ptr: *const c_char,
+    ) {
+        let error_msg = _string(error_msg_ptr);
+        let error_type: CplErr = std::mem::transmute(error_type);
+
+        // reconstruct callback from user data pointer
+        let callback_raw = CPLGetErrorHandlerUserData();
+        let callback: &mut Box<CallbackType> = &mut *(callback_raw as *mut Box<_>);
+
+        callback(error_type, error_num as i32, &error_msg);
+    }
+
+    unsafe {
+        // this part is not thread safe
+        ERROR_CALLBACK.replace(Box::new(callback));
+
+        if let Some(callback) = &mut ERROR_CALLBACK {
+            gdal_sys::CPLSetErrorHandlerEx(Some(error_handler), callback as *mut _ as *mut c_void);
+        }
+    };
+}
+
+/// Set a custom error handler for GDAL.
+/// Could be overwritten by setting a thread-local error handler.
+///
+/// Note:
+/// Stores the callback in the static variable [`ERROR_CALLBACK_THREAD_SAFE`].
+/// Internally, it passes a pointer to the callback to GDAL as `pUserData`.
+///
+pub fn set_error_handler_thread_safe<F>(callback: F)
+where
+    F: FnMut(CplErr, i32, &str) + 'static + Send,
+{
+    unsafe extern "C" fn error_handler(
+        error_type: CPLErr::Type,
+        error_num: CPLErrorNum,
+        error_msg_ptr: *const c_char,
+    ) {
+        let error_msg = _string(error_msg_ptr);
+        let error_type: CplErr = std::mem::transmute(error_type);
+
+        // reconstruct callback from user data pointer
+        let callback_raw = CPLGetErrorHandlerUserData();
+        let callback: &mut Box<CallbackTypeThreadSafe> = &mut *(callback_raw as *mut Box<_>);
+
+        callback(error_type, error_num as i32, &error_msg);
+    }
+
+    let mut callback_lock = match ERROR_CALLBACK_THREAD_SAFE.lock() {
+        Ok(guard) => guard,
+        // poor man's lock poisoning handling, i.e., ignoring it
+        Err(poison_error) => poison_error.into_inner(),
+    };
+    callback_lock.replace(Box::new(callback));
+
+    if let Some(callback) = callback_lock.as_mut() {
+        unsafe {
+            gdal_sys::CPLSetErrorHandlerEx(Some(error_handler), callback as *mut _ as *mut c_void);
+        };
+    }
+}
+
+/// Remove a custom error handler for GDAL.
+pub fn remove_error_handler() {
+    unsafe {
+        gdal_sys::CPLSetErrorHandler(None);
+    };
+
+    // drop callback
+    unsafe {
+        ERROR_CALLBACK.take();
+    }
+}
+
+/// Remove a custom error handler for GDAL.
+pub fn remove_error_handler_thread_safe() {
+    unsafe {
+        gdal_sys::CPLSetErrorHandler(None);
+    };
+
+    // drop callback
+
+    let mut callback_lock = match ERROR_CALLBACK_THREAD_SAFE.lock() {
+        Ok(guard) => guard,
+        // poor man's lock poisoning handling, i.e., ignoring it
+        Err(poison_error) => poison_error.into_inner(),
+    };
+
+    callback_lock.take();
+}
+
 #[cfg(test)]
 mod tests {
+
+    use std::sync::{Arc, Mutex};
+
     use super::*;
+
+    #[test]
+    fn error_handler() {
+        let errors: Arc<Mutex<Vec<(CplErr, i32, String)>>> = Arc::new(Mutex::new(vec![]));
+
+        let errors_clone = errors.clone();
+
+        set_error_handler(move |a, b, c| {
+            errors_clone.lock().unwrap().push((a, b, c.to_string()));
+        });
+
+        unsafe {
+            let msg = CString::new("foo".as_bytes()).unwrap();
+            gdal_sys::CPLError(CPLErr::CE_Failure, 42, msg.as_ptr());
+        };
+
+        unsafe {
+            let msg = CString::new("bar".as_bytes()).unwrap();
+            gdal_sys::CPLError(std::mem::transmute(CplErr::Warning), 1, msg.as_ptr());
+        };
+
+        remove_error_handler();
+
+        let result: Vec<(CplErr, i32, String)> = errors.lock().unwrap().clone();
+        assert_eq!(
+            result,
+            vec![
+                (CplErr::Failure, 42, "foo".to_string()),
+                (CplErr::Warning, 1, "bar".to_string())
+            ]
+        );
+    }
+
+    #[test]
+    fn error_handler_thread_safe() {
+        let errors: Arc<Mutex<Vec<(CplErr, i32, String)>>> = Arc::new(Mutex::new(vec![]));
+
+        let errors_clone = errors.clone();
+
+        set_error_handler_thread_safe(move |a, b, c| {
+            errors_clone.lock().unwrap().push((a, b, c.to_string()));
+        });
+
+        unsafe {
+            let msg = CString::new("foo".as_bytes()).unwrap();
+            gdal_sys::CPLError(CPLErr::CE_Failure, 42, msg.as_ptr());
+        };
+
+        unsafe {
+            let msg = CString::new("bar".as_bytes()).unwrap();
+            gdal_sys::CPLError(std::mem::transmute(CplErr::Warning), 1, msg.as_ptr());
+        };
+
+        remove_error_handler_thread_safe();
+
+        let result: Vec<(CplErr, i32, String)> = errors.lock().unwrap().clone();
+        assert_eq!(
+            result,
+            vec![
+                (CplErr::Failure, 42, "foo".to_string()),
+                (CplErr::Warning, 1, "bar".to_string())
+            ]
+        );
+    }
 
     #[test]
     fn test_set_get_option() {
