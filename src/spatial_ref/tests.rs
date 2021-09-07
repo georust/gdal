@@ -81,7 +81,7 @@ fn transform_coordinates() {
     let mut xs = [23.43, 23.50];
     let mut ys = [37.58, 37.70];
     transform
-        .transform_coords(&mut xs, &mut ys, &mut [0.0, 0.0])
+        .transform_coords(&mut xs, &mut ys, &mut [])
         .unwrap();
     assert_almost_eq(xs[0], 5509543.1508097);
     assert_almost_eq(ys[0], 1716062.1916192223);

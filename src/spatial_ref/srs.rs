@@ -2,7 +2,7 @@ use crate::utils::{_last_cpl_err, _last_null_pointer_err, _string};
 use gdal_sys::{self, CPLErr, OGRCoordinateTransformationH, OGRErr, OGRSpatialReferenceH};
 use libc::{c_char, c_int};
 use std::ffi::{CStr, CString};
-use std::ptr;
+use std::ptr::{self, null_mut};
 use std::str::FromStr;
 
 use crate::errors::*;
@@ -42,7 +42,12 @@ impl CoordTransform {
                 nb_coords as c_int,
                 x.as_mut_ptr(),
                 y.as_mut_ptr(),
-                z.as_mut_ptr(),
+                if z.is_empty() {
+                    null_mut()
+                } else {
+                    assert_eq!(nb_coords, z.len());
+                    z.as_mut_ptr()
+                },
             ) == 1
         };
 
