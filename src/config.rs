@@ -26,7 +26,7 @@
 use gdal_sys::{CPLErr, CPLErrorNum, CPLGetErrorHandlerUserData};
 use libc::{c_char, c_void};
 
-use crate::errors::Result;
+use crate::errors::{CplErrType, Result};
 use crate::utils::_string;
 use once_cell::sync::Lazy;
 use std::ffi::CString;
@@ -114,17 +114,7 @@ pub fn clear_thread_local_config_option(key: &str) -> Result<()> {
     Ok(())
 }
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
-#[repr(C)]
-pub enum CplErr {
-    None = 0,
-    Debug = 1,
-    Warning = 2,
-    Failure = 3,
-    Fatal = 4,
-}
-
-type CallbackType = dyn FnMut(CplErr, i32, &str) + 'static + Send;
+type CallbackType = dyn FnMut(CplErrType, i32, &str) + 'static + Send;
 type PinnedCallback = Pin<Box<Box<CallbackType>>>;
 
 /// Static variable that holds the current error callback function
@@ -139,7 +129,7 @@ static ERROR_CALLBACK: Lazy<Mutex<Option<PinnedCallback>>> = Lazy::new(Default::
 ///
 pub fn set_error_handler<F>(callback: F)
 where
-    F: FnMut(CplErr, i32, &str) + 'static + Send,
+    F: FnMut(CplErrType, i32, &str) + 'static + Send,
 {
     unsafe extern "C" fn error_handler(
         error_type: CPLErr::Type,
@@ -147,7 +137,7 @@ where
         error_msg_ptr: *const c_char,
     ) {
         let error_msg = _string(error_msg_ptr);
-        let error_type: CplErr = std::mem::transmute(error_type);
+        let error_type: CplErrType = error_type.into();
 
         // reconstruct callback from user data pointer
         let callback_raw = CPLGetErrorHandlerUserData();
@@ -199,7 +189,7 @@ mod tests {
 
     #[test]
     fn error_handler() {
-        let errors: Arc<Mutex<Vec<(CplErr, i32, String)>>> = Arc::new(Mutex::new(vec![]));
+        let errors: Arc<Mutex<Vec<(CplErrType, i32, String)>>> = Arc::new(Mutex::new(vec![]));
 
         let errors_clone = errors.clone();
 
@@ -214,17 +204,17 @@ mod tests {
 
         unsafe {
             let msg = CString::new("bar".as_bytes()).unwrap();
-            gdal_sys::CPLError(std::mem::transmute(CplErr::Warning), 1, msg.as_ptr());
+            gdal_sys::CPLError(std::mem::transmute(CplErrType::Warning), 1, msg.as_ptr());
         };
 
         remove_error_handler();
 
-        let result: Vec<(CplErr, i32, String)> = errors.lock().unwrap().clone();
+        let result: Vec<(CplErrType, i32, String)> = errors.lock().unwrap().clone();
         assert_eq!(
             result,
             vec![
-                (CplErr::Failure, 42, "foo".to_string()),
-                (CplErr::Warning, 1, "bar".to_string())
+                (CplErrType::Failure, 42, "foo".to_string()),
+                (CplErrType::Warning, 1, "bar".to_string())
             ]
         );
     }
