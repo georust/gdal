@@ -33,9 +33,21 @@ impl CoordTransform {
         })
     }
 
+    /// Transform coordinates in place.
+    ///
+    /// # Arguments
+    /// * x - slice of x coordinates
+    /// * y - slice of y coordinates (must match x in length)
+    /// * z - slice of z coordinates, or an empty slice to ignore
     pub fn transform_coords(&self, x: &mut [f64], y: &mut [f64], z: &mut [f64]) -> Result<()> {
         let nb_coords = x.len();
-        assert_eq!(nb_coords, y.len());
+        assert_eq!(
+            nb_coords,
+            y.len(),
+            "transform coordinate slices have different length: {} != {}",
+            nb_coords,
+            y.len()
+        );
         let ret_val = unsafe {
             gdal_sys::OCTTransform(
                 self.inner,
@@ -45,7 +57,13 @@ impl CoordTransform {
                 if z.is_empty() {
                     null_mut()
                 } else {
-                    assert_eq!(nb_coords, z.len());
+                    assert_eq!(
+                        nb_coords,
+                        z.len(),
+                        "transform coordinate slices have different length: {} != {}",
+                        nb_coords,
+                        z.len()
+                    );
                     z.as_mut_ptr()
                 },
             ) == 1
