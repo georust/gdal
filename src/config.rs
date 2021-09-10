@@ -30,7 +30,6 @@ use crate::errors::{CplErrType, Result};
 use crate::utils::_string;
 use once_cell::sync::Lazy;
 use std::ffi::CString;
-use std::pin::Pin;
 use std::sync::Mutex;
 
 /// Set a GDAL library configuration option
@@ -115,7 +114,7 @@ pub fn clear_thread_local_config_option(key: &str) -> Result<()> {
 }
 
 type ErrorCallbackType = dyn FnMut(CplErrType, i32, &str) + 'static + Send;
-type PinnedErrorCallback = Pin<Box<Box<ErrorCallbackType>>>;
+type PinnedErrorCallback = Box<Box<ErrorCallbackType>>;
 
 /// Static variable that holds the current error callback function
 static ERROR_CALLBACK: Lazy<Mutex<Option<PinnedErrorCallback>>> = Lazy::new(Default::default);
@@ -147,9 +146,9 @@ where
     }
 
     // pin memory location of callback for sending its pointer to GDAL
-    let mut callback: PinnedErrorCallback = Box::pin(Box::new(callback));
+    let mut callback: PinnedErrorCallback = Box::new(Box::new(callback));
 
-    let callback_ref: &mut Box<ErrorCallbackType> = callback.as_mut().get_mut();
+    let callback_ref: &mut Box<ErrorCallbackType> = callback.as_mut();
 
     let mut callback_lock = match ERROR_CALLBACK.lock() {
         Ok(guard) => guard,
