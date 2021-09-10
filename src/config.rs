@@ -114,19 +114,19 @@ pub fn clear_thread_local_config_option(key: &str) -> Result<()> {
     Ok(())
 }
 
-type CallbackType = dyn FnMut(CplErrType, i32, &str) + 'static + Send;
-type PinnedCallback = Pin<Box<Box<CallbackType>>>;
+type ErrorCallbackType = dyn FnMut(CplErrType, i32, &str) + 'static + Send;
+type PinnedErrorCallback = Pin<Box<Box<ErrorCallbackType>>>;
 
 /// Static variable that holds the current error callback function
-static ERROR_CALLBACK: Lazy<Mutex<Option<PinnedCallback>>> = Lazy::new(Default::default);
+static ERROR_CALLBACK: Lazy<Mutex<Option<PinnedErrorCallback>>> = Lazy::new(Default::default);
 
 /// Set a custom error handler for GDAL.
 /// Could be overwritten by setting a thread-local error handler.
 ///
-/// Note:
-/// Stores the callback in the static variable [`ERROR_CALLBACK_THREAD_SAFE`].
-/// Internally, it passes a pointer to the callback to GDAL as `pUserData`.
-///
+// Note:
+// Stores the callback in the static variable [`ERROR_CALLBACK`].
+// Internally, it passes a pointer to the callback to GDAL as `pUserData`.
+//
 pub fn set_error_handler<F>(callback: F)
 where
     F: FnMut(CplErrType, i32, &str) + 'static + Send,
@@ -141,15 +141,15 @@ where
 
         // reconstruct callback from user data pointer
         let callback_raw = CPLGetErrorHandlerUserData();
-        let callback: &mut Box<CallbackType> = &mut *(callback_raw as *mut Box<_>);
+        let callback: &mut Box<ErrorCallbackType> = &mut *(callback_raw as *mut Box<_>);
 
         callback(error_type, error_num as i32, &error_msg);
     }
 
     // pin memory location of callback for sending its pointer to GDAL
-    let mut callback: PinnedCallback = Box::pin(Box::new(callback));
+    let mut callback: PinnedErrorCallback = Box::pin(Box::new(callback));
 
-    let callback_ref: &mut Box<CallbackType> = callback.as_mut().get_mut();
+    let callback_ref: &mut Box<ErrorCallbackType> = callback.as_mut().get_mut();
 
     let mut callback_lock = match ERROR_CALLBACK.lock() {
         Ok(guard) => guard,
