@@ -150,33 +150,36 @@ where
     let mut callback: PinnedCallback = Box::pin(Box::new(callback));
 
     let callback_ref: &mut Box<CallbackType> = callback.as_mut().get_mut();
-    unsafe {
-        gdal_sys::CPLSetErrorHandlerEx(Some(error_handler), callback_ref as *mut _ as *mut c_void);
-    };
 
     let mut callback_lock = match ERROR_CALLBACK.lock() {
         Ok(guard) => guard,
         // poor man's lock poisoning handling, i.e., ignoring it
         Err(poison_error) => poison_error.into_inner(),
     };
+
+    // changing the error callback is fenced by the callback lock
+    unsafe {
+        gdal_sys::CPLSetErrorHandlerEx(Some(error_handler), callback_ref as *mut _ as *mut c_void);
+    };
+
     // store callback in static variable so we avoid a dangling pointer
     callback_lock.replace(callback);
 }
 
 /// Remove a custom error handler for GDAL.
 pub fn remove_error_handler() {
-    unsafe {
-        gdal_sys::CPLSetErrorHandler(None);
-    };
-
-    // drop callback
-
     let mut callback_lock = match ERROR_CALLBACK.lock() {
         Ok(guard) => guard,
         // poor man's lock poisoning handling, i.e., ignoring it
         Err(poison_error) => poison_error.into_inner(),
     };
 
+    // changing the error callback is fenced by the callback lock
+    unsafe {
+        gdal_sys::CPLSetErrorHandler(None);
+    };
+
+    // drop callback
     callback_lock.take();
 }
 
@@ -217,6 +220,38 @@ mod tests {
                 (CplErrType::Warning, 1, "bar".to_string())
             ]
         );
+    }
+
+    #[test]
+    fn error_handler_interleaved() {
+        use std::thread;
+        // Two racing threads trying to set error handlers
+        // First one
+        thread::spawn(move || loop {
+            set_error_handler(move |_a, _b, _c| {});
+        });
+
+        // Second one
+        thread::spawn(move || loop {
+            set_error_handler(move |_a, _b, _c| {});
+        });
+
+        // A thread that makes a lot of mistakes
+        let join_handle = thread::spawn(move || {
+            for _ in 0..100 {
+                unsafe {
+                    let msg = CString::new("foo".as_bytes()).unwrap();
+                    gdal_sys::CPLError(CPLErr::CE_Failure, 42, msg.as_ptr());
+                };
+
+                unsafe {
+                    let msg = CString::new("bar".as_bytes()).unwrap();
+                    gdal_sys::CPLError(std::mem::transmute(CplErrType::Warning), 1, msg.as_ptr());
+                };
+            }
+        });
+
+        join_handle.join().unwrap();
     }
 
     #[test]
