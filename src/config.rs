@@ -126,9 +126,11 @@ static ERROR_CALLBACK: Lazy<Mutex<Option<PinnedErrorCallback>>> = Lazy::new(Defa
 // Stores the callback in the static variable [`ERROR_CALLBACK`].
 // Internally, it passes a pointer to the callback to GDAL as `pUserData`.
 //
+/// The function must be `Send` and `Sync` since it is potentially called from multiple threads.
+///
 pub fn set_error_handler<F>(callback: F)
 where
-    F: FnMut(CplErrType, i32, &str) + 'static + Send,
+    F: FnMut(CplErrType, i32, &str) + 'static + Send + Sync,
 {
     unsafe extern "C" fn error_handler(
         error_type: CPLErr::Type,
@@ -152,7 +154,7 @@ where
 
     let mut callback_lock = match ERROR_CALLBACK.lock() {
         Ok(guard) => guard,
-        // poor man's lock poisoning handling, i.e., ignoring it
+        // poisoning could only occur on `CPLSetErrorHandler(Ex)` panicing, thus the value must be valid nevertheless
         Err(poison_error) => poison_error.into_inner(),
     };
 
@@ -169,7 +171,7 @@ where
 pub fn remove_error_handler() {
     let mut callback_lock = match ERROR_CALLBACK.lock() {
         Ok(guard) => guard,
-        // poor man's lock poisoning handling, i.e., ignoring it
+        // poisoning could only occur on `CPLSetErrorHandler(Ex)` panicing, thus the value must be valid nevertheless
         Err(poison_error) => poison_error.into_inner(),
     };
 
@@ -235,7 +237,7 @@ mod tests {
             set_error_handler(move |_a, _b, _c| {});
         });
 
-        // A thread that makes a lot of mistakes
+        // A thread that provokes potential race conditions
         let join_handle = thread::spawn(move || {
             for _ in 0..100 {
                 unsafe {
