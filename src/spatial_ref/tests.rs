@@ -80,11 +80,13 @@ fn transform_coordinates() {
     let transform = CoordTransform::new(&spatial_ref1, &spatial_ref2).unwrap();
     let mut xs = [23.43, 23.50];
     let mut ys = [37.58, 37.70];
+    let mut zs = [32.0, 20.0];
     transform
-        .transform_coords(&mut xs, &mut ys, &mut [])
+        .transform_coords(&mut xs, &mut ys, &mut zs)
         .unwrap();
     assert_almost_eq(xs[0], 5509543.1508097);
     assert_almost_eq(ys[0], 1716062.1916192223);
+    assert_almost_eq(zs[0], 32.0);
 }
 
 #[test]
@@ -169,10 +171,9 @@ fn failing_transformation() {
 
     let mut x = [1000000.0];
     let mut y = [1000000.0];
-    let mut z = [0.0];
 
     let trafo = CoordTransform::new(&wgs84, &webmercator).unwrap();
-    let r = trafo.transform_coords(&mut x, &mut y, &mut z);
+    let r = trafo.transform_coords(&mut x, &mut y, &mut []);
 
     assert!(r.is_err());
     if let GdalError::InvalidCoordinateRange { .. } = r.unwrap_err() {

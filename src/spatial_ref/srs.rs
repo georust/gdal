@@ -44,7 +44,7 @@ impl CoordTransform {
         assert_eq!(
             nb_coords,
             y.len(),
-            "transform coordinate slices have different length: {} != {}",
+            "transform coordinate slices have different lengths: {} != {}",
             nb_coords,
             y.len()
         );
@@ -60,7 +60,7 @@ impl CoordTransform {
                     assert_eq!(
                         nb_coords,
                         z.len(),
-                        "transform coordinate slices have different length: {} != {}",
+                        "transform coordinate slices have different lengths: {} != {}",
                         nb_coords,
                         z.len()
                     );
