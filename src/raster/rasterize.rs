@@ -3,7 +3,7 @@ use crate::utils::_last_cpl_err;
 use crate::vector::Geometry;
 use gdal_sys::{self, CPLErr};
 use libc::{c_char, c_void};
-use std::{convert::TryFrom, ffi::CString, ptr};
+use std::{ffi::CString, ptr};
 
 use crate::errors::*;
 
@@ -79,70 +79,100 @@ impl Default for RasterizeOptions {
     }
 }
 
-/// An internal wrapper to simplify constructing **papszOptions. The
-/// key is that you keep TextOptions around during a call that uses
-/// its `as_ptr` result.
+type OptionPtr = *mut *mut c_char;
+
+/// An internal wrapper to simplify constructing **papszOptions.
 struct TextOptions {
-    cstrings: Vec<CString>,
-    ptrs: Vec<*const i8>,
+    c_options: OptionPtr,
+}
+
+impl Default for TextOptions {
+    fn default() -> Self {
+        TextOptions {
+            c_options: ptr::null_mut(),
+        }
+    }
 }
 
 impl TextOptions {
-    fn new(strings: &[&str]) -> Result<TextOptions> {
-        let cstrings: Result<Vec<CString>> = strings
-            .iter()
-            .map(|&s| CString::new(s).map_err(|error| error.into()))
-            .collect();
-        let cstrings = cstrings?;
-        let ptrs = cstrings
-            .iter()
-            .map(|s| s.as_ptr())
-            .chain(std::iter::once(ptr::null()))
-            .collect();
-        Ok(TextOptions { cstrings, ptrs })
+    /// Add a key-value pair.
+    /// * `key` should be a "well formed token (no spaces or very special characters)"
+    /// * `value` can be anything but shouldn't have carriage return or linefeed characters present
+    fn add(&mut self, key: &str, value: &str) -> Result<()> {
+        assert!(key.chars().all(|c| c.is_ascii_alphanumeric() || c == '_'));
+        assert!(!value.contains(|c| c == '\n' || c == '\r'));
+        let key = CString::new(key)?;
+        let value = CString::new(value)?;
+        unsafe {
+            self.c_options =
+                gdal_sys::CSLSetNameValue(self.c_options, key.as_ptr(), value.as_ptr());
+        }
+        Ok(())
     }
 
-    fn as_ptr(&self) -> *const *const c_char {
-        if self.cstrings.is_empty() {
-            ptr::null()
-        } else {
-            self.ptrs.as_ptr()
-        }
+    fn into_ptr(self) -> OptionPtr {
+        self.c_options
     }
 }
 
-impl TryFrom<&RasterizeOptions> for TextOptions {
-    type Error = GdalError;
+impl RasterizeOptions {
+    fn as_ptr(&self) -> Result<OptionPtr> {
+        let mut options = TextOptions::default();
 
-    fn try_from(options: &RasterizeOptions) -> Result<Self> {
-        let mut strings = vec![
-            format!(
-                "ALL_TOUCHED={}",
-                if options.all_touched { "TRUE" } else { "FALSE" }
-            ),
-            format!(
-                "MERGE_ALG={}",
-                match options.merge_algorithm {
-                    MergeAlgorithm::Replace => "REPLACE",
-                    MergeAlgorithm::Add => "ADD",
-                }
-            ),
-            format!("CHUNKYSIZE={}", options.chunk_y_size),
-            format!(
-                "OPTIM={}",
-                match options.optimize {
-                    OptimizeMode::Automatic => "AUTO",
-                    OptimizeMode::Raster => "RASTER",
-                    OptimizeMode::Vector => "VECTOR",
-                }
-            ),
-        ];
-        if let BurnSource::Z = options.source {
-            strings.push("BURN_VALUE_FROM=Z".to_string());
+        options.add(
+            "ALL_TOUCHED",
+            if self.all_touched { "TRUE" } else { "FALSE" },
+        )?;
+        options.add(
+            "MERGE_ALG",
+            match self.merge_algorithm {
+                MergeAlgorithm::Replace => "REPLACE",
+                MergeAlgorithm::Add => "ADD",
+            },
+        )?;
+        options.add("CHUNKYSIZE", &self.chunk_y_size.to_string())?;
+        options.add(
+            "OPTIM",
+            match self.optimize {
+                OptimizeMode::Automatic => "AUTO",
+                OptimizeMode::Raster => "RASTER",
+                OptimizeMode::Vector => "VECTOR",
+            },
+        )?;
+        if let BurnSource::Z = self.source {
+            options.add("BURN_VALUE_FROM", "Z")?;
         }
 
-        let strs: Vec<&str> = strings.iter().map(String::as_str).collect();
-        TextOptions::new(&strs)
+        Ok(options.into_ptr())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{OptionPtr, RasterizeOptions};
+    use std::ffi::{CStr, CString};
+
+    fn fetch(c_options: &OptionPtr, key: &str) -> Option<String> {
+        let key = CString::new(key).unwrap();
+        unsafe {
+            let c_value = gdal_sys::CSLFetchNameValue(*c_options, key.as_ptr());
+            if c_value.is_null() {
+                None
+            } else {
+                Some(CStr::from_ptr(c_value).to_str().unwrap())
+            }
+        }
+        .map(String::from)
+    }
+
+    #[test]
+    fn test_rasterizeoptions_as_ptr() {
+        let c_options = RasterizeOptions::default().as_ptr().unwrap();
+        assert_eq!(fetch(&c_options, "ALL_TOUCHED"), Some("FALSE".to_string()));
+        assert_eq!(fetch(&c_options, "BURN_VALUE_FROM"), None);
+        assert_eq!(fetch(&c_options, "MERGE_ALG"), Some("REPLACE".to_string()));
+        assert_eq!(fetch(&c_options, "CHUNKYSIZE"), Some("0".to_string()));
+        assert_eq!(fetch(&c_options, "OPTIM"), Some("AUTO".to_string()));
     }
 }
 
@@ -184,7 +214,7 @@ pub fn rasterize(
         .copied()
         .collect();
 
-    let text_options: TextOptions = TryFrom::try_from(&options)?;
+    let c_options = options.as_ptr()?;
     unsafe {
         // The C function takes `bands`, `geometries`, `burn_values`
         // and `options` without mention of `const`, and this is
@@ -201,7 +231,7 @@ pub fn rasterize(
             None,
             ptr::null_mut(),
             burn_values.as_ptr() as *mut f64,
-            text_options.as_ptr() as *mut *mut i8,
+            c_options as *mut *mut i8,
             None,
             ptr::null_mut(),
         );
