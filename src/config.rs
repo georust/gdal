@@ -114,6 +114,10 @@ pub fn clear_thread_local_config_option(key: &str) -> Result<()> {
 }
 
 type ErrorCallbackType = dyn FnMut(CplErrType, i32, &str) + 'static + Send;
+// We have to double-`Box` the type because we need two things:
+// 1. A stable pointer for moving the data in and out of the `Mutex`. This is done by the outer `Box`.
+// 2. A thin pointer to our Trait-`FnMut`. This is done by the inner (sized) `Box`. We cannot use `*mut dyn FnMut`
+//    (a fat pointer) since we have to cast it from a `*mut c_void`, which is a thin pointer.
 type PinnedErrorCallback = Box<Box<ErrorCallbackType>>;
 
 /// Static variable that holds the current error callback function
