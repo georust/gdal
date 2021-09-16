@@ -68,4 +68,6 @@ pub enum GdalError {
     UnsupportedGdalGeometryType(OGRwkbGeometryType::Type),
     #[error("Unable to unlink mem file: {file_name}")]
     UnlinkMemFile { file_name: String },
+    #[error("BadArgument")]
+    BadArgument(String),
 }

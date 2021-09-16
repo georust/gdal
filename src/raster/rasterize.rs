@@ -99,8 +99,19 @@ impl TextOptions {
     /// * `key` should be a "well formed token (no spaces or very special characters)"
     /// * `value` can be anything but shouldn't have carriage return or linefeed characters present
     fn add(&mut self, key: &str, value: &str) -> Result<()> {
-        assert!(key.chars().all(|c| c.is_ascii_alphanumeric() || c == '_'));
-        assert!(!value.contains(|c| c == '\n' || c == '\r'));
+        if !key.chars().all(|c| c.is_ascii_alphanumeric() || c == '_') {
+            return Err(GdalError::BadArgument(format!(
+                "Invalid characters in key: '{}'",
+                key
+            )));
+        }
+        if value.contains(|c| c == '\n' || c == '\r') {
+            return Err(GdalError::BadArgument(format!(
+                "Invalid characters in value: '{}'",
+                value
+            )));
+        }
+
         let key = CString::new(key)?;
         let value = CString::new(value)?;
         unsafe {
@@ -195,10 +206,26 @@ pub fn rasterize(
     burn_values: &[f64],
     options: Option<RasterizeOptions>,
 ) -> Result<()> {
-    assert!(!bands.is_empty());
-    assert_eq!(burn_values.len(), geometries.len());
+    if bands.is_empty() {
+        return Err(GdalError::BadArgument(
+            "`bands` must not be empty".to_string(),
+        ));
+    }
+    if burn_values.len() != geometries.len() {
+        return Err(GdalError::BadArgument(format!(
+            "Burn values length ({}) must match geometries length ({})",
+            burn_values.len(),
+            geometries.len()
+        )));
+    }
     for band in bands {
-        assert!(*band > 0 && *band <= dataset.raster_count());
+        let is_good = *band > 0 && *band <= dataset.raster_count();
+        if !is_good {
+            return Err(GdalError::BadArgument(format!(
+                "Band index {} is out of bounds",
+                *band
+            )));
+        }
     }
 
     let bands: Vec<i32> = bands.iter().map(|&band| band as i32).collect();
