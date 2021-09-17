@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Update types to fix build on ppc64le.
+  - <https://github.com/georust/gdal/pull/214/>
+
 - Upgrade `semver` to 1.0 and trim gdal version output in `build.rs`.
   - <https://github.com/georust/gdal/pull/211/>
 
@@ -202,7 +205,13 @@ let mut dataset = driver
   
 - Wrappers for `GDALRasterizeGeometries` provided in a new `rasters::rasterize` function
 
+
   - <https://github.com/georust/gdal/pull/213>
+
+- Added `set_error_handler` and `remove_error_handler` to the config module that wraps `CPLSetErrorHandlerEx`
+
+  - <https://github.com/georust/gdal/pull/215>
+
 
 ## 0.7.1
 

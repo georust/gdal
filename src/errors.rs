@@ -71,3 +71,24 @@ pub enum GdalError {
     #[error("BadArgument")]
     BadArgument(String),
 }
+
+/// A wrapper for [`CPLErr::Type`] that reflects it as an enum
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[repr(C)]
+pub enum CplErrType {
+    None = 0,
+    Debug = 1,
+    Warning = 2,
+    Failure = 3,
+    Fatal = 4,
+}
+
+impl From<CPLErr::Type> for CplErrType {
+    fn from(error_type: CPLErr::Type) -> Self {
+        if error_type > 4 {
+            return Self::None; // fallback type, should not happen
+        }
+
+        unsafe { std::mem::transmute(error_type) }
+    }
+}

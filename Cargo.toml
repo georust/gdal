@@ -24,6 +24,7 @@ gdal-sys = { path = "gdal-sys", version = "^0.5"}
 ndarray = {version = "0.15", optional = true }
 chrono = { version = "0.4", optional = true }
 bitflags = "1.2"
+once_cell = "1.8"
 
 [build-dependencies]
 gdal-sys = { path = "gdal-sys", version= "^0.5"}

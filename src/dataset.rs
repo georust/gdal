@@ -488,7 +488,7 @@ impl Dataset {
                 c_name.as_ptr(),
                 c_srs,
                 options.ty,
-                c_options_ptr as *mut *mut i8,
+                c_options_ptr as *mut *mut libc::c_char,
             )
         };
         if c_layer.is_null() {
