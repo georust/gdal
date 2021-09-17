@@ -203,6 +203,9 @@ let mut dataset = driver
 
   - <https://github.com/georust/gdal/pull/212>
 
+- Added `set_error_handler` and `remove_error_handler` to the config module that wraps `CPLSetErrorHandlerEx`
+
+  - <https://github.com/georust/gdal/pull/215>
 
 ## 0.7.1
 
