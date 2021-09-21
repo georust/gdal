@@ -202,10 +202,16 @@ let mut dataset = driver
 - Add `set_description` to the `Metadata` trait
 
   - <https://github.com/georust/gdal/pull/212>
+  
+- Wrappers for `GDALRasterizeGeometries` provided in a new `rasters::rasterize` function
+
+
+  - <https://github.com/georust/gdal/pull/213>
 
 - Added `set_error_handler` and `remove_error_handler` to the config module that wraps `CPLSetErrorHandlerEx`
 
   - <https://github.com/georust/gdal/pull/215>
+
 
 ## 0.7.1
 

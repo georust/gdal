@@ -1,10 +1,12 @@
 //! GDAL Raster Data
 
 mod rasterband;
+mod rasterize;
 mod types;
 mod warp;
 
 pub use rasterband::{Buffer, ByteBuffer, ColorInterpretation, RasterBand, ResampleAlg};
+pub use rasterize::{rasterize, BurnSource, MergeAlgorithm, RasterizeOptions};
 pub use types::{GDALDataType, GdalType};
 pub use warp::reproject;
 
