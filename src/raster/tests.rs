@@ -310,10 +310,9 @@ fn test_create_copy() {
 }
 
 #[test]
-fn test_create_copy_cog() {
+fn test_create_copy_with_options() {
     let dataset = Dataset::open(fixture!("tinymarble.tif")).unwrap();
 
-    assert_eq!(dataset.rasterband(1).unwrap().block_size(), (100, 27));
     assert_eq!(
         dataset.metadata_domain("IMAGE_STRUCTURE").unwrap(),
         vec!["INTERLEAVE=PIXEL"]
@@ -323,22 +322,27 @@ fn test_create_copy_cog() {
 
     let copy = dataset
         .create_copy(
-            &Driver::get("COG").unwrap(),
+            &Driver::get("GTiff").unwrap(),
             mem_file_path,
-            &[RasterCreationOption {
-                key: "COMPRESS",
-                value: "LZW",
-            }],
+            &[
+                RasterCreationOption {
+                    key: "INTERLEAVE",
+                    value: "BAND",
+                },
+                RasterCreationOption {
+                    key: "COMPRESS",
+                    value: "LZW",
+                },
+            ],
         )
         .unwrap();
 
     assert_eq!(copy.raster_size(), (100, 50));
     assert_eq!(copy.raster_count(), 3);
 
-    assert_eq!(copy.rasterband(1).unwrap().block_size(), (512, 512));
     assert_eq!(
         copy.metadata_domain("IMAGE_STRUCTURE").unwrap(),
-        vec!["COMPRESSION=LZW", "INTERLEAVE=PIXEL"]
+        vec!["COMPRESSION=LZW", "INTERLEAVE=BAND"]
     );
 
     unlink_mem_file(mem_file_path).unwrap();
