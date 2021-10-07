@@ -2,6 +2,7 @@ use crate::dataset::Dataset;
 use crate::metadata::Metadata;
 use crate::raster::rasterband::ResampleAlg;
 use crate::raster::{ByteBuffer, ColorInterpretation, RasterCreationOption};
+use crate::vsi::unlink_mem_file;
 use crate::Driver;
 use gdal_sys::GDALDataType;
 use std::path::Path;
@@ -303,9 +304,44 @@ fn test_create_with_band_type_with_options() {
 fn test_create_copy() {
     let driver = Driver::get("MEM").unwrap();
     let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
-    let copy = dataset.create_copy(&driver, "").unwrap();
+    let copy = dataset.create_copy(&driver, "", &[]).unwrap();
     assert_eq!(copy.raster_size(), (100, 50));
     assert_eq!(copy.raster_count(), 3);
+}
+
+#[test]
+fn test_create_copy_cog() {
+    let dataset = Dataset::open(fixture!("tinymarble.tif")).unwrap();
+
+    assert_eq!(dataset.rasterband(1).unwrap().block_size(), (100, 27));
+    assert_eq!(
+        dataset.metadata_domain("IMAGE_STRUCTURE").unwrap(),
+        vec!["INTERLEAVE=PIXEL"]
+    );
+
+    let mem_file_path = "/vsimem/5128fad0-0a6b-4a9e-9899-ec78da7c6f04";
+
+    let copy = dataset
+        .create_copy(
+            &Driver::get("COG").unwrap(),
+            mem_file_path,
+            &[RasterCreationOption {
+                key: "COMPRESS",
+                value: "LZW",
+            }],
+        )
+        .unwrap();
+
+    assert_eq!(copy.raster_size(), (100, 50));
+    assert_eq!(copy.raster_count(), 3);
+
+    assert_eq!(copy.rasterband(1).unwrap().block_size(), (512, 512));
+    assert_eq!(
+        copy.metadata_domain("IMAGE_STRUCTURE").unwrap(),
+        vec!["COMPRESSION=LZW", "INTERLEAVE=PIXEL"]
+    );
+
+    unlink_mem_file(mem_file_path).unwrap();
 }
 
 #[test]
