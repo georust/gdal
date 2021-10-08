@@ -7,7 +7,9 @@ use std::{
     ptr,
 };
 
+use crate::driver::CslStringList;
 use crate::errors::*;
+use crate::raster::RasterCreationOption;
 use crate::utils::{_last_cpl_err, _last_null_pointer_err, _string};
 use crate::vector::sql;
 use crate::vector::Geometry;
@@ -302,15 +304,26 @@ impl Dataset {
         Ok(())
     }
 
-    pub fn create_copy(&self, driver: &Driver, filename: &str) -> Result<Dataset> {
+    pub fn create_copy(
+        &self,
+        driver: &Driver,
+        filename: &str,
+        options: &[RasterCreationOption],
+    ) -> Result<Dataset> {
         let c_filename = CString::new(filename)?;
+
+        let mut c_options = CslStringList::new();
+        for option in options {
+            c_options.set_name_value(option.key, option.value)?;
+        }
+
         let c_dataset = unsafe {
             gdal_sys::GDALCreateCopy(
                 driver.c_driver(),
                 c_filename.as_ptr(),
                 self.c_dataset,
                 0,
-                ptr::null_mut(),
+                c_options.as_ptr(),
                 None,
                 ptr::null_mut(),
             )

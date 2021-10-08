@@ -212,6 +212,21 @@ let mut dataset = driver
 
   - <https://github.com/georust/gdal/pull/215>
 
+- **Breaking**: Changed `Dataset::create_copy` to take a slice of `RasterCreationOption`s which was previously not included.
+
+  - <https://github.com/georust/gdal/pull/220>
+
+  Before:
+
+  ```rust
+  dataset.create_copy(&driver, "output_file");
+  ```
+
+  After:
+
+  ```rust
+  dataset.create_copy(&driver, "output_file", &[]);
+  ```
 
 ## 0.7.1
 

@@ -3,7 +3,7 @@ use crate::gdal_major_object::MajorObject;
 use crate::metadata::Metadata;
 use crate::raster::{GdalType, RasterCreationOption};
 use crate::utils::{_last_null_pointer_err, _string};
-use gdal_sys::{self, GDALDriverH, GDALMajorObjectH};
+use gdal_sys::{self, CSLSetNameValue, GDALDriverH, GDALMajorObjectH};
 use libc::{c_char, c_int};
 use std::ffi::CString;
 use std::ptr::null_mut;
@@ -24,16 +24,6 @@ pub fn _register_drivers() {
 #[allow(missing_copy_implementations)]
 pub struct Driver {
     c_driver: GDALDriverH,
-}
-
-type CSLConstList = *mut *mut c_char;
-
-extern "C" {
-    fn CSLSetNameValue(
-        papszOptions: CSLConstList,
-        pszName: *const libc::c_char,
-        pszValue: *const libc::c_char,
-    ) -> *mut *mut libc::c_char;
 }
 
 impl Driver {
@@ -102,13 +92,9 @@ impl Driver {
         bands: isize,
         options: &[RasterCreationOption],
     ) -> Result<Dataset> {
-        let mut options_c = null_mut();
+        let mut options_c = CslStringList::new();
         for option in options {
-            let psz_name = CString::new(option.key)?;
-            let psz_value = CString::new(option.value)?;
-            unsafe {
-                options_c = CSLSetNameValue(options_c, psz_name.as_ptr(), psz_value.as_ptr());
-            }
+            options_c.set_name_value(option.key, option.value)?;
         }
 
         let c_filename = CString::new(filename)?;
@@ -120,14 +106,14 @@ impl Driver {
                 size_y as c_int,
                 bands as c_int,
                 T::gdal_type(),
-                options_c as gdal_sys::CSLConstList,
+                options_c.as_ptr(),
             )
         };
-        unsafe { gdal_sys::CSLDestroy(options_c) };
 
         if c_dataset.is_null() {
             return Err(_last_null_pointer_err("GDALCreate"));
         };
+
         Ok(unsafe { Dataset::from_c_dataset(c_dataset) })
     }
 
@@ -143,3 +129,40 @@ impl MajorObject for Driver {
 }
 
 impl Metadata for Driver {}
+
+/// Wraps a `char **papszStrList` pointer into a struct that
+/// automatically destroys the allocated memory on `drop`.
+pub struct CslStringList {
+    list_ptr: *mut *mut c_char,
+}
+
+impl CslStringList {
+    pub fn new() -> Self {
+        Self {
+            list_ptr: null_mut(),
+        }
+    }
+
+    /// Assign `value` to `name` in StringList.
+    /// Overrides duplicate `name`s.
+    pub fn set_name_value(&mut self, name: &str, value: &str) -> Result<()> {
+        let psz_name = CString::new(name)?;
+        let psz_value = CString::new(value)?;
+
+        unsafe {
+            self.list_ptr = CSLSetNameValue(self.list_ptr, psz_name.as_ptr(), psz_value.as_ptr());
+        }
+
+        Ok(())
+    }
+
+    pub fn as_ptr(&self) -> gdal_sys::CSLConstList {
+        self.list_ptr
+    }
+}
+
+impl Drop for CslStringList {
+    fn drop(&mut self) {
+        unsafe { gdal_sys::CSLDestroy(self.list_ptr) }
+    }
+}
