@@ -196,7 +196,16 @@ mod tests {
     use super::*;
 
     #[test]
-    fn error_handler() {
+    fn test_error_handler() {
+        // We cannot test different error handler scenarios in parallel since we modify a global error handler in GDAL.
+        // Therefore, we test the error handler behavior sequentially to avoid data races.
+
+        use_error_handler();
+
+        error_handler_interleaved();
+    }
+
+    fn use_error_handler() {
         let errors: Arc<Mutex<Vec<(CplErrType, i32, String)>>> = Arc::new(Mutex::new(vec![]));
 
         let errors_clone = errors.clone();
@@ -227,7 +236,6 @@ mod tests {
         );
     }
 
-    #[test]
     fn error_handler_interleaved() {
         use std::thread;
         // Two racing threads trying to set error handlers
@@ -260,6 +268,23 @@ mod tests {
     }
 
     #[test]
+    fn test_config_options() {
+        // We cannot test different global config scenarios in parallel since we modify a global config state in GDAL.
+        // Therefore, we test the config option behavior sequentially to avoid data races.
+
+        test_set_get_option();
+
+        test_set_option_with_embedded_nul();
+
+        test_clear_option();
+
+        test_set_get_option_thread_local();
+
+        test_set_option_with_embedded_nul_thread_local();
+
+        test_clear_option_thread_local();
+    }
+
     fn test_set_get_option() {
         assert!(set_config_option("GDAL_CACHEMAX", "128").is_ok());
         assert_eq!(
@@ -273,14 +298,12 @@ mod tests {
         );
     }
 
-    #[test]
     fn test_set_option_with_embedded_nul() {
         assert!(set_config_option("f\0oo", "valid").is_err());
         assert!(set_config_option("foo", "in\0valid").is_err());
         assert!(set_config_option("xxxf\0oo", "in\0valid").is_err());
     }
 
-    #[test]
     fn test_clear_option() {
         assert!(set_config_option("TEST_OPTION", "256").is_ok());
         assert_eq!(
@@ -294,7 +317,6 @@ mod tests {
         );
     }
 
-    #[test]
     fn test_set_get_option_thread_local() {
         assert!(set_thread_local_config_option("GDAL_CACHEMAX", "128").is_ok());
 
@@ -315,14 +337,12 @@ mod tests {
         );
     }
 
-    #[test]
     fn test_set_option_with_embedded_nul_thread_local() {
         assert!(set_thread_local_config_option("f\0oo", "valid").is_err());
         assert!(set_thread_local_config_option("foo", "in\0valid").is_err());
         assert!(set_thread_local_config_option("xxxf\0oo", "in\0valid").is_err());
     }
 
-    #[test]
     fn test_clear_option_thread_local() {
         assert!(set_thread_local_config_option("TEST_OPTION", "256").is_ok());
 
