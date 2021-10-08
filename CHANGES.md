@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.8 - 0.10
+
 - Update types to fix build on ppc64le.
   - <https://github.com/georust/gdal/pull/214/>
 
