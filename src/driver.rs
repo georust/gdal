@@ -5,7 +5,7 @@ use crate::raster::{GdalType, RasterCreationOption};
 use crate::utils::{_last_null_pointer_err, _string};
 use gdal_sys::{self, CSLSetNameValue, GDALDriverH, GDALMajorObjectH};
 use libc::{c_char, c_int};
-use std::ffi::CString;
+use std::ffi::{CStr, CString};
 use std::ptr::null_mut;
 use std::sync::Once;
 
@@ -143,9 +143,22 @@ impl CslStringList {
         }
     }
 
-    /// Assign `value` to `name` in StringList.
-    /// Overrides duplicate `name`s.
+    /// Assigns `value` to `name`.
+    ///
+    /// Overwrites duplicate `name`s.
     pub fn set_name_value(&mut self, name: &str, value: &str) -> Result<()> {
+        if !name.chars().all(|c| c.is_ascii_alphanumeric() || c == '_') {
+            return Err(GdalError::BadArgument(format!(
+                "Invalid characters in name: '{}'",
+                name
+            )));
+        }
+        if value.contains(|c| c == '\n' || c == '\r') {
+            return Err(GdalError::BadArgument(format!(
+                "Invalid characters in value: '{}'",
+                value
+            )));
+        }
         let psz_name = CString::new(name)?;
         let psz_value = CString::new(value)?;
 
@@ -154,6 +167,21 @@ impl CslStringList {
         }
 
         Ok(())
+    }
+
+    // Looks up the value corresponding to a key.
+    ///
+    /// See `CSLFetchNameValue` for details.
+    pub fn fetch_name_value(&self, key: &str) -> Option<String> {
+        let key = CString::new(key).ok()?;
+        unsafe {
+            let c_value = gdal_sys::CSLFetchNameValue(self.as_ptr(), key.as_ptr());
+            if c_value.is_null() {
+                None
+            } else {
+                Some(CStr::from_ptr(c_value).to_str().ok()?.to_string())
+            }
+        }
     }
 
     pub fn as_ptr(&self) -> gdal_sys::CSLConstList {
