@@ -1,9 +1,9 @@
-use crate::dataset::Dataset;
 use crate::utils::_last_cpl_err;
 use crate::vector::Geometry;
+use crate::{dataset::Dataset, driver::CslStringList};
 use gdal_sys::{self, CPLErr};
 use libc::{c_char, c_void};
-use std::{ffi::CString, ptr};
+use std::ptr;
 
 use crate::errors::*;
 
@@ -81,68 +81,23 @@ impl Default for RasterizeOptions {
 
 type OptionPtr = *mut *mut c_char;
 
-/// An internal wrapper to simplify constructing **papszOptions.
-struct TextOptions {
-    c_options: OptionPtr,
-}
-
-impl Default for TextOptions {
-    fn default() -> Self {
-        TextOptions {
-            c_options: ptr::null_mut(),
-        }
-    }
-}
-
-impl TextOptions {
-    /// Add a key-value pair.
-    /// * `key` should be a "well formed token (no spaces or very special characters)"
-    /// * `value` can be anything but shouldn't have carriage return or linefeed characters present
-    fn add(&mut self, key: &str, value: &str) -> Result<()> {
-        if !key.chars().all(|c| c.is_ascii_alphanumeric() || c == '_') {
-            return Err(GdalError::BadArgument(format!(
-                "Invalid characters in key: '{}'",
-                key
-            )));
-        }
-        if value.contains(|c| c == '\n' || c == '\r') {
-            return Err(GdalError::BadArgument(format!(
-                "Invalid characters in value: '{}'",
-                value
-            )));
-        }
-
-        let key = CString::new(key)?;
-        let value = CString::new(value)?;
-        unsafe {
-            self.c_options =
-                gdal_sys::CSLSetNameValue(self.c_options, key.as_ptr(), value.as_ptr());
-        }
-        Ok(())
-    }
-
-    fn into_ptr(self) -> OptionPtr {
-        self.c_options
-    }
-}
-
 impl RasterizeOptions {
     fn as_ptr(&self) -> Result<OptionPtr> {
-        let mut options = TextOptions::default();
+        let mut options = CslStringList::new();
 
-        options.add(
+        options.set_name_value(
             "ALL_TOUCHED",
             if self.all_touched { "TRUE" } else { "FALSE" },
         )?;
-        options.add(
+        options.set_name_value(
             "MERGE_ALG",
             match self.merge_algorithm {
                 MergeAlgorithm::Replace => "REPLACE",
                 MergeAlgorithm::Add => "ADD",
             },
         )?;
-        options.add("CHUNKYSIZE", &self.chunk_y_size.to_string())?;
-        options.add(
+        options.set_name_value("CHUNKYSIZE", &self.chunk_y_size.to_string())?;
+        options.set_name_value(
             "OPTIM",
             match self.optimize {
                 OptimizeMode::Automatic => "AUTO",
@@ -151,10 +106,10 @@ impl RasterizeOptions {
             },
         )?;
         if let BurnSource::Z = self.source {
-            options.add("BURN_VALUE_FROM", "Z")?;
+            options.set_name_value("BURN_VALUE_FROM", "Z")?;
         }
 
-        Ok(options.into_ptr())
+        Ok(options.as_ptr())
     }
 }
 
