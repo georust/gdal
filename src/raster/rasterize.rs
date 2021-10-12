@@ -3,6 +3,7 @@ use crate::vector::Geometry;
 use crate::{dataset::Dataset, driver::CslStringList};
 use gdal_sys::{self, CPLErr};
 use libc::{c_char, c_void};
+use std::convert::TryFrom;
 use std::ptr;
 
 use crate::errors::*;
@@ -81,42 +82,15 @@ impl Default for RasterizeOptions {
 
 type OptionPtr = *mut *mut c_char;
 
-impl RasterizeOptions {
-    fn try_from(&self) -> Result<CslStringList> {
-        let mut options = CslStringList::new();
-
-        options.set_name_value(
-            "ALL_TOUCHED",
-            if self.all_touched { "TRUE" } else { "FALSE" },
-        )?;
-        options.set_name_value(
-            "MERGE_ALG",
-            match self.merge_algorithm {
-                MergeAlgorithm::Replace => "REPLACE",
-                MergeAlgorithm::Add => "ADD",
-            },
-        )?;
-        options.set_name_value("CHUNKYSIZE", &self.chunk_y_size.to_string())?;
-        options.set_name_value(
-            "OPTIM",
-            match self.optimize {
-                OptimizeMode::Automatic => "AUTO",
-                OptimizeMode::Raster => "RASTER",
-                OptimizeMode::Vector => "VECTOR",
-            },
-        )?;
-        if let BurnSource::Z = self.source {
-            options.set_name_value("BURN_VALUE_FROM", "Z")?;
-        }
-
-        Ok(options)
-    }
-}
-
 #[cfg(test)]
 mod tests {
+    use crate::driver::CslStringList;
+
     use super::{OptionPtr, RasterizeOptions};
-    use std::ffi::{CStr, CString};
+    use std::{
+        convert::TryFrom,
+        ffi::{CStr, CString},
+    };
 
     fn fetch(c_options: &OptionPtr, key: &str) -> Option<String> {
         let key = CString::new(key).unwrap();
@@ -133,24 +107,14 @@ mod tests {
 
     #[test]
     fn test_rasterizeoptions_as_ptr() {
-        let c_options = RasterizeOptions::default().try_from().unwrap();
-        assert_eq!(
-            fetch(&c_options.as_ptr(), "ALL_TOUCHED"),
-            Some("FALSE".to_string())
-        );
-        assert_eq!(fetch(&c_options.as_ptr(), "BURN_VALUE_FROM"), None);
-        assert_eq!(
-            fetch(&c_options.as_ptr(), "MERGE_ALG"),
-            Some("REPLACE".to_string())
-        );
-        assert_eq!(
-            fetch(&c_options.as_ptr(), "CHUNKYSIZE"),
-            Some("0".to_string())
-        );
-        assert_eq!(
-            fetch(&c_options.as_ptr(), "OPTIM"),
-            Some("AUTO".to_string())
-        );
+        let c_options = CslStringList::try_from(RasterizeOptions::default())
+            .unwrap()
+            .as_ptr();
+        assert_eq!(fetch(&c_options, "ALL_TOUCHED"), Some("FALSE".to_string()));
+        assert_eq!(fetch(&c_options, "BURN_VALUE_FROM"), None);
+        assert_eq!(fetch(&c_options, "MERGE_ALG"), Some("REPLACE".to_string()));
+        assert_eq!(fetch(&c_options, "CHUNKYSIZE"), Some("0".to_string()));
+        assert_eq!(fetch(&c_options, "OPTIM"), Some("AUTO".to_string()));
     }
 }
 
@@ -208,7 +172,7 @@ pub fn rasterize(
         .copied()
         .collect();
 
-    let c_options = options.try_from().unwrap().as_ptr();
+    let c_options = CslStringList::try_from(options).unwrap().as_ptr();
     unsafe {
         // The C function takes `bands`, `geometries`, `burn_values`
         // and `options` without mention of `const`, and this is
