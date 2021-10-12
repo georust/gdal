@@ -1,13 +1,10 @@
 use crate::dataset::Dataset;
 use crate::gdal_major_object::MajorObject;
 use crate::metadata::Metadata;
-use crate::raster::{
-    BurnSource, GdalType, MergeAlgorithm, OptimizeMode, RasterCreationOption, RasterizeOptions,
-};
+use crate::raster::{GdalType, RasterCreationOption};
 use crate::utils::{_last_null_pointer_err, _string};
 use gdal_sys::{self, CSLSetNameValue, GDALDriverH, GDALMajorObjectH};
 use libc::{c_char, c_int};
-use std::convert::TryFrom;
 use std::ffi::CString;
 use std::ptr::null_mut;
 use std::sync::Once;
@@ -161,40 +158,6 @@ impl CslStringList {
 
     pub fn as_ptr(&self) -> gdal_sys::CSLConstList {
         self.list_ptr
-    }
-}
-
-impl TryFrom<RasterizeOptions> for CslStringList {
-    type Error = GdalError;
-
-    fn try_from(value: RasterizeOptions) -> Result<CslStringList> {
-        let mut options = CslStringList::new();
-
-        options.set_name_value(
-            "ALL_TOUCHED",
-            if value.all_touched { "TRUE" } else { "FALSE" },
-        )?;
-        options.set_name_value(
-            "MERGE_ALG",
-            match value.merge_algorithm {
-                MergeAlgorithm::Replace => "REPLACE",
-                MergeAlgorithm::Add => "ADD",
-            },
-        )?;
-        options.set_name_value("CHUNKYSIZE", &value.chunk_y_size.to_string())?;
-        options.set_name_value(
-            "OPTIM",
-            match value.optimize {
-                OptimizeMode::Automatic => "AUTO",
-                OptimizeMode::Raster => "RASTER",
-                OptimizeMode::Vector => "VECTOR",
-            },
-        )?;
-        if let BurnSource::Z = value.source {
-            options.set_name_value("BURN_VALUE_FROM", "Z")?;
-        }
-
-        Ok(options)
     }
 }
 
