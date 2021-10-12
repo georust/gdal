@@ -80,6 +80,40 @@ impl Default for RasterizeOptions {
     }
 }
 
+impl TryFrom<RasterizeOptions> for CslStringList {
+    type Error = GdalError;
+
+    fn try_from(value: RasterizeOptions) -> Result<CslStringList> {
+        let mut options = CslStringList::new();
+
+        options.set_name_value(
+            "ALL_TOUCHED",
+            if value.all_touched { "TRUE" } else { "FALSE" },
+        )?;
+        options.set_name_value(
+            "MERGE_ALG",
+            match value.merge_algorithm {
+                MergeAlgorithm::Replace => "REPLACE",
+                MergeAlgorithm::Add => "ADD",
+            },
+        )?;
+        options.set_name_value("CHUNKYSIZE", &value.chunk_y_size.to_string())?;
+        options.set_name_value(
+            "OPTIM",
+            match value.optimize {
+                OptimizeMode::Automatic => "AUTO",
+                OptimizeMode::Raster => "RASTER",
+                OptimizeMode::Vector => "VECTOR",
+            },
+        )?;
+        if let BurnSource::Z = value.source {
+            options.set_name_value("BURN_VALUE_FROM", "Z")?;
+        }
+
+        Ok(options)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::driver::CslStringList;
