@@ -82,7 +82,7 @@ impl Default for RasterizeOptions {
 type OptionPtr = *mut *mut c_char;
 
 impl RasterizeOptions {
-    fn as_ptr(&self) -> Result<OptionPtr> {
+    fn try_from(&self) -> Result<CslStringList> {
         let mut options = CslStringList::new();
 
         options.set_name_value(
@@ -109,7 +109,7 @@ impl RasterizeOptions {
             options.set_name_value("BURN_VALUE_FROM", "Z")?;
         }
 
-        Ok(options.as_ptr())
+        Ok(options)
     }
 }
 
@@ -133,12 +133,24 @@ mod tests {
 
     #[test]
     fn test_rasterizeoptions_as_ptr() {
-        let c_options = RasterizeOptions::default().as_ptr().unwrap();
-        assert_eq!(fetch(&c_options, "ALL_TOUCHED"), Some("FALSE".to_string()));
-        assert_eq!(fetch(&c_options, "BURN_VALUE_FROM"), None);
-        assert_eq!(fetch(&c_options, "MERGE_ALG"), Some("REPLACE".to_string()));
-        assert_eq!(fetch(&c_options, "CHUNKYSIZE"), Some("0".to_string()));
-        assert_eq!(fetch(&c_options, "OPTIM"), Some("AUTO".to_string()));
+        let c_options = RasterizeOptions::default().try_from().unwrap();
+        assert_eq!(
+            fetch(&c_options.as_ptr(), "ALL_TOUCHED"),
+            Some("FALSE".to_string())
+        );
+        assert_eq!(fetch(&c_options.as_ptr(), "BURN_VALUE_FROM"), None);
+        assert_eq!(
+            fetch(&c_options.as_ptr(), "MERGE_ALG"),
+            Some("REPLACE".to_string())
+        );
+        assert_eq!(
+            fetch(&c_options.as_ptr(), "CHUNKYSIZE"),
+            Some("0".to_string())
+        );
+        assert_eq!(
+            fetch(&c_options.as_ptr(), "OPTIM"),
+            Some("AUTO".to_string())
+        );
     }
 }
 
@@ -196,7 +208,7 @@ pub fn rasterize(
         .copied()
         .collect();
 
-    let c_options = options.as_ptr()?;
+    let c_options = options.try_from().unwrap().as_ptr();
     unsafe {
         // The C function takes `bands`, `geometries`, `burn_values`
         // and `options` without mention of `const`, and this is
