@@ -2,7 +2,7 @@ use crate::utils::_last_cpl_err;
 use crate::vector::Geometry;
 use crate::{dataset::Dataset, driver::CslStringList};
 use gdal_sys::{self, CPLErr};
-use libc::{c_char, c_void};
+use libc::c_void;
 use std::convert::TryFrom;
 use std::ptr;
 
@@ -80,22 +80,20 @@ impl Default for RasterizeOptions {
     }
 }
 
-type OptionPtr = *mut *mut c_char;
-
 #[cfg(test)]
 mod tests {
     use crate::driver::CslStringList;
 
-    use super::{OptionPtr, RasterizeOptions};
+    use super::RasterizeOptions;
     use std::{
         convert::TryFrom,
         ffi::{CStr, CString},
     };
 
-    fn fetch(c_options: &OptionPtr, key: &str) -> Option<String> {
+    fn fetch(c_options: &CslStringList, key: &str) -> Option<String> {
         let key = CString::new(key).unwrap();
         unsafe {
-            let c_value = gdal_sys::CSLFetchNameValue(*c_options, key.as_ptr());
+            let c_value = gdal_sys::CSLFetchNameValue(c_options.as_ptr(), key.as_ptr());
             if c_value.is_null() {
                 None
             } else {
@@ -107,9 +105,7 @@ mod tests {
 
     #[test]
     fn test_rasterizeoptions_as_ptr() {
-        let c_options = CslStringList::try_from(RasterizeOptions::default())
-            .unwrap()
-            .as_ptr();
+        let c_options = CslStringList::try_from(RasterizeOptions::default()).unwrap();
         assert_eq!(fetch(&c_options, "ALL_TOUCHED"), Some("FALSE".to_string()));
         assert_eq!(fetch(&c_options, "BURN_VALUE_FROM"), None);
         assert_eq!(fetch(&c_options, "MERGE_ALG"), Some("REPLACE".to_string()));
