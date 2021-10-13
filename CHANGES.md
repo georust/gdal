@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Make `gdal::rasters::OptimizeMode` public
+
 ## 0.8 - 0.10
 
 - Update types to fix build on ppc64le.
