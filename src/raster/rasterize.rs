@@ -215,7 +215,7 @@ pub fn rasterize(
             None,
             ptr::null_mut(),
             burn_values.as_ptr() as *mut f64,
-            c_options.as_ptr() as *mut *mut i8,
+            c_options.as_ptr(),
             None,
             ptr::null_mut(),
         );
