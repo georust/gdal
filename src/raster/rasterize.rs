@@ -119,32 +119,28 @@ mod tests {
     use crate::driver::CslStringList;
 
     use super::RasterizeOptions;
-    use std::{
-        convert::TryFrom,
-        ffi::{CStr, CString},
-    };
-
-    fn fetch(c_options: &CslStringList, key: &str) -> Option<String> {
-        let key = CString::new(key).unwrap();
-        unsafe {
-            let c_value = gdal_sys::CSLFetchNameValue(c_options.as_ptr(), key.as_ptr());
-            if c_value.is_null() {
-                None
-            } else {
-                Some(CStr::from_ptr(c_value).to_str().unwrap())
-            }
-        }
-        .map(String::from)
-    }
+    use std::convert::TryFrom;
 
     #[test]
     fn test_rasterizeoptions_as_ptr() {
         let c_options = CslStringList::try_from(RasterizeOptions::default()).unwrap();
-        assert_eq!(fetch(&c_options, "ALL_TOUCHED"), Some("FALSE".to_string()));
-        assert_eq!(fetch(&c_options, "BURN_VALUE_FROM"), None);
-        assert_eq!(fetch(&c_options, "MERGE_ALG"), Some("REPLACE".to_string()));
-        assert_eq!(fetch(&c_options, "CHUNKYSIZE"), Some("0".to_string()));
-        assert_eq!(fetch(&c_options, "OPTIM"), Some("AUTO".to_string()));
+        assert_eq!(
+            c_options.fetch_name_value("ALL_TOUCHED"),
+            Some("FALSE".to_string())
+        );
+        assert_eq!(c_options.fetch_name_value("BURN_VALUE_FROM"), None);
+        assert_eq!(
+            c_options.fetch_name_value("MERGE_ALG"),
+            Some("REPLACE".to_string())
+        );
+        assert_eq!(
+            c_options.fetch_name_value("CHUNKYSIZE"),
+            Some("0".to_string())
+        );
+        assert_eq!(
+            c_options.fetch_name_value("OPTIM"),
+            Some("AUTO".to_string())
+        );
     }
 }
 
@@ -202,7 +198,7 @@ pub fn rasterize(
         .copied()
         .collect();
 
-    let c_options = CslStringList::try_from(options).unwrap().as_ptr();
+    let c_options = CslStringList::try_from(options).unwrap();
     unsafe {
         // The C function takes `bands`, `geometries`, `burn_values`
         // and `options` without mention of `const`, and this is
@@ -219,7 +215,7 @@ pub fn rasterize(
             None,
             ptr::null_mut(),
             burn_values.as_ptr() as *mut f64,
-            c_options as *mut *mut i8,
+            c_options.as_ptr() as *mut *mut i8,
             None,
             ptr::null_mut(),
         );
