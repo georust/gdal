@@ -1,12 +1,14 @@
-use crate::utils::_last_cpl_err;
-use crate::vector::Geometry;
-use crate::{dataset::Dataset, driver::CslStringList};
-use gdal_sys::{self, CPLErr};
-use libc::c_void;
 use std::convert::TryFrom;
 use std::ptr;
 
+use gdal_sys::{self, CPLErr};
+use libc::c_void;
+
+use crate::cpl::CslStringList;
+use crate::dataset::Dataset;
 use crate::errors::*;
+use crate::utils::_last_cpl_err;
+use crate::vector::Geometry;
 
 #[derive(Copy, Clone, Debug)]
 pub enum BurnSource {
@@ -116,10 +118,11 @@ impl TryFrom<RasterizeOptions> for CslStringList {
 
 #[cfg(test)]
 mod tests {
-    use crate::driver::CslStringList;
+    use std::convert::TryFrom;
+
+    use crate::cpl::CslStringList;
 
     use super::RasterizeOptions;
-    use std::convert::TryFrom;
 
     #[test]
     fn test_rasterizeoptions_as_ptr() {

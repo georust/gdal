@@ -23,6 +23,7 @@
 pub use version::version_info;
 
 pub mod config;
+pub mod cpl;
 mod dataset;
 mod driver;
 pub mod errors;
