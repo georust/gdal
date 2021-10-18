@@ -1,10 +1,11 @@
-use std::ffi::{CStr, CString};
+use std::ffi::CString;
 use std::ptr;
 
 use gdal_sys::CSLSetNameValue;
 use libc::c_char;
 
 use crate::errors::{GdalError, Result};
+use crate::utils::_string;
 
 /// Wraps a `char **papszStrList` pointer into a struct that
 /// automatically destroys the allocated memory on `drop`.
@@ -47,19 +48,18 @@ impl CslStringList {
         Ok(())
     }
 
-    // Looks up the value corresponding to a key.
+    /// Looks up the value corresponding to a key.
     ///
     /// See `CSLFetchNameValue` for details.
-    pub fn fetch_name_value(&self, key: &str) -> Option<String> {
-        let key = CString::new(key).ok()?;
-        unsafe {
-            let c_value = gdal_sys::CSLFetchNameValue(self.as_ptr(), key.as_ptr());
-            if c_value.is_null() {
-                None
-            } else {
-                Some(CStr::from_ptr(c_value).to_str().ok()?.to_string())
-            }
-        }
+    pub fn fetch_name_value(&self, key: &str) -> Result<Option<String>> {
+        let key = CString::new(key)?;
+        let c_value = unsafe { gdal_sys::CSLFetchNameValue(self.as_ptr(), key.as_ptr()) };
+        let value = if c_value.is_null() {
+            None
+        } else {
+            Some(_string(c_value))
+        };
+        Ok(value)
     }
 
     pub fn as_ptr(&self) -> gdal_sys::CSLConstList {
