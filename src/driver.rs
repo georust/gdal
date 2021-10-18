@@ -2,10 +2,11 @@ use crate::dataset::Dataset;
 use crate::gdal_major_object::MajorObject;
 use crate::metadata::Metadata;
 use crate::raster::{GdalType, RasterCreationOption};
-use crate::utils::{_last_null_pointer_err, _string};
-use gdal_sys::{self, CSLSetNameValue, GDALDriverH, GDALMajorObjectH};
+use crate::utils::{_last_cpl_err, _last_null_pointer_err, _path_to_c_string, _string};
+use gdal_sys::{self, CPLErr, CSLSetNameValue, GDALDriverH, GDALMajorObjectH};
 use libc::{c_char, c_int};
 use std::ffi::CString;
+use std::path::Path;
 use std::ptr::null_mut;
 use std::sync::Once;
 
@@ -119,6 +120,49 @@ impl Driver {
 
     pub fn create_vector_only(&self, filename: &str) -> Result<Dataset> {
         self.create_with_band_type::<u8>(filename, 0, 0, 0)
+    }
+
+    /// Delete named dataset.
+    ///
+    /// It is unwise to have open dataset handles on this dataset when it is deleted.
+    ///
+    /// Calls `GDALDeleteDataset()`
+    ///
+    pub fn delete(&self, filename: &Path) -> Result<()> {
+        let c_filename = _path_to_c_string(filename)?;
+
+        let rv = unsafe { gdal_sys::GDALDeleteDataset(self.c_driver, c_filename.as_ptr()) };
+
+        if rv != CPLErr::CE_None {
+            return Err(_last_cpl_err(rv));
+        }
+
+        Ok(())
+    }
+
+    /// Rename a dataset.
+    ///
+    /// It is unwise to have open dataset handles on this dataset when it is being renamed.
+    ///
+    /// Calls `GDALRenameDataset()`
+    ///
+    pub fn rename(&self, new_filename: &Path, old_filename: &Path) -> Result<()> {
+        let c_old_filename = _path_to_c_string(old_filename)?;
+        let c_new_filename = _path_to_c_string(new_filename)?;
+
+        let rv = unsafe {
+            gdal_sys::GDALRenameDataset(
+                self.c_driver,
+                c_new_filename.as_ptr(),
+                c_old_filename.as_ptr(),
+            )
+        };
+
+        if rv != CPLErr::CE_None {
+            return Err(_last_cpl_err(rv));
+        }
+
+        Ok(())
     }
 }
 

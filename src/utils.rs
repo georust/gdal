@@ -1,6 +1,7 @@
 use gdal_sys::{self, CPLErr};
 use libc::c_char;
-use std::ffi::CStr;
+use std::ffi::{CStr, CString};
+use std::path::Path;
 
 use crate::errors::*;
 
@@ -49,4 +50,9 @@ pub fn _last_null_pointer_err(method_name: &'static str) -> GdalError {
         method_name,
         msg: last_err_msg,
     }
+}
+
+pub fn _path_to_c_string(path: &Path) -> Result<CString> {
+    let path_str = path.to_string_lossy();
+    CString::new(path_str.as_ref()).map_err(Into::into)
 }
