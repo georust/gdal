@@ -14,8 +14,6 @@ edition = "2018"
 default = []
 bindgen = ["gdal-sys/bindgen"]
 array = ["ndarray"]
-# unused, kept for compatibility
-datetime = []
 
 [dependencies]
 thiserror = "1.0"
