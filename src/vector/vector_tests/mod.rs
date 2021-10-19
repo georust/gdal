@@ -325,7 +325,6 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "datetime")]
     fn test_get_field_as_datetime() {
         use chrono::{FixedOffset, TimeZone};
 

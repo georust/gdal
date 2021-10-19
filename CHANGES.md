@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Remove the `datetime` feature
+  - <https://github.com/georust/gdal/pull/229>
+
 - Add `cpl::CslStringList`
   - <https://github.com/georust/gdal/pull/223>
 
