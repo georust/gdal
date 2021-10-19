@@ -1,11 +1,14 @@
+use std::convert::TryFrom;
+use std::ptr;
+
+use gdal_sys::{self, CPLErr};
+use libc::c_void;
+
+use crate::cpl::CslStringList;
 use crate::dataset::Dataset;
+use crate::errors::*;
 use crate::utils::_last_cpl_err;
 use crate::vector::Geometry;
-use gdal_sys::{self, CPLErr};
-use libc::{c_char, c_void};
-use std::{ffi::CString, ptr};
-
-use crate::errors::*;
 
 #[derive(Copy, Clone, Debug)]
 pub enum BurnSource {
@@ -79,111 +82,68 @@ impl Default for RasterizeOptions {
     }
 }
 
-type OptionPtr = *mut *mut c_char;
+impl TryFrom<RasterizeOptions> for CslStringList {
+    type Error = GdalError;
 
-/// An internal wrapper to simplify constructing **papszOptions.
-struct TextOptions {
-    c_options: OptionPtr,
-}
+    fn try_from(value: RasterizeOptions) -> Result<CslStringList> {
+        let mut options = CslStringList::new();
 
-impl Default for TextOptions {
-    fn default() -> Self {
-        TextOptions {
-            c_options: ptr::null_mut(),
-        }
-    }
-}
-
-impl TextOptions {
-    /// Add a key-value pair.
-    /// * `key` should be a "well formed token (no spaces or very special characters)"
-    /// * `value` can be anything but shouldn't have carriage return or linefeed characters present
-    fn add(&mut self, key: &str, value: &str) -> Result<()> {
-        if !key.chars().all(|c| c.is_ascii_alphanumeric() || c == '_') {
-            return Err(GdalError::BadArgument(format!(
-                "Invalid characters in key: '{}'",
-                key
-            )));
-        }
-        if value.contains(|c| c == '\n' || c == '\r') {
-            return Err(GdalError::BadArgument(format!(
-                "Invalid characters in value: '{}'",
-                value
-            )));
-        }
-
-        let key = CString::new(key)?;
-        let value = CString::new(value)?;
-        unsafe {
-            self.c_options =
-                gdal_sys::CSLSetNameValue(self.c_options, key.as_ptr(), value.as_ptr());
-        }
-        Ok(())
-    }
-
-    fn into_ptr(self) -> OptionPtr {
-        self.c_options
-    }
-}
-
-impl RasterizeOptions {
-    fn as_ptr(&self) -> Result<OptionPtr> {
-        let mut options = TextOptions::default();
-
-        options.add(
+        options.set_name_value(
             "ALL_TOUCHED",
-            if self.all_touched { "TRUE" } else { "FALSE" },
+            if value.all_touched { "TRUE" } else { "FALSE" },
         )?;
-        options.add(
+        options.set_name_value(
             "MERGE_ALG",
-            match self.merge_algorithm {
+            match value.merge_algorithm {
                 MergeAlgorithm::Replace => "REPLACE",
                 MergeAlgorithm::Add => "ADD",
             },
         )?;
-        options.add("CHUNKYSIZE", &self.chunk_y_size.to_string())?;
-        options.add(
+        options.set_name_value("CHUNKYSIZE", &value.chunk_y_size.to_string())?;
+        options.set_name_value(
             "OPTIM",
-            match self.optimize {
+            match value.optimize {
                 OptimizeMode::Automatic => "AUTO",
                 OptimizeMode::Raster => "RASTER",
                 OptimizeMode::Vector => "VECTOR",
             },
         )?;
-        if let BurnSource::Z = self.source {
-            options.add("BURN_VALUE_FROM", "Z")?;
+        if let BurnSource::Z = value.source {
+            options.set_name_value("BURN_VALUE_FROM", "Z")?;
         }
 
-        Ok(options.into_ptr())
+        Ok(options)
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{OptionPtr, RasterizeOptions};
-    use std::ffi::{CStr, CString};
+    use std::convert::TryFrom;
 
-    fn fetch(c_options: &OptionPtr, key: &str) -> Option<String> {
-        let key = CString::new(key).unwrap();
-        unsafe {
-            let c_value = gdal_sys::CSLFetchNameValue(*c_options, key.as_ptr());
-            if c_value.is_null() {
-                None
-            } else {
-                Some(CStr::from_ptr(c_value).to_str().unwrap())
-            }
-        }
-        .map(String::from)
-    }
+    use crate::cpl::CslStringList;
+
+    use super::RasterizeOptions;
 
     #[test]
     fn test_rasterizeoptions_as_ptr() {
-        let c_options = RasterizeOptions::default().as_ptr().unwrap();
-        assert_eq!(fetch(&c_options, "ALL_TOUCHED"), Some("FALSE".to_string()));
-        assert_eq!(fetch(&c_options, "BURN_VALUE_FROM"), None);
-        assert_eq!(fetch(&c_options, "MERGE_ALG"), Some("REPLACE".to_string()));
-        assert_eq!(fetch(&c_options, "CHUNKYSIZE"), Some("0".to_string()));
-        assert_eq!(fetch(&c_options, "OPTIM"), Some("AUTO".to_string()));
+        let c_options = CslStringList::try_from(RasterizeOptions::default()).unwrap();
+        assert_eq!(
+            c_options.fetch_name_value("ALL_TOUCHED"),
+            Ok(Some("FALSE".to_string()))
+        );
+        assert_eq!(c_options.fetch_name_value("BURN_VALUE_FROM"), Ok(None));
+        assert_eq!(
+            c_options.fetch_name_value("MERGE_ALG"),
+            Ok(Some("REPLACE".to_string()))
+        );
+        assert_eq!(
+            c_options.fetch_name_value("CHUNKYSIZE"),
+            Ok(Some("0".to_string()))
+        );
+        assert_eq!(
+            c_options.fetch_name_value("OPTIM"),
+            Ok(Some("AUTO".to_string()))
+        );
     }
 }
 
@@ -241,7 +201,7 @@ pub fn rasterize(
         .copied()
         .collect();
 
-    let c_options = options.as_ptr()?;
+    let c_options = CslStringList::try_from(options).unwrap();
     unsafe {
         // The C function takes `bands`, `geometries`, `burn_values`
         // and `options` without mention of `const`, and this is
@@ -258,7 +218,7 @@ pub fn rasterize(
             None,
             ptr::null_mut(),
             burn_values.as_ptr() as *mut f64,
-            c_options as *mut *mut i8,
+            c_options.as_ptr(),
             None,
             ptr::null_mut(),
         );

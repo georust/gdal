@@ -1,13 +1,15 @@
+use std::ffi::CString;
+use std::sync::Once;
+
+use gdal_sys::{self, GDALDriverH, GDALMajorObjectH};
+use libc::c_int;
+
+use crate::cpl::CslStringList;
 use crate::dataset::Dataset;
 use crate::gdal_major_object::MajorObject;
 use crate::metadata::Metadata;
 use crate::raster::{GdalType, RasterCreationOption};
 use crate::utils::{_last_null_pointer_err, _string};
-use gdal_sys::{self, CSLSetNameValue, GDALDriverH, GDALMajorObjectH};
-use libc::{c_char, c_int};
-use std::ffi::CString;
-use std::ptr::null_mut;
-use std::sync::Once;
 
 use crate::errors::*;
 
@@ -129,40 +131,3 @@ impl MajorObject for Driver {
 }
 
 impl Metadata for Driver {}
-
-/// Wraps a `char **papszStrList` pointer into a struct that
-/// automatically destroys the allocated memory on `drop`.
-pub struct CslStringList {
-    list_ptr: *mut *mut c_char,
-}
-
-impl CslStringList {
-    pub fn new() -> Self {
-        Self {
-            list_ptr: null_mut(),
-        }
-    }
-
-    /// Assign `value` to `name` in StringList.
-    /// Overrides duplicate `name`s.
-    pub fn set_name_value(&mut self, name: &str, value: &str) -> Result<()> {
-        let psz_name = CString::new(name)?;
-        let psz_value = CString::new(value)?;
-
-        unsafe {
-            self.list_ptr = CSLSetNameValue(self.list_ptr, psz_name.as_ptr(), psz_value.as_ptr());
-        }
-
-        Ok(())
-    }
-
-    pub fn as_ptr(&self) -> gdal_sys::CSLConstList {
-        self.list_ptr
-    }
-}
-
-impl Drop for CslStringList {
-    fn drop(&mut self) {
-        unsafe { gdal_sys::CSLDestroy(self.list_ptr) }
-    }
-}

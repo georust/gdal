@@ -7,7 +7,7 @@ use std::{
     ptr,
 };
 
-use crate::driver::CslStringList;
+use crate::cpl::CslStringList;
 use crate::errors::*;
 use crate::raster::RasterCreationOption;
 use crate::utils::{_last_cpl_err, _last_null_pointer_err, _string};

@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add `cpl::CslStringList`
+  - <https://github.com/georust/gdal/pull/223>
+
 - Make `gdal::rasters::OptimizeMode` public
   - <https://github.com/georust/gdal/pull/224>
 
@@ -207,7 +210,7 @@ let mut dataset = driver
 - Add `set_description` to the `Metadata` trait
 
   - <https://github.com/georust/gdal/pull/212>
-  
+
 - Wrappers for `GDALRasterizeGeometries` provided in a new `rasters::rasterize` function
 
 
