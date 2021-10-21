@@ -11,6 +11,9 @@
 - Make `gdal::rasters::OptimizeMode` public
   - <https://github.com/georust/gdal/pull/224>
 
+- Added `rename` and `delete` to `gdal::Driver`
+  - <https://github.com/georust/gdal/pull/226>
+
 ## 0.8 - 0.10
 
 - Update types to fix build on ppc64le.

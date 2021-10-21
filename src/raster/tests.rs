@@ -147,6 +147,31 @@ fn test_write_raster() {
 }
 
 #[test]
+fn test_rename_remove_raster() {
+    let dataset = Dataset::open(fixture!("tinymarble.tif")).unwrap();
+
+    let mem_file_path_a = Path::new("/vsimem/030bd1d1-8955-4604-8e37-177dade13863");
+    let mem_file_path_b = Path::new("/vsimem/c7bfce32-2474-48fa-a907-2af95f83c824");
+
+    let driver = Driver::get("GTiff").unwrap();
+
+    dataset
+        .create_copy(&driver, &mem_file_path_a.to_string_lossy(), &[])
+        .unwrap();
+
+    driver.rename(mem_file_path_b, mem_file_path_a).unwrap();
+
+    // old dataset path is gone
+    assert!(Dataset::open(mem_file_path_a).is_err());
+    // dataset exists under new name
+    Dataset::open(mem_file_path_b).unwrap();
+
+    driver.delete(mem_file_path_b).unwrap();
+
+    assert!(Dataset::open(mem_file_path_b).is_err());
+}
+
+#[test]
 fn test_get_dataset_driver() {
     let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
     let driver = dataset.driver();

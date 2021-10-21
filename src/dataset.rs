@@ -10,7 +10,7 @@ use std::{
 use crate::cpl::CslStringList;
 use crate::errors::*;
 use crate::raster::RasterCreationOption;
-use crate::utils::{_last_cpl_err, _last_null_pointer_err, _string};
+use crate::utils::{_last_cpl_err, _last_null_pointer_err, _path_to_c_string, _string};
 use crate::vector::sql;
 use crate::vector::Geometry;
 use crate::{
@@ -179,8 +179,7 @@ impl Dataset {
     pub fn open_ex(path: &Path, options: DatasetOptions) -> Result<Dataset> {
         crate::driver::_register_drivers();
 
-        let filename = path.to_string_lossy();
-        let c_filename = CString::new(filename.as_ref())?;
+        let c_filename = _path_to_c_string(path)?;
         let c_open_flags = options.open_flags.bits;
 
         // handle driver params:
