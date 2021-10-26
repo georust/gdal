@@ -52,7 +52,8 @@ pub fn _last_null_pointer_err(method_name: &'static str) -> GdalError {
     }
 }
 
-pub fn _path_to_c_string(path: &Path) -> Result<CString> {
-    let path_str = path.to_string_lossy();
+pub fn _path_to_c_string<P: AsRef<Path>>(path: P) -> Result<CString> {
+    let path_ref: &Path = path.as_ref();
+    let path_str = path_ref.to_string_lossy();
     CString::new(path_str.as_ref()).map_err(Into::into)
 }

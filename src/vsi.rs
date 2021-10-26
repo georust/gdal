@@ -1,15 +1,15 @@
-use std::ffi::CString;
 use std::marker::PhantomData;
 use std::mem::ManuallyDrop;
+use std::path::{Path, PathBuf};
 
 use gdal_sys::{VSIFCloseL, VSIFileFromMemBuffer, VSIFree, VSIGetMemFileBuffer, VSIUnlink};
 
 use crate::errors::{GdalError, Result};
-use crate::utils::_last_null_pointer_err;
+use crate::utils::{_last_null_pointer_err, _path_to_c_string};
 
 /// Creates a new VSIMemFile from a given buffer.
-pub fn create_mem_file(file_name: &str, data: Vec<u8>) -> Result<()> {
-    let file_name = CString::new(file_name)?;
+pub fn create_mem_file<P: AsRef<Path>>(file_name: P, data: Vec<u8>) -> Result<()> {
+    let file_name = _path_to_c_string(file_name)?;
 
     // ownership will be given to GDAL, so it should not be automaticly dropped
     let mut data = ManuallyDrop::new(data);
@@ -39,14 +39,14 @@ pub fn create_mem_file(file_name: &str, data: Vec<u8>) -> Result<()> {
 /// A helper struct that unlinks a mem file that points to borrowed data
 /// before that data is freed.
 pub struct MemFileRef<'d> {
-    file_name: String,
+    file_name: PathBuf,
     data_ref: PhantomData<&'d mut ()>,
 }
 
 impl<'d> MemFileRef<'d> {
-    pub fn new(file_name: &str) -> MemFileRef<'d> {
+    pub fn new(file_name: &Path) -> MemFileRef<'d> {
         Self {
-            file_name: file_name.to_string(),
+            file_name: file_name.into(),
             data_ref: PhantomData::default(),
         }
     }
@@ -62,8 +62,11 @@ impl<'d> Drop for MemFileRef<'d> {
 
 /// Creates a new VSIMemFile from a given buffer reference.
 /// Returns a handle that has a lifetime that is shorter than `data`.
-pub fn create_mem_file_from_ref<'d>(file_name: &str, data: &'d mut [u8]) -> Result<MemFileRef<'d>> {
-    let file_name_c = CString::new(file_name)?;
+pub fn create_mem_file_from_ref<P: AsRef<Path>>(
+    file_name: P,
+    data: &mut [u8],
+) -> Result<MemFileRef<'_>> {
+    let file_name_c = _path_to_c_string(&file_name)?;
 
     let handle = unsafe {
         VSIFileFromMemBuffer(
@@ -82,18 +85,18 @@ pub fn create_mem_file_from_ref<'d>(file_name: &str, data: &'d mut [u8]) -> Resu
         VSIFCloseL(handle);
     }
 
-    Ok(MemFileRef::new(file_name))
+    Ok(MemFileRef::new(file_name.as_ref()))
 }
 
 /// Unlink a VSIMemFile.
-pub fn unlink_mem_file(file_name: &str) -> Result<()> {
-    let file_name_c = CString::new(file_name)?;
+pub fn unlink_mem_file<P: AsRef<Path>>(file_name: P) -> Result<()> {
+    let file_name_c = _path_to_c_string(&file_name)?;
 
     let rv = unsafe { VSIUnlink(file_name_c.as_ptr()) };
 
     if rv != 0 {
         return Err(GdalError::UnlinkMemFile {
-            file_name: file_name.to_string(),
+            file_name: file_name.as_ref().display().to_string(),
         });
     }
 
@@ -102,8 +105,8 @@ pub fn unlink_mem_file(file_name: &str) -> Result<()> {
 
 /// Copies the bytes of the VSIMemFile with given `file_name`.
 /// Takes the ownership and frees the memory of the VSIMemFile.
-pub fn get_vsi_mem_file_bytes_owned(file_name: &str) -> Result<Vec<u8>> {
-    let file_name = CString::new(file_name)?;
+pub fn get_vsi_mem_file_bytes_owned<P: AsRef<Path>>(file_name: P) -> Result<Vec<u8>> {
+    let file_name = _path_to_c_string(file_name)?;
 
     let owned_bytes = unsafe {
         let mut length: u64 = 0;
@@ -126,11 +129,11 @@ pub fn get_vsi_mem_file_bytes_owned(file_name: &str) -> Result<Vec<u8>> {
 
 /// Computes a function on the bytes of the vsi in-memory file with given `file_name`.
 /// This method is useful if you don't want to take the ownership of the memory.
-pub fn call_on_mem_file_bytes<F, R>(file_name: &str, fun: F) -> Result<R>
+pub fn call_on_mem_file_bytes<F, R, P: AsRef<Path>>(file_name: P, fun: F) -> Result<R>
 where
     F: FnOnce(&[u8]) -> R,
 {
-    let file_name = CString::new(file_name)?;
+    let file_name = _path_to_c_string(file_name)?;
 
     unsafe {
         let mut length: u64 = 0;
