@@ -74,7 +74,7 @@ pub fn create_mem_file_from_ref<P: AsRef<Path>>(
 }
 
 fn _create_mem_file_from_ref<'d>(file_name: &Path, data: &'d mut [u8]) -> Result<MemFileRef<'d>> {
-    let file_name_c = _path_to_c_string(&file_name)?;
+    let file_name_c = _path_to_c_string(file_name)?;
 
     let handle = unsafe {
         VSIFileFromMemBuffer(
@@ -102,7 +102,7 @@ pub fn unlink_mem_file<P: AsRef<Path>>(file_name: P) -> Result<()> {
 }
 
 fn _unlink_mem_file(file_name: &Path) -> Result<()> {
-    let file_name_c = _path_to_c_string(&file_name)?;
+    let file_name_c = _path_to_c_string(file_name)?;
 
     let rv = unsafe { VSIUnlink(file_name_c.as_ptr()) };
 

@@ -96,7 +96,7 @@ impl Driver {
         options: &[RasterCreationOption],
     ) -> Result<Dataset> {
         Self::_create_with_band_type_with_options::<T>(
-            &self,
+            self,
             filename.as_ref(),
             size_x,
             size_y,
@@ -149,7 +149,7 @@ impl Driver {
     /// Calls `GDALDeleteDataset()`
     ///
     pub fn delete<P: AsRef<Path>>(&self, filename: P) -> Result<()> {
-        Self::_delete(&self, filename.as_ref())
+        Self::_delete(self, filename.as_ref())
     }
 
     fn _delete(&self, filename: &Path) -> Result<()> {
@@ -175,7 +175,7 @@ impl Driver {
         new_filename: P1,
         old_filename: P2,
     ) -> Result<()> {
-        Self::_rename(&self, new_filename.as_ref(), old_filename.as_ref())
+        Self::_rename(self, new_filename.as_ref(), old_filename.as_ref())
     }
 
     fn _rename(&self, new_filename: &Path, old_filename: &Path) -> Result<()> {

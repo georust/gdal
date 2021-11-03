@@ -313,7 +313,7 @@ impl Dataset {
         filename: P,
         options: &[RasterCreationOption],
     ) -> Result<Dataset> {
-        Self::_create_copy(&self, driver, filename.as_ref(), options)
+        Self::_create_copy(self, driver, filename.as_ref(), options)
     }
 
     fn _create_copy(
