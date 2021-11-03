@@ -9,6 +9,10 @@ use crate::utils::{_last_null_pointer_err, _path_to_c_string};
 
 /// Creates a new VSIMemFile from a given buffer.
 pub fn create_mem_file<P: AsRef<Path>>(file_name: P, data: Vec<u8>) -> Result<()> {
+    _create_mem_file(file_name.as_ref(), data)
+}
+
+fn _create_mem_file(file_name: &Path, data: Vec<u8>) -> Result<()> {
     let file_name = _path_to_c_string(file_name)?;
 
     // ownership will be given to GDAL, so it should not be automaticly dropped
@@ -66,6 +70,10 @@ pub fn create_mem_file_from_ref<P: AsRef<Path>>(
     file_name: P,
     data: &mut [u8],
 ) -> Result<MemFileRef<'_>> {
+    _create_mem_file_from_ref(file_name.as_ref(), data)
+}
+
+fn _create_mem_file_from_ref<'d>(file_name: &Path, data: &'d mut [u8]) -> Result<MemFileRef<'d>> {
     let file_name_c = _path_to_c_string(&file_name)?;
 
     let handle = unsafe {
@@ -85,18 +93,22 @@ pub fn create_mem_file_from_ref<P: AsRef<Path>>(
         VSIFCloseL(handle);
     }
 
-    Ok(MemFileRef::new(file_name.as_ref()))
+    Ok(MemFileRef::new(file_name))
 }
 
 /// Unlink a VSIMemFile.
 pub fn unlink_mem_file<P: AsRef<Path>>(file_name: P) -> Result<()> {
+    _unlink_mem_file(file_name.as_ref())
+}
+
+fn _unlink_mem_file(file_name: &Path) -> Result<()> {
     let file_name_c = _path_to_c_string(&file_name)?;
 
     let rv = unsafe { VSIUnlink(file_name_c.as_ptr()) };
 
     if rv != 0 {
         return Err(GdalError::UnlinkMemFile {
-            file_name: file_name.as_ref().display().to_string(),
+            file_name: file_name.display().to_string(),
         });
     }
 
@@ -106,6 +118,10 @@ pub fn unlink_mem_file<P: AsRef<Path>>(file_name: P) -> Result<()> {
 /// Copies the bytes of the VSIMemFile with given `file_name`.
 /// Takes the ownership and frees the memory of the VSIMemFile.
 pub fn get_vsi_mem_file_bytes_owned<P: AsRef<Path>>(file_name: P) -> Result<Vec<u8>> {
+    _get_vsi_mem_file_bytes_owned(file_name.as_ref())
+}
+
+fn _get_vsi_mem_file_bytes_owned(file_name: &Path) -> Result<Vec<u8>> {
     let file_name = _path_to_c_string(file_name)?;
 
     let owned_bytes = unsafe {
@@ -130,6 +146,13 @@ pub fn get_vsi_mem_file_bytes_owned<P: AsRef<Path>>(file_name: P) -> Result<Vec<
 /// Computes a function on the bytes of the vsi in-memory file with given `file_name`.
 /// This method is useful if you don't want to take the ownership of the memory.
 pub fn call_on_mem_file_bytes<F, R, P: AsRef<Path>>(file_name: P, fun: F) -> Result<R>
+where
+    F: FnOnce(&[u8]) -> R,
+{
+    _call_on_mem_file_bytes(file_name.as_ref(), fun)
+}
+
+fn _call_on_mem_file_bytes<F, R>(file_name: &Path, fun: F) -> Result<R>
 where
     F: FnOnce(&[u8]) -> R,
 {

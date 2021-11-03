@@ -95,6 +95,24 @@ impl Driver {
         bands: isize,
         options: &[RasterCreationOption],
     ) -> Result<Dataset> {
+        Self::_create_with_band_type_with_options::<T>(
+            &self,
+            filename.as_ref(),
+            size_x,
+            size_y,
+            bands,
+            options,
+        )
+    }
+
+    fn _create_with_band_type_with_options<T: GdalType>(
+        &self,
+        filename: &Path,
+        size_x: isize,
+        size_y: isize,
+        bands: isize,
+        options: &[RasterCreationOption],
+    ) -> Result<Dataset> {
         let mut options_c = CslStringList::new();
         for option in options {
             options_c.set_name_value(option.key, option.value)?;
@@ -131,6 +149,10 @@ impl Driver {
     /// Calls `GDALDeleteDataset()`
     ///
     pub fn delete<P: AsRef<Path>>(&self, filename: P) -> Result<()> {
+        Self::_delete(&self, filename.as_ref())
+    }
+
+    fn _delete(&self, filename: &Path) -> Result<()> {
         let c_filename = _path_to_c_string(filename)?;
 
         let rv = unsafe { gdal_sys::GDALDeleteDataset(self.c_driver, c_filename.as_ptr()) };
@@ -153,6 +175,10 @@ impl Driver {
         new_filename: P1,
         old_filename: P2,
     ) -> Result<()> {
+        Self::_rename(&self, new_filename.as_ref(), old_filename.as_ref())
+    }
+
+    fn _rename(&self, new_filename: &Path, old_filename: &Path) -> Result<()> {
         let c_old_filename = _path_to_c_string(old_filename)?;
         let c_new_filename = _path_to_c_string(new_filename)?;
 
