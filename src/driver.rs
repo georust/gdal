@@ -66,30 +66,48 @@ impl Driver {
         _string(rv)
     }
 
-    pub fn create(
+    pub fn create<P: AsRef<Path>>(
         &self,
-        filename: &str,
+        filename: P,
         size_x: isize,
         size_y: isize,
         bands: isize,
     ) -> Result<Dataset> {
-        self.create_with_band_type::<u8>(filename, size_x, size_y, bands)
+        self.create_with_band_type::<u8, _>(filename, size_x, size_y, bands)
     }
 
-    pub fn create_with_band_type<T: GdalType>(
+    pub fn create_with_band_type<T: GdalType, P: AsRef<Path>>(
         &self,
-        filename: &str,
+        filename: P,
         size_x: isize,
         size_y: isize,
         bands: isize,
     ) -> Result<Dataset> {
         let options = [];
-        self.create_with_band_type_with_options::<T>(filename, size_x, size_y, bands, &options)
+        self.create_with_band_type_with_options::<T, _>(filename, size_x, size_y, bands, &options)
     }
 
-    pub fn create_with_band_type_with_options<T: GdalType>(
+    pub fn create_with_band_type_with_options<T: GdalType, P: AsRef<Path>>(
         &self,
-        filename: &str,
+        filename: P,
+        size_x: isize,
+        size_y: isize,
+        bands: isize,
+        options: &[RasterCreationOption],
+    ) -> Result<Dataset> {
+        Self::_create_with_band_type_with_options::<T>(
+            self,
+            filename.as_ref(),
+            size_x,
+            size_y,
+            bands,
+            options,
+        )
+    }
+
+    fn _create_with_band_type_with_options<T: GdalType>(
+        &self,
+        filename: &Path,
         size_x: isize,
         size_y: isize,
         bands: isize,
@@ -100,7 +118,7 @@ impl Driver {
             options_c.set_name_value(option.key, option.value)?;
         }
 
-        let c_filename = CString::new(filename)?;
+        let c_filename = _path_to_c_string(filename)?;
         let c_dataset = unsafe {
             gdal_sys::GDALCreate(
                 self.c_driver,
@@ -120,8 +138,8 @@ impl Driver {
         Ok(unsafe { Dataset::from_c_dataset(c_dataset) })
     }
 
-    pub fn create_vector_only(&self, filename: &str) -> Result<Dataset> {
-        self.create_with_band_type::<u8>(filename, 0, 0, 0)
+    pub fn create_vector_only<P: AsRef<Path>>(&self, filename: P) -> Result<Dataset> {
+        self.create_with_band_type::<u8, _>(filename, 0, 0, 0)
     }
 
     /// Delete named dataset.
@@ -130,7 +148,11 @@ impl Driver {
     ///
     /// Calls `GDALDeleteDataset()`
     ///
-    pub fn delete(&self, filename: &Path) -> Result<()> {
+    pub fn delete<P: AsRef<Path>>(&self, filename: P) -> Result<()> {
+        Self::_delete(self, filename.as_ref())
+    }
+
+    fn _delete(&self, filename: &Path) -> Result<()> {
         let c_filename = _path_to_c_string(filename)?;
 
         let rv = unsafe { gdal_sys::GDALDeleteDataset(self.c_driver, c_filename.as_ptr()) };
@@ -148,7 +170,15 @@ impl Driver {
     ///
     /// Calls `GDALRenameDataset()`
     ///
-    pub fn rename(&self, new_filename: &Path, old_filename: &Path) -> Result<()> {
+    pub fn rename<P1: AsRef<Path>, P2: AsRef<Path>>(
+        &self,
+        new_filename: P1,
+        old_filename: P2,
+    ) -> Result<()> {
+        Self::_rename(self, new_filename.as_ref(), old_filename.as_ref())
+    }
+
+    fn _rename(&self, new_filename: &Path, old_filename: &Path) -> Result<()> {
         let c_old_filename = _path_to_c_string(old_filename)?;
         let c_new_filename = _path_to_c_string(new_filename)?;
 

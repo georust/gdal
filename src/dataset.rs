@@ -168,15 +168,19 @@ impl Dataset {
 
     /// Open a dataset at the given `path` with default
     /// options.
-    pub fn open(path: &Path) -> Result<Dataset> {
-        Self::open_ex(path, DatasetOptions::default())
+    pub fn open<P: AsRef<Path>>(path: P) -> Result<Dataset> {
+        Self::_open_ex(path.as_ref(), DatasetOptions::default())
     }
 
     /// Open a dataset with extended options. See
     /// [`GDALOpenEx`].
     ///
     /// [`GDALOpenEx`]: https://gdal.org/doxygen/gdal_8h.html#a9cb8585d0b3c16726b08e25bcc94274a
-    pub fn open_ex(path: &Path, options: DatasetOptions) -> Result<Dataset> {
+    pub fn open_ex<P: AsRef<Path>>(path: P, options: DatasetOptions) -> Result<Dataset> {
+        Self::_open_ex(path.as_ref(), options)
+    }
+
+    fn _open_ex(path: &Path, options: DatasetOptions) -> Result<Dataset> {
         crate::driver::_register_drivers();
 
         let c_filename = _path_to_c_string(path)?;
@@ -303,13 +307,22 @@ impl Dataset {
         Ok(())
     }
 
-    pub fn create_copy(
+    pub fn create_copy<P: AsRef<Path>>(
         &self,
         driver: &Driver,
-        filename: &str,
+        filename: P,
         options: &[RasterCreationOption],
     ) -> Result<Dataset> {
-        let c_filename = CString::new(filename)?;
+        Self::_create_copy(self, driver, filename.as_ref(), options)
+    }
+
+    fn _create_copy(
+        &self,
+        driver: &Driver,
+        filename: &Path,
+        options: &[RasterCreationOption],
+    ) -> Result<Dataset> {
+        let c_filename = _path_to_c_string(filename)?;
 
         let mut c_options = CslStringList::new();
         for option in options {

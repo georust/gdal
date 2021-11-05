@@ -14,6 +14,9 @@
 - Added `rename` and `delete` to `gdal::Driver`
   - <https://github.com/georust/gdal/pull/226>
 
+- **Breaking**: File paths must now implement `AsRef<Path>`
+  - <https://github.com/georust/gdal/pull/230>
+
 ## 0.8 - 0.10
 
 - Update types to fix build on ppc64le.

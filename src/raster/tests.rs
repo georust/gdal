@@ -155,9 +155,7 @@ fn test_rename_remove_raster() {
 
     let driver = Driver::get("GTiff").unwrap();
 
-    dataset
-        .create_copy(&driver, &mem_file_path_a.to_string_lossy(), &[])
-        .unwrap();
+    dataset.create_copy(&driver, &mem_file_path_a, &[]).unwrap();
 
     driver.rename(mem_file_path_b, mem_file_path_a).unwrap();
 
@@ -270,7 +268,9 @@ fn test_create() {
 #[test]
 fn test_create_with_band_type() {
     let driver = Driver::get("MEM").unwrap();
-    let dataset = driver.create_with_band_type::<f32>("", 10, 20, 3).unwrap();
+    let dataset = driver
+        .create_with_band_type::<f32, _>("", 10, 20, 3)
+        .unwrap();
     assert_eq!(dataset.raster_size(), (10, 20));
     assert_eq!(dataset.raster_count(), 3);
     assert_eq!(dataset.driver().short_name(), "MEM");
@@ -307,7 +307,7 @@ fn test_create_with_band_type_with_options() {
     let tmp_filename = "/tmp/test.tif";
     {
         let dataset = driver
-            .create_with_band_type_with_options::<u8>(tmp_filename, 256, 256, 1, &options)
+            .create_with_band_type_with_options::<u8, _>(tmp_filename, 256, 256, 1, &options)
             .unwrap();
         let rasterband = dataset.rasterband(1).unwrap();
         let block_size = rasterband.block_size();
