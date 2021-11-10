@@ -2,16 +2,22 @@
 
 ## Unreleased
 
+## 0.11
+
 - Remove the `datetime` feature
+
   - <https://github.com/georust/gdal/pull/229>
 
 - Add `cpl::CslStringList`
+
   - <https://github.com/georust/gdal/pull/223>
 
 - Make `gdal::rasters::OptimizeMode` public
+
   - <https://github.com/georust/gdal/pull/224>
 
 - Added `rename` and `delete` to `gdal::Driver`
+
   - <https://github.com/georust/gdal/pull/226>
 
 - **Breaking**: File paths must now implement `AsRef<Path>`
@@ -20,16 +26,20 @@
 ## 0.8 - 0.10
 
 - Update types to fix build on ppc64le.
+
   - <https://github.com/georust/gdal/pull/214/>
 
 - Upgrade `semver` to 1.0 and trim gdal version output in `build.rs`.
+
   - <https://github.com/georust/gdal/pull/211/>
 
 - **Breaking**: Make `set_attribute_filter` and `clear_attribute_filter` take `&mut self`
+
   - <https://github.com/georust/gdal/pull/209/>
 
 - **Breaking**: Drop pre-build bindings for GDAL versions < 2.4. The bindgen feature can be used to generate bindings for older versions.
 - Fix memory leaks reported by Valgrind. This required re-generation of the pre-build bindings.
+
   - <https://github.com/georust/gdal/pull/205>
 
 - **Breaking**: Implement `TryFrom` instead of `From` to convert from gdal geometries to `geo-types`. This avoids a possible panic on unsupported geometries and returns an error instead.
@@ -221,7 +231,6 @@ let mut dataset = driver
   - <https://github.com/georust/gdal/pull/212>
 
 - Wrappers for `GDALRasterizeGeometries` provided in a new `rasters::rasterize` function
-
 
   - <https://github.com/georust/gdal/pull/213>
 
