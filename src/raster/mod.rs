@@ -1,6 +1,8 @@
 //! GDAL Raster Data
 
+#[cfg(all(major_ge_3, minor_ge_1))]
 pub(crate) mod mdarray;
+
 mod rasterband;
 mod rasterize;
 mod types;
