@@ -1,10 +1,10 @@
 //! GDAL Raster Data
 
+pub(crate) mod mdarray;
 mod rasterband;
 mod rasterize;
 mod types;
 mod warp;
-pub(crate) mod mdarray;
 
 pub use rasterband::{Buffer, ByteBuffer, ColorInterpretation, RasterBand, ResampleAlg};
 pub use rasterize::{rasterize, BurnSource, MergeAlgorithm, OptimizeMode, RasterizeOptions};
