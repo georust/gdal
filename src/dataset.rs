@@ -14,8 +14,8 @@ use crate::raster::RasterCreationOption;
 use crate::utils::{_last_cpl_err, _last_null_pointer_err, _path_to_c_string, _string};
 use crate::vector::{sql, Geometry, OwnedLayer};
 use crate::{
-    gdal_major_object::MajorObject, raster::RasterBand, spatial_ref::SpatialRef, vector::Layer,
-    Driver, Metadata, raster::mdarray::Group
+    gdal_major_object::MajorObject, raster::mdarray::Group, raster::RasterBand,
+    spatial_ref::SpatialRef, vector::Layer, Driver, Metadata,
 };
 use gdal_sys::OGRGeometryH;
 use gdal_sys::{
