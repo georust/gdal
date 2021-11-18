@@ -15,7 +15,7 @@ use crate::utils::{_last_cpl_err, _last_null_pointer_err, _path_to_c_string, _st
 use crate::vector::{sql, Geometry, OwnedLayer};
 use crate::{
     gdal_major_object::MajorObject, raster::RasterBand, spatial_ref::SpatialRef, vector::Layer,
-    Driver, Metadata,
+    Driver, Metadata, raster::mdarray::Group
 };
 use gdal_sys::OGRGeometryH;
 use gdal_sys::{
@@ -412,6 +412,15 @@ impl Dataset {
                 return Err(_last_null_pointer_err("GDALGetRasterBand"));
             }
             Ok(RasterBand::from_c_rasterband(self, c_band))
+        }
+    }
+    pub fn root_group(&self) -> Result<Group> {
+        unsafe {
+            let c_group = gdal_sys::GDALDatasetGetRootGroup(self.c_dataset());
+            if c_group.is_null() {
+                return Err(_last_null_pointer_err("GDALGetRasterBand"));
+            }
+            Ok(Group::from_c_group(self, c_group))
         }
     }
 
