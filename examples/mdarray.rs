@@ -1,6 +1,8 @@
+#[cfg(all(major_ge_3, minor_ge_1))]
 use gdal::{cpl, Dataset, DatasetOptions, GdalOpenFlags};
 use ndarray::ArrayD;
 
+#[cfg(all(major_ge_3, minor_ge_1))]
 fn main() {
     let dataset_options = DatasetOptions {
         open_flags: GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER,
