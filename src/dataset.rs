@@ -14,14 +14,18 @@ use crate::raster::RasterCreationOption;
 use crate::utils::{_last_cpl_err, _last_null_pointer_err, _path_to_c_string, _string};
 use crate::vector::{sql, Geometry, OwnedLayer};
 use crate::{
-    gdal_major_object::MajorObject, raster::mdarray::Group, raster::RasterBand,
-    spatial_ref::SpatialRef, vector::Layer, Driver, Metadata,
+    gdal_major_object::MajorObject, raster::RasterBand, spatial_ref::SpatialRef, vector::Layer,
+    Driver, Metadata,
 };
+
 use gdal_sys::OGRGeometryH;
 use gdal_sys::{
     self, CPLErr, GDALAccess, GDALDatasetH, GDALMajorObjectH, OGRErr, OGRLayerH, OGRwkbGeometryType,
 };
 use libc::{c_double, c_int, c_uint};
+
+#[cfg(all(major_ge_3, minor_ge_1))]
+use crate::raster::mdarray::Group;
 
 use bitflags::bitflags;
 
@@ -414,6 +418,8 @@ impl Dataset {
             Ok(RasterBand::from_c_rasterband(self, c_band))
         }
     }
+
+    #[cfg(all(major_ge_3, minor_ge_1))]
     pub fn root_group(&self) -> Result<Group> {
         unsafe {
             let c_group = gdal_sys::GDALDatasetGetRootGroup(self.c_dataset());
