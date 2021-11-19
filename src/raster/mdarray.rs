@@ -13,8 +13,7 @@ use std::convert::TryInto;
 use std::ffi::CString;
 
 #[cfg(feature = "ndarray")]
-use ndarray::ArrayD;
-use ndarray::IxDyn;
+use ndarray::{ArrayD, IxDyn};
 use std::fmt::Debug;
 
 #[cfg(test)]
@@ -214,7 +213,7 @@ impl<'a> MDArray<'a> {
         let buffer_stride: *const i64 = std::ptr::null();
         let data_type = unsafe { GDALMDArrayGetDataType(self.c_mdarray) };
         let p_dst_buffer_alloc_start: *mut libc::c_void = std::ptr::null_mut();
-        let n_dst_buffer_alloc_size = 0 as usize;
+        let n_dst_buffer_alloc_size = 0;
 
         let rv = unsafe {
             gdal_sys::GDALMDArrayRead(
@@ -321,7 +320,7 @@ impl<'a> Group<'a> {
         let c_mdarray =
             unsafe { GDALGroupOpenMDArray(self.c_group, name.as_ptr(), options.as_ptr()) };
 
-        MDArray::from_c_mdarray(&self, c_mdarray)
+        MDArray::from_c_mdarray(self, c_mdarray)
     }
     // pub unsafe fn array(&self, array_name: String, options: CslStringList) -> MDArray{
     //     let name = CString::new(array_name).unwrap();
