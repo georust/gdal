@@ -10,7 +10,7 @@ on:
 
 
 jobs:
-  gdal_334
+  gdal_34
     name: "ci gdal-34"
     runs-on: ubuntu-latest
     container:
