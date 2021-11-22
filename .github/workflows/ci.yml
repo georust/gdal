@@ -215,3 +215,54 @@ jobs:
         with:
           command: test
           args: ${{ matrix.features }} --verbose
+
+  gdal_30:
+    name: "ci gdal-30"
+    runs-on: ubuntu-latest
+    container:
+      image: osgeo/gdal:ubuntu-small-3.0.2
+
+    strategy:
+      matrix:
+        features: ["", "--all-features"]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Install build deps
+        run: |
+          apt-get update -y
+          apt-get install build-essential pkg-config libclang-dev -y
+      - name: Setup building
+        run: |
+          export CC="clang-9"
+          export CXX="clang++-9"
+     
+      - name: Install stable
+        uses: actions-rs/toolchain@v1
+        with:
+            toolchain: stable
+            override: true
+            components: rustfmt, clippy
+
+
+      - name: Check with Rustfmt
+        uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: --all -- --check
+      - name: Check with Clippy
+        uses: actions-rs/clippy-check@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          args: --all-targets ${{ matrix.features }} -- -D warnings
+      - name: Build
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: ${{ matrix.features }} --verbose
+      - name: Run tests
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: ${{ matrix.features }} --verbose
