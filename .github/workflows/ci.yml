@@ -218,10 +218,8 @@ jobs:
 
   gdal_30:
     name: "ci gdal-30"
-    runs-on: ubuntu-latest
-    container:
-      image: osgeo/gdal:ubuntu-small-3.0.2
-
+    runs-on: "ubuntu-20.04"
+    
     strategy:
       matrix:
         features: ["", "--all-features"]
@@ -229,23 +227,17 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      - name: Install build deps
+      - name: Install GDAL
         run: |
-          apt-get update -y
-          apt-get install build-essential pkg-config libclang-dev -y
+          sudo apt-get update
+          sudo apt-get install libgdal-dev gdal-bin build-essential
+          export C_INCLUDE_PATH=/usr/include/gdal:$C_INCLUDE_PATH
+          export CPLUS_INCLUDE_PATH=/usr/include/gdal:$CPLUS_INCLUDE_PATH
+          sudo ldconfig
       - name: Setup building
         run: |
           export CC="clang-9"
           export CXX="clang++-9"
-     
-      - name: Install stable
-        uses: actions-rs/toolchain@v1
-        with:
-            toolchain: stable
-            override: true
-            components: rustfmt, clippy
-
-
       - name: Check with Rustfmt
         uses: actions-rs/cargo@v1
         with:
