@@ -625,6 +625,7 @@ impl Dataset {
     ///
     /// ```
     /// # use gdal::{Dataset, LayerOptions};
+    /// # use gdal::vector::LayerAccess;
     /// #
     /// fn create_point_grid(dataset: &mut Dataset) -> gdal::errors::Result<()> {
     ///     use gdal::vector::Geometry;
@@ -690,6 +691,7 @@ impl Dataset {
     /// # use gdal::Dataset;
     /// # use std::path::Path;
     /// use gdal::vector::sql;
+    /// use gdal::vector::LayerAccess;
     ///
     /// let ds = Dataset::open(Path::new("fixtures/roads.geojson")).unwrap();
     /// let query = "SELECT kind, is_bridge, highway FROM roads WHERE highway = 'pedestrian'";

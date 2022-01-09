@@ -86,6 +86,7 @@ impl LayerCaps {
 /// ```
 /// use std::path::Path;
 /// use gdal::Dataset;
+/// use gdal::vector::LayerAccess;
 ///
 /// let dataset = Dataset::open(Path::new("fixtures/roads.geojson")).unwrap();
 /// let mut layer = dataset.layer(0).unwrap();
@@ -139,6 +140,7 @@ impl<'a> Layer<'a> {
 /// ```
 /// use std::path::Path;
 /// use gdal::Dataset;
+/// use gdal::vector::LayerAccess;
 ///
 /// let dataset = Dataset::open(Path::new("fixtures/roads.geojson")).unwrap();
 /// let mut layer = dataset.into_layer(0).unwrap();
