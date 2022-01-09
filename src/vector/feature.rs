@@ -1,7 +1,6 @@
 use crate::utils::{_last_null_pointer_err, _string, _string_array};
 use crate::vector::geometry::Geometry;
-use crate::vector::layer::Layer;
-use crate::vector::Defn;
+use crate::vector::{Defn, LayerAccess};
 use gdal_sys::{self, OGRErr, OGRFeatureH, OGRFieldType};
 use libc::c_longlong;
 use libc::{c_double, c_int};
@@ -487,7 +486,7 @@ impl<'a> Feature<'a> {
         Ok(&self.geometry[idx])
     }
 
-    pub fn create(&self, lyr: &Layer) -> Result<()> {
+    pub fn create<L: LayerAccess>(&self, lyr: &L) -> Result<()> {
         let rv = unsafe { gdal_sys::OGR_L_CreateFeature(lyr.c_layer(), self.c_feature) };
         if rv != OGRErr::OGRERR_NONE {
             return Err(GdalError::OgrError {

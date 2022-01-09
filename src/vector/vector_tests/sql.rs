@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use crate::{
     fixture,
-    vector::{sql, Geometry},
+    vector::{sql, Geometry, LayerAccess},
     Dataset,
 };
 

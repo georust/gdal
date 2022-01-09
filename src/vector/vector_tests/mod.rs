@@ -1,5 +1,5 @@
 use super::{
-    Feature, FeatureIterator, FieldValue, Geometry, Layer, LayerCaps::*, OGRFieldType,
+    Feature, FeatureIterator, FieldValue, Geometry, Layer, LayerAccess, LayerCaps::*, OGRFieldType,
     OGRwkbGeometryType,
 };
 use crate::spatial_ref::SpatialRef;
@@ -159,6 +159,25 @@ mod tests {
         let layers = ds.layers();
         assert_eq!(layers.size_hint(), (3, Some(3)));
         assert_eq!(layers.count(), 3);
+    }
+
+    #[test]
+    fn test_owned_layers() {
+        let ds = Dataset::open(fixture!("three_layer_ds.s3db")).unwrap();
+
+        assert_eq!(ds.layer_count(), 3);
+
+        let mut layer = ds.into_layer(0).unwrap();
+
+        {
+            let feature = layer.features().next().unwrap();
+            assert_eq!(feature.field("id").unwrap(), None);
+        }
+
+        // convert back to dataset
+
+        let ds = layer.into_dataset();
+        assert_eq!(ds.layer_count(), 3);
     }
 
     #[test]

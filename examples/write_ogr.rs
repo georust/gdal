@@ -1,5 +1,5 @@
 use gdal::errors::Result;
-use gdal::vector::{Defn, Feature, FieldDefn, FieldValue, Geometry, OGRFieldType};
+use gdal::vector::{Defn, Feature, FieldDefn, FieldValue, Geometry, LayerAccess, OGRFieldType};
 use gdal::Driver;
 use std::fs;
 

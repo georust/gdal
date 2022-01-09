@@ -1,6 +1,6 @@
 use crate::spatial_ref::SpatialRef;
 use crate::utils::{_last_null_pointer_err, _string};
-use crate::vector::layer::Layer;
+use crate::vector::LayerAccess;
 use gdal_sys::{
     self, OGRFeatureDefnH, OGRFieldDefnH, OGRFieldType, OGRGeomFieldDefnH, OGRwkbGeometryType,
 };
@@ -55,7 +55,7 @@ impl Defn {
         }
     }
 
-    pub fn from_layer(lyr: &Layer) -> Defn {
+    pub fn from_layer<L: LayerAccess>(lyr: &L) -> Defn {
         let c_defn = unsafe { gdal_sys::OGR_L_GetLayerDefn(lyr.c_layer()) };
         Defn { c_defn }
     }

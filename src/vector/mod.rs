@@ -28,7 +28,7 @@ pub use defn::{Defn, Field, FieldIterator};
 pub use feature::{Feature, FieldValue, FieldValueIterator};
 pub use gdal_sys::{OGRFieldType, OGRwkbGeometryType};
 pub use geometry::Geometry;
-pub use layer::{FeatureIterator, FieldDefn, Layer, LayerCaps};
+pub use layer::{FeatureIterator, FieldDefn, Layer, LayerAccess, LayerCaps, OwnedLayer};
 pub use ops::GeometryIntersection;
 
 use crate::errors::Result;
