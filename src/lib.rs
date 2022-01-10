@@ -30,6 +30,7 @@ pub mod errors;
 mod gdal_major_object;
 mod metadata;
 pub mod raster;
+pub mod raster_programs;
 pub mod spatial_ref;
 mod utils;
 pub mod vector;
