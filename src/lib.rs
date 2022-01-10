@@ -56,6 +56,18 @@ pub fn apply_geo_transform(geo_transform: &GeoTransform, pixel: f64, line: f64) 
     (geo_x, geo_y)
 }
 
+/// Invert Geotransform.
+/// Wraps [GDALInvGeoTransform].
+/// 
+/// [GDALInvGeoTransform]: https://gdal.org/api/raster_c_api.html#_CPPv419GDALInvGeoTransformPdPd
+pub fn inv_geo_transform(geo_transform: &GeoTransform) -> GeoTransform {
+    let mut gt_out: GeoTransform = Default::default();
+    unsafe {
+        gdal_sys::GDALInvGeoTransform(geo_transform.as_ptr() as *mut f64, gt_out.as_mut_ptr());
+    }
+    gt_out
+}
+
 #[cfg(test)]
 fn assert_almost_eq(a: f64, b: f64) {
     let f: f64 = a / b;
