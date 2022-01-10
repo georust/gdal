@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Add `raster_programs::build_vrt`
+- Add `apply_geo_transform`
+- Add `inv_geo_transform`
+
+  - <https://github.com/georust/gdal/pull/239>
+
 ## 0.11
 
 - Remove the `datetime` feature
