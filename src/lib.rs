@@ -45,20 +45,26 @@ pub use metadata::Metadata;
 
 /// Apply GeoTransform to x/y coordinate.
 /// Wraps [GDALApplyGeoTransform].
-/// 
+///
 /// [GDALApplyGeoTransform]: https://gdal.org/api/raster_c_api.html#_CPPv421GDALApplyGeoTransformPdddPdPd
 pub fn apply_geo_transform(geo_transform: &GeoTransform, pixel: f64, line: f64) -> (f64, f64) {
     let mut geo_x: f64 = 0.;
     let mut geo_y: f64 = 0.;
     unsafe {
-        gdal_sys::GDALApplyGeoTransform(geo_transform.as_ptr() as *mut f64, pixel, line, &mut geo_x, &mut geo_y);
+        gdal_sys::GDALApplyGeoTransform(
+            geo_transform.as_ptr() as *mut f64,
+            pixel,
+            line,
+            &mut geo_x,
+            &mut geo_y,
+        );
     }
     (geo_x, geo_y)
 }
 
 /// Invert Geotransform.
 /// Wraps [GDALInvGeoTransform].
-/// 
+///
 /// [GDALInvGeoTransform]: https://gdal.org/api/raster_c_api.html#_CPPv419GDALInvGeoTransformPdPd
 pub fn inv_geo_transform(geo_transform: &GeoTransform) -> GeoTransform {
     let mut gt_out: GeoTransform = Default::default();

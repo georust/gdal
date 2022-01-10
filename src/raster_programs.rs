@@ -1,15 +1,22 @@
-use std::{borrow::Borrow, ptr::{null, null_mut}};
-use std::ffi::CString;
 use crate::{errors::*, Dataset};
 use libc::{c_char, c_int};
+use std::ffi::CString;
+use std::{
+    borrow::Borrow,
+    ptr::{null, null_mut},
+};
 
 /// Build a VRT from a list of datasets.
 /// Wraps [GDALBuildVRT].
 /// See the [program docs] for more details.
-/// 
+///
 /// [GDALBuildVRT]: https://gdal.org/api/gdal_utils.html#gdal__utils_8h_1a057aaea8b0ed0476809a781ffa377ea4
 /// [program docs]: https://gdal.org/programs/gdalbuildvrt.html
-pub fn build_vrt<D: Borrow<Dataset>>(dest: Option<String>, datasets: &[D], args: Vec<String>) -> Result<Dataset> {
+pub fn build_vrt<D: Borrow<Dataset>>(
+    dest: Option<String>,
+    datasets: &[D],
+    args: Vec<String>,
+) -> Result<Dataset> {
     // Convert dest to raw string
     let dest = match dest {
         Some(s) => CString::new(s)?.into_raw(),
@@ -27,9 +34,17 @@ pub fn build_vrt<D: Borrow<Dataset>>(dest: Option<String>, datasets: &[D], args:
         let options = gdal_sys::GDALBuildVRTOptionsNew(c_args.as_mut_ptr(), null_mut());
 
         // Get raw handles to the datasets
-        let mut datasets_raw: Vec<gdal_sys::GDALDatasetH> = datasets.iter().map(|x| x.borrow().c_dataset()).collect();
+        let mut datasets_raw: Vec<gdal_sys::GDALDatasetH> =
+            datasets.iter().map(|x| x.borrow().c_dataset()).collect();
 
-        let dataset_out = gdal_sys::GDALBuildVRT(dest, datasets_raw.len() as c_int, datasets_raw.as_mut_ptr(), null(), options, null_mut());
+        let dataset_out = gdal_sys::GDALBuildVRT(
+            dest,
+            datasets_raw.len() as c_int,
+            datasets_raw.as_mut_ptr(),
+            null(),
+            options,
+            null_mut(),
+        );
 
         gdal_sys::GDALBuildVRTOptionsFree(options);
 
@@ -44,7 +59,10 @@ pub fn build_vrt<D: Borrow<Dataset>>(dest: Option<String>, datasets: &[D], args:
         }
 
         if dataset_out.is_null() {
-            return Err(GdalError::NullPointer{method_name: "GDALBuildVRT", msg: "".to_string()});
+            return Err(GdalError::NullPointer {
+                method_name: "GDALBuildVRT",
+                msg: "".to_string(),
+            });
         }
 
         Dataset::from_c_dataset(dataset_out)
