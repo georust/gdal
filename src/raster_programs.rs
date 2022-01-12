@@ -1,4 +1,8 @@
-use crate::{errors::*, utils::_last_null_pointer_err, Dataset};
+use crate::{
+    errors::*,
+    utils::{_last_null_pointer_err, _path_to_c_string},
+    Dataset,
+};
 use gdal_sys::GDALBuildVRTOptions;
 use libc::{c_char, c_int};
 use std::{
@@ -21,10 +25,11 @@ impl BuildVRTOptions {
     /// [GDALBuildVRTOptionsNew]: https://gdal.org/api/gdal_utils.html#_CPPv422GDALBuildVRTOptionsNewPPcP28GDALBuildVRTOptionsForBinary
     fn new(args: Vec<String>) -> Result<Self> {
         // Convert args to CStrings to add terminating null bytes
-        let mut cstr_args = Vec::<CString>::new();
-        for arg in args {
-            cstr_args.push(CString::new(arg)?);
-        }
+        let cstr_args = args
+            .into_iter()
+            .map(CString::new)
+            .collect::<std::result::Result<Vec<_>, _>>()?;
+
         // Get pointers to the strings
         // These strings don't actually get modified, the C API is just not const-correct
         // Null-terminate the list
@@ -33,6 +38,7 @@ impl BuildVRTOptions {
             .map(|x| x.as_ptr() as *mut c_char)
             .chain(std::iter::once(null_mut()))
             .collect::<Vec<_>>();
+
         unsafe {
             Ok(Self {
                 c_options: gdal_sys::GDALBuildVRTOptionsNew(c_args.as_mut_ptr(), null_mut()),
@@ -72,14 +78,8 @@ pub fn build_vrt<D: Borrow<Dataset>>(
 
 fn _build_vrt(dest: Option<&Path>, datasets: &[&Dataset], args: Vec<String>) -> Result<Dataset> {
     // Convert dest to CString
-    let dest = match dest {
-        Some(x) => Some(CString::new(x.to_string_lossy().to_string())?),
-        None => None,
-    };
-    let c_dest = match dest {
-        Some(x) => x.as_ptr(),
-        None => null(),
-    };
+    let dest = dest.map(_path_to_c_string).transpose()?;
+    let c_dest = dest.map(|x| x.as_ptr()).unwrap_or(null());
 
     let result = unsafe {
         let options = BuildVRTOptions::new(args)?;
