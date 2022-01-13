@@ -61,13 +61,13 @@ impl Drop for BuildVRTOptions {
 ///
 /// [GDALBuildVRT]: https://gdal.org/api/gdal_utils.html#gdal__utils_8h_1a057aaea8b0ed0476809a781ffa377ea4
 /// [program docs]: https://gdal.org/programs/gdalbuildvrt.html
-pub fn build_vrt<D: Borrow<Dataset>, P: AsRef<Path>>(
-    dest: Option<P>,
+pub fn build_vrt<D: Borrow<Dataset>>(
+    dest: Option<&Path>,
     datasets: &[D],
     args: Vec<String>,
 ) -> Result<Dataset> {
     _build_vrt(
-        dest.as_ref().map(|x| x.as_ref()),
+        dest,
         &datasets
             .iter()
             .map(|x| x.borrow())
