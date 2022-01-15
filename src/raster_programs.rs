@@ -79,7 +79,7 @@ pub fn build_vrt<D: Borrow<Dataset>>(
 fn _build_vrt(dest: Option<&Path>, datasets: &[&Dataset], args: Vec<String>) -> Result<Dataset> {
     // Convert dest to CString
     let dest = dest.map(_path_to_c_string).transpose()?;
-    let c_dest = dest.map(|x| x.as_ptr()).unwrap_or(null());
+    let c_dest = dest.as_ref().map(|x| x.as_ptr()).unwrap_or(null());
 
     let result = unsafe {
         let options = BuildVRTOptions::new(args)?;
