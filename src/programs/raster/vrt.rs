@@ -15,7 +15,7 @@ use std::{
 /// Wraps a [GDALBuildVRTOptions] object.
 ///
 /// [GDALBuildVRTOptions]: https://gdal.org/api/gdal_utils.html#_CPPv419GDALBuildVRTOptions
-struct BuildVRTOptions {
+pub struct BuildVRTOptions {
     c_options: *mut GDALBuildVRTOptions,
 }
 
@@ -23,7 +23,7 @@ impl BuildVRTOptions {
     /// See [GDALBuildVRTOptionsNew].
     ///
     /// [GDALBuildVRTOptionsNew]: https://gdal.org/api/gdal_utils.html#_CPPv422GDALBuildVRTOptionsNewPPcP28GDALBuildVRTOptionsForBinary
-    fn new(args: Vec<String>) -> Result<Self> {
+    pub fn new(args: Vec<String>) -> Result<Self> {
         // Convert args to CStrings to add terminating null bytes
         let cstr_args = args
             .into_iter()
@@ -45,6 +45,14 @@ impl BuildVRTOptions {
             })
         }
     }
+
+    /// Returns the wrapped C pointer
+    ///
+    /// # Safety
+    /// This method returns a raw C pointer
+    pub unsafe fn c_options(&self) -> *mut GDALBuildVRTOptions {
+        self.c_options
+    }
 }
 
 impl Drop for BuildVRTOptions {
@@ -64,7 +72,7 @@ impl Drop for BuildVRTOptions {
 pub fn build_vrt<D: Borrow<Dataset>>(
     dest: Option<&Path>,
     datasets: &[D],
-    args: Vec<String>,
+    options: Option<BuildVRTOptions>,
 ) -> Result<Dataset> {
     _build_vrt(
         dest,
@@ -72,17 +80,25 @@ pub fn build_vrt<D: Borrow<Dataset>>(
             .iter()
             .map(|x| x.borrow())
             .collect::<Vec<&Dataset>>(),
-        args,
+        options,
     )
 }
 
-fn _build_vrt(dest: Option<&Path>, datasets: &[&Dataset], args: Vec<String>) -> Result<Dataset> {
+fn _build_vrt(
+    dest: Option<&Path>,
+    datasets: &[&Dataset],
+    options: Option<BuildVRTOptions>,
+) -> Result<Dataset> {
     // Convert dest to CString
     let dest = dest.map(_path_to_c_string).transpose()?;
     let c_dest = dest.as_ref().map(|x| x.as_ptr()).unwrap_or(null());
 
+    let c_options = options
+        .as_ref()
+        .map(|x| x.c_options as *const GDALBuildVRTOptions)
+        .unwrap_or(null());
+
     let result = unsafe {
-        let options = BuildVRTOptions::new(args)?;
         // Get raw handles to the datasets
         let mut datasets_raw: Vec<gdal_sys::GDALDatasetH> =
             datasets.iter().map(|x| x.c_dataset()).collect();
@@ -92,7 +108,7 @@ fn _build_vrt(dest: Option<&Path>, datasets: &[&Dataset], args: Vec<String>) -> 
             datasets_raw.len() as c_int,
             datasets_raw.as_mut_ptr(),
             null(),
-            options.c_options,
+            c_options,
             null_mut(),
         );
 

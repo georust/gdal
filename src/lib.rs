@@ -29,8 +29,8 @@ mod driver;
 pub mod errors;
 mod gdal_major_object;
 mod metadata;
+pub mod programs;
 pub mod raster;
-pub mod raster_programs;
 pub mod spatial_ref;
 mod utils;
 pub mod vector;
@@ -38,7 +38,8 @@ pub mod version;
 pub mod vsi;
 
 pub use dataset::{
-    Dataset, DatasetOptions, GdalOpenFlags, GeoTransform, GeoTransformTrait, LayerIterator, LayerOptions, Transaction,
+    Dataset, DatasetOptions, GdalOpenFlags, GeoTransform, GeoTransformTrait, LayerIterator,
+    LayerOptions, Transaction,
 };
 pub use driver::Driver;
 pub use metadata::Metadata;

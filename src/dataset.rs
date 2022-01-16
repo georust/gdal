@@ -63,9 +63,7 @@ impl GeoTransformTrait for GeoTransform {
     fn invert(&self) -> Result<GeoTransform> {
         let mut gt_out: GeoTransform = Default::default();
         unsafe {
-            if gdal_sys::GDALInvGeoTransform(self.as_ptr() as *mut f64, gt_out.as_mut_ptr())
-                == 0
-            {
+            if gdal_sys::GDALInvGeoTransform(self.as_ptr() as *mut f64, gt_out.as_mut_ptr()) == 0 {
                 return Err(GdalError::BadArgument(
                     "Geo transform is uninvertible".to_string(),
                 ));
