@@ -38,47 +38,10 @@ pub mod version;
 pub mod vsi;
 
 pub use dataset::{
-    Dataset, DatasetOptions, GdalOpenFlags, GeoTransform, LayerIterator, LayerOptions, Transaction,
+    Dataset, DatasetOptions, GdalOpenFlags, GeoTransform, GeoTransformTrait, LayerIterator, LayerOptions, Transaction,
 };
 pub use driver::Driver;
 pub use metadata::Metadata;
-
-/// Apply GeoTransform to x/y coordinate.
-/// Wraps [GDALApplyGeoTransform].
-///
-/// [GDALApplyGeoTransform]: https://gdal.org/api/raster_c_api.html#_CPPv421GDALApplyGeoTransformPdddPdPd
-pub fn apply_geo_transform(geo_transform: &GeoTransform, pixel: f64, line: f64) -> (f64, f64) {
-    let mut geo_x: f64 = 0.;
-    let mut geo_y: f64 = 0.;
-    unsafe {
-        gdal_sys::GDALApplyGeoTransform(
-            geo_transform.as_ptr() as *mut f64,
-            pixel,
-            line,
-            &mut geo_x,
-            &mut geo_y,
-        );
-    }
-    (geo_x, geo_y)
-}
-
-/// Invert Geotransform.
-/// Wraps [GDALInvGeoTransform].
-///
-/// [GDALInvGeoTransform]: https://gdal.org/api/raster_c_api.html#_CPPv419GDALInvGeoTransformPdPd
-pub fn invert_geo_transform(geo_transform: &GeoTransform) -> errors::Result<GeoTransform> {
-    let mut gt_out: GeoTransform = Default::default();
-    unsafe {
-        if gdal_sys::GDALInvGeoTransform(geo_transform.as_ptr() as *mut f64, gt_out.as_mut_ptr())
-            == 0
-        {
-            return Err(errors::GdalError::BadArgument(
-                "Geo transform is uninvertible".to_string(),
-            ));
-        }
-    }
-    Ok(gt_out)
-}
 
 #[cfg(test)]
 fn assert_almost_eq(a: f64, b: f64) {

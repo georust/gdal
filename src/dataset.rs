@@ -31,6 +31,50 @@ use bitflags::bitflags;
 /// [GDALGetGeoTransform]: https://gdal.org/api/gdaldataset_cpp.html#classGDALDataset_1a5101119705f5fa2bc1344ab26f66fd1d
 pub type GeoTransform = [c_double; 6];
 
+pub trait GeoTransformTrait {
+    fn apply(&self, pixel: f64, line: f64) -> (f64, f64);
+    fn invert(&self) -> Result<GeoTransform>;
+}
+
+impl GeoTransformTrait for GeoTransform {
+    /// Apply GeoTransform to x/y coordinate.
+    /// Wraps [GDALApplyGeoTransform].
+    ///
+    /// [GDALApplyGeoTransform]: https://gdal.org/api/raster_c_api.html#_CPPv421GDALApplyGeoTransformPdddPdPd
+    fn apply(&self, pixel: f64, line: f64) -> (f64, f64) {
+        let mut geo_x: f64 = 0.;
+        let mut geo_y: f64 = 0.;
+        unsafe {
+            gdal_sys::GDALApplyGeoTransform(
+                self.as_ptr() as *mut f64,
+                pixel,
+                line,
+                &mut geo_x,
+                &mut geo_y,
+            );
+        }
+        (geo_x, geo_y)
+    }
+
+    /// Invert Geotransform.
+    /// Wraps [GDALInvGeoTransform].
+    ///
+    /// [GDALInvGeoTransform]: https://gdal.org/api/raster_c_api.html#_CPPv419GDALInvGeoTransformPdPd
+    fn invert(&self) -> Result<GeoTransform> {
+        let mut gt_out: GeoTransform = Default::default();
+        unsafe {
+            if gdal_sys::GDALInvGeoTransform(self.as_ptr() as *mut f64, gt_out.as_mut_ptr())
+                == 0
+            {
+                return Err(GdalError::BadArgument(
+                    "Geo transform is uninvertible".to_string(),
+                ));
+            }
+        }
+        Ok(gt_out)
+    }
+}
+
 /// Wrapper around a [`GDALDataset`][GDALDataset] object.
 ///
 /// Represents both a [vector dataset][vector-data-model]
