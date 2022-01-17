@@ -8,7 +8,6 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-
     
 jobs:
   gdal_34:
@@ -39,8 +38,6 @@ jobs:
             toolchain: stable
             override: true
             components: rustfmt, clippy
-
-
       - name: Check with Rustfmt
         uses: actions-rs/cargo@v1
         with:
@@ -90,8 +87,6 @@ jobs:
             toolchain: stable
             override: true
             components: rustfmt, clippy
-
-
       - name: Check with Rustfmt
         uses: actions-rs/cargo@v1
         with:
@@ -142,8 +137,6 @@ jobs:
             toolchain: stable
             override: true
             components: rustfmt, clippy
-
-
       - name: Check with Rustfmt
         uses: actions-rs/cargo@v1
         with:
@@ -193,8 +186,6 @@ jobs:
             toolchain: stable
             override: true
             components: rustfmt, clippy
-
-
       - name: Check with Rustfmt
         uses: actions-rs/cargo@v1
         with:
@@ -216,8 +207,56 @@ jobs:
           command: test
           args: ${{ matrix.features }} --verbose
 
-  gdal_30:
-    name: "ci gdal-30"
+    gdal_30:
+    name: "ci gdal-304"
+    runs-on: ubuntu-latest
+    container:
+      image: osgeo/gdal:ubuntu-full-3.0.4
+
+    strategy:
+      matrix:
+        features: ["", "--all-features"]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Install build deps
+        run: |
+          apt-get update -y
+          apt-get install build-essential pkg-config libclang-dev -y
+      - name: Setup building
+        run: |
+          export CC="clang-9"
+          export CXX="clang++-9"     
+      - name: Install stable
+        uses: actions-rs/toolchain@v1
+        with:
+            toolchain: stable
+            override: true
+            components: rustfmt, clippy
+      - name: Check with Rustfmt
+        uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: --all -- --check
+      - name: Check with Clippy
+        uses: actions-rs/clippy-check@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          args: --all-targets ${{ matrix.features }} -- -D warnings
+      - name: Build
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: ${{ matrix.features }} --verbose
+      - name: Run tests
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: ${{ matrix.features }} --verbose
+
+  ubuntu_lts:
+    name: "ci ubuntu-lts"
     runs-on: "ubuntu-20.04"
     
     strategy:
