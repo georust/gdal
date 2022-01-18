@@ -233,16 +233,8 @@ impl<'a> RasterBand<'a> {
     ) -> Result<Buffer<T>> {
         let pixels = (size.0 * size.1) as usize;
 
-        let mut data: Vec<T> = Vec::with_capacity(pixels);
+        let mut data = vec![T::zero(); pixels];
 
-        // Safety: the read_into_slice line below writes
-        // exactly pixel elements into the slice, before we
-        // read from this slice. This paradigm is suggested
-        // in the rust std docs
-        // (https://doc.rust-lang.org/std/vec/struct.Vec.html#examples-18)
-        unsafe {
-            data.set_len(pixels);
-        };
         self.read_into_slice(window, window_size, size, &mut data, e_resample_alg)?;
 
         Ok(Buffer { size, data })
