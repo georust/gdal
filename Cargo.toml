@@ -8,7 +8,7 @@ authors = [
     "Johannes Drönner <droenner@informatik.uni-marburg.de>",
 ]
 repository = "https://github.com/georust/gdal"
-edition = "2018"
+edition = "2021"
 
 [features]
 default = []
