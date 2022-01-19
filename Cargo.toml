@@ -22,16 +22,16 @@ geo-types = { version = "0.7" }
 gdal-sys = { path = "gdal-sys", version = "^0.5" }
 ndarray = { version = "0.15", optional = true }
 chrono = { version = "0.4" }
-bitflags = "1.2"
-once_cell = "1.8"
+bitflags = "1.3"
+once_cell = "1.9"
 
 [build-dependencies]
 gdal-sys = { path = "gdal-sys", version = "^0.5" }
 semver = "1.0"
 
 [dev-dependencies]
-tempfile = "3.2"
-trybuild = "1.0.42"
+tempfile = "3.3"
+trybuild = "1.0"
 
 [workspace]
 members = ["gdal-sys"]
