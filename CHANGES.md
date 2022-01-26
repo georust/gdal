@@ -8,6 +8,14 @@
 
   - <https://github.com/georust/gdal/pull/239>
 
+## 0.12
+
+- Bump Rust edition to 2021
+
+- Add prebuild bindings for GDAL 3.4
+
+  - <https://github.com/georust/gdal/pull/231>
+
 ## 0.11
 
 - Remove the `datetime` feature

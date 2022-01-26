@@ -29,7 +29,7 @@ fn main() {
     if detected_version.major < 2 {
         panic!(
             "The GDAL crate requires a GDAL version >= 2.0.0. Found {}",
-            detected_version.to_string()
+            detected_version
         );
     }
 
