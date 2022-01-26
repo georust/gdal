@@ -23,7 +23,7 @@ impl BuildVRTOptions {
     /// See [GDALBuildVRTOptionsNew].
     ///
     /// [GDALBuildVRTOptionsNew]: https://gdal.org/api/gdal_utils.html#_CPPv422GDALBuildVRTOptionsNewPPcP28GDALBuildVRTOptionsForBinary
-    pub fn new(args: Vec<String>) -> Result<Self> {
+    pub fn new<S: Into<Vec<u8>>, I: IntoIterator<Item = S>>(args: I) -> Result<Self> {
         // Convert args to CStrings to add terminating null bytes
         let cstr_args = args
             .into_iter()
