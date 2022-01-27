@@ -30,7 +30,8 @@ pub struct Driver {
 }
 
 impl Driver {
-    pub fn get(name: &str) -> Result<Driver> {
+    /// Returns the driver with the given short name.
+    pub fn get_by_name(name: &str) -> Result<Driver> {
         _register_drivers();
         let c_name = CString::new(name)?;
         let c_driver = unsafe { gdal_sys::GDALGetDriverByName(c_name.as_ptr()) };
@@ -38,6 +39,24 @@ impl Driver {
             return Err(_last_null_pointer_err("GDALGetDriverByName"));
         };
         Ok(Driver { c_driver })
+    }
+
+    /// Returns the driver with the given index, which must be less than the value returned by
+    /// `Driver::count()`.
+    pub fn get(index: usize) -> Result<Driver> {
+        _register_drivers();
+        let c_driver = unsafe { gdal_sys::GDALGetDriver(index.try_into().unwrap()) };
+        if c_driver.is_null() {
+            return Err(_last_null_pointer_err("GDALGetDriver"));
+        }
+        Ok(Driver { c_driver })
+    }
+
+    /// Returns the number of registered drivers.
+    pub fn count() -> usize {
+        _register_drivers();
+        let count = unsafe { gdal_sys::GDALGetDriverCount() };
+        count.try_into().unwrap()
     }
 
     /// Creates a new Driver object by wrapping a C pointer

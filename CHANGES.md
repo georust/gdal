@@ -10,6 +10,10 @@
 
   - https://github.com/georust/gdal/pull/267
 
+- **Breaking**: Rename `Driver::get` to `Driver::get_by_name`, add `Driver::get(usize)` and `Driver::count`
+
+  - <https://github.com/georust/gdal/pull/251>
+
 - Add `programs::raster::build_vrt`
 - Add `GeoTransformEx` extension trait with `apply` and `invert`
 
@@ -92,7 +96,7 @@
   - <https://github.com/georust/gdal/pull/193>
 
 ```rust
-let driver = Driver::get("GTiff").unwrap();
+let driver = Driver::get_by_name("GTiff").unwrap();
 let options = &[
     RasterCreationOption {
         key: "COMPRESS",
