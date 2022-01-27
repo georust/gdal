@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- **Breaking**: `Driver::get` renamed to `Driver::get_by_name`
+
+- Add `Driver::get(usize)` and `Driver::count`
+
 ## 0.12
 
 - Bump Rust edition to 2021
@@ -59,7 +63,7 @@
   - <https://github.com/georust/gdal/pull/193>
 
 ```rust
-let driver = Driver::get("GTiff").unwrap();
+let driver = Driver::get_by_name("GTiff").unwrap();
 let options = &[
     RasterCreationOption {
         key: "COMPRESS",

@@ -629,7 +629,7 @@ mod tests {
         use std::fs;
 
         {
-            let driver = Driver::get("GeoJSON").unwrap();
+            let driver = Driver::get_by_name("GeoJSON").unwrap();
             let mut ds = driver
                 .create_vector_only(&fixture!("output.geojson"))
                 .unwrap();

@@ -458,7 +458,7 @@ impl Dataset {
     ///
     /// ```
     /// # use gdal::Driver;
-    /// # let driver = Driver::get("GPKG").unwrap();
+    /// # let driver = Driver::get_by_name("GPKG").unwrap();
     /// # let mut dataset = driver.create_vector_only("/vsimem/example.gpkg").unwrap();
     /// let blank_layer = dataset.create_layer(Default::default()).unwrap();
     /// ```
@@ -468,7 +468,7 @@ impl Dataset {
     /// ```
     /// # use gdal::{Driver, LayerOptions};
     /// # use gdal::spatial_ref::SpatialRef;
-    /// # let driver = Driver::get("GPKG").unwrap();
+    /// # let driver = Driver::get_by_name("GPKG").unwrap();
     /// # let mut dataset = driver.create_vector_only("/vsimem/example.gpkg").unwrap();
     /// let roads = dataset.create_layer(LayerOptions {
     ///     name: "roads",
@@ -625,7 +625,7 @@ impl Dataset {
     /// }
     /// #
     /// # fn main() -> gdal::errors::Result<()> {
-    /// #     let driver = gdal::Driver::get("SQLite")?;
+    /// #     let driver = gdal::Driver::get_by_name("SQLite")?;
     /// #     let mut dataset = driver.create_vector_only(":memory:")?;
     /// #     create_point_grid(&mut dataset)?;
     /// #     assert_eq!(dataset.layer(0)?.features().count(), 10000);
