@@ -7,6 +7,10 @@
 
   - <https://github.com/georust/gdal/pull/239>
 
+- Add `gdal::vector::geometry_type_to_name`
+
+  - <https://github.com/georust/gdal/pull/250>
+
 ## 0.12
 
 - Bump Rust edition to 2021
