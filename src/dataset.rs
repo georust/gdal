@@ -31,12 +31,12 @@ use bitflags::bitflags;
 /// [GDALGetGeoTransform]: https://gdal.org/api/gdaldataset_cpp.html#classGDALDataset_1a5101119705f5fa2bc1344ab26f66fd1d
 pub type GeoTransform = [c_double; 6];
 
-pub trait GeoTransformTrait {
+pub trait GeoTransformEx {
     fn apply(&self, pixel: f64, line: f64) -> (f64, f64);
     fn invert(&self) -> Result<GeoTransform>;
 }
 
-impl GeoTransformTrait for GeoTransform {
+impl GeoTransformEx for GeoTransform {
     /// Apply GeoTransform to x/y coordinate.
     /// Wraps [GDALApplyGeoTransform].
     ///

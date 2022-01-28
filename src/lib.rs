@@ -38,7 +38,7 @@ pub mod version;
 pub mod vsi;
 
 pub use dataset::{
-    Dataset, DatasetOptions, GdalOpenFlags, GeoTransform, GeoTransformTrait, LayerIterator,
+    Dataset, DatasetOptions, GdalOpenFlags, GeoTransform, GeoTransformEx, LayerIterator,
     LayerOptions, Transaction,
 };
 pub use driver::Driver;
