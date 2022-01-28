@@ -3,9 +3,7 @@
 ## Unreleased
 
 - Add `programs::raster::build_vrt`
-- Add `GeoTransformTrait` extension trait with `apply` and `invert`
-- Add `apply_geo_transform`
-- Add `inv_geo_transform`
+- Add `GeoTransformEx` extension trait with `apply` and `invert`
 
   - <https://github.com/georust/gdal/pull/239>
 
