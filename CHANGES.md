@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Add `programs::raster::build_vrt`
+- Add `GeoTransformEx` extension trait with `apply` and `invert`
+
+  - <https://github.com/georust/gdal/pull/239>
+
 ## 0.12
 
 - Bump Rust edition to 2021

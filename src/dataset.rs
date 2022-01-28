@@ -1,5 +1,6 @@
 use ptr::null_mut;
 use std::convert::TryInto;
+use std::mem::MaybeUninit;
 use std::{
     ffi::NulError,
     ffi::{CStr, CString},
@@ -30,6 +31,53 @@ use bitflags::bitflags;
 ///
 /// [GDALGetGeoTransform]: https://gdal.org/api/gdaldataset_cpp.html#classGDALDataset_1a5101119705f5fa2bc1344ab26f66fd1d
 pub type GeoTransform = [c_double; 6];
+
+pub trait GeoTransformEx {
+    fn apply(&self, pixel: f64, line: f64) -> (f64, f64);
+    fn invert(&self) -> Result<GeoTransform>;
+}
+
+impl GeoTransformEx for GeoTransform {
+    /// Apply GeoTransform to x/y coordinate.
+    /// Wraps [GDALApplyGeoTransform].
+    ///
+    /// [GDALApplyGeoTransform]: https://gdal.org/api/raster_c_api.html#_CPPv421GDALApplyGeoTransformPdddPdPd
+    fn apply(&self, pixel: f64, line: f64) -> (f64, f64) {
+        let mut geo_x = MaybeUninit::<f64>::uninit();
+        let mut geo_y = MaybeUninit::<f64>::uninit();
+        unsafe {
+            gdal_sys::GDALApplyGeoTransform(
+                self.as_ptr() as *mut f64,
+                pixel,
+                line,
+                geo_x.as_mut_ptr(),
+                geo_y.as_mut_ptr(),
+            );
+            (geo_x.assume_init(), geo_y.assume_init())
+        }
+    }
+
+    /// Invert Geotransform.
+    /// Wraps [GDALInvGeoTransform].
+    ///
+    /// [GDALInvGeoTransform]: https://gdal.org/api/raster_c_api.html#_CPPv419GDALInvGeoTransformPdPd
+    fn invert(&self) -> Result<GeoTransform> {
+        let mut gt_out = MaybeUninit::<GeoTransform>::uninit();
+        let rv = unsafe {
+            gdal_sys::GDALInvGeoTransform(
+                self.as_ptr() as *mut f64,
+                (&mut *gt_out.as_mut_ptr()).as_mut_ptr(),
+            )
+        };
+        if rv == 0 {
+            return Err(GdalError::BadArgument(
+                "Geo transform is uninvertible".to_string(),
+            ));
+        }
+        let result = unsafe { gt_out.assume_init() };
+        Ok(result)
+    }
+}
 
 /// Wrapper around a [`GDALDataset`][GDALDataset] object.
 ///
