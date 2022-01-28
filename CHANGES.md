@@ -2,7 +2,8 @@
 
 ## Unreleased
 
-- Add `raster_programs::build_vrt`
+- Add `programs::raster::build_vrt`
+- Add `GeoTransformTrait` extension trait with `apply` and `invert`
 - Add `apply_geo_transform`
 - Add `inv_geo_transform`
 
