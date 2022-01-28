@@ -98,26 +98,26 @@ fn _build_vrt(
         .map(|x| x.c_options as *const GDALBuildVRTOptions)
         .unwrap_or(null());
 
-    let result = unsafe {
+    let dataset_out = unsafe {
         // Get raw handles to the datasets
         let mut datasets_raw: Vec<gdal_sys::GDALDatasetH> =
             datasets.iter().map(|x| x.c_dataset()).collect();
 
-        let dataset_out = gdal_sys::GDALBuildVRT(
+        gdal_sys::GDALBuildVRT(
             c_dest,
             datasets_raw.len() as c_int,
             datasets_raw.as_mut_ptr(),
             null(),
             c_options,
             null_mut(),
-        );
-
-        if dataset_out.is_null() {
-            return Err(_last_null_pointer_err("GDALBuildVRT"));
-        }
-
-        Dataset::from_c_dataset(dataset_out)
+        )
     };
+
+    if dataset_out.is_null() {
+        return Err(_last_null_pointer_err("GDALBuildVRT"));
+    }
+
+    let result = unsafe { Dataset::from_c_dataset(dataset_out) };
 
     Ok(result)
 }
