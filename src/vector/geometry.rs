@@ -437,11 +437,18 @@ impl PartialEq for Geometry {
 
 impl Eq for Geometry {}
 
+pub fn geometry_type_to_name(ty: OGRwkbGeometryType::Type) -> String {
+    let rv = unsafe { gdal_sys::OGRGeometryTypeToName(ty) };
+    // If the type is invalid, OGRGeometryTypeToName returns a valid string anyway.
+    assert!(!rv.is_null());
+    _string(rv)
+}
+
 #[cfg(test)]
 mod tests {
     use crate::spatial_ref::SpatialRef;
 
-    use super::Geometry;
+    use super::{geometry_type_to_name, Geometry};
 
     #[test]
     #[allow(clippy::float_cmp)]
@@ -539,5 +546,15 @@ mod tests {
             ::gdal_sys::OGRwkbGeometryType::wkbPolygon
         );
         assert!(buffered.area() > 10.0);
+    }
+
+    #[test]
+    pub fn test_geometry_type_to_name() {
+        assert_eq!(
+            geometry_type_to_name(::gdal_sys::OGRwkbGeometryType::wkbLineString),
+            "Line String"
+        );
+        // We don't care what it returns when passed an invalid value, just that it doesn't crash.
+        geometry_type_to_name(4372521);
     }
 }
