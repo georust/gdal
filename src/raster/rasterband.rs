@@ -232,18 +232,47 @@ impl<'a> RasterBand<'a> {
         e_resample_alg: Option<ResampleAlg>,
     ) -> Result<Buffer<T>> {
         let pixels = (size.0 * size.1) as usize;
-
         let mut data: Vec<T> = Vec::with_capacity(pixels);
 
-        // Safety: the read_into_slice line below writes
+        let resample_alg = e_resample_alg.unwrap_or(ResampleAlg::NearestNeighbour);
+
+        let mut options: GDALRasterIOExtraArg = RasterIOExtraArg {
+            e_resample_alg: resample_alg,
+            ..Default::default()
+        }
+        .into();
+
+        let options_ptr: *mut GDALRasterIOExtraArg = &mut options;
+
+        // Safety: the GDALRasterIOEx writes
         // exactly pixel elements into the slice, before we
         // read from this slice. This paradigm is suggested
         // in the rust std docs
         // (https://doc.rust-lang.org/std/vec/struct.Vec.html#examples-18)
+        let rv = unsafe {
+            gdal_sys::GDALRasterIOEx(
+                self.c_rasterband,
+                GDALRWFlag::GF_Read,
+                window.0 as c_int,
+                window.1 as c_int,
+                window_size.0 as c_int,
+                window_size.1 as c_int,
+                data.as_mut_ptr() as GDALRasterBandH,
+                size.0 as c_int,
+                size.1 as c_int,
+                T::gdal_type(),
+                0,
+                0,
+                options_ptr,
+            )
+        };
+        if rv != CPLErr::CE_None {
+            return Err(_last_cpl_err(rv));
+        }
+
         unsafe {
             data.set_len(pixels);
         };
-        self.read_into_slice(window, window_size, size, &mut data, e_resample_alg)?;
 
         Ok(Buffer { size, data })
     }

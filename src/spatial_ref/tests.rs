@@ -185,21 +185,30 @@ fn failing_transformation() {
 
 #[test]
 fn auto_identify() {
+    // retreived from https://epsg.io/32632, but deleted the `AUTHORITY["EPSG","32632"]`
     let mut spatial_ref = SpatialRef::from_wkt(
         r#"
-        PROJCS["WGS_1984_UTM_Zone_32N",
-            GEOGCS["GCS_WGS_1984",
-                DATUM["D_WGS_1984",
-                    SPHEROID["WGS_1984",6378137,298.257223563]],
-                PRIMEM["Greenwich",0],
-                UNIT["Degree",0.017453292519943295]],
+        PROJCS["WGS 84 / UTM zone 32N",
+            GEOGCS["WGS 84",
+                DATUM["WGS_1984",
+                    SPHEROID["WGS 84",6378137,298.257223563,
+                        AUTHORITY["EPSG","7030"]],
+                    AUTHORITY["EPSG","6326"]],
+                PRIMEM["Greenwich",0,
+                    AUTHORITY["EPSG","8901"]],
+                UNIT["degree",0.0174532925199433,
+                    AUTHORITY["EPSG","9122"]],
+                AUTHORITY["EPSG","4326"]],
             PROJECTION["Transverse_Mercator"],
             PARAMETER["latitude_of_origin",0],
             PARAMETER["central_meridian",9],
             PARAMETER["scale_factor",0.9996],
             PARAMETER["false_easting",500000],
             PARAMETER["false_northing",0],
-            UNIT["Meter",1]]
+            UNIT["metre",1,
+                AUTHORITY["EPSG","9001"]],
+            AXIS["Easting",EAST],
+            AXIS["Northing",NORTH]]
     "#,
     )
     .unwrap();

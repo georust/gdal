@@ -2,6 +2,23 @@
 
 ## Unreleased
 
+- Add `programs::raster::build_vrt`
+- Add `GeoTransformEx` extension trait with `apply` and `invert`
+
+  - <https://github.com/georust/gdal/pull/239>
+
+- Add `gdal::vector::geometry_type_to_name`
+
+  - <https://github.com/georust/gdal/pull/250>
+
+## 0.12
+
+- Bump Rust edition to 2021
+
+- Add prebuild bindings for GDAL 3.4
+
+  - <https://github.com/georust/gdal/pull/231>
+
 ## 0.11
 
 - Remove the `datetime` feature
