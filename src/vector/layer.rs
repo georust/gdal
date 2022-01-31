@@ -189,6 +189,16 @@ impl OwnedLayer {
         }
     }
 
+    /// Returns iterator over the features in this layer.
+    ///
+    /// **Note.** This method resets the current index to
+    /// the beginning before iteration. It also borrows the
+    /// layer mutably, preventing any overlapping borrows.
+    pub fn owned_features(mut self) -> OwnedFeatureIterator {
+        self.reset_feature_reading();
+        OwnedFeatureIterator::_with_layer(self)
+    }
+
     /// Returns the `Dataset` this layer belongs to and consumes this layer.
     pub fn into_dataset(self) -> Dataset {
         self._dataset
@@ -198,6 +208,12 @@ impl OwnedLayer {
 /// As long we have a 1:1 mapping between a dataset and a layer, it is `Send`.
 /// We cannot allow a layer to be send, when two or more access (and modify) the same `Dataset`.
 unsafe impl Send for OwnedLayer {}
+
+impl From<OwnedLayer> for Dataset {
+    fn from(owned_layer: OwnedLayer) -> Self {
+        owned_layer.into_dataset()
+    }
+}
 
 pub trait LayerAccess: Sized {
     /// Returns the C wrapped pointer
@@ -470,17 +486,78 @@ impl<'a> Iterator for FeatureIterator<'a> {
 }
 
 impl<'a> FeatureIterator<'a> {
-    pub fn _with_layer<L: LayerAccess>(layer: &'a L) -> FeatureIterator<'a> {
+    pub(crate) fn _with_layer<L: LayerAccess>(layer: &'a L) -> Self {
         let defn = layer.defn();
         let size_hint = layer
             .try_feature_count()
             .map(|s| s.try_into().ok())
             .flatten();
-        FeatureIterator {
+        Self {
             c_layer: unsafe { layer.c_layer() },
             size_hint,
             defn,
         }
+    }
+}
+
+pub struct OwnedFeatureIterator {
+    pub(crate) layer: OwnedLayer,
+    size_hint: Option<usize>,
+}
+
+impl<'a> Iterator for &'a mut OwnedFeatureIterator
+where
+    Self: 'a,
+{
+    type Item = Feature<'a>;
+
+    #[inline]
+    fn next(&mut self) -> Option<Feature<'a>> {
+        let c_feature = unsafe { gdal_sys::OGR_L_GetNextFeature(self.layer.c_layer()) };
+
+        if c_feature.is_null() {
+            return None;
+        }
+
+        Some(unsafe {
+            // We have to convince the compiler that our `Defn` adheres to our iterator lifetime `<'a>`
+            let defn: &'a Defn = std::mem::transmute::<&'_ _, &'a _>(self.layer.defn());
+
+            Feature::from_c_feature(defn, c_feature)
+        })
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        match self.size_hint {
+            Some(size) => (size, Some(size)),
+            None => (0, None),
+        }
+    }
+}
+
+impl OwnedFeatureIterator {
+    pub(crate) fn _with_layer(layer: OwnedLayer) -> Self {
+        let size_hint = layer
+            .try_feature_count()
+            .map(|s| s.try_into().ok())
+            .flatten();
+        Self { layer, size_hint }
+    }
+
+    pub fn into_layer(self) -> OwnedLayer {
+        self.layer
+    }
+}
+
+impl AsMut<OwnedFeatureIterator> for OwnedFeatureIterator {
+    fn as_mut(&mut self) -> &mut Self {
+        self
+    }
+}
+
+impl From<OwnedFeatureIterator> for OwnedLayer {
+    fn from(feature_iterator: OwnedFeatureIterator) -> Self {
+        feature_iterator.into_layer()
     }
 }
 
