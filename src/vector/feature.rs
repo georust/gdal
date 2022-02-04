@@ -692,7 +692,7 @@ impl<'a> Drop for Feature<'a> {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum FieldValue {
     IntegerValue(i32),
     IntegerListValue(Vec<i32>),
