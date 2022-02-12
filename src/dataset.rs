@@ -12,8 +12,7 @@ use crate::cpl::CslStringList;
 use crate::errors::*;
 use crate::raster::RasterCreationOption;
 use crate::utils::{_last_cpl_err, _last_null_pointer_err, _path_to_c_string, _string};
-use crate::vector::sql;
-use crate::vector::Geometry;
+use crate::vector::{sql, Geometry, OwnedLayer};
 use crate::{
     gdal_major_object::MajorObject, raster::RasterBand, spatial_ref::SpatialRef, vector::Layer,
     Driver, Metadata,
@@ -453,6 +452,10 @@ impl Dataset {
         unsafe { Layer::from_c_layer(self, c_layer) }
     }
 
+    fn into_child_layer(self, c_layer: OGRLayerH) -> OwnedLayer {
+        unsafe { OwnedLayer::from_c_layer(self, c_layer) }
+    }
+
     /// Get the number of layers in this dataset.
     pub fn layer_count(&self) -> isize {
         (unsafe { gdal_sys::OGR_DS_GetLayerCount(self.c_dataset) }) as isize
@@ -470,6 +473,18 @@ impl Dataset {
         Ok(self.child_layer(c_layer))
     }
 
+    /// Fetch a layer by index.
+    ///
+    /// Applies to vector datasets, and fetches by the given
+    /// _0-based_ index.
+    pub fn into_layer(self, idx: isize) -> Result<OwnedLayer> {
+        let c_layer = unsafe { gdal_sys::OGR_DS_GetLayer(self.c_dataset, idx as c_int) };
+        if c_layer.is_null() {
+            return Err(_last_null_pointer_err("OGR_DS_GetLayer"));
+        }
+        Ok(self.into_child_layer(c_layer))
+    }
+
     /// Fetch a layer by name.
     pub fn layer_by_name(&self, name: &str) -> Result<Layer> {
         let c_name = CString::new(name)?;
@@ -478,6 +493,16 @@ impl Dataset {
             return Err(_last_null_pointer_err("OGR_DS_GetLayerByName"));
         }
         Ok(self.child_layer(c_layer))
+    }
+
+    /// Fetch a layer by name.
+    pub fn into_layer_by_name(self, name: &str) -> Result<OwnedLayer> {
+        let c_name = CString::new(name)?;
+        let c_layer = unsafe { gdal_sys::OGR_DS_GetLayerByName(self.c_dataset(), c_name.as_ptr()) };
+        if c_layer.is_null() {
+            return Err(_last_null_pointer_err("OGR_DS_GetLayerByName"));
+        }
+        Ok(self.into_child_layer(c_layer))
     }
 
     /// Returns an iterator over the layers of the dataset.
@@ -648,6 +673,7 @@ impl Dataset {
     ///
     /// ```
     /// # use gdal::{Dataset, LayerOptions};
+    /// # use gdal::vector::LayerAccess;
     /// #
     /// fn create_point_grid(dataset: &mut Dataset) -> gdal::errors::Result<()> {
     ///     use gdal::vector::Geometry;
@@ -713,6 +739,7 @@ impl Dataset {
     /// # use gdal::Dataset;
     /// # use std::path::Path;
     /// use gdal::vector::sql;
+    /// use gdal::vector::LayerAccess;
     ///
     /// let ds = Dataset::open(Path::new("fixtures/roads.geojson")).unwrap();
     /// let query = "SELECT kind, is_bridge, highway FROM roads WHERE highway = 'pedestrian'";
@@ -933,7 +960,7 @@ impl<'a> Drop for Transaction<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::vector::Geometry;
+    use crate::vector::{Geometry, LayerAccess};
     use tempfile::TempPath;
 
     macro_rules! fixture {

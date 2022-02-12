@@ -1,6 +1,6 @@
 use super::{
-    Feature, FeatureIterator, FieldValue, Geometry, Layer, LayerCaps::*, OGRFieldType,
-    OGRwkbGeometryType,
+    Feature, FeatureIterator, FieldValue, Geometry, Layer, LayerAccess, LayerCaps::*, OGRFieldType,
+    OGRwkbGeometryType, OwnedLayer,
 };
 use crate::spatial_ref::SpatialRef;
 use crate::{assert_almost_eq, Dataset, Driver};
@@ -95,6 +95,15 @@ where
     f(layer);
 }
 
+fn with_owned_layer<F>(name: &str, f: F)
+where
+    F: Fn(OwnedLayer),
+{
+    let ds = Dataset::open(fixture!(name)).unwrap();
+    let layer = ds.into_layer(0).unwrap();
+    f(layer);
+}
+
 fn with_features<F>(name: &str, f: F)
 where
     F: Fn(FeatureIterator),
@@ -159,6 +168,40 @@ mod tests {
         let layers = ds.layers();
         assert_eq!(layers.size_hint(), (3, Some(3)));
         assert_eq!(layers.count(), 3);
+    }
+
+    #[test]
+    fn test_owned_layers() {
+        let ds = Dataset::open(fixture!("three_layer_ds.s3db")).unwrap();
+
+        assert_eq!(ds.layer_count(), 3);
+
+        let mut layer = ds.into_layer(0).unwrap();
+
+        {
+            let feature = layer.features().next().unwrap();
+            assert_eq!(feature.field("id").unwrap(), None);
+        }
+
+        // convert back to dataset
+
+        let ds = layer.into_dataset();
+        assert_eq!(ds.layer_count(), 3);
+    }
+
+    #[test]
+    fn test_iterate_owned_features() {
+        with_owned_layer("roads.geojson", |layer| {
+            let mut features = layer.owned_features();
+
+            assert_eq!(features.as_mut().size_hint(), (21, Some(21)));
+            assert_eq!(features.count(), 21);
+
+            // get back layer
+
+            let layer = features.into_layer();
+            assert_eq!(layer.name(), "roads");
+        });
     }
 
     #[test]

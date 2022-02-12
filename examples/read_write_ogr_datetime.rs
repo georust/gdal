@@ -1,3 +1,5 @@
+use gdal::vector::LayerAccess;
+
 fn run() -> gdal::errors::Result<()> {
     use chrono::Duration;
     use gdal::vector::{Defn, Feature, FieldDefn, FieldValue};

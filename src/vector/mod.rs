@@ -5,6 +5,7 @@
 //! ```
 //! use std::path::Path;
 //! use gdal::Dataset;
+//! use gdal::vector::LayerAccess;
 //!
 //! let dataset = Dataset::open(Path::new("fixtures/roads.geojson")).unwrap();
 //! let mut layer = dataset.layer(0).unwrap();
@@ -28,7 +29,9 @@ pub use defn::{Defn, Field, FieldIterator};
 pub use feature::{Feature, FieldValue, FieldValueIterator};
 pub use gdal_sys::{OGRFieldType, OGRwkbGeometryType};
 pub use geometry::{geometry_type_to_name, Geometry};
-pub use layer::{FeatureIterator, FieldDefn, Layer, LayerCaps};
+pub use layer::{
+    FeatureIterator, FieldDefn, Layer, LayerAccess, LayerCaps, OwnedFeatureIterator, OwnedLayer,
+};
 pub use ops::GeometryIntersection;
 
 use crate::errors::Result;

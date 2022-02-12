@@ -1,10 +1,10 @@
 error[E0502]: cannot borrow `layer` as immutable because it is also borrowed as mutable
- --> $DIR/01-features-aliasing-errors.rs:9:17
-  |
-8 |     for _ in layer.features() {
-  |              ----------------
-  |              |
-  |              mutable borrow occurs here
-  |              mutable borrow later used here
-9 |         let _ = layer.defn();
-  |                 ^^^^^^^^^^^^ immutable borrow occurs here
+  --> $DIR/01-features-aliasing-errors.rs:10:17
+   |
+9  |     for _ in layer.features() {
+   |              ----------------
+   |              |
+   |              mutable borrow occurs here
+   |              mutable borrow later used here
+10 |         let _ = layer.defn();
+   |                 ^^^^^^^^^^^^ immutable borrow occurs here

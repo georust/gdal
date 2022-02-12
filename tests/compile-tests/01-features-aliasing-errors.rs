@@ -1,5 +1,6 @@
 mod utils;
 
+use gdal::vector::LayerAccess;
 use gdal::Dataset;
 
 fn main() {

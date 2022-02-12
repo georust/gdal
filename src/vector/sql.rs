@@ -2,7 +2,7 @@ use std::ops::{Deref, DerefMut};
 
 use gdal_sys::GDALDatasetH;
 
-use crate::vector::Layer;
+use crate::vector::{Layer, LayerAccess};
 
 /// The result of a SQL query executed by
 /// [`Dataset::execute_sql()`](crate::Dataset::execute_sql()). It is just a thin wrapper around a
