@@ -11,6 +11,10 @@
 
   - <https://github.com/georust/gdal/pull/250>
 
+- **Breaking**: Add `gdal::vector::OwnedLayer`, `gdal::vector::LayerAccess` and `gdal::vector::layer::OwnedFeatureIterator`. This requires importing `gdal::vector::LayerAccess` for using most vector layer methods.
+
+  - https://github.com/georust/gdal/pull/238
+
 ## 0.12
 
 - Bump Rust edition to 2021
