@@ -772,3 +772,15 @@ impl FieldValue {
         }
     }
 }
+
+pub fn field_type_to_name(ty: OGRFieldType::Type) -> String {
+    let rv = unsafe { gdal_sys::OGR_GetFieldTypeName(ty) };
+    _string(rv)
+}
+
+#[test]
+pub fn test_field_type_to_name() {
+    assert_eq!(field_type_to_name(OGRFieldType::OFTReal), "Real");
+    // We don't care what it returns when passed an invalid value, just that it doesn't crash.
+    field_type_to_name(4372521);
+}

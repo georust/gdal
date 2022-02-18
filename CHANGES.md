@@ -7,9 +7,10 @@
 
   - <https://github.com/georust/gdal/pull/239>
 
-- Add `gdal::vector::geometry_type_to_name`
+- Add `gdal::vector::geometry_type_to_name` and `gdal::vector::field_type_to_name`
 
   - <https://github.com/georust/gdal/pull/250>
+  - <https://github.com/georust/gdal/pull/258>
 
 - **Breaking**: Add `gdal::vector::OwnedLayer`, `gdal::vector::LayerAccess` and `gdal::vector::layer::OwnedFeatureIterator`. This requires importing `gdal::vector::LayerAccess` for using most vector layer methods.
 
