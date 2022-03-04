@@ -250,6 +250,13 @@ pub trait LayerAccess: Sized {
         FeatureIterator::_with_layer(self)
     }
 
+    /// Set a feature on this layer layer.
+    /// Refer[SetFeature](https://gdal.org/doxygen/classOGRLayer.html#a681139bfd585b74d7218e51a32144283)
+    fn set_feature(&self, feature: Feature)  -> Result<()>  {
+        unsafe {gdal_sys::OGR_L_SetFeature(self.c_layer(), feature.c_feature())};
+        Ok(())
+    }
+
     /// Set a spatial filter on this layer.
     ///
     /// Refer [OGR_L_SetSpatialFilter](https://gdal.org/doxygen/classOGRLayer.html#a75c06b4993f8eb76b569f37365cd19ab)

@@ -3,10 +3,12 @@ use super::{
     OGRwkbGeometryType, OwnedLayer,
 };
 use crate::spatial_ref::SpatialRef;
-use crate::{assert_almost_eq, Dataset, Driver};
+use crate::{assert_almost_eq, Dataset, DatasetOptions, Driver, GdalOpenFlags};
 
 mod convert_geo;
 mod sql;
+
+use std::fs;
 
 #[macro_export]
 macro_rules! fixture {
@@ -121,7 +123,10 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::errors::{GdalError, Result};
+    use crate::{
+        errors::{GdalError, Result},
+        vector::feature,
+    };
 
     #[test]
     fn test_feature_count() {
@@ -446,6 +451,30 @@ mod tests {
                 FieldValue::RealListValue(vec![0.1, 0.2])
             );
         });
+    }
+
+    #[test]
+    fn test_set_feature() {
+        let ds_options = DatasetOptions {
+            open_flags: GdalOpenFlags::GDAL_OF_UPDATE,
+            ..DatasetOptions::default()
+        };
+        let tmp_file = "/tmp/test.s3db";
+        fs::copy(fixture!("three_layer_ds.s3db"), tmp_file).unwrap();
+        let ds = Dataset::open_ex(fixture!("three_layer_ds.s3db"), ds_options).unwrap();
+        let mut layer = ds.layer(0).unwrap();
+        let fids: Vec<u64> = layer.features().map(|f| f.fid().unwrap()).collect();
+        let feature = layer.feature(fids[0]).unwrap();
+        // to original value of the id field in fid 0 is null; we will set it to 1.
+        feature.set_field_integer("id", 1).ok();
+        layer.set_feature(feature);
+
+        // now we check that the field is 1.
+        let ds = Dataset::open(tmp_file).unwrap();
+        let layer = ds.layer(0).unwrap();
+        let feature = layer.feature(fids[0]).unwrap();
+        let value = feature.field("id").unwrap().unwrap().into_int().unwrap();
+        assert_eq!(value, 1);
     }
 
     #[test]
