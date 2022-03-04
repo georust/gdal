@@ -461,13 +461,13 @@ mod tests {
         };
         let tmp_file = "/tmp/test.s3db";
         fs::copy(fixture!("three_layer_ds.s3db"), tmp_file).unwrap();
-        let ds = Dataset::open_ex(fixture!("three_layer_ds.s3db"), ds_options).unwrap();
+        let ds = Dataset::open_ex(tmp_file, ds_options).unwrap();
         let mut layer = ds.layer(0).unwrap();
         let fids: Vec<u64> = layer.features().map(|f| f.fid().unwrap()).collect();
         let feature = layer.feature(fids[0]).unwrap();
         // to original value of the id field in fid 0 is null; we will set it to 1.
         feature.set_field_integer("id", 1).ok();
-        layer.set_feature(feature);
+        layer.set_feature(feature).ok();
 
         // now we check that the field is 1.
         let ds = Dataset::open(tmp_file).unwrap();
