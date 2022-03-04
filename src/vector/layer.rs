@@ -252,8 +252,8 @@ pub trait LayerAccess: Sized {
 
     /// Set a feature on this layer layer.
     /// Refer[SetFeature](https://gdal.org/doxygen/classOGRLayer.html#a681139bfd585b74d7218e51a32144283)
-    fn set_feature(&self, feature: Feature)  -> Result<()>  {
-        unsafe {gdal_sys::OGR_L_SetFeature(self.c_layer(), feature.c_feature())};
+    fn set_feature(&self, feature: Feature) -> Result<()> {
+        unsafe { gdal_sys::OGR_L_SetFeature(self.c_layer(), feature.c_feature()) };
         Ok(())
     }
 
