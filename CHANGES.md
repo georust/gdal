@@ -1,7 +1,6 @@
 # Changes
 
 ## Unreleased
-- Implemented wrapper for `OGR_L_SetFeature`
 - Add `programs::raster::build_vrt`
 - Add `GeoTransformEx` extension trait with `apply` and `invert`
 
