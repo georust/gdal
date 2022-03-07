@@ -527,7 +527,7 @@ mod tests {
             assert_eq!(geom.geometry_type(), OGRwkbGeometryType::wkbLineString);
             assert!(feature.geometry_by_index(1).is_err());
             let geom = feature.geometry_by_name("");
-            assert!(!geom.is_err());
+            assert!(geom.is_ok());
             let geom = feature.geometry_by_name("").unwrap();
             assert_eq!(geom.geometry_type(), OGRwkbGeometryType::wkbLineString);
             assert!(feature.geometry_by_name("FOO").is_err());
