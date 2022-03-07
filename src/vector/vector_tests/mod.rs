@@ -3,12 +3,10 @@ use super::{
     OGRwkbGeometryType, OwnedLayer,
 };
 use crate::spatial_ref::SpatialRef;
-use crate::{assert_almost_eq, Dataset, DatasetOptions, Driver, GdalOpenFlags};
+use crate::{assert_almost_eq, Dataset, Driver};
 
 mod convert_geo;
 mod sql;
-
-use std::fs;
 
 #[macro_export]
 macro_rules! fixture {
