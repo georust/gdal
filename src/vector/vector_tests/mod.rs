@@ -125,7 +125,6 @@ mod tests {
     use super::*;
     use crate::{
         errors::{GdalError, Result},
-        vector::feature,
     };
 
     #[test]
