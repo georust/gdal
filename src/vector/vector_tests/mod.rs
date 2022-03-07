@@ -123,9 +123,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{
-        errors::{GdalError, Result},
-    };
+    use crate::errors::{GdalError, Result};
 
     #[test]
     fn test_feature_count() {
