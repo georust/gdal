@@ -1,6 +1,7 @@
 # Changes
 
 ## Unreleased
+- Fixed: Calling `map(..).flatten()` not allowed on an `Option` from in `rust >= 1.59`
 - Add `programs::raster::build_vrt`
 - Add `GeoTransformEx` extension trait with `apply` and `invert`
 
