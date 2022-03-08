@@ -676,7 +676,7 @@ impl<'a> Iterator for FieldValueIterator<'a> {
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        match Some(self.count).map(|s| s.try_into().ok()).flatten() {
+        match Some(self.count).and_then(|s| s.try_into().ok()) {
             Some(size) => (size, Some(size)),
             None => (0, None),
         }

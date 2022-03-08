@@ -489,9 +489,7 @@ impl<'a> FeatureIterator<'a> {
     pub(crate) fn _with_layer<L: LayerAccess>(layer: &'a L) -> Self {
         let defn = layer.defn();
         let size_hint = layer
-            .try_feature_count()
-            .map(|s| s.try_into().ok())
-            .flatten();
+            .try_feature_count().and_then(|s| s.try_into().ok());
         Self {
             c_layer: unsafe { layer.c_layer() },
             size_hint,
@@ -538,9 +536,7 @@ where
 impl OwnedFeatureIterator {
     pub(crate) fn _with_layer(layer: OwnedLayer) -> Self {
         let size_hint = layer
-            .try_feature_count()
-            .map(|s| s.try_into().ok())
-            .flatten();
+            .try_feature_count().and_then(|s| s.try_into().ok());
         Self { layer, size_hint }
     }
 
