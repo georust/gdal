@@ -214,8 +214,12 @@ impl SpatialRef {
         }
     }
 
-    pub fn from_c_obj(c_obj: OGRSpatialReferenceH) -> Result<SpatialRef> {
-        let mut_c_obj = unsafe { gdal_sys::OSRClone(c_obj) };
+    /// Returns a wrapped `SpatialRef` from a raw C API handle.
+    ///
+    /// # Safety
+    /// The handle passed to this function must be valid.
+    pub unsafe fn from_c_obj(c_obj: OGRSpatialReferenceH) -> Result<SpatialRef> {
+        let mut_c_obj = gdal_sys::OSRClone(c_obj);
         if mut_c_obj.is_null() {
             Err(_last_null_pointer_err("OSRClone"))
         } else {
