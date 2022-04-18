@@ -1,6 +1,8 @@
 use std::cell::RefCell;
 use std::ffi::CString;
-use std::fmt::{self, Debug};
+use std::fmt::{self, Debug, Formatter};
+use std::marker::PhantomData;
+use std::ops::Deref;
 use std::ptr::null_mut;
 
 use libc::{c_char, c_double, c_int, c_void};
@@ -310,6 +312,13 @@ impl Geometry {
         Geometry::with_c_geometry(c_geom, false)
     }
 
+    /// Get a reference to the geometry at given `index`
+    pub fn get_geometry(&self, index: usize) -> Result<GeometryRef> {
+        let geom = unsafe { self.get_unowned_geometry(index) };
+        let gref = GeometryRef { geom, _lifetime: PhantomData::default() };
+        Ok(gref)
+    }
+
     pub fn add_geometry(&mut self, mut sub: Geometry) -> Result<()> {
         assert!(sub.owned);
         sub.owned = false;
@@ -442,6 +451,26 @@ pub fn geometry_type_to_name(ty: OGRwkbGeometryType::Type) -> String {
     // If the type is invalid, OGRGeometryTypeToName returns a valid string anyway.
     assert!(!rv.is_null());
     _string(rv)
+}
+
+/// Reference to owned geometry
+pub struct GeometryRef<'a> {
+    geom: Geometry,
+    _lifetime: PhantomData<&'a ()>
+}
+
+impl Deref for GeometryRef<'_> {
+    type Target = Geometry;
+
+    fn deref(&self) -> &Self::Target {
+        &self.geom
+    }
+}
+
+impl Debug for GeometryRef<'_> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        Debug::fmt(&self.geom, f)
+    }
 }
 
 #[cfg(test)]
