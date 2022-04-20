@@ -47,7 +47,7 @@ impl Geometry {
     /// Set the wrapped C pointer
     ///
     /// # Safety
-    /// This method operates on a raw C pointer    
+    /// This method operates on a raw C pointer
     pub unsafe fn set_c_geometry(&self, c_geometry: OGRGeometryH) {
         assert!(!self.has_gdal_ptr());
         assert!(!self.owned);
@@ -388,7 +388,7 @@ impl Geometry {
         if c_spatial_ref.is_null() {
             None
         } else {
-            match SpatialRef::from_c_obj(c_spatial_ref) {
+            match unsafe { SpatialRef::from_c_obj(c_spatial_ref) } {
                 Ok(sr) => Some(sr),
                 Err(_) => None,
             }
