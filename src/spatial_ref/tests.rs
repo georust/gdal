@@ -64,6 +64,68 @@ fn comparison() {
     assert!(spatial_ref5 == spatial_ref4);
 }
 
+#[cfg(all(major_ge_3, minor_ge_4))]
+#[test]
+fn transform_bounds() {
+    let bounds: [f64; 4] = [-180., -80., 180., 80.];
+    // bounds for y,x ordered SpatialRefs
+    let yx_bounds: [f64; 4] = [-80.0, -180.0, 80.0, 180.];
+
+    let spatial_ref1 = SpatialRef::from_definition("OGC:CRS84").unwrap();
+
+    // transforming between the same SpatialRef should return existing bounds
+    let mut transform = CoordTransform::new(&spatial_ref1, &spatial_ref1).unwrap();
+    let mut out_bounds = transform.transform_bounds(&bounds, 21).unwrap();
+    assert_almost_eq(out_bounds[0], bounds[0]);
+    assert_almost_eq(out_bounds[1], bounds[1]);
+    assert_almost_eq(out_bounds[2], bounds[2]);
+    assert_almost_eq(out_bounds[3], bounds[3]);
+
+    // EPSG:4326 is in y,x order by default; returned bounds are [ymin, xmin, ymax, xmax]
+    let mut spatial_ref2 = SpatialRef::from_epsg(4326).unwrap();
+    transform = CoordTransform::new(&spatial_ref1, &spatial_ref2).unwrap();
+    out_bounds = transform.transform_bounds(&bounds, 21).unwrap();
+    assert_almost_eq(out_bounds[0], yx_bounds[0]);
+    assert_almost_eq(out_bounds[1], yx_bounds[1]);
+    assert_almost_eq(out_bounds[2], yx_bounds[2]);
+    assert_almost_eq(out_bounds[3], yx_bounds[3]);
+
+    // if source SpatialRef is in y,x order and and target SpatialRef is in x,y order
+    // input bounds are interpreted as [ymin, xmin, ymax, xmax] and returns
+    // [xmin, ymin, xmax, ymax]
+    transform = CoordTransform::new(&spatial_ref2, &spatial_ref1).unwrap();
+    out_bounds = transform.transform_bounds(&yx_bounds, 21).unwrap();
+    assert_almost_eq(out_bounds[0], bounds[0]);
+    assert_almost_eq(out_bounds[1], bounds[1]);
+    assert_almost_eq(out_bounds[2], bounds[2]);
+    assert_almost_eq(out_bounds[3], bounds[3]);
+
+    // force EPSG:4326 into x,y order to match source SpatialRef
+    spatial_ref2
+        .set_axis_mapping_strategy(gdal_sys::OSRAxisMappingStrategy::OAMS_TRADITIONAL_GIS_ORDER);
+    transform = CoordTransform::new(&spatial_ref1, &spatial_ref2).unwrap();
+    out_bounds = transform.transform_bounds(&bounds, 21).unwrap();
+    assert_almost_eq(out_bounds[0], bounds[0]);
+    assert_almost_eq(out_bounds[1], bounds[1]);
+    assert_almost_eq(out_bounds[2], bounds[2]);
+    assert_almost_eq(out_bounds[3], bounds[3]);
+
+    spatial_ref2 = SpatialRef::from_epsg(3857).unwrap();
+    transform = CoordTransform::new(&spatial_ref1, &spatial_ref2).unwrap();
+    out_bounds = transform.transform_bounds(&bounds, 21).unwrap();
+
+    let expected_bounds: [f64; 4] = [
+        -20037508.342789244,
+        -15538711.096309224,
+        20037508.342789244,
+        15538711.09630923,
+    ];
+    assert_almost_eq(out_bounds[0], expected_bounds[0]);
+    assert_almost_eq(out_bounds[1], expected_bounds[1]);
+    assert_almost_eq(out_bounds[2], expected_bounds[2]);
+    assert_almost_eq(out_bounds[3], expected_bounds[3]);
+}
+
 #[test]
 fn transform_coordinates() {
     let spatial_ref1 = SpatialRef::from_wkt("GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",7030]],TOWGS84[0,0,0,0,0,0,0],AUTHORITY[\"EPSG\",6326]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",8901]],UNIT[\"DMSH\",0.0174532925199433,AUTHORITY[\"EPSG\",9108]],AXIS[\"Lat\",NORTH],AXIS[\"Long\",EAST],AUTHORITY[\"EPSG\",4326]]").unwrap();

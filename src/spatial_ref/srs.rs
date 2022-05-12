@@ -1,6 +1,6 @@
 use crate::utils::{_last_cpl_err, _last_null_pointer_err, _string};
 use gdal_sys::{self, CPLErr, OGRCoordinateTransformationH, OGRErr, OGRSpatialReferenceH};
-use libc::{c_char, c_int};
+use libc::{c_char, c_double, c_int};
 use std::ffi::{CStr, CString};
 use std::ptr::{self, null_mut};
 use std::str::FromStr;
@@ -31,6 +31,61 @@ impl CoordTransform {
             from: sp_ref1.authority().or_else(|_| sp_ref1.to_proj4())?,
             to: sp_ref2.authority().or_else(|_| sp_ref2.to_proj4())?,
         })
+    }
+
+    /// Transform bounding box, densifying the edges to account for nonlinear
+    /// transformations.
+    ///
+    /// # Arguments
+    /// * bounds - array of [axis0_min, axis1_min, axis0_max, axis1_min],
+    ///            interpreted in the axis order of the source SpatialRef,
+    ///            typically [xmin, ymin, xmax, ymax]
+    /// * densify_pts - number of points per edge (recommended: 21)
+    ///
+    /// # Returns
+    /// Some([f64; 4]) with bounds in axis order of target SpatialRef
+    /// None if there is an error.
+    #[cfg(all(major_ge_3, minor_ge_4))]
+    pub fn transform_bounds(&self, bounds: &[f64; 4], densify_pts: i32) -> Result<([f64; 4])> {
+        let mut out_xmin: f64 = 0.;
+        let mut out_ymin: f64 = 0.;
+        let mut out_xmax: f64 = 0.;
+        let mut out_ymax: f64 = 0.;
+
+        let ret_val = unsafe {
+            gdal_sys::OCTTransformBounds(
+                self.inner,
+                bounds[0] as c_double,
+                bounds[1] as c_double,
+                bounds[2] as c_double,
+                bounds[3] as c_double,
+                &mut out_xmin as *mut c_double,
+                &mut out_ymin as *mut c_double,
+                &mut out_xmax as *mut c_double,
+                &mut out_ymax as *mut c_double,
+                densify_pts as c_int,
+            ) == 1
+        };
+
+        if ret_val {
+            Ok([out_xmin, out_ymin, out_xmax, out_ymax])
+        } else {
+            let err = _last_cpl_err(CPLErr::CE_Failure);
+            let msg = if let GdalError::CplError { msg, .. } = err {
+                if msg.trim().is_empty() {
+                    None
+                } else {
+                    Some(msg)
+                }
+            } else {
+                return Err(err);
+            };
+            Err(GdalError::InvalidCoordinateRange {
+                from: self.from.clone(),
+                to: self.to.clone(),
+                msg,
+            })
+        }
     }
 
     /// Transform coordinates in place.
