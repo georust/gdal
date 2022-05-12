@@ -476,6 +476,13 @@ impl<'a> RasterBand<'a> {
             Ok(RasterBand::from_c_rasterband(self.dataset, overview))
         }
     }
+
+    /// Return the unit of the rasterband.
+    /// If there is no unit, the empty string is returned.
+    pub fn unit(&self) -> String {
+        let str_ptr = unsafe { gdal_sys::GDALGetRasterUnitType(self.c_rasterband) };
+        _string(str_ptr)
+    }
 }
 
 impl<'a> MajorObject for RasterBand<'a> {
