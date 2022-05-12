@@ -693,3 +693,16 @@ fn test_rasterize() {
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0,]
     );
 }
+
+#[test]
+fn test_rasterband_unit() {
+    let dataset = Dataset::open(fixture!("tinymarble.tif")).unwrap();
+    let rasterband = dataset.rasterband(1).unwrap();
+
+    assert!(rasterband.unit().is_empty());
+
+    let dataset = Dataset::open(fixture!("114p01_0100_deme_truncated.dem")).unwrap();
+    let rasterband = dataset.rasterband(1).unwrap();
+
+    assert_eq!(rasterband.unit(), "m".to_string());
+}
