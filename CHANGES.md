@@ -19,6 +19,10 @@
 
   - <https://github.com/georust/gdal/pull/250>
 
+- Add `gdal::raster::rasterband::RasterBand::unit` as wrapper for `GDALGetRasterUnitType`
+
+  - <https://github.com/georust/gdal/pull/271>
+
 ## 0.12
 
 - Bump Rust edition to 2021
