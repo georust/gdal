@@ -706,3 +706,43 @@ fn test_rasterband_unit() {
 
     assert_eq!(rasterband.unit(), "m".to_string());
 }
+
+#[test]
+fn test_color_table() {
+    use crate::raster::rasterband::{ColorEntry, PaletteInterpretation};
+
+    // Raster containing one band.
+    let dataset = Dataset::open(fixture!("test_color_table.tif")).expect("open failure");
+    assert_eq!(dataset.raster_count(), 1);
+
+    // Band is PaletteIndex.
+    let band = dataset.rasterband(1).expect("rasterband failure");
+    assert_eq!(
+        band.color_interpretation(),
+        ColorInterpretation::PaletteIndex
+    );
+
+    // Color table is RGB.
+    let color_table = band.color_table().unwrap();
+    assert_eq!(
+        color_table.palette_interpretation(),
+        PaletteInterpretation::Rgba
+    );
+
+    // Color table has 256 entries.
+    let entry_count = color_table.entry_count();
+    assert_eq!(entry_count, 256);
+
+    // Check that entry and entry_as_rgb are the same.
+    for index in 0..entry_count {
+        if let ColorEntry::Rgba(entry) = color_table.entry(index).unwrap() {
+            let rgb_entry = color_table.entry_as_rgb(index).unwrap();
+            assert_eq!(entry.r, rgb_entry.r);
+            assert_eq!(entry.g, rgb_entry.g);
+            assert_eq!(entry.b, rgb_entry.b);
+            assert_eq!(entry.a, rgb_entry.a);
+        } else {
+            panic!();
+        }
+    }
+}
