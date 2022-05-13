@@ -25,7 +25,7 @@ use gdal_sys::{
 use libc::{c_double, c_int, c_uint};
 
 #[cfg(all(major_ge_3, minor_ge_1))]
-use crate::raster::mdarray::Group;
+use crate::raster::Group;
 
 use bitflags::bitflags;
 
@@ -419,6 +419,12 @@ impl Dataset {
         }
     }
 
+    /// Opens the root group of a multi-dim GDAL raster
+    ///
+    /// # Note
+    /// You must have opened the dataset with the `GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER`
+    /// flag in order for it to work.
+    ///
     #[cfg(all(major_ge_3, minor_ge_1))]
     pub fn root_group(&self) -> Result<Group> {
         unsafe {

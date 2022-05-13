@@ -1,13 +1,14 @@
 //! GDAL Raster Data
 
 #[cfg(all(major_ge_3, minor_ge_1))]
-pub(crate) mod mdarray;
-
+mod mdarray;
 mod rasterband;
 mod rasterize;
 mod types;
 mod warp;
 
+#[cfg(all(major_ge_3, minor_ge_1))]
+pub use mdarray::{Group, MDArray};
 pub use rasterband::{Buffer, ByteBuffer, ColorInterpretation, RasterBand, ResampleAlg};
 pub use rasterize::{rasterize, BurnSource, MergeAlgorithm, OptimizeMode, RasterizeOptions};
 pub use types::{GDALDataType, GdalType};
