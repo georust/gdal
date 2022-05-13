@@ -430,7 +430,7 @@ impl Dataset {
         unsafe {
             let c_group = gdal_sys::GDALDatasetGetRootGroup(self.c_dataset());
             if c_group.is_null() {
-                return Err(_last_null_pointer_err("GDALGetRasterBand"));
+                return Err(_last_null_pointer_err("GDALDatasetGetRootGroup"));
             }
             Ok(Group::from_c_group(self, c_group))
         }
