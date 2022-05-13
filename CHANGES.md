@@ -23,6 +23,10 @@
 
   - <https://github.com/georust/gdal/pull/271>
 
+- Add support for MDArray API
+
+  - <https://github.com/georust/gdal/pull/273>
+
 ## 0.12
 
 - Bump Rust edition to 2021
