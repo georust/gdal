@@ -27,7 +27,7 @@ fn _convert_raw_ptr_array<F, R>(raw_ptr: *mut *mut c_char, convert: F) -> Vec<R>
 where
     F: Fn(*const c_char) -> R,
 {
-    let mut ret_val: Vec<R> = vec![];
+    let mut ret_val = Vec::new();
     let mut i = 0;
     unsafe {
         loop {
