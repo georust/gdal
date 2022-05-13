@@ -8,11 +8,11 @@ use crate::errors::{GdalError, Result};
 use crate::utils::{_last_null_pointer_err, _path_to_c_string, _string_array};
 
 /// Read the file names from a virtual file system with optional recursion.
-pub fn read_dir<P: AsRef<Path>>(path: P, recursive: bool) -> Result<Vec<String>> {
+pub fn read_dir<P: AsRef<Path>>(path: P, recursive: bool) -> Result<Vec<PathBuf>> {
     _read_dir(path.as_ref(), recursive)
 }
 
-fn _read_dir(path: &Path, recursive: bool) -> Result<Vec<String>> {
+fn _read_dir(path: &Path, recursive: bool) -> Result<Vec<PathBuf>> {
     let path = _path_to_c_string(path)?;
     let data = if recursive {
         let data = unsafe { gdal_sys::VSIReadDirRecursive(path.as_ptr()) };
@@ -28,7 +28,14 @@ fn _read_dir(path: &Path, recursive: bool) -> Result<Vec<String>> {
         data
     };
 
-    Ok(_string_array(data))
+    let strings = _string_array(data);
+    let mut paths = Vec::new();
+    paths.reserve(strings.len());
+    for string in strings {
+        paths.push(string.into());
+    }
+
+    Ok(paths)
 }
 
 /// Creates a new VSIMemFile from a given buffer.
@@ -317,17 +324,22 @@ mod tests {
         let path = ["/vsizip/", zip_path.to_str().unwrap()].concat();
 
         // Read without recursion.
-        let expected = ["folder", "File 1.txt", "File 2.txt", "File 3.txt"];
+        let expected = [
+            Path::new("folder"),
+            Path::new("File 1.txt"),
+            Path::new("File 2.txt"),
+            Path::new("File 3.txt"),
+        ];
         let files = read_dir(path.as_str(), false).unwrap();
         assert_eq!(files, expected);
 
         // Read with recursion.
         let expected = [
-            "folder/",
-            "folder/File 4.txt",
-            "File 1.txt",
-            "File 2.txt",
-            "File 3.txt",
+            Path::new("folder/"),
+            Path::new("folder/File 4.txt"),
+            Path::new("File 1.txt"),
+            Path::new("File 2.txt"),
+            Path::new("File 3.txt"),
         ];
         let files = read_dir(path.as_str(), true).unwrap();
         assert_eq!(files, expected);
