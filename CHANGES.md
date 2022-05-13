@@ -23,6 +23,10 @@
 
   - <https://github.com/georust/gdal/pull/271>
 
+- Add `gdal::vsi::read_dir` function.
+
+  - <https://github.com/georust/gdal/pull/257>
+
 - Add support for MDArray API
 
   - <https://github.com/georust/gdal/pull/273>

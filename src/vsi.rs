@@ -5,7 +5,31 @@ use std::path::{Path, PathBuf};
 use gdal_sys::{VSIFCloseL, VSIFileFromMemBuffer, VSIFree, VSIGetMemFileBuffer, VSIUnlink};
 
 use crate::errors::{GdalError, Result};
-use crate::utils::{_last_null_pointer_err, _path_to_c_string};
+use crate::utils::{_last_null_pointer_err, _path_to_c_string, _pathbuf_array};
+
+/// Read the file names from a virtual file system with optional recursion.
+pub fn read_dir<P: AsRef<Path>>(path: P, recursive: bool) -> Result<Vec<PathBuf>> {
+    _read_dir(path.as_ref(), recursive)
+}
+
+fn _read_dir(path: &Path, recursive: bool) -> Result<Vec<PathBuf>> {
+    let path = _path_to_c_string(path)?;
+    let data = if recursive {
+        let data = unsafe { gdal_sys::VSIReadDirRecursive(path.as_ptr()) };
+        if data.is_null() {
+            return Err(_last_null_pointer_err("VSIReadDirRecursive"));
+        }
+        data
+    } else {
+        let data = unsafe { gdal_sys::VSIReadDir(path.as_ptr()) };
+        if data.is_null() {
+            return Err(_last_null_pointer_err("VSIReadDir"));
+        }
+        data
+    };
+
+    Ok(_pathbuf_array(data))
+}
 
 /// Creates a new VSIMemFile from a given buffer.
 pub fn create_mem_file<P: AsRef<Path>>(file_name: P, data: Vec<u8>) -> Result<()> {
@@ -276,5 +300,44 @@ mod tests {
                 file_name: "".to_string()
             })
         );
+    }
+
+    #[test]
+    fn test_vsi_read_dir() {
+        use std::path::Path;
+        let zip_path = Path::new(file!())
+            .parent()
+            .unwrap()
+            .parent()
+            .unwrap()
+            .join("fixtures")
+            .join("test_vsi_read_dir.zip");
+
+        // Concatenate "/vsizip/" prefix.
+        let path = ["/vsizip/", zip_path.to_str().unwrap()].concat();
+
+        // Read without recursion.
+        let expected = [
+            Path::new("folder"),
+            Path::new("File 1.txt"),
+            Path::new("File 2.txt"),
+            Path::new("File 3.txt"),
+        ];
+        let files = read_dir(path.as_str(), false).unwrap();
+        assert_eq!(files, expected);
+
+        // Read with recursion.
+        let expected = [
+            Path::new("folder/"),
+            Path::new("folder/File 4.txt"),
+            Path::new("File 1.txt"),
+            Path::new("File 2.txt"),
+            Path::new("File 3.txt"),
+        ];
+        let files = read_dir(path.as_str(), true).unwrap();
+        assert_eq!(files, expected);
+
+        // Attempting to read without VSI prefix returns error.
+        assert!(read_dir(zip_path, false).is_err());
     }
 }
