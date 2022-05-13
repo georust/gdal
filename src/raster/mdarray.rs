@@ -188,9 +188,9 @@ impl<'a> MDArray<'a> {
         // in the rust std docs
         // (https://doc.rust-lang.org/std/vec/struct.Vec.html#examples-18)
         unsafe {
+            self.read_into_slice(&mut data, array_start_index, count)?;
             data.set_len(pixels);
         };
-        self.read_into_slice(&mut data, array_start_index, count)?;
 
         Ok(data)
     }
@@ -586,10 +586,7 @@ impl Attribute {
             let c_int_array =
                 GDALAttributeReadAsIntArray(self.c_attribute, std::ptr::addr_of_mut!(array_len));
 
-            let int_array = std::slice::from_raw_parts(c_int_array, array_len)
-                .iter()
-                .copied()
-                .collect();
+            let int_array = std::slice::from_raw_parts(c_int_array, array_len).to_vec();
 
             VSIFree(c_int_array as *mut c_void);
 
@@ -607,10 +604,7 @@ impl Attribute {
             let c_int_array =
                 GDALAttributeReadAsDoubleArray(self.c_attribute, std::ptr::addr_of_mut!(array_len));
 
-            let float_array = std::slice::from_raw_parts(c_int_array, array_len)
-                .iter()
-                .copied()
-                .collect();
+            let float_array = std::slice::from_raw_parts(c_int_array, array_len).to_vec();
 
             VSIFree(c_int_array as *mut c_void);
 
