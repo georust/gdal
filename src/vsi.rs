@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 use gdal_sys::{VSIFCloseL, VSIFileFromMemBuffer, VSIFree, VSIGetMemFileBuffer, VSIUnlink};
 
 use crate::errors::{GdalError, Result};
-use crate::utils::{_last_null_pointer_err, _path_to_c_string, _string_array};
+use crate::utils::{_last_null_pointer_err, _path_to_c_string, _pathbuf_array};
 
 /// Read the file names from a virtual file system with optional recursion.
 pub fn read_dir<P: AsRef<Path>>(path: P, recursive: bool) -> Result<Vec<PathBuf>> {
@@ -28,14 +28,7 @@ fn _read_dir(path: &Path, recursive: bool) -> Result<Vec<PathBuf>> {
         data
     };
 
-    let strings = _string_array(data);
-    let mut paths = Vec::new();
-    paths.reserve(strings.len());
-    for string in strings {
-        paths.push(string.into());
-    }
-
-    Ok(paths)
+    Ok(_pathbuf_array(data))
 }
 
 /// Creates a new VSIMemFile from a given buffer.
