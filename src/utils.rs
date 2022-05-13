@@ -1,7 +1,7 @@
 use gdal_sys::{self, CPLErr};
 use libc::c_char;
 use std::ffi::{CStr, CString};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use crate::errors::*;
 
@@ -11,7 +11,23 @@ pub fn _string(raw_ptr: *const c_char) -> String {
 }
 
 pub fn _string_array(raw_ptr: *mut *mut c_char) -> Vec<String> {
-    let mut ret_val: Vec<String> = vec![];
+    _convert_raw_ptr_array(raw_ptr, _string)
+}
+
+pub fn _pathbuf(raw_ptr: *const c_char) -> PathBuf {
+    let c_str = unsafe { CStr::from_ptr(raw_ptr) };
+    c_str.to_string_lossy().into_owned().into()
+}
+
+pub fn _pathbuf_array(raw_ptr: *mut *mut c_char) -> Vec<PathBuf> {
+    _convert_raw_ptr_array(raw_ptr, _pathbuf)
+}
+
+fn _convert_raw_ptr_array<F, R>(raw_ptr: *mut *mut c_char, convert: F) -> Vec<R>
+where
+    F: Fn(*const c_char) -> R,
+{
+    let mut ret_val: Vec<R> = vec![];
     let mut i = 0;
     unsafe {
         loop {
@@ -23,7 +39,7 @@ pub fn _string_array(raw_ptr: *mut *mut c_char) -> Vec<String> {
             if next.is_null() {
                 break;
             }
-            let value = _string(next);
+            let value = convert(next);
             i += 1;
             ret_val.push(value);
         }
