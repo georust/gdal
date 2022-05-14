@@ -27,6 +27,10 @@
 
   - <https://github.com/georust/gdal/pull/257>
 
+- Add a `ColorTable` struct and `RasterBand::color_table` method
+
+  - <https://github.com/georust/gdal/pull/246>
+
 ## 0.12
 
 - Bump Rust edition to 2021
