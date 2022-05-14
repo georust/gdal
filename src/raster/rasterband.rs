@@ -9,6 +9,7 @@ use gdal_sys::{
 };
 use libc::c_int;
 use std::ffi::CString;
+use std::marker::PhantomData;
 
 #[cfg(feature = "ndarray")]
 use ndarray::Array2;
@@ -427,7 +428,7 @@ impl<'a> RasterBand<'a> {
         if c_color_table.is_null() {
             return None;
         }
-        Some(ColorTable::from_c_color_table(c_color_table, self))
+        Some(ColorTable::from_c_color_table(c_color_table))
     }
 
     /// Returns the scale of this band if set.
@@ -686,16 +687,16 @@ pub enum ColorEntry {
 pub struct ColorTable<'a> {
     palette_interpretation: PaletteInterpretation,
     c_color_table: GDALColorTableH,
-    _raster_band: &'a RasterBand<'a>,
+    phantom_raster_band: PhantomData<&'a RasterBand<'a>>,
 }
 
 impl<'a> ColorTable<'a> {
-    fn from_c_color_table(c_color_table: GDALColorTableH, raster_band: &'a RasterBand<'a>) -> Self {
+    fn from_c_color_table(c_color_table: GDALColorTableH) -> Self {
         let interp_index = unsafe { gdal_sys::GDALGetPaletteInterpretation(c_color_table) };
         ColorTable {
             palette_interpretation: PaletteInterpretation::from_c_int(interp_index),
             c_color_table,
-            _raster_band: raster_band,
+            phantom_raster_band: PhantomData,
         }
     }
 
