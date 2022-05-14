@@ -31,6 +31,10 @@
 
   - <https://github.com/georust/gdal/pull/246>
 
+- Add `GeometryRef<'a>` to reference owned nested geometry in a lifetime-safe way.
+
+  - <https://github.com/georust/gdal/pull/274>
+
 ## 0.12
 
 - Bump Rust edition to 2021
