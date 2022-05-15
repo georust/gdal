@@ -1,11 +1,11 @@
 use std::str::FromStr;
 
-#[cfg(docsrs)]
+#[cfg(feature = "docsrs")]
 pub fn gdal_version_info(_key: &str) -> String {
     "3020000".to_string()
 }
 
-#[cfg(not(docsrs))]
+#[cfg(not(feature = "docsrs"))]
 pub fn gdal_version_info(key: &str) -> String {
     let c_key = std::ffi::CString::new(key.as_bytes()).unwrap();
 
