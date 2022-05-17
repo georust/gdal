@@ -313,10 +313,9 @@ impl Geometry {
     }
 
     /// Get a reference to the geometry at given `index`
-    pub fn get_geometry(&self, index: usize) -> Result<GeometryRef> {
+    pub fn get_geometry(&self, index: usize) -> GeometryRef {
         let geom = unsafe { self.get_unowned_geometry(index) };
-        let gref = GeometryRef { geom, _lifetime: PhantomData::default() };
-        Ok(gref)
+        GeometryRef { geom, _lifetime: PhantomData::default() }
     }
 
     pub fn add_geometry(&mut self, mut sub: Geometry) -> Result<()> {

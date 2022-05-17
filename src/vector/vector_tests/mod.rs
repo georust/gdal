@@ -526,7 +526,7 @@ mod tests {
         // NB: In Python SWIG bindings, `GetPoints` is fallible.
         assert!(poly.get_point_vec().is_empty());
         assert_eq!(poly.geometry_count(), 1);
-        let ring_out = poly.get_geometry(0).unwrap();
+        let ring_out = poly.get_geometry(0);
         // NB: `wkb()` shows it to be a `LINEARRING`, but returned type is LineString
         assert_eq!(ring_out.geometry_type(), wkbLineString);
         assert!(!&ring_out.is_empty());
@@ -541,7 +541,7 @@ mod tests {
         assert!(geom.area() > 0.);
         assert_eq!(geom.geometry_type(), OGRwkbGeometryType::wkbPolygon);
         assert!(geom.json().unwrap().contains("Polygon"));
-        let inner = geom.get_geometry(0).unwrap();
+        let inner = geom.get_geometry(0);
         let points = inner.get_point_vec();
         assert!(!points.is_empty());
     }
