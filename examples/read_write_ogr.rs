@@ -17,7 +17,7 @@ fn run() -> Result<()> {
     // Create a new dataset:
     let path = std::env::temp_dir().join("abcde.shp");
     let _ = fs::remove_file(&path);
-    let drv = Driver::get("ESRI Shapefile")?;
+    let drv = Driver::get_by_name("ESRI Shapefile")?;
     let mut ds = drv.create_vector_only(path.to_str().unwrap())?;
     let lyr = ds.create_layer(Default::default())?;
 

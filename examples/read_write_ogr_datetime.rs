@@ -15,7 +15,7 @@ fn run() -> gdal::errors::Result<()> {
     // Create a new dataset:
     let path = std::env::temp_dir().join("later.geojson");
     let _ = std::fs::remove_file(&path);
-    let drv = Driver::get("GeoJSON")?;
+    let drv = Driver::get_by_name("GeoJSON")?;
     let mut ds = drv.create_vector_only(path.to_str().unwrap())?;
     let lyr = ds.create_layer(Default::default())?;
 

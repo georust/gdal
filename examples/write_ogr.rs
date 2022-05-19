@@ -7,7 +7,7 @@ use std::fs;
 fn example_1() -> Result<()> {
     let path = std::env::temp_dir().join("output1.geojson");
     let _ = fs::remove_file(&path);
-    let drv = Driver::get("GeoJSON")?;
+    let drv = Driver::get_by_name("GeoJSON")?;
     let mut ds = drv.create_vector_only(path.to_str().unwrap())?;
 
     let lyr = ds.create_layer(Default::default())?;
@@ -52,7 +52,7 @@ fn example_1() -> Result<()> {
 fn example_2() -> Result<()> {
     let path = std::env::temp_dir().join("output2.geojson");
     let _ = fs::remove_file(&path);
-    let driver = Driver::get("GeoJSON")?;
+    let driver = Driver::get_by_name("GeoJSON")?;
     let mut ds = driver.create_vector_only(path.to_str().unwrap())?;
     let mut layer = ds.create_layer(Default::default())?;
 
