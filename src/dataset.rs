@@ -17,11 +17,15 @@ use crate::{
     gdal_major_object::MajorObject, raster::RasterBand, spatial_ref::SpatialRef, vector::Layer,
     Driver, Metadata,
 };
+
 use gdal_sys::OGRGeometryH;
 use gdal_sys::{
     self, CPLErr, GDALAccess, GDALDatasetH, GDALMajorObjectH, OGRErr, OGRLayerH, OGRwkbGeometryType,
 };
 use libc::{c_double, c_int, c_uint};
+
+#[cfg(all(major_ge_3, minor_ge_1))]
+use crate::raster::Group;
 
 use bitflags::bitflags;
 
@@ -412,6 +416,23 @@ impl Dataset {
                 return Err(_last_null_pointer_err("GDALGetRasterBand"));
             }
             Ok(RasterBand::from_c_rasterband(self, c_band))
+        }
+    }
+
+    /// Opens the root group of a multi-dim GDAL raster
+    ///
+    /// # Note
+    /// You must have opened the dataset with the `GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER`
+    /// flag in order for it to work.
+    ///
+    #[cfg(all(major_ge_3, minor_ge_1))]
+    pub fn root_group(&self) -> Result<Group> {
+        unsafe {
+            let c_group = gdal_sys::GDALDatasetGetRootGroup(self.c_dataset());
+            if c_group.is_null() {
+                return Err(_last_null_pointer_err("GDALDatasetGetRootGroup"));
+            }
+            Ok(Group::from_c_group(self, c_group))
         }
     }
 
