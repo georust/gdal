@@ -1,6 +1,6 @@
 use crate::utils::{_last_cpl_err, _last_null_pointer_err, _string};
 use gdal_sys::{self, CPLErr, OGRCoordinateTransformationH, OGRErr, OGRSpatialReferenceH};
-use libc::{c_char, c_double, c_int};
+use libc::{c_char, c_int};
 use std::ffi::{CStr, CString};
 use std::ptr::{self, null_mut};
 use std::str::FromStr;
@@ -55,37 +55,34 @@ impl CoordTransform {
         let ret_val = unsafe {
             gdal_sys::OCTTransformBounds(
                 self.inner,
-                bounds[0] as c_double,
-                bounds[1] as c_double,
-                bounds[2] as c_double,
-                bounds[3] as c_double,
-                &mut out_xmin as *mut c_double,
-                &mut out_ymin as *mut c_double,
-                &mut out_xmax as *mut c_double,
-                &mut out_ymax as *mut c_double,
+                bounds[0],
+                bounds[1],
+                bounds[2],
+                bounds[3],
+                &mut out_xmin,
+                &mut out_ymin,
+                &mut out_xmax,
+                &mut out_ymax,
                 densify_pts as c_int,
             ) == 1
         };
 
-        if ret_val {
-            Ok([out_xmin, out_ymin, out_xmax, out_ymax])
-        } else {
-            let err = _last_cpl_err(CPLErr::CE_Failure);
-            let msg = if let GdalError::CplError { msg, .. } = err {
-                if msg.trim().is_empty() {
-                    None
-                } else {
-                    Some(msg)
-                }
-            } else {
-                return Err(err);
+        if !ret_val {
+            let msg = match _last_cpl_err(CPLErr::CE_Failure) {
+                GdalError::CplError { msg, .. } => match msg.is_empty() {
+                    false => Some(msg),
+                    _ => None
+                },
+                err => return Err(err)
             };
-            Err(GdalError::InvalidCoordinateRange {
+            return Err(GdalError::InvalidCoordinateRange {
                 from: self.from.clone(),
                 to: self.to.clone(),
                 msg,
             })
         }
+
+        Ok([out_xmin, out_ymin, out_xmax, out_ymax])
     }
 
     /// Transform coordinates in place.
