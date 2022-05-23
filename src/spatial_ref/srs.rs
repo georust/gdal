@@ -71,15 +71,15 @@ impl CoordTransform {
             let msg = match _last_cpl_err(CPLErr::CE_Failure) {
                 GdalError::CplError { msg, .. } => match msg.is_empty() {
                     false => Some(msg),
-                    _ => None
+                    _ => None,
                 },
-                err => return Err(err)
+                err => return Err(err),
             };
             return Err(GdalError::InvalidCoordinateRange {
                 from: self.from.clone(),
                 to: self.to.clone(),
                 msg,
-            })
+            });
         }
 
         Ok([out_xmin, out_ymin, out_xmax, out_ymax])
