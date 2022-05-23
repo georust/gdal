@@ -279,6 +279,7 @@ fn test_create_with_band_type() {
 }
 
 #[test]
+#[cfg(not(target_os = "windows"))] // https://github.com/georust/gdal/issues/219
 fn test_create_with_band_type_with_options() {
     let driver = Driver::get_by_name("GTiff").unwrap();
     let options = [

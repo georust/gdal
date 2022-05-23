@@ -614,6 +614,7 @@ impl Attribute {
 }
 
 #[cfg(test)]
+#[cfg(not(target_os = "windows"))] // https://github.com/georust/gdal/issues/219
 mod tests {
     use super::*;
 

@@ -668,6 +668,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(not(target_os = "windows"))] // https://github.com/georust/gdal/issues/219
     fn test_write_features() {
         use std::fs;
 

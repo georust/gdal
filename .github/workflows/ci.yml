@@ -280,5 +280,4 @@ jobs:
         export GDAL_VERSION=$(gdalinfo --version | sed 's/GDAL \(.*\), .*/\1/')
 
         cargo build ${{ matrix.features }} -j 1 --tests --verbose
-        cargo test ${{ matrix.features }} --verbose || true
-        # Ignore test failures for now. See https://github.com/georust/gdal/issues/219
+        cargo test ${{ matrix.features }} --verbose
