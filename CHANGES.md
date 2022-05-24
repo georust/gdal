@@ -39,6 +39,10 @@
 
   - <https://github.com/georust/gdal/pull/273>
 
+- Add `gdal::srs::CoordTransform::transform_bounds` as wrapper for  `OCTTransformBounds` for GDAL 3.4
+
+  - <https://github.com/georust/gdal/pull/272>
+
 ## 0.12
 
 - Bump Rust edition to 2021
