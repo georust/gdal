@@ -10,6 +10,10 @@
 
   - https://github.com/georust/gdal/pull/267
 
+- **Breaking**: Rename `Driver::get` to `Driver::get_by_name`, add `Driver::get(usize)` and `Driver::count`
+
+  - <https://github.com/georust/gdal/pull/251>
+
 - Add `programs::raster::build_vrt`
 - Add `GeoTransformEx` extension trait with `apply` and `invert`
 
@@ -34,6 +38,14 @@
 - Add `GeometryRef<'a>` to reference owned nested geometry in a lifetime-safe way.
 
   - <https://github.com/georust/gdal/pull/274>
+
+- Add support for MDArray API
+
+  - <https://github.com/georust/gdal/pull/273>
+
+- Add `gdal::srs::CoordTransform::transform_bounds` as wrapper for  `OCTTransformBounds` for GDAL 3.4
+
+  - <https://github.com/georust/gdal/pull/272>
 
 ## 0.12
 
@@ -92,7 +104,7 @@
   - <https://github.com/georust/gdal/pull/193>
 
 ```rust
-let driver = Driver::get("GTiff").unwrap();
+let driver = Driver::get_by_name("GTiff").unwrap();
 let options = &[
     RasterCreationOption {
         key: "COMPRESS",
