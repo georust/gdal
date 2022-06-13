@@ -315,7 +315,10 @@ impl Geometry {
     /// Get a reference to the geometry at given `index`
     pub fn get_geometry(&self, index: usize) -> GeometryRef {
         let geom = unsafe { self.get_unowned_geometry(index) };
-        GeometryRef { geom, _lifetime: PhantomData::default() }
+        GeometryRef {
+            geom,
+            _lifetime: PhantomData::default(),
+        }
     }
 
     pub fn add_geometry(&mut self, mut sub: Geometry) -> Result<()> {
@@ -455,7 +458,7 @@ pub fn geometry_type_to_name(ty: OGRwkbGeometryType::Type) -> String {
 /// Reference to owned geometry
 pub struct GeometryRef<'a> {
     geom: Geometry,
-    _lifetime: PhantomData<&'a ()>
+    _lifetime: PhantomData<&'a ()>,
 }
 
 impl Deref for GeometryRef<'_> {

@@ -120,9 +120,9 @@ where
 
 #[cfg(test)]
 mod tests {
-    use gdal_sys::OGRwkbGeometryType::{wkbLinearRing, wkbLineString, wkbPolygon};
     use super::*;
     use crate::errors::{GdalError, Result};
+    use gdal_sys::OGRwkbGeometryType::{wkbLineString, wkbLinearRing, wkbPolygon};
 
     #[test]
     fn test_feature_count() {
