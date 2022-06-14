@@ -35,6 +35,10 @@
 
   - <https://github.com/georust/gdal/pull/246>
 
+- Add `GeometryRef<'a>` to reference owned nested geometry in a lifetime-safe way.
+
+  - <https://github.com/georust/gdal/pull/274>
+
 - Add support for MDArray API
 
   - <https://github.com/georust/gdal/pull/273>
