@@ -1,6 +1,8 @@
 use std::cell::RefCell;
 use std::ffi::CString;
-use std::fmt::{self, Debug};
+use std::fmt::{self, Debug, Formatter};
+use std::marker::PhantomData;
+use std::ops::Deref;
 use std::ptr::null_mut;
 
 use libc::{c_char, c_double, c_int, c_void};
@@ -47,7 +49,7 @@ impl Geometry {
     /// Set the wrapped C pointer
     ///
     /// # Safety
-    /// This method operates on a raw C pointer    
+    /// This method operates on a raw C pointer
     pub unsafe fn set_c_geometry(&self, c_geometry: OGRGeometryH) {
         assert!(!self.has_gdal_ptr());
         assert!(!self.owned);
@@ -310,6 +312,15 @@ impl Geometry {
         Geometry::with_c_geometry(c_geom, false)
     }
 
+    /// Get a reference to the geometry at given `index`
+    pub fn get_geometry(&self, index: usize) -> GeometryRef {
+        let geom = unsafe { self.get_unowned_geometry(index) };
+        GeometryRef {
+            geom,
+            _lifetime: PhantomData::default(),
+        }
+    }
+
     pub fn add_geometry(&mut self, mut sub: Geometry) -> Result<()> {
         assert!(sub.owned);
         sub.owned = false;
@@ -388,7 +399,7 @@ impl Geometry {
         if c_spatial_ref.is_null() {
             None
         } else {
-            match SpatialRef::from_c_obj(c_spatial_ref) {
+            match unsafe { SpatialRef::from_c_obj(c_spatial_ref) } {
                 Ok(sr) => Some(sr),
                 Err(_) => None,
             }
@@ -442,6 +453,26 @@ pub fn geometry_type_to_name(ty: OGRwkbGeometryType::Type) -> String {
     // If the type is invalid, OGRGeometryTypeToName returns a valid string anyway.
     assert!(!rv.is_null());
     _string(rv)
+}
+
+/// Reference to owned geometry
+pub struct GeometryRef<'a> {
+    geom: Geometry,
+    _lifetime: PhantomData<&'a ()>,
+}
+
+impl Deref for GeometryRef<'_> {
+    type Target = Geometry;
+
+    fn deref(&self) -> &Self::Target {
+        &self.geom
+    }
+}
+
+impl Debug for GeometryRef<'_> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        Debug::fmt(&self.geom, f)
+    }
 }
 
 #[cfg(test)]

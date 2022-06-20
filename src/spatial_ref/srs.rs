@@ -33,6 +33,58 @@ impl CoordTransform {
         })
     }
 
+    /// Transform bounding box, densifying the edges to account for nonlinear
+    /// transformations.
+    ///
+    /// # Arguments
+    /// * bounds - array of [axis0_min, axis1_min, axis0_max, axis1_min],
+    ///            interpreted in the axis order of the source SpatialRef,
+    ///            typically [xmin, ymin, xmax, ymax]
+    /// * densify_pts - number of points per edge (recommended: 21)
+    ///
+    /// # Returns
+    /// Some([f64; 4]) with bounds in axis order of target SpatialRef
+    /// None if there is an error.
+    #[cfg(all(major_ge_3, minor_ge_4))]
+    pub fn transform_bounds(&self, bounds: &[f64; 4], densify_pts: i32) -> Result<([f64; 4])> {
+        let mut out_xmin: f64 = 0.;
+        let mut out_ymin: f64 = 0.;
+        let mut out_xmax: f64 = 0.;
+        let mut out_ymax: f64 = 0.;
+
+        let ret_val = unsafe {
+            gdal_sys::OCTTransformBounds(
+                self.inner,
+                bounds[0],
+                bounds[1],
+                bounds[2],
+                bounds[3],
+                &mut out_xmin,
+                &mut out_ymin,
+                &mut out_xmax,
+                &mut out_ymax,
+                densify_pts as c_int,
+            ) == 1
+        };
+
+        if !ret_val {
+            let msg = match _last_cpl_err(CPLErr::CE_Failure) {
+                GdalError::CplError { msg, .. } => match msg.is_empty() {
+                    false => Some(msg),
+                    _ => None,
+                },
+                err => return Err(err),
+            };
+            return Err(GdalError::InvalidCoordinateRange {
+                from: self.from.clone(),
+                to: self.to.clone(),
+                msg,
+            });
+        }
+
+        Ok([out_xmin, out_ymin, out_xmax, out_ymax])
+    }
+
     /// Transform coordinates in place.
     ///
     /// # Arguments
@@ -214,8 +266,12 @@ impl SpatialRef {
         }
     }
 
-    pub fn from_c_obj(c_obj: OGRSpatialReferenceH) -> Result<SpatialRef> {
-        let mut_c_obj = unsafe { gdal_sys::OSRClone(c_obj) };
+    /// Returns a wrapped `SpatialRef` from a raw C API handle.
+    ///
+    /// # Safety
+    /// The handle passed to this function must be valid.
+    pub unsafe fn from_c_obj(c_obj: OGRSpatialReferenceH) -> Result<SpatialRef> {
+        let mut_c_obj = gdal_sys::OSRClone(c_obj);
         if mut_c_obj.is_null() {
             Err(_last_null_pointer_err("OSRClone"))
         } else {

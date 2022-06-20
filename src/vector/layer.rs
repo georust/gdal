@@ -424,7 +424,7 @@ pub trait LayerAccess: Sized {
         if c_obj.is_null() {
             return Err(_last_null_pointer_err("OGR_L_GetSpatialRef"));
         }
-        SpatialRef::from_c_obj(c_obj)
+        unsafe { SpatialRef::from_c_obj(c_obj) }
     }
 
     fn reset_feature_reading(&mut self) {

@@ -121,6 +121,7 @@ where
 mod tests {
     use super::*;
     use crate::errors::{GdalError, Result};
+    use gdal_sys::OGRwkbGeometryType::{wkbLineString, wkbLinearRing, wkbPolygon};
 
     #[test]
     fn test_feature_count() {
@@ -508,6 +509,43 @@ mod tests {
     }
 
     #[test]
+    fn test_ring_points() {
+        let mut ring = Geometry::empty(wkbLinearRing).unwrap();
+        ring.add_point_2d((1179091.1646903288, 712782.8838459781));
+        ring.add_point_2d((1161053.0218226474, 667456.2684348812));
+        ring.add_point_2d((1214704.933941905, 641092.8288590391));
+        ring.add_point_2d((1228580.428455506, 682719.3123998424));
+        ring.add_point_2d((1218405.0658121984, 721108.1805541387));
+        ring.add_point_2d((1179091.1646903288, 712782.8838459781));
+        assert!(!ring.is_empty());
+        assert_eq!(ring.get_point_vec().len(), 6);
+        let mut poly = Geometry::empty(wkbPolygon).unwrap();
+        poly.add_geometry(ring.to_owned()).unwrap();
+        // Points are in ring, not containing geometry.
+        // NB: In Python SWIG bindings, `GetPoints` is fallible.
+        assert!(poly.get_point_vec().is_empty());
+        assert_eq!(poly.geometry_count(), 1);
+        let ring_out = poly.get_geometry(0);
+        // NB: `wkb()` shows it to be a `LINEARRING`, but returned type is LineString
+        assert_eq!(ring_out.geometry_type(), wkbLineString);
+        assert!(!&ring_out.is_empty());
+        assert_eq!(ring.get_point_vec(), ring_out.get_point_vec());
+    }
+
+    #[test]
+    fn test_get_inner_points() {
+        let geom = Geometry::bbox(0., 0., 1., 1.).unwrap();
+        assert!(!geom.is_empty());
+        assert_eq!(geom.geometry_count(), 1);
+        assert!(geom.area() > 0.);
+        assert_eq!(geom.geometry_type(), OGRwkbGeometryType::wkbPolygon);
+        assert!(geom.json().unwrap().contains("Polygon"));
+        let inner = geom.get_geometry(0);
+        let points = inner.get_point_vec();
+        assert!(!points.is_empty());
+    }
+
+    #[test]
     fn test_wkt() {
         with_feature("roads.geojson", 236194095, |feature| {
             let wkt = feature.geometry().wkt().unwrap();
@@ -671,7 +709,7 @@ mod tests {
         use std::fs;
 
         {
-            let driver = Driver::get("GeoJSON").unwrap();
+            let driver = Driver::get_by_name("GeoJSON").unwrap();
             let mut ds = driver
                 .create_vector_only(&fixture!("output.geojson"))
                 .unwrap();

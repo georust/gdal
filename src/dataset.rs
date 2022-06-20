@@ -17,11 +17,15 @@ use crate::{
     gdal_major_object::MajorObject, raster::RasterBand, spatial_ref::SpatialRef, vector::Layer,
     Driver, Metadata,
 };
+
 use gdal_sys::OGRGeometryH;
 use gdal_sys::{
     self, CPLErr, GDALAccess, GDALDatasetH, GDALMajorObjectH, OGRErr, OGRLayerH, OGRwkbGeometryType,
 };
 use libc::{c_double, c_int, c_uint};
+
+#[cfg(all(major_ge_3, minor_ge_1))]
+use crate::raster::Group;
 
 use bitflags::bitflags;
 
@@ -415,6 +419,23 @@ impl Dataset {
         }
     }
 
+    /// Opens the root group of a multi-dim GDAL raster
+    ///
+    /// # Note
+    /// You must have opened the dataset with the `GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER`
+    /// flag in order for it to work.
+    ///
+    #[cfg(all(major_ge_3, minor_ge_1))]
+    pub fn root_group(&self) -> Result<Group> {
+        unsafe {
+            let c_group = gdal_sys::GDALDatasetGetRootGroup(self.c_dataset());
+            if c_group.is_null() {
+                return Err(_last_null_pointer_err("GDALDatasetGetRootGroup"));
+            }
+            Ok(Group::from_c_group(self, c_group))
+        }
+    }
+
     /// Builds overviews for the current `Dataset`. See [`GDALBuildOverviews`].
     ///
     /// # Arguments
@@ -531,7 +552,7 @@ impl Dataset {
     ///
     /// ```
     /// # use gdal::Driver;
-    /// # let driver = Driver::get("GPKG").unwrap();
+    /// # let driver = Driver::get_by_name("GPKG").unwrap();
     /// # let mut dataset = driver.create_vector_only("/vsimem/example.gpkg").unwrap();
     /// let blank_layer = dataset.create_layer(Default::default()).unwrap();
     /// ```
@@ -541,7 +562,7 @@ impl Dataset {
     /// ```
     /// # use gdal::{Driver, LayerOptions};
     /// # use gdal::spatial_ref::SpatialRef;
-    /// # let driver = Driver::get("GPKG").unwrap();
+    /// # let driver = Driver::get_by_name("GPKG").unwrap();
     /// # let mut dataset = driver.create_vector_only("/vsimem/example.gpkg").unwrap();
     /// let roads = dataset.create_layer(LayerOptions {
     ///     name: "roads",
@@ -699,7 +720,7 @@ impl Dataset {
     /// }
     /// #
     /// # fn main() -> gdal::errors::Result<()> {
-    /// #     let driver = gdal::Driver::get("SQLite")?;
+    /// #     let driver = gdal::Driver::get_by_name("SQLite")?;
     /// #     let mut dataset = driver.create_vector_only(":memory:")?;
     /// #     create_point_grid(&mut dataset)?;
     /// #     assert_eq!(dataset.layer(0)?.features().count(), 10000);

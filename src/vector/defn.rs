@@ -20,7 +20,7 @@ impl Defn {
     /// Creates a new Defn by wrapping a C pointer
     ///
     /// # Safety
-    /// This method operates on a raw C pointer    
+    /// This method operates on a raw C pointer
     pub unsafe fn from_c_defn(c_defn: OGRFeatureDefnH) -> Defn {
         Defn { c_defn }
     }
@@ -160,6 +160,6 @@ impl<'a> GeomField<'a> {
         if c_obj.is_null() {
             return Err(_last_null_pointer_err("OGR_GFld_GetSpatialRef"));
         }
-        SpatialRef::from_c_obj(c_obj)
+        unsafe { SpatialRef::from_c_obj(c_obj) }
     }
 }

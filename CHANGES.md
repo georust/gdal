@@ -1,7 +1,23 @@
 # Changes
 
 ## Unreleased
+
+- **Breaking**: Add `gdal::vector::OwnedLayer`, `gdal::vector::LayerAccess` and `gdal::vector::layer::OwnedFeatureIterator`. This requires importing `gdal::vector::LayerAccess` for using most vector layer methods.
+
+  - https://github.com/georust/gdal/pull/238
+
+- **Breaking**: `SpatialRef::from_c_obj` is now unsafe.
+
+  - https://github.com/georust/gdal/pull/267
+
+- **Breaking**: Rename `Driver::get` to `Driver::get_by_name`, add `Driver::get(usize)` and `Driver::count`
+
+  - <https://github.com/georust/gdal/pull/251>
+
 - Implemented wrapper for `OGR_L_SetFeature`
+
+  - <https://github.com/georust/gdal/pull/264>
+  
 - Add `programs::raster::build_vrt`
 - Add `GeoTransformEx` extension trait with `apply` and `invert`
 
@@ -11,9 +27,29 @@
 
   - <https://github.com/georust/gdal/pull/250>
 
-- **Breaking**: Add `gdal::vector::OwnedLayer`, `gdal::vector::LayerAccess` and `gdal::vector::layer::OwnedFeatureIterator`. This requires importing `gdal::vector::LayerAccess` for using most vector layer methods.
+- Add `gdal::raster::rasterband::RasterBand::unit` as wrapper for `GDALGetRasterUnitType`
 
-  - https://github.com/georust/gdal/pull/238
+  - <https://github.com/georust/gdal/pull/271>
+
+- Add `gdal::vsi::read_dir` function.
+
+  - <https://github.com/georust/gdal/pull/257>
+
+- Add a `ColorTable` struct and `RasterBand::color_table` method
+
+  - <https://github.com/georust/gdal/pull/246>
+
+- Add `GeometryRef<'a>` to reference owned nested geometry in a lifetime-safe way.
+
+  - <https://github.com/georust/gdal/pull/274>
+
+- Add support for MDArray API
+
+  - <https://github.com/georust/gdal/pull/273>
+
+- Add `gdal::srs::CoordTransform::transform_bounds` as wrapper for  `OCTTransformBounds` for GDAL 3.4
+
+  - <https://github.com/georust/gdal/pull/272>
 
 ## 0.12
 
@@ -72,7 +108,7 @@
   - <https://github.com/georust/gdal/pull/193>
 
 ```rust
-let driver = Driver::get("GTiff").unwrap();
+let driver = Driver::get_by_name("GTiff").unwrap();
 let options = &[
     RasterCreationOption {
         key: "COMPRESS",
