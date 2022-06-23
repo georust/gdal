@@ -1,8 +1,8 @@
-use semver::Version;
+use std::str::FromStr;
 
 #[cfg(docsrs)]
 pub fn gdal_version_info(_key: &str) -> String {
-    "GDAL 3.2.0, released 2222/02/22".to_string()
+    "3020000".to_string()
 }
 
 #[cfg(not(docsrs))]
@@ -17,46 +17,43 @@ pub fn gdal_version_info(key: &str) -> String {
 }
 
 fn main() {
-    let gdal_version_string = gdal_version_info("--version"); // This expects GDAL to repond with "GDAL Semver , RELEASE DATE"
+    let gdal_version_string = gdal_version_info("VERSION_NUM");
     println!("GDAL version string: \"{}\"", gdal_version_string);
 
-    let semver_substring =
-        &gdal_version_string[4..gdal_version_string.find(',').unwrap_or(12)].trim();
-    println!("GDAL semver string: \"{}\"", semver_substring);
+    // this version string is the result of:
+    // #define GDAL_COMPUTE_VERSION(maj,min,rev) ((maj)*1000000+(min)*10000+(rev)*100)
+    // so we can get the parts by doing the following
+    let gdal_version = i64::from_str(&gdal_version_string)
+        .expect("Could not convert gdal version string into number.");
+    let major = gdal_version / 1000000;
+    let minor = (gdal_version - major * 1000000) / 10000;
+    let patch = (gdal_version - major * 1000000 - minor * 10000) / 100;
 
-    let detected_version = Version::parse(semver_substring).expect("Could not parse gdal version!");
-
-    if detected_version.major < 2 {
+    if major < 2 {
         panic!(
-            "The GDAL crate requires a GDAL version >= 2.0.0. Found {}",
-            detected_version
+            "The GDAL crate requires a GDAL version >= 2.0.0. Found {}.{}.{}",
+            major, minor, patch
         );
     }
 
-    println!("cargo:rustc-cfg=gdal_{}", detected_version.major);
-    println!(
-        "cargo:rustc-cfg=gdal_{}_{}",
-        detected_version.major, detected_version.minor
-    );
-    println!(
-        "cargo:rustc-cfg=gdal_{}_{}_{}",
-        detected_version.major, detected_version.minor, detected_version.patch
-    );
+    println!("cargo:rustc-cfg=gdal_{}", major);
+    println!("cargo:rustc-cfg=gdal_{}_{}", major, minor);
+    println!("cargo:rustc-cfg=gdal_{}_{}_{}", major, minor, patch);
 
-    println!("cargo:rustc-cfg=major_is_{}", detected_version.major);
-    println!("cargo:rustc-cfg=minor_is_{}", detected_version.minor);
-    println!("cargo:rustc-cfg=patch_is_{}", detected_version.patch);
+    println!("cargo:rustc-cfg=major_is_{}", major);
+    println!("cargo:rustc-cfg=minor_is_{}", minor);
+    println!("cargo:rustc-cfg=patch_is_{}", patch);
 
     // we only support GDAL >= 2.0.
-    for major in 2..=detected_version.major {
+    for major in 2..=major {
         println!("cargo:rustc-cfg=major_ge_{}", major);
     }
 
-    for minor in 0..=detected_version.minor {
+    for minor in 0..=minor {
         println!("cargo:rustc-cfg=minor_ge_{}", minor);
     }
 
-    for patch in 0..=detected_version.patch {
+    for patch in 0..=patch {
         println!("cargo:rustc-cfg=patch_ge_{}", patch);
     }
 }
