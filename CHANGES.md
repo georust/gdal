@@ -14,6 +14,10 @@
 
   - <https://github.com/georust/gdal/pull/251>
 
+- Implemented wrapper for `OGR_L_SetFeature`
+
+  - <https://github.com/georust/gdal/pull/264>
+  
 - Add `programs::raster::build_vrt`
 - Add `GeoTransformEx` extension trait with `apply` and `invert`
 
