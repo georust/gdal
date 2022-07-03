@@ -51,6 +51,10 @@
 
   - <https://github.com/georust/gdal/pull/272>
 
+- Add `Feature::set_field_*_list` functions for list field types
+
+  - <https://github.com/georust/gdal/pull/278>
+
 ## 0.12
 
 - Bump Rust edition to 2021

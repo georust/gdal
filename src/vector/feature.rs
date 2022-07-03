@@ -2,10 +2,10 @@ use crate::utils::{_last_null_pointer_err, _string, _string_array};
 use crate::vector::geometry::Geometry;
 use crate::vector::{Defn, LayerAccess};
 use gdal_sys::{self, OGRErr, OGRFeatureH, OGRFieldType};
-use libc::c_longlong;
-use libc::{c_double, c_int};
+use libc::{c_char, c_double, c_int, c_longlong};
 use std::convert::TryInto;
-use std::ffi::CString;
+use std::ffi::{CString, NulError};
+use std::ptr;
 
 use chrono::{Date, DateTime, Datelike, FixedOffset, TimeZone, Timelike};
 
@@ -80,20 +80,8 @@ impl<'a> Feature<'a> {
     ///
     /// If the field is null, returns `None`.
     pub fn field<S: AsRef<str>>(&self, name: S) -> Result<Option<FieldValue>> {
-        let c_name = CString::new(name.as_ref())?;
-        self._field(c_name)
-    }
-
-    fn _field(&self, c_name: CString) -> Result<Option<FieldValue>> {
-        let field_id = unsafe { gdal_sys::OGR_F_GetFieldIndex(self.c_feature, c_name.as_ptr()) };
-        if field_id == -1 {
-            Err(GdalError::InvalidFieldName {
-                field_name: c_name.into_string()?,
-                method_name: "OGR_F_GetFieldIndex",
-            })
-        } else {
-            self.field_from_id(field_id)
-        }
+        let idx = self.field_idx_from_name(name)?;
+        self.field_from_id(idx)
     }
 
     /// Get the value of a named field. If the field exists, it returns a [`FieldValue`] wrapper,
@@ -177,13 +165,13 @@ impl<'a> Feature<'a> {
     ///
     /// If the field is missing, returns [`GdalError::InvalidFieldName`].
     ///
-    fn field_idx_from_name(&self, field_name: &str) -> Result<i32> {
-        let c_str_field_name = CString::new(field_name)?;
+    fn field_idx_from_name<S: AsRef<str>>(&self, field_name: S) -> Result<i32> {
+        let c_str_field_name = CString::new(field_name.as_ref())?;
         let field_id =
             unsafe { gdal_sys::OGR_F_GetFieldIndex(self.c_feature, c_str_field_name.as_ptr()) };
         if field_id == -1 {
             return Err(GdalError::InvalidFieldName {
-                field_name: field_name.to_string(),
+                field_name: field_name.as_ref().to_string(),
                 method_name: "OGR_F_GetFieldIndex",
             });
         }
@@ -498,72 +486,89 @@ impl<'a> Feature<'a> {
     }
 
     pub fn set_field_string(&self, field_name: &str, value: &str) -> Result<()> {
-        let c_str_field_name = CString::new(field_name)?;
         let c_str_value = CString::new(value)?;
-        let idx =
-            unsafe { gdal_sys::OGR_F_GetFieldIndex(self.c_feature, c_str_field_name.as_ptr()) };
-        if idx == -1 {
-            return Err(GdalError::InvalidFieldName {
-                field_name: field_name.to_string(),
-                method_name: "OGR_F_GetFieldIndex",
-            });
-        }
+        let idx = self.field_idx_from_name(field_name)?;
         unsafe { gdal_sys::OGR_F_SetFieldString(self.c_feature, idx, c_str_value.as_ptr()) };
         Ok(())
     }
 
+    pub fn set_field_string_list(&self, field_name: &str, value: &[&str]) -> Result<()> {
+        let c_strings = value
+            .iter()
+            .map(|&value| CString::new(value))
+            .collect::<std::result::Result<Vec<CString>, NulError>>()?;
+        let c_str_ptrs = c_strings
+            .iter()
+            .map(|s| s.as_ptr())
+            .chain(std::iter::once(ptr::null()))
+            .collect::<Vec<*const c_char>>();
+        // OGR_F_SetFieldStringList takes a CSLConstList, which is defined as *mut *mut c_char in
+        // gdal-sys despite being constant.
+        let c_value = c_str_ptrs.as_ptr() as *mut *mut c_char;
+        let idx = self.field_idx_from_name(field_name)?;
+        unsafe { gdal_sys::OGR_F_SetFieldStringList(self.c_feature, idx, c_value) };
+        Ok(())
+    }
+
     pub fn set_field_double(&self, field_name: &str, value: f64) -> Result<()> {
-        let c_str_field_name = CString::new(field_name)?;
-        let idx =
-            unsafe { gdal_sys::OGR_F_GetFieldIndex(self.c_feature, c_str_field_name.as_ptr()) };
-        if idx == -1 {
-            return Err(GdalError::InvalidFieldName {
-                field_name: field_name.to_string(),
-                method_name: "OGR_F_GetFieldIndex",
-            });
-        }
+        let idx = self.field_idx_from_name(field_name)?;
         unsafe { gdal_sys::OGR_F_SetFieldDouble(self.c_feature, idx, value as c_double) };
         Ok(())
     }
 
+    pub fn set_field_double_list(&self, field_name: &str, value: &[f64]) -> Result<()> {
+        let idx = self.field_idx_from_name(field_name)?;
+        unsafe {
+            gdal_sys::OGR_F_SetFieldDoubleList(
+                self.c_feature,
+                idx,
+                value.len() as c_int,
+                value.as_ptr(),
+            )
+        };
+        Ok(())
+    }
+
     pub fn set_field_integer(&self, field_name: &str, value: i32) -> Result<()> {
-        let c_str_field_name = CString::new(field_name)?;
-        let idx =
-            unsafe { gdal_sys::OGR_F_GetFieldIndex(self.c_feature, c_str_field_name.as_ptr()) };
-        if idx == -1 {
-            return Err(GdalError::InvalidFieldName {
-                field_name: field_name.to_string(),
-                method_name: "OGR_F_GetFieldIndex",
-            });
-        }
+        let idx = self.field_idx_from_name(field_name)?;
         unsafe { gdal_sys::OGR_F_SetFieldInteger(self.c_feature, idx, value as c_int) };
         Ok(())
     }
 
+    pub fn set_field_integer_list(&self, field_name: &str, value: &[i32]) -> Result<()> {
+        let idx = self.field_idx_from_name(field_name)?;
+        unsafe {
+            gdal_sys::OGR_F_SetFieldIntegerList(
+                self.c_feature,
+                idx,
+                value.len() as c_int,
+                value.as_ptr(),
+            )
+        };
+        Ok(())
+    }
+
     pub fn set_field_integer64(&self, field_name: &str, value: i64) -> Result<()> {
-        let c_str_field_name = CString::new(field_name)?;
-        let idx =
-            unsafe { gdal_sys::OGR_F_GetFieldIndex(self.c_feature, c_str_field_name.as_ptr()) };
-        if idx == -1 {
-            return Err(GdalError::InvalidFieldName {
-                field_name: field_name.to_string(),
-                method_name: "OGR_F_GetFieldIndex",
-            });
-        }
+        let idx = self.field_idx_from_name(field_name)?;
         unsafe { gdal_sys::OGR_F_SetFieldInteger64(self.c_feature, idx, value as c_longlong) };
         Ok(())
     }
 
+    pub fn set_field_integer64_list(&self, field_name: &str, value: &[i64]) -> Result<()> {
+        let idx = self.field_idx_from_name(field_name)?;
+        unsafe {
+            gdal_sys::OGR_F_SetFieldInteger64List(
+                self.c_feature,
+                idx,
+                value.len() as c_int,
+                value.as_ptr(),
+            )
+        };
+        Ok(())
+    }
+
     pub fn set_field_datetime(&self, field_name: &str, value: DateTime<FixedOffset>) -> Result<()> {
-        let c_str_field_name = CString::new(field_name)?;
-        let idx =
-            unsafe { gdal_sys::OGR_F_GetFieldIndex(self.c_feature, c_str_field_name.as_ptr()) };
-        if idx == -1 {
-            return Err(GdalError::InvalidFieldName {
-                field_name: field_name.to_string(),
-                method_name: "OGR_F_GetFieldIndex",
-            });
-        }
+        let idx = self.field_idx_from_name(field_name)?;
 
         let year = value.year() as c_int;
         let month = value.month() as c_int;
@@ -595,20 +600,23 @@ impl<'a> Feature<'a> {
 
     pub fn set_field(&self, field_name: &str, value: &FieldValue) -> Result<()> {
         match value {
-            FieldValue::RealValue(value) => self.set_field_double(field_name, *value),
-            FieldValue::StringValue(ref value) => self.set_field_string(field_name, value.as_str()),
             FieldValue::IntegerValue(value) => self.set_field_integer(field_name, *value),
+            FieldValue::IntegerListValue(value) => self.set_field_integer_list(field_name, value),
             FieldValue::Integer64Value(value) => self.set_field_integer64(field_name, *value),
-
-            FieldValue::DateTimeValue(value) => self.set_field_datetime(field_name, *value),
-
+            FieldValue::Integer64ListValue(value) => {
+                self.set_field_integer64_list(field_name, value)
+            }
+            FieldValue::StringValue(ref value) => self.set_field_string(field_name, value.as_str()),
+            FieldValue::StringListValue(ref value) => {
+                let strs = value.iter().map(String::as_str).collect::<Vec<&str>>();
+                self.set_field_string_list(field_name, &strs)
+            }
+            FieldValue::RealValue(value) => self.set_field_double(field_name, *value),
+            FieldValue::RealListValue(value) => self.set_field_double_list(field_name, value),
             FieldValue::DateValue(value) => {
                 self.set_field_datetime(field_name, value.and_hms(0, 0, 0))
             }
-            _ => Err(GdalError::UnhandledFieldType {
-                field_type: value.ogr_field_type(),
-                method_name: "OGR_Fld_GetType",
-            }),
+            FieldValue::DateTimeValue(value) => self.set_field_datetime(field_name, *value),
         }
     }
 

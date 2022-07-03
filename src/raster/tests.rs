@@ -631,10 +631,13 @@ fn test_fail_read_overviews() {
 #[test]
 fn test_rasterband_lifetime() {
     let dataset: Dataset = Dataset::open(fixture!("tinymarble.tif")).unwrap();
-    let rasterband = dataset.rasterband(1).unwrap();
-    let overview = rasterband.overview(0).unwrap();
 
-    drop(rasterband);
+    let overview = {
+        let rasterband = dataset.rasterband(1).unwrap();
+        let overview = rasterband.overview(0).unwrap();
+        overview
+    };
+
     assert!(overview.no_data_value().is_none());
 }
 

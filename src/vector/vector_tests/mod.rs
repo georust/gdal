@@ -261,6 +261,20 @@ mod tests {
     }
 
     #[test]
+    fn test_set_string_list_field() {
+        with_features("soundg.json", |mut features| {
+            let feature = features.next().unwrap();
+            let value = FieldValue::StringListValue(vec![
+                String::from("the"),
+                String::from("new"),
+                String::from("strings"),
+            ]);
+            feature.set_field("a_string_list", &value).unwrap();
+            assert_eq!(feature.field("a_string_list").unwrap().unwrap(), value);
+        });
+    }
+
+    #[test]
     #[allow(clippy::float_cmp)]
     fn test_get_field_as_x_by_name() {
         with_features("roads.geojson", |mut features| {
@@ -438,6 +452,16 @@ mod tests {
     }
 
     #[test]
+    fn test_set_int_list_field() {
+        with_features("soundg.json", |mut features| {
+            let feature = features.next().unwrap();
+            let value = FieldValue::IntegerListValue(vec![3, 4, 5]);
+            feature.set_field("an_int_list", &value).unwrap();
+            assert_eq!(feature.field("an_int_list").unwrap().unwrap(), value);
+        });
+    }
+
+    #[test]
     fn test_real_list_field() {
         with_features("soundg.json", |mut features| {
             let feature = features.next().unwrap();
@@ -449,6 +473,16 @@ mod tests {
     }
 
     #[test]
+    fn test_set_real_list_field() {
+        with_features("soundg.json", |mut features| {
+            let feature = features.next().unwrap();
+            let value = FieldValue::RealListValue(vec![2.5, 3.0, 4.75]);
+            feature.set_field("a_real_list", &value).unwrap();
+            assert_eq!(feature.field("a_real_list").unwrap().unwrap(), value);
+        });
+    }
+
+    #[test]
     fn test_long_list_field() {
         with_features("soundg.json", |mut features| {
             let feature = features.next().unwrap();
@@ -456,6 +490,16 @@ mod tests {
                 feature.field("a_long_list").unwrap().unwrap(),
                 FieldValue::Integer64ListValue(vec![5000000000, 6000000000])
             );
+        });
+    }
+
+    #[test]
+    fn test_set_long_list_field() {
+        with_features("soundg.json", |mut features| {
+            let feature = features.next().unwrap();
+            let value = FieldValue::Integer64ListValue(vec![7000000000, 8000000000]);
+            feature.set_field("a_long_list", &value).unwrap();
+            assert_eq!(feature.field("a_long_list").unwrap().unwrap(), value);
         });
     }
 
