@@ -4,6 +4,7 @@ use std::mem::MaybeUninit;
 use std::{
     ffi::NulError,
     ffi::{CStr, CString},
+    ops::{Deref, DerefMut},
     path::Path,
     ptr,
 };
@@ -662,11 +663,11 @@ impl Dataset {
 
     /// For datasources which support transactions, this creates a transaction.
     ///
-    /// During the transaction, the dataset can be mutably borrowed using
-    /// [`Transaction::dataset_mut`] to make changes. All changes done after the start of the
-    /// transaction are applied to the datasource when [`commit`](Transaction::commit) is called.
-    /// They may be canceled by calling [`rollback`](Transaction::rollback) instead, or by dropping
-    /// the `Transaction` without calling `commit`.
+    /// Because the transaction implements `DerefMut`, it can be used in place of the original
+    /// `Dataset` to make modifications. All changes done after the start of the transaction are
+    /// applied to the datasource when [`commit`](Transaction::commit) is called. They may be
+    /// canceled by calling [`rollback`](Transaction::rollback) instead, or by dropping the
+    /// `Transaction` without calling `commit`.
     ///
     /// Depending on the driver, using a transaction can give a huge performance improvement when
     /// creating a lot of geometry at once. This is because the driver doesn't need to commit every
@@ -702,7 +703,7 @@ impl Dataset {
     ///     // Start the transaction.
     ///     let mut txn = dataset.start_transaction()?;
     ///
-    ///     let mut layer = txn.dataset_mut().create_layer(LayerOptions {
+    ///     let mut layer = txn.create_layer(LayerOptions {
     ///         name: "grid",
     ///         ty: gdal_sys::OGRwkbGeometryType::wkbPoint,
     ///         ..Default::default()
@@ -909,8 +910,8 @@ impl Drop for Dataset {
 /// back.
 ///
 /// The transaction holds a mutable borrow on the `Dataset` that it was created from, so during the
-/// lifetime of the transaction you will need to access the dataset through
-/// [`Transaction::dataset`] or [`Transaction::dataset_mut`].
+/// lifetime of the transaction you will need to access the dataset by dereferencing the
+/// `Transaction` through its [`Deref`] or [`DerefMut`] implementations.
 #[derive(Debug)]
 pub struct Transaction<'a> {
     dataset: &'a mut Dataset,
@@ -926,11 +927,13 @@ impl<'a> Transaction<'a> {
     }
 
     /// Returns a reference to the dataset from which this `Transaction` was created.
+    #[deprecated = "Transaction now implements Deref<Target = Dataset>, so you can call Dataset methods on it directly. Use .deref() if you need a reference to the underlying Dataset."]
     pub fn dataset(&self) -> &Dataset {
         self.dataset
     }
 
     /// Returns a mutable reference to the dataset from which this `Transaction` was created.
+    #[deprecated = "Transaction now implements DerefMut<Target = Dataset>, so you can call Dataset methods on it directly. Use .deref_mut() if you need a mutable reference to the underlying Dataset."]
     pub fn dataset_mut(&mut self) -> &mut Dataset {
         self.dataset
     }
@@ -965,6 +968,20 @@ impl<'a> Transaction<'a> {
             });
         }
         Ok(())
+    }
+}
+
+impl<'a> Deref for Transaction<'a> {
+    type Target = Dataset;
+
+    fn deref(&self) -> &Self::Target {
+        self.dataset
+    }
+}
+
+impl<'a> DerefMut for Transaction<'a> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        self.dataset
     }
 }
 
@@ -1159,8 +1176,8 @@ mod tests {
         let (_temp_path, mut ds) = open_gpkg_for_update(fixture!("poly.gpkg"));
         let orig_feature_count = ds.layer(0).unwrap().feature_count();
 
-        let mut txn = ds.start_transaction().unwrap();
-        let mut layer = txn.dataset_mut().layer(0).unwrap();
+        let txn = ds.start_transaction().unwrap();
+        let mut layer = txn.layer(0).unwrap();
         layer.create_feature(polygon()).unwrap();
         assert!(txn.commit().is_ok());
 
@@ -1172,8 +1189,8 @@ mod tests {
         let (_temp_path, mut ds) = open_gpkg_for_update(fixture!("poly.gpkg"));
         let orig_feature_count = ds.layer(0).unwrap().feature_count();
 
-        let mut txn = ds.start_transaction().unwrap();
-        let mut layer = txn.dataset_mut().layer(0).unwrap();
+        let txn = ds.start_transaction().unwrap();
+        let mut layer = txn.layer(0).unwrap();
         layer.create_feature(polygon()).unwrap();
         assert!(txn.rollback().is_ok());
 
@@ -1186,8 +1203,8 @@ mod tests {
         let orig_feature_count = ds.layer(0).unwrap().feature_count();
 
         {
-            let mut txn = ds.start_transaction().unwrap();
-            let mut layer = txn.dataset_mut().layer(0).unwrap();
+            let txn = ds.start_transaction().unwrap();
+            let mut layer = txn.layer(0).unwrap();
             layer.create_feature(polygon()).unwrap();
         } // txn is dropped here.
 

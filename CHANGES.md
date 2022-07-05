@@ -55,6 +55,10 @@
 
   - <https://github.com/georust/gdal/pull/278>
 
+- Deprecate `Transaction::dataset` and `Transaction::dataset_mut`. Add `Deref` and `DerefMut` implementations instead.
+
+  - <https://github.com/georust/gdal/pull/265>
+
 ## 0.12
 
 - Bump Rust edition to 2021
