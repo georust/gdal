@@ -2,6 +2,13 @@ use std::str::FromStr;
 
 #[cfg(feature = "docsrs")]
 pub fn gdal_version_info(_key: &str) -> String {
+    if std::env::var("DOCS_RS").is_err() {
+        panic!(
+            r#"The `docsrs` feature should not be enabled.
+  If you are using the `--all-features` flag, try replacing it with `--features bindgen,array`.
+  See https://github.com/georust/gdal/pull/241 for more details."#
+        );
+    };
     "3020000".to_string()
 }
 
