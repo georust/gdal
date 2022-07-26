@@ -258,5 +258,4 @@ fn main() {
             panic!("No GDAL version detected");
         }
     }
-
 }
