@@ -57,7 +57,31 @@ fn find_gdal_dll(lib_dir: &Path) -> io::Result<Option<String>> {
     Ok(None)
 }
 
+fn add_docs_rs_helper() {
+    let out_path = PathBuf::from(env::var("OUT_DIR").unwrap()).join("docs_rs_helper.rs");
+    let docs_helper_code = if std::env::var_os("DOCS_RS").is_some() {
+        r#"
+        pub fn gdal_version_docs_rs_wrapper() -> String {
+            "3020000".to_string()
+        }"#
+    } else {
+        r#"
+        pub fn gdal_version_docs_rs_wrapper() -> String {
+            let key = "VERSION_NUM";
+            let c_key = std::ffi::CString::new(key.as_bytes()).unwrap();
+
+            unsafe {
+                let res_ptr = crate::GDALVersionInfo(c_key.as_ptr());
+                let c_res = std::ffi::CStr::from_ptr(res_ptr);
+                c_res.to_string_lossy().into_owned()
+            }
+        }"#
+    };
+    std::fs::write(&out_path, docs_helper_code.as_bytes()).unwrap();
+}
+
 fn main() {
+    add_docs_rs_helper();
     let out_path = PathBuf::from(env::var("OUT_DIR").unwrap()).join("bindings.rs");
 
     // Hardcode a prebuilt binding version while generating docs.
@@ -234,4 +258,5 @@ fn main() {
             panic!("No GDAL version detected");
         }
     }
+
 }
