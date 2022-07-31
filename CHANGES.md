@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add prebuild bindings for GDAL 3.5
+  - <https://github.com/georust/gdal/pull/277>
+
 - **Breaking**: Add `gdal::vector::OwnedLayer`, `gdal::vector::LayerAccess` and `gdal::vector::layer::OwnedFeatureIterator`. This requires importing `gdal::vector::LayerAccess` for using most vector layer methods.
 
   - https://github.com/georust/gdal/pull/238
@@ -17,7 +20,7 @@
 - Implemented wrapper for `OGR_L_SetFeature`
 
   - <https://github.com/georust/gdal/pull/264>
-  
+
 - Add `programs::raster::build_vrt`
 - Add `GeoTransformEx` extension trait with `apply` and `invert`
 
