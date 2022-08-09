@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- **Breaking**: Change signature of `gdal::raster::rasterize` method to accept a slice of _references_ to Geometries.
+
+  - https://github.com/georust/gdal/pull/283
+
 - **Breaking**: Add `gdal::vector::OwnedLayer`, `gdal::vector::LayerAccess` and `gdal::vector::layer::OwnedFeatureIterator`. This requires importing `gdal::vector::LayerAccess` for using most vector layer methods.
 
   - https://github.com/georust/gdal/pull/238
