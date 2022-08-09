@@ -685,7 +685,7 @@ fn test_rasterize() {
     let mut dataset = driver.create("", rows, cols, 1).unwrap();
 
     let bands = [1];
-    let geometries = [poly];
+    let geometries = [&poly];
     let burn_values = [1.0];
     super::rasterize(&mut dataset, &bands, &geometries, &burn_values, None).unwrap();
 

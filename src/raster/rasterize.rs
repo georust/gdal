@@ -162,7 +162,7 @@ mod tests {
 pub fn rasterize(
     dataset: &mut Dataset,
     bands: &[isize],
-    geometries: &[Geometry],
+    geometries: &[&Geometry],
     burn_values: &[f64],
     options: Option<RasterizeOptions>,
 ) -> Result<()> {
