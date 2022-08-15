@@ -5,7 +5,8 @@ use gdal_sys::{CPLErr, OGRErr, OGRFieldType, OGRwkbGeometryType};
 
 pub type Result<T> = std::result::Result<T, GdalError>;
 
-#[derive(Clone, PartialEq, Eq, Debug, Error)]
+#[allow(unknown_lints, clippy::derive_partial_eq_without_eq)] // only enforce `PartialEq` for `GdalError`
+#[derive(Clone, PartialEq, Debug, Error)]
 pub enum GdalError {
     #[error("FfiNulError")]
     FfiNulError(#[from] std::ffi::NulError),
