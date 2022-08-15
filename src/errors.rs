@@ -3,11 +3,9 @@ use thiserror::Error;
 
 use gdal_sys::{CPLErr, OGRErr, OGRFieldType, OGRwkbGeometryType};
 
-use crate::raster::ExtendedDataType;
-
 pub type Result<T> = std::result::Result<T, GdalError>;
 
-#[derive(Clone, PartialEq, Debug, Error)]
+#[derive(Clone, PartialEq, Eq, Debug, Error)]
 pub enum GdalError {
     #[error("FfiNulError")]
     FfiNulError(#[from] std::ffi::NulError),
@@ -72,9 +70,11 @@ pub enum GdalError {
     UnlinkMemFile { file_name: String },
     #[error("BadArgument")]
     BadArgument(String),
+
+    #[cfg(all(major_ge_3, minor_ge_1))]
     #[error("Unhandled type '{data_type:?}' on GDAL MD method {method_name}")]
     UnsupportedMdDataType {
-        data_type: ExtendedDataType,
+        data_type: crate::raster::ExtendedDataType,
         method_name: &'static str,
     },
 }
