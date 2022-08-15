@@ -50,6 +50,37 @@ fn map_resample_alg(alg: &ResampleAlg) -> u32 {
     }
 }
 
+/// Wrapper type for gdal mask flags.
+/// From the GDAL docs:
+/// - `GMF_ALL_VALID`(0x01): There are no invalid pixels, all mask values will be 255. When used this will normally be the only flag set.
+/// - `GMF_PER_DATASET`(0x02): The mask band is shared between all bands on the dataset.
+/// - `GMF_ALPHA`(0x04): The mask band is actually an alpha band and may have values other than 0 and 255.
+/// - `GMF_NODATA`(0x08): Indicates the mask is actually being generated from nodata values. (mutually exclusive of `GMF_ALPHA`)
+pub struct GdalMaskFlags(i32);
+
+impl GdalMaskFlags {
+    const GMF_ALL_VALID: i32 = 0x01;
+    const GMF_PER_DATASET: i32 = 0x02;
+    const GMF_ALPHA: i32 = 0x04;
+    const GMF_NODATA: i32 = 0x08;
+
+    pub fn is_all_valid(&self) -> bool {
+        self.0 & Self::GMF_ALL_VALID != 0
+    }
+
+    pub fn is_per_dataset(&self) -> bool {
+        self.0 & Self::GMF_PER_DATASET != 0
+    }
+
+    pub fn is_alpha(&self) -> bool {
+        self.0 & Self::GMF_ALPHA != 0
+    }
+
+    pub fn is_nodata(&self) -> bool {
+        self.0 & Self::GMF_NODATA != 0
+    }
+}
+
 /// Extra options used to read a raster.
 ///
 /// For documentation, see `gdal_sys::GDALRasterIOExtraArg`.
@@ -497,6 +528,43 @@ impl<'a> RasterBand<'a> {
         }
 
         _string(str_ptr)
+    }
+
+    /// Read the band mask flags for a GDAL `RasterBand`.
+    pub fn mask_flags(&self) -> Result<GdalMaskFlags> {
+        let band_mask_flags = unsafe { gdal_sys::GDALGetMaskFlags(self.c_rasterband) };
+
+        Ok(GdalMaskFlags(band_mask_flags))
+    }
+
+    /// Create a new mask band for the layer.
+    /// `shared_between_all_bands` indicates if all bands of the dataset use the same mask.
+    pub fn create_mask_band(&mut self, shared_between_all_bands: bool) -> Result<()> {
+        let flags = if shared_between_all_bands {
+            GdalMaskFlags::GMF_PER_DATASET // It is the only valid flag here.
+        } else {
+            0x00
+        };
+
+        unsafe {
+            let rv = gdal_sys::GDALCreateMaskBand(self.c_rasterband, flags);
+            if rv != 0 {
+                return Err(_last_cpl_err(rv));
+            }
+            Ok(())
+        }
+    }
+
+    /// Open the mask-`Rasterband`
+    pub fn open_mask_band(&self) -> Result<RasterBand> {
+        unsafe {
+            let mask_band_ptr = gdal_sys::GDALGetMaskBand(self.c_rasterband);
+            if mask_band_ptr.is_null() {
+                return Err(_last_null_pointer_err("GDALGetMaskBand"));
+            }
+            let mask_band = RasterBand::from_c_rasterband(self.dataset, mask_band_ptr);
+            Ok(mask_band)
+        }
     }
 }
 

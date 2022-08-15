@@ -407,6 +407,38 @@ fn test_read_raster_as() {
 }
 
 #[test]
+fn mask_flags() {
+    let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
+    let rb = dataset.rasterband(1).unwrap();
+    let mask_flags = rb.mask_flags().unwrap();
+    assert_eq!(mask_flags.is_nodata(), false);
+    assert_eq!(mask_flags.is_alpha(), false);
+    assert_eq!(mask_flags.is_per_dataset(), false);
+    assert_eq!(mask_flags.is_all_valid(), true);
+}
+
+#[test]
+fn open_mask_band() {
+    let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
+    let rb = dataset.rasterband(1).unwrap();
+    let mb = rb.open_mask_band().unwrap();
+    let mask_values = mb.read_as::<u8>((20, 30), (2, 3), (2, 3), None).unwrap();
+    assert_eq!(mask_values.data, [255u8; 6])
+}
+
+#[test]
+fn create_mask_band() {
+    let driver = Driver::get_by_name("MEM").unwrap();
+    let dataset = driver.create("", 20, 10, 1).unwrap();
+    let mut rb = dataset.rasterband(1).unwrap();
+    rb.create_mask_band(false).unwrap();
+
+    let mb = rb.open_mask_band().unwrap();
+    let mask_values = mb.read_as::<u8>((0, 0), (20, 10), (20, 10), None).unwrap();
+    assert_eq!(mask_values.data, [0; 200])
+}
+
+#[test]
 #[cfg(feature = "ndarray")]
 fn test_read_raster_as_array() {
     let band_index = 1;
