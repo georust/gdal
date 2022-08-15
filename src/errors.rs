@@ -8,6 +8,7 @@ use crate::raster::ExtendedDataType;
 pub type Result<T> = std::result::Result<T, GdalError>;
 
 #[derive(Clone, PartialEq, Debug, Error)]
+#[allow(clippy::derive_partial_eq_without_eq)] // only enforce `PartialEq` for `GdalError`
 pub enum GdalError {
     #[error("FfiNulError")]
     FfiNulError(#[from] std::ffi::NulError),

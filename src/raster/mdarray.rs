@@ -482,7 +482,7 @@ impl<'a> Dimension<'a> {
 }
 
 /// Wrapper for `GDALExtendedDataType`
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ExtendedDataType {
     c_data_type: GDALExtendedDataTypeH,
 }
