@@ -222,6 +222,10 @@ impl<'a> MDArray<'a> {
     pub fn read_as_string_array(&self) -> Result<Vec<String>> {
         let data_type = self.datatype();
         if data_type.class() != GDALExtendedDataTypeClass::GEDTC_STRING {
+            // We have to check that the data type is string.
+            // Only then, GDAL returns an array of string pointers.
+            // Otherwise, we will dereference these string pointers and get a segfault.
+
             return Err(GdalError::UnsupportedMdDataType {
                 data_type,
                 method_name: "GDALMDArrayRead (string)",
