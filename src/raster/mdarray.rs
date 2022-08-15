@@ -220,6 +220,14 @@ impl<'a> MDArray<'a> {
 
     /// Read `MDArray` as one-dimensional string array
     pub fn read_as_string_array(&self) -> Result<Vec<String>> {
+        let data_type = self.datatype();
+        if data_type.class() != GDALExtendedDataTypeClass::GEDTC_STRING {
+            return Err(GdalError::UnsupportedMdDataType {
+                data_type,
+                method_name: "GDALMDArrayRead (string)",
+            });
+        }
+
         let num_values = self.num_elements() as usize;
         let mut string_pointers: Vec<*const c_char> = vec![std::ptr::null(); num_values];
 
@@ -470,7 +478,7 @@ impl<'a> Dimension<'a> {
 }
 
 /// Wrapper for `GDALExtendedDataType`
-#[derive(Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct ExtendedDataType {
     c_data_type: GDALExtendedDataTypeH,
 }
@@ -760,6 +768,26 @@ mod tests {
             .unwrap();
 
         assert_eq!(string_array.read_as_string_array().unwrap(), ["abcd", "ef"]);
+    }
+
+    #[test]
+    fn test_read_as_string_array_for_non_string() {
+        let dataset_options = DatasetOptions {
+            open_flags: GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER,
+            allowed_drivers: None,
+            open_options: None,
+            sibling_files: None,
+        };
+        let dataset = Dataset::open_ex("fixtures/alldatatypes.nc", dataset_options).unwrap();
+
+        let root_group = dataset.root_group().unwrap();
+
+        let string_array = root_group
+            .open_md_array("uint_var", CslStringList::new())
+            .unwrap();
+
+        // check that we don't get a `SIGSEV` here
+        assert!(string_array.read_as_string_array().is_err());
     }
 
     #[test]

@@ -3,6 +3,8 @@ use thiserror::Error;
 
 use gdal_sys::{CPLErr, OGRErr, OGRFieldType, OGRwkbGeometryType};
 
+use crate::raster::ExtendedDataType;
+
 pub type Result<T> = std::result::Result<T, GdalError>;
 
 #[derive(Clone, PartialEq, Debug, Error)]
@@ -70,6 +72,11 @@ pub enum GdalError {
     UnlinkMemFile { file_name: String },
     #[error("BadArgument")]
     BadArgument(String),
+    #[error("Unhandled type '{data_type:?}' on GDAL MD method {method_name}")]
+    UnsupportedMdDataType {
+        data_type: ExtendedDataType,
+        method_name: &'static str,
+    },
 }
 
 /// A wrapper for [`CPLErr::Type`] that reflects it as an enum
