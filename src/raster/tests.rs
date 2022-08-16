@@ -411,10 +411,10 @@ fn mask_flags() {
     let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
     let rb = dataset.rasterband(1).unwrap();
     let mask_flags = rb.mask_flags().unwrap();
-    assert_eq!(mask_flags.is_nodata(), false);
-    assert_eq!(mask_flags.is_alpha(), false);
-    assert_eq!(mask_flags.is_per_dataset(), false);
-    assert_eq!(mask_flags.is_all_valid(), true);
+    assert!(!mask_flags.is_nodata());
+    assert!(!mask_flags.is_alpha());
+    assert!(!mask_flags.is_per_dataset());
+    assert!(mask_flags.is_all_valid());
 }
 
 #[test]
