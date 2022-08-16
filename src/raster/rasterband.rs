@@ -547,7 +547,7 @@ impl<'a> RasterBand<'a> {
         };
 
         unsafe {
-            let rv = gdal_sys::GDALCreateMaskBand(self.c_rasterband, flags);
+            let rv = unsafe { gdal_sys::GDALCreateMaskBand(self.c_rasterband, flags) };
             if rv != 0 {
                 return Err(_last_cpl_err(rv));
             }
