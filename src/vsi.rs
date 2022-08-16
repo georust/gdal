@@ -211,12 +211,13 @@ mod tests {
         assert_eq!(bytes, vec![1_u8, 2, 3, 4]);
 
         // mem file must not be there anymore
-        assert_eq!(
-            unlink_mem_file(file_name),
-            Err(GdalError::UnlinkMemFile {
-                file_name: file_name.to_string()
-            })
-        );
+        assert!(matches!(
+            unlink_mem_file(file_name).unwrap_err(),
+            GdalError::UnlinkMemFile {
+                file_name
+            }
+            if file_name == file_name
+        ));
     }
 
     #[test]
@@ -246,13 +247,14 @@ mod tests {
 
     #[test]
     fn no_mem_file() {
-        assert_eq!(
-            get_vsi_mem_file_bytes_owned("foobar"),
-            Err(GdalError::NullPointer {
+        assert!(matches!(
+            get_vsi_mem_file_bytes_owned("foobar").unwrap_err(),
+            GdalError::NullPointer {
                 method_name: "VSIGetMemFileBuffer",
-                msg: "".to_string(),
-            })
-        );
+                msg,
+            }
+            if msg.is_empty()
+        ));
     }
 
     #[test]
@@ -286,20 +288,22 @@ mod tests {
     fn unable_to_create() {
         let file_name = "";
 
-        assert_eq!(
-            create_mem_file(file_name, vec![1_u8, 2, 3, 4]),
-            Err(GdalError::NullPointer {
+        assert!(matches!(
+            create_mem_file(file_name, vec![1_u8, 2, 3, 4]).unwrap_err(),
+            GdalError::NullPointer {
                 method_name: "VSIGetMemFileBuffer",
-                msg: "".to_string(),
-            })
-        );
+                msg,
+            }
+            if msg.is_empty()
+        ));
 
-        assert_eq!(
-            unlink_mem_file(file_name),
-            Err(GdalError::UnlinkMemFile {
-                file_name: "".to_string()
-            })
-        );
+        assert!(matches!(
+            unlink_mem_file(file_name).unwrap_err(),
+            GdalError::UnlinkMemFile {
+                file_name,
+            }
+            if file_name.is_empty()
+        ));
     }
 
     #[test]
