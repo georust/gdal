@@ -17,7 +17,7 @@
 - Implemented wrapper for `OGR_L_SetFeature`
 
   - <https://github.com/georust/gdal/pull/264>
-  
+
 - Add `programs::raster::build_vrt`
 - Add `GeoTransformEx` extension trait with `apply` and `invert`
 
@@ -47,7 +47,7 @@
 
   - <https://github.com/georust/gdal/pull/273>
 
-- Add `gdal::srs::CoordTransform::transform_bounds` as wrapper for  `OCTTransformBounds` for GDAL 3.4
+- Add `gdal::srs::CoordTransform::transform_bounds` as wrapper for `OCTTransformBounds` for GDAL 3.4
 
   - <https://github.com/georust/gdal/pull/272>
 
@@ -58,6 +58,10 @@
 - Deprecate `Transaction::dataset` and `Transaction::dataset_mut`. Add `Deref` and `DerefMut` implementations instead.
 
   - <https://github.com/georust/gdal/pull/265>
+
+- Remove `PartialEq` from `GdalError`
+
+  - <https://github.com/georust/gdal/pull/286>
 
 ## 0.12
 
