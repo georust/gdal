@@ -131,21 +131,18 @@ mod tests {
             c_options.fetch_name_value("ALL_TOUCHED").unwrap(),
             Some("FALSE".to_string())
         );
-        assert_eq!(
-            c_options.fetch_name_value("BURN_VALUE_FROM").unwrap(),
-            (None)
-        );
+        assert_eq!(c_options.fetch_name_value("BURN_VALUE_FROM").unwrap(), None);
         assert_eq!(
             c_options.fetch_name_value("MERGE_ALG").unwrap(),
-            (Some("REPLACE".to_string()))
+            Some("REPLACE".to_string())
         );
         assert_eq!(
             c_options.fetch_name_value("CHUNKYSIZE").unwrap(),
-            (Some("0".to_string()))
+            Some("0".to_string())
         );
         assert_eq!(
             c_options.fetch_name_value("OPTIM").unwrap(),
-            (Some("AUTO".to_string()))
+            Some("AUTO".to_string())
         );
     }
 }
