@@ -63,6 +63,10 @@
 
   - <https://github.com/georust/gdal/pull/285>
 
+- Remove `PartialEq` from `GdalError`
+
+  - <https://github.com/georust/gdal/pull/286>
+
 ## 0.12
 
 - Bump Rust edition to 2021

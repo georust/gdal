@@ -5,7 +5,7 @@ use gdal_sys::{CPLErr, OGRErr, OGRFieldType, OGRwkbGeometryType};
 
 pub type Result<T> = std::result::Result<T, GdalError>;
 
-#[derive(Clone, PartialEq, Debug, Error)]
+#[derive(Clone, Debug, Error)]
 pub enum GdalError {
     #[error("FfiNulError")]
     FfiNulError(#[from] std::ffi::NulError),

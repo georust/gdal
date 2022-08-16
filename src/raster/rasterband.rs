@@ -590,7 +590,7 @@ impl<T: GdalType> Buffer<T> {
 pub type ByteBuffer = Buffer<u8>;
 
 /// Represents a color interpretation of a RasterBand
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum ColorInterpretation {
     /// Undefined
     Undefined,
