@@ -322,14 +322,14 @@ mod tests {
             assert_eq!(feature.field_as_integer64_by_name("railway").unwrap(), None);
             assert_eq!(feature.field_as_double_by_name("railway").unwrap(), None);
 
-            // test error
-            assert_eq!(
-                feature.field_as_string_by_name("not_a_field"),
-                Err(GdalError::InvalidFieldName {
-                    field_name: "not_a_field".to_owned(),
+            assert!(matches!(
+                feature.field_as_string_by_name("not_a_field").unwrap_err(),
+                GdalError::InvalidFieldName {
+                    field_name,
                     method_name: "OGR_F_GetFieldIndex",
-                })
-            );
+                }
+                if field_name == "not_a_field"
+            ));
         });
     }
 
@@ -371,13 +371,13 @@ mod tests {
             assert_eq!(feature.field_as_double(railway_field).unwrap(), None);
 
             // test error
-            assert_eq!(
-                feature.field_as_string(23),
-                Err(GdalError::InvalidFieldIndex {
+            assert!(matches!(
+                feature.field_as_string(23).unwrap_err(),
+                GdalError::InvalidFieldIndex {
                     index: 23,
                     method_name: "field_as_string",
-                })
-            );
+                }
+            ));
         });
     }
 
@@ -415,20 +415,22 @@ mod tests {
             assert_eq!(feature.field_as_datetime(railway_field).unwrap(), None);
 
             // test error
-            assert_eq!(
-                feature.field_as_datetime_by_name("not_a_field"),
-                Err(GdalError::InvalidFieldName {
-                    field_name: "not_a_field".to_owned(),
+            assert!(matches!(
+                feature
+                    .field_as_datetime_by_name("not_a_field")
+                    .unwrap_err(),
+                GdalError::InvalidFieldName {
+                    field_name,
                     method_name: "OGR_F_GetFieldIndex",
-                })
-            );
-            assert_eq!(
-                feature.field_as_datetime(23),
-                Err(GdalError::InvalidFieldIndex {
+                } if field_name == "not_a_field"
+            ));
+            assert!(matches!(
+                feature.field_as_datetime(23).unwrap_err(),
+                GdalError::InvalidFieldIndex {
                     index: 23,
                     method_name: "field_as_datetime",
-                })
-            );
+                }
+            ));
         });
     }
 
@@ -849,13 +851,13 @@ mod tests {
             assert_eq!(layer.features().count(), 21);
 
             // force error
-            assert_eq!(
-                layer.set_attribute_filter("foo = bar"),
-                Err(GdalError::OgrError {
+            assert!(matches!(
+                layer.set_attribute_filter("foo = bar").unwrap_err(),
+                GdalError::OgrError {
                     err: gdal_sys::OGRErr::OGRERR_CORRUPT_DATA,
                     method_name: "OGR_L_SetAttributeFilter",
-                })
-            );
+                }
+            ));
         });
     }
 

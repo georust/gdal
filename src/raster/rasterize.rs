@@ -128,21 +128,24 @@ mod tests {
     fn test_rasterizeoptions_as_ptr() {
         let c_options = CslStringList::try_from(RasterizeOptions::default()).unwrap();
         assert_eq!(
-            c_options.fetch_name_value("ALL_TOUCHED"),
-            Ok(Some("FALSE".to_string()))
-        );
-        assert_eq!(c_options.fetch_name_value("BURN_VALUE_FROM"), Ok(None));
-        assert_eq!(
-            c_options.fetch_name_value("MERGE_ALG"),
-            Ok(Some("REPLACE".to_string()))
+            c_options.fetch_name_value("ALL_TOUCHED").unwrap(),
+            Some("FALSE".to_string())
         );
         assert_eq!(
-            c_options.fetch_name_value("CHUNKYSIZE"),
-            Ok(Some("0".to_string()))
+            c_options.fetch_name_value("BURN_VALUE_FROM").unwrap(),
+            (None)
         );
         assert_eq!(
-            c_options.fetch_name_value("OPTIM"),
-            Ok(Some("AUTO".to_string()))
+            c_options.fetch_name_value("MERGE_ALG").unwrap(),
+            (Some("REPLACE".to_string()))
+        );
+        assert_eq!(
+            c_options.fetch_name_value("CHUNKYSIZE").unwrap(),
+            (Some("0".to_string()))
+        );
+        assert_eq!(
+            c_options.fetch_name_value("OPTIM").unwrap(),
+            (Some("AUTO".to_string()))
         );
     }
 }
