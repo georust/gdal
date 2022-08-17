@@ -656,8 +656,10 @@ impl Attribute {
 #[cfg(test)]
 mod tests {
     use super::*;
-
     use crate::{raster::RasterCreationOption, Dataset, DatasetOptions, Driver, GdalOpenFlags};
+
+    #[cfg(feature = "ndarray")]
+    use ndarray::Array2;
 
     #[test]
     #[cfg(feature = "ndarray")]
@@ -699,10 +701,10 @@ mod tests {
 
         let buffer = Buffer {
             size: (array_size[0], array_size[1]),
-            data,
+            data: data.clone(),
         };
         mdarray
-            .write::<u8>(array_start_index, count, array_size, &buffer)
+            .write::<u8>(array_start_index, count, array_size.clone(), &buffer)
             .unwrap();
 
         let options = DatasetOptions {
@@ -717,16 +719,18 @@ mod tests {
         let root_group = dataset.root_group().unwrap();
         let root_options = CslStringList::new();
         let array_names = root_group.array_names(root_options);
-        println!("array_names: {array_names:?}");
         let mdarray_options = CslStringList::new();
 
         let mdarray = root_group
             .open_md_array(&array_names[0], mdarray_options)
             .unwrap();
-        let data = mdarray
+        let array = mdarray
             .read_as_array::<u8>(vec![0, 0], vec![10, 10], vec![10, 10])
             .unwrap();
-        println!("data: {data:?}");
+
+        let dim: IxDyn = IxDyn(&array_size);
+        let expected =  ArrayD::from_shape_vec(dim, data).unwrap();
+        assert_eq!(array, expected)
     }
 
     #[test]
