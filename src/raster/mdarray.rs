@@ -1,4 +1,4 @@
-use super::GdalType;
+use super::{Buffer, GdalType, ResampleAlg};
 use crate::errors::*;
 use crate::spatial_ref::SpatialRef;
 use crate::utils::{_last_cpl_err, _last_null_pointer_err, _string, _string_array};
@@ -163,6 +163,46 @@ impl<'a> MDArray<'a> {
             return Err(_last_cpl_err(CPLErr::CE_Failure));
         }
 
+        Ok(())
+    }
+
+    pub fn write<T: GdalType + Copy>(
+        &mut self,
+        array_start_index: Vec<u64>,
+        count: Vec<usize>,
+        array_size: Vec<usize>,
+        buffer: &Buffer<T>,
+    ) -> Result<()> {
+        let num_values = self.num_elements() as usize;
+        // If set to nullptr, [1, 1, … 1] will be used as a default to indicate consecutive elements.
+        let array_step: *const i64 = std::ptr::null();
+        // If set to nullptr, will be set so that pDstBuffer is written in a compact way,
+        // with elements of the last / fastest varying dimension being consecutive.
+        let buffer_stride: *const i64 = std::ptr::null();
+        let p_dst_buffer_alloc_start: *mut libc::c_void = std::ptr::null_mut();
+        let n_dst_buffer_alloc_size = 0;
+        {
+            unsafe {
+                let data_type = GDALMDArrayGetDataType(self.c_mdarray);
+
+                let rv = gdal_sys::GDALMDArrayWrite(
+                    self.c_mdarray,
+                    array_start_index.as_ptr(),
+                    count.as_ptr(),
+                    array_step,
+                    buffer_stride,
+                    data_type,
+                    buffer.data.as_ptr() as *const c_void,
+                    p_dst_buffer_alloc_start,
+                    n_dst_buffer_alloc_size,
+                );
+                // `rv` is boolean
+                if rv != 1 {
+                    // OSGeo Python wrapper treats it as `CE_Failure`
+                    return Err(_last_cpl_err(CPLErr::CE_Failure));
+                }
+            }
+        }
         Ok(())
     }
 
@@ -617,7 +657,77 @@ impl Attribute {
 mod tests {
     use super::*;
 
-    use crate::{Dataset, DatasetOptions, GdalOpenFlags};
+    use crate::{raster::RasterCreationOption, Dataset, DatasetOptions, Driver, GdalOpenFlags};
+
+    #[test]
+    #[cfg(feature = "ndarray")]
+
+    fn test_write_mdarray() {
+        // This test will write a MDArray to a Zarr dataset
+        // and then read the content to make suer it is the same
+
+        // create a file to store the MDArray
+        let driver = Driver::get_by_name("Zarr").unwrap();
+        let options = [RasterCreationOption {
+            key: "BLOCKSIZE",
+            value: "5,5",
+        }];
+        let file_name = "test_zarr";
+        driver
+            .create_with_band_type_with_options::<u8, &str>(file_name, 10, 10, 1, &options)
+            .unwrap();
+
+        // Open the new file and add data.
+        let options = DatasetOptions {
+            open_flags: GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER,
+            allowed_drivers: None,
+            open_options: None,
+            sibling_files: None,
+        };
+        let ds = Dataset::open_ex(file_name, options).unwrap();
+        let rg = ds.root_group().unwrap();
+        let mdarray_options = CslStringList::new();
+        let root_options = CslStringList::new();
+        let array_names = rg.array_names(root_options);
+
+        let mut mdarray = rg.open_md_array(&array_names[0], mdarray_options).unwrap();
+
+        let array_start_index = vec![0, 0];
+        let count = vec![10, 10];
+        let array_size = count.clone();
+        let data: Vec<u8> = vec![1; count[0] * count[1]];
+
+        let buffer = Buffer {
+            size: (array_size[0], array_size[1]),
+            data,
+        };
+        mdarray
+            .write::<u8>(array_start_index, count, array_size, &buffer)
+            .unwrap();
+
+        let options = DatasetOptions {
+            open_flags: GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER,
+            allowed_drivers: None,
+            open_options: None,
+            sibling_files: None,
+        };
+        // dataset
+        let dataset = Dataset::open_ex(file_name, options).unwrap();
+        // group has different arrays.
+        let root_group = dataset.root_group().unwrap();
+        let root_options = CslStringList::new();
+        let array_names = root_group.array_names(root_options);
+        println!("array_names: {array_names:?}");
+        let mdarray_options = CslStringList::new();
+
+        let mdarray = root_group
+            .open_md_array(&array_names[0], mdarray_options)
+            .unwrap();
+        let data = mdarray
+            .read_as_array::<u8>(vec![0, 0], vec![10, 10], vec![10, 10])
+            .unwrap();
+        println!("data: {data:?}");
+    }
 
     #[test]
     fn test_root_group_name() {
