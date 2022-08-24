@@ -406,7 +406,7 @@ impl<'a> Group<'a> {
         }
     }
 
-    pub fn open_group(&self, name: &str, options: CslStringList) -> Result<Group> {
+    pub fn open_group(&'_ self, name: &str, options: CslStringList) -> Result<Group<'a>> {
         let name = CString::new(name)?;
 
         unsafe {
@@ -945,6 +945,9 @@ mod tests {
         let group_grids = group_science
             .open_group("grids", CslStringList::new())
             .unwrap();
+
+        drop(group_science); // check that `Group`s do not borrow each other
+
         let group_data = group_grids
             .open_group("data", CslStringList::new())
             .unwrap();
