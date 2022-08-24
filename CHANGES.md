@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Add prebuild bindings for GDAL 3.5
+
   - <https://github.com/georust/gdal/pull/277>
 
 - **Breaking**: Add `gdal::vector::OwnedLayer`, `gdal::vector::LayerAccess` and `gdal::vector::layer::OwnedFeatureIterator`. This requires importing `gdal::vector::LayerAccess` for using most vector layer methods.
@@ -65,6 +66,10 @@
 - Remove `PartialEq` from `GdalError`
 
   - <https://github.com/georust/gdal/pull/286>
+
+- Added program wrapper for `GDALMultiDimTranslate`
+
+  - <https://github.com/georust/gdal/pull/289>
 
 ## 0.12
 
