@@ -90,6 +90,10 @@ impl<'a> MDArray<'a> {
             let c_dimensions =
                 GDALMDArrayGetDimensions(self.c_mdarray, std::ptr::addr_of_mut!(num_dimensions));
 
+            if c_dimensions.is_null() {
+                return Err(_last_null_pointer_err("GDALMDArrayGetDimensions"));
+            }
+
             let dimensions_ref = std::slice::from_raw_parts_mut(c_dimensions, num_dimensions);
 
             let mut dimensions: Vec<Dimension> = Vec::with_capacity(num_dimensions);
@@ -515,7 +519,7 @@ impl ExtendedDataType {
     }
 }
 
-// Wrapper for `GDALExtendedDataType`
+// Wrapper for `GDALAttribute`
 #[derive(Debug)]
 pub struct Attribute {
     c_attribute: GDALAttributeH,
@@ -772,26 +776,13 @@ mod tests {
             .unwrap();
 
         assert_eq!(string_array.read_as_string_array().unwrap(), ["abcd", "ef"]);
-    }
 
-    #[test]
-    fn test_read_as_string_array_for_non_string() {
-        let dataset_options = DatasetOptions {
-            open_flags: GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER,
-            allowed_drivers: None,
-            open_options: None,
-            sibling_files: None,
-        };
-        let dataset = Dataset::open_ex("fixtures/alldatatypes.nc", dataset_options).unwrap();
-
-        let root_group = dataset.root_group().unwrap();
-
-        let string_array = root_group
+        let non_string_array = root_group
             .open_md_array("uint_var", CslStringList::new())
             .unwrap();
 
         // check that we don't get a `SIGSEV` here
-        assert!(string_array.read_as_string_array().is_err());
+        assert!(non_string_array.read_as_string_array().is_err());
     }
 
     #[test]
