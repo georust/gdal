@@ -7,7 +7,6 @@ use gdal_sys::{GDALMultiDimTranslate, GDALMultiDimTranslateOptions};
 use libc::{c_char, c_int};
 use std::{
     borrow::Borrow,
-    cell::Cell,
     ffi::CString,
     mem::ManuallyDrop,
     path::Path,
@@ -85,7 +84,7 @@ pub enum MultiDimTranslateDestination {
     Path(CString),
     Dataset {
         dataset: ManuallyDrop<Dataset>,
-        drop: Cell<bool>,
+        drop: bool,
     },
 }
 
@@ -94,7 +93,7 @@ impl Drop for MultiDimTranslateDestination {
         match self {
             Self::Path(_) => {}
             Self::Dataset { dataset, drop } => {
-                if drop.get() {
+                if *drop {
                     unsafe {
                         ManuallyDrop::drop(dataset);
                     }
@@ -108,7 +107,7 @@ impl MultiDimTranslateDestination {
     pub fn dataset(dataset: Dataset) -> Self {
         Self::Dataset {
             dataset: ManuallyDrop::new(dataset),
-            drop: Cell::new(true),
+            drop: true,
         }
     }
 
@@ -117,11 +116,11 @@ impl MultiDimTranslateDestination {
         Ok(Self::Path(c_path))
     }
 
-    unsafe fn do_no_drop_dataset(&self) {
+    unsafe fn do_no_drop_dataset(&mut self) {
         match self {
             Self::Path(_) => {}
             Self::Dataset { dataset: _, drop } => {
-                drop.set(false);
+                *drop = false;
             }
         }
     }
@@ -149,7 +148,7 @@ pub fn multi_dim_translate<D: Borrow<Dataset>>(
 
 fn _multi_dim_translate(
     input: &[&Dataset],
-    destination: MultiDimTranslateDestination,
+    mut destination: MultiDimTranslateDestination,
     options: Option<MultiDimTranslateOptions>,
 ) -> Result<Dataset> {
     let (psz_dest_option, h_dst_ds) = match &destination {
