@@ -35,6 +35,3 @@ trybuild = "1.0"
 
 [workspace]
 members = ["gdal-sys"]
-
-[package.metadata.docs.rs]
-rustc-args = ["--cfg", "docsrs"]

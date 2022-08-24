@@ -1,23 +1,11 @@
 use std::str::FromStr;
 
-#[cfg(docsrs)]
-pub fn gdal_version_info(_key: &str) -> String {
-    "3020000".to_string()
-}
-
-#[cfg(not(docsrs))]
-pub fn gdal_version_info(key: &str) -> String {
-    let c_key = std::ffi::CString::new(key.as_bytes()).unwrap();
-
-    unsafe {
-        let res_ptr = gdal_sys::GDALVersionInfo(c_key.as_ptr());
-        let c_res = std::ffi::CStr::from_ptr(res_ptr);
-        c_res.to_string_lossy().into_owned()
-    }
+fn gdal_version_info() -> String {
+    gdal_sys::gdal_version_docs_rs_wrapper()
 }
 
 fn main() {
-    let gdal_version_string = gdal_version_info("VERSION_NUM");
+    let gdal_version_string = gdal_version_info();
     println!("GDAL version string: \"{}\"", gdal_version_string);
 
     // this version string is the result of:
