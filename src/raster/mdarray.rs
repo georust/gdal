@@ -10,12 +10,12 @@ use gdal_sys::{
     GDALAttributeRelease, GDALDataType, GDALDimensionGetIndexingVariable, GDALDimensionGetName,
     GDALDimensionGetSize, GDALDimensionHS, GDALDimensionRelease, GDALExtendedDataTypeClass,
     GDALExtendedDataTypeGetClass, GDALExtendedDataTypeGetNumericDataType, GDALExtendedDataTypeH,
-    GDALExtendedDataTypeRelease, GDALGroupGetAttribute, GDALGroupGetGroupNames,
-    GDALGroupGetMDArrayNames, GDALGroupGetName, GDALGroupH, GDALGroupOpenGroup,
-    GDALGroupOpenMDArray, GDALGroupRelease, GDALMDArrayGetAttribute, GDALMDArrayGetDataType,
-    GDALMDArrayGetDimensionCount, GDALMDArrayGetDimensions, GDALMDArrayGetNoDataValueAsDouble,
-    GDALMDArrayGetSpatialRef, GDALMDArrayGetTotalElementsCount, GDALMDArrayGetUnit, GDALMDArrayH,
-    GDALMDArrayRelease, OSRDestroySpatialReference, VSIFree,
+    GDALExtendedDataTypeRelease, GDALGroupGetAttribute, GDALGroupGetDimensions,
+    GDALGroupGetGroupNames, GDALGroupGetMDArrayNames, GDALGroupGetName, GDALGroupH,
+    GDALGroupOpenGroup, GDALGroupOpenMDArray, GDALGroupRelease, GDALMDArrayGetAttribute,
+    GDALMDArrayGetDataType, GDALMDArrayGetDimensionCount, GDALMDArrayGetDimensions,
+    GDALMDArrayGetNoDataValueAsDouble, GDALMDArrayGetSpatialRef, GDALMDArrayGetTotalElementsCount,
+    GDALMDArrayGetUnit, GDALMDArrayH, GDALMDArrayRelease, OSRDestroySpatialReference, VSIFree,
 };
 use libc::c_void;
 use std::ffi::CString;
@@ -37,9 +37,15 @@ pub struct MDArray<'a> {
 }
 
 #[derive(Debug)]
-enum GroupOrDimension<'a> {
+pub enum GroupOrDimension<'a> {
     Group { _group: &'a Group<'a> },
     Dimension { _dimension: &'a Dimension<'a> },
+}
+
+#[derive(Debug)]
+pub enum GroupOrArray<'a> {
+    Group { _group: &'a Group<'a> },
+    MDArray { _md_array: &'a MDArray<'a> },
 }
 
 impl Drop for MDArray<'_> {
@@ -95,7 +101,10 @@ impl<'a> MDArray<'a> {
             let mut dimensions: Vec<Dimension> = Vec::with_capacity(num_dimensions);
 
             for c_dimension in dimensions_ref {
-                let dimension = Dimension::from_c_dimension(self, *c_dimension);
+                let dimension = Dimension::from_c_dimension(
+                    GroupOrArray::MDArray { _md_array: self },
+                    *c_dimension,
+                );
                 dimensions.push(dimension);
             }
 
@@ -424,13 +433,43 @@ impl<'a> Group<'a> {
             Ok(Attribute::from_c_attribute(c_attribute))
         }
     }
+
+    pub fn dimensions(&self, options: CslStringList) -> Result<Vec<Dimension>> {
+        unsafe {
+            let mut num_dimensions: usize = 0;
+            let c_dimensions = GDALGroupGetDimensions(
+                self.c_group,
+                std::ptr::addr_of_mut!(num_dimensions),
+                options.as_ptr(),
+            );
+
+            if c_dimensions.is_null() {
+                return Err(_last_null_pointer_err("GDALGroupGetDimensions"));
+            }
+
+            let dimensions_ref = std::slice::from_raw_parts_mut(c_dimensions, num_dimensions);
+
+            let mut dimensions: Vec<Dimension> = Vec::with_capacity(num_dimensions);
+
+            for c_dimension in dimensions_ref {
+                let dimension =
+                    Dimension::from_c_dimension(GroupOrArray::Group { _group: self }, *c_dimension);
+                dimensions.push(dimension);
+            }
+
+            // only free the array, not the dimensions themselves
+            VSIFree(c_dimensions as *mut c_void);
+
+            Ok(dimensions)
+        }
+    }
 }
 
 /// A `GDALDimension` with name and size
 #[derive(Debug)]
 pub struct Dimension<'a> {
     c_dimension: *mut GDALDimensionHS,
-    _md_array: &'a MDArray<'a>,
+    _parent: GroupOrArray<'a>,
 }
 
 impl Drop for Dimension<'_> {
@@ -446,10 +485,13 @@ impl<'a> Dimension<'a> {
     ///
     /// # Safety
     /// This method operates on a raw C pointer
-    pub fn from_c_dimension(_md_array: &'a MDArray<'a>, c_dimension: *mut GDALDimensionHS) -> Self {
+    pub unsafe fn from_c_dimension(
+        _parent: GroupOrArray<'a>,
+        c_dimension: *mut GDALDimensionHS,
+    ) -> Self {
         Self {
             c_dimension,
-            _md_array,
+            _parent,
         }
     }
     pub fn size(&self) -> usize {
@@ -692,6 +734,17 @@ mod tests {
         };
         let dataset = Dataset::open_ex("fixtures/byte_no_cf.nc", dataset_options).unwrap();
         let root_group = dataset.root_group().unwrap();
+
+        // group dimensions
+        let group_dimensions = root_group.dimensions(CslStringList::new()).unwrap();
+        let group_dimensions_names: Vec<String> = group_dimensions
+            .into_iter()
+            .map(|dimensions| dimensions.name())
+            .collect();
+        assert_eq!(group_dimensions_names, vec!["x", "y"]);
+
+        // array dimensions
+
         let array_name = "Band1".to_string();
         let options = CslStringList::new(); //Driver specific options determining how the array should be opened. Pass nullptr for default behavior.
         let md_array = root_group.open_md_array(&array_name, options).unwrap();
@@ -702,6 +755,7 @@ mod tests {
         }
         assert_eq!(dimension_names, vec!["y".to_string(), "x".to_string()])
     }
+
     #[test]
     fn test_dimension_size() {
         let dataset_options = DatasetOptions {
