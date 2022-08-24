@@ -18,11 +18,11 @@ use std::{
 ///
 /// [GDALMultiDimTranslateOptions]: https://gdal.org/api/gdal_utils.html#_CPPv428GDALMultiDimTranslateOptions
 ///
-pub struct MultiDimTranslateOption {
+pub struct MultiDimTranslateOptions {
     c_options: *mut GDALMultiDimTranslateOptions,
 }
 
-impl MultiDimTranslateOption {
+impl MultiDimTranslateOptions {
     /// See [GDALMultiDimTranslateOptionsNew].
     ///
     /// [GDALMultiDimTranslateOptionsNew]: https://gdal.org/api/gdal_utils.html#_CPPv431GDALMultiDimTranslateOptionsNewPPcP37GDALMultiDimTranslateOptionsForBinary
@@ -65,7 +65,7 @@ impl MultiDimTranslateOption {
     }
 }
 
-impl Drop for MultiDimTranslateOption {
+impl Drop for MultiDimTranslateOptions {
     fn drop(&mut self) {
         unsafe {
             gdal_sys::GDALMultiDimTranslateOptionsFree(self.c_options);
@@ -73,11 +73,11 @@ impl Drop for MultiDimTranslateOption {
     }
 }
 
-impl TryFrom<Vec<&str>> for MultiDimTranslateOption {
+impl TryFrom<Vec<&str>> for MultiDimTranslateOptions {
     type Error = GdalError;
 
-    fn try_from(value: Vec<&str>) -> std::result::Result<Self, Self::Error> {
-        MultiDimTranslateOption::new(value)
+    fn try_from(value: Vec<&str>) -> Result<Self> {
+        MultiDimTranslateOptions::new(value)
     }
 }
 
@@ -138,7 +138,7 @@ impl MultiDimTranslateDestination {
 pub fn multi_dim_translate<D: Borrow<Dataset>>(
     input: &[D],
     destination: MultiDimTranslateDestination,
-    options: Option<MultiDimTranslateOption>,
+    options: Option<MultiDimTranslateOptions>,
 ) -> Result<Dataset> {
     _multi_dim_translate(
         &input.iter().map(|x| x.borrow()).collect::<Vec<&Dataset>>(),
@@ -150,7 +150,7 @@ pub fn multi_dim_translate<D: Borrow<Dataset>>(
 fn _multi_dim_translate(
     input: &[&Dataset],
     destination: MultiDimTranslateDestination,
-    options: Option<MultiDimTranslateOption>,
+    options: Option<MultiDimTranslateOptions>,
 ) -> Result<Dataset> {
     let (psz_dest_option, h_dst_ds) = match &destination {
         MultiDimTranslateDestination::Path(c_path) => (Some(c_path), null_mut()),
@@ -249,7 +249,7 @@ mod tests {
             &[output_dataset],
             MultiDimTranslateDestination::dataset(dataset),
             Some(
-                MultiDimTranslateOption::new(vec![
+                MultiDimTranslateOptions::new(vec![
                     "-array",
                     "name=/science/grids/imagingGeometry/lookAngle,view=[2,:,:]",
                 ])
