@@ -67,6 +67,10 @@
 
   - <https://github.com/georust/gdal/pull/286>
 
+- Prevent SIGGEGV when reading a string array on an MD Array that is not of type string.
+
+  - <https://github.com/georust/gdal/pull/284>
+
 ## 0.12
 
 - Bump Rust edition to 2021
