@@ -27,9 +27,10 @@
 
   - <https://github.com/georust/gdal/pull/239>
 
-- Add `gdal::vector::geometry_type_to_name`
+- Add `gdal::vector::geometry_type_to_name` and `gdal::vector::field_type_to_name`
 
   - <https://github.com/georust/gdal/pull/250>
+  - <https://github.com/georust/gdal/pull/258>
 
 - Add `gdal::raster::rasterband::RasterBand::unit` as wrapper for `GDALGetRasterUnitType`
 
@@ -66,6 +67,10 @@
 - Remove `PartialEq` from `GdalError`
 
   - <https://github.com/georust/gdal/pull/286>
+
+- Prevent SIGGEGV when reading a string array on an MD Array that is not of type string.
+
+  - <https://github.com/georust/gdal/pull/284>
 
 - Added program wrapper for `GDALMultiDimTranslate`
 

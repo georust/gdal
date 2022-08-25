@@ -90,6 +90,10 @@ impl<'a> MDArray<'a> {
             let c_dimensions =
                 GDALMDArrayGetDimensions(self.c_mdarray, std::ptr::addr_of_mut!(num_dimensions));
 
+            if c_dimensions.is_null() {
+                return Err(_last_null_pointer_err("GDALMDArrayGetDimensions"));
+            }
+
             let dimensions_ref = std::slice::from_raw_parts_mut(c_dimensions, num_dimensions);
 
             let mut dimensions: Vec<Dimension> = Vec::with_capacity(num_dimensions);
@@ -220,6 +224,18 @@ impl<'a> MDArray<'a> {
 
     /// Read `MDArray` as one-dimensional string array
     pub fn read_as_string_array(&self) -> Result<Vec<String>> {
+        let data_type = self.datatype();
+        if data_type.class() != GDALExtendedDataTypeClass::GEDTC_STRING {
+            // We have to check that the data type is string.
+            // Only then, GDAL returns an array of string pointers.
+            // Otherwise, we will dereference these string pointers and get a segfault.
+
+            return Err(GdalError::UnsupportedMdDataType {
+                data_type,
+                method_name: "GDALMDArrayRead (string)",
+            });
+        }
+
         let num_values = self.num_elements() as usize;
         let mut string_pointers: Vec<*const c_char> = vec![std::ptr::null(); num_values];
 
@@ -470,7 +486,7 @@ impl<'a> Dimension<'a> {
 }
 
 /// Wrapper for `GDALExtendedDataType`
-#[derive(Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ExtendedDataType {
     c_data_type: GDALExtendedDataTypeH,
 }
@@ -503,7 +519,7 @@ impl ExtendedDataType {
     }
 }
 
-// Wrapper for `GDALExtendedDataType`
+// Wrapper for `GDALAttribute`
 #[derive(Debug)]
 pub struct Attribute {
     c_attribute: GDALAttributeH,
@@ -760,6 +776,13 @@ mod tests {
             .unwrap();
 
         assert_eq!(string_array.read_as_string_array().unwrap(), ["abcd", "ef"]);
+
+        let non_string_array = root_group
+            .open_md_array("uint_var", CslStringList::new())
+            .unwrap();
+
+        // check that we don't get a `SIGSEV` here
+        assert!(non_string_array.read_as_string_array().is_err());
     }
 
     #[test]
