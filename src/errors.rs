@@ -70,6 +70,13 @@ pub enum GdalError {
     UnlinkMemFile { file_name: String },
     #[error("BadArgument")]
     BadArgument(String),
+
+    #[cfg(all(major_ge_3, minor_ge_1))]
+    #[error("Unhandled type '{data_type:?}' on GDAL MD method {method_name}")]
+    UnsupportedMdDataType {
+        data_type: crate::raster::ExtendedDataType,
+        method_name: &'static str,
+    },
 }
 
 /// A wrapper for [`CPLErr::Type`] that reflects it as an enum

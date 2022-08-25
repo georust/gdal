@@ -68,6 +68,10 @@
 
   - <https://github.com/georust/gdal/pull/286>
 
+- Prevent SIGGEGV when reading a string array on an MD Array that is not of type string.
+
+  - <https://github.com/georust/gdal/pull/284>
+
 - Allow reading `Dimension`s from `Group`s in multimensional `Dataset`s.
 
   - <https://github.com/georust/gdal/pull/291>
