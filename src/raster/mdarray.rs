@@ -96,6 +96,12 @@ impl<'a> MDArray<'a> {
             let c_dimensions =
                 GDALMDArrayGetDimensions(self.c_mdarray, std::ptr::addr_of_mut!(num_dimensions));
 
+            // `num_dimensions` is `0`, we can safely return an empty vector
+            // `GDALMDArrayGetDimensions` does not state that errors can occur
+            if num_dimensions > 0 && c_dimensions.is_null() {
+                return Err(_last_null_pointer_err("GDALGroupGetDimensions"));
+            }
+
             let dimensions_ref = std::slice::from_raw_parts_mut(c_dimensions, num_dimensions);
 
             let mut dimensions: Vec<Dimension> = Vec::with_capacity(num_dimensions);
@@ -443,7 +449,9 @@ impl<'a> Group<'a> {
                 options.as_ptr(),
             );
 
-            if c_dimensions.is_null() {
+            // `num_dimensions` is `0`, we can safely return an empty vector
+            // `GDALGroupGetDimensions` does not state that errors can occur
+            if num_dimensions > 0 && c_dimensions.is_null() {
                 return Err(_last_null_pointer_err("GDALGroupGetDimensions"));
             }
 
@@ -827,6 +835,7 @@ mod tests {
         let dataset = Dataset::open_ex("fixtures/byte_no_cf.nc", dataset_options).unwrap();
 
         let root_group = dataset.root_group().unwrap();
+
         let md_array = root_group
             .open_md_array("Band1", CslStringList::new())
             .unwrap();
@@ -897,6 +906,12 @@ mod tests {
         let group_science = root_group
             .open_group("science", CslStringList::new())
             .unwrap();
+
+        assert!(group_science
+            .dimensions(Default::default())
+            .unwrap()
+            .is_empty());
+
         let group_grids = group_science
             .open_group("grids", CslStringList::new())
             .unwrap();
