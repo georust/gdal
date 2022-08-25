@@ -68,6 +68,10 @@
 
   - <https://github.com/georust/gdal/pull/286>
 
+- Allow reading `Dimension`s from `Group`s in multimensional `Dataset`s.
+
+  - <https://github.com/georust/gdal/pull/291>
+
 - Added program wrapper for `GDALMultiDimTranslate`
 
   - <https://github.com/georust/gdal/pull/289>
