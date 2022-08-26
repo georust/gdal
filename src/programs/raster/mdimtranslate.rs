@@ -9,7 +9,7 @@ use std::{
     borrow::Borrow,
     ffi::CString,
     mem::ManuallyDrop,
-    path::Path,
+    path::{Path, PathBuf},
     ptr::{null, null_mut},
 };
 
@@ -86,6 +86,36 @@ pub enum MultiDimTranslateDestination {
         dataset: ManuallyDrop<Dataset>,
         drop: bool,
     },
+}
+
+impl TryFrom<&str> for MultiDimTranslateDestination {
+    type Error = GdalError;
+
+    fn try_from(path: &str) -> Result<Self> {
+        Self::path(path)
+    }
+}
+
+impl TryFrom<&Path> for MultiDimTranslateDestination {
+    type Error = GdalError;
+
+    fn try_from(path: &Path) -> Result<Self> {
+        Self::path(path)
+    }
+}
+
+impl TryFrom<PathBuf> for MultiDimTranslateDestination {
+    type Error = GdalError;
+
+    fn try_from(path: PathBuf) -> Result<Self> {
+        Self::path(path)
+    }
+}
+
+impl From<Dataset> for MultiDimTranslateDestination {
+    fn from(dataset: Dataset) -> Self {
+        Self::dataset(dataset)
+    }
 }
 
 impl Drop for MultiDimTranslateDestination {
@@ -215,7 +245,7 @@ mod tests {
 
         let dataset = multi_dim_translate(
             &[dataset],
-            MultiDimTranslateDestination::path(mem_file_path).unwrap(),
+            mem_file_path.try_into().unwrap(),
             Some(
                 vec![
                     "-array",
@@ -246,7 +276,7 @@ mod tests {
 
         let error = multi_dim_translate(
             &[output_dataset],
-            MultiDimTranslateDestination::dataset(dataset),
+            dataset.into(),
             Some(
                 MultiDimTranslateOptions::new(vec![
                     "-array",
