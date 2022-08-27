@@ -99,7 +99,7 @@ impl<'a> MDArray<'a> {
             // `num_dimensions` is `0`, we can safely return an empty vector
             // `GDALMDArrayGetDimensions` does not state that errors can occur
             if num_dimensions > 0 && c_dimensions.is_null() {
-                return Err(_last_null_pointer_err("GDALGroupGetDimensions"));
+                return Err(_last_null_pointer_err("GDALMDArrayGetDimensions"));
             }
 
             let dimensions_ref = std::slice::from_raw_parts_mut(c_dimensions, num_dimensions);
