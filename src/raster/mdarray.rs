@@ -91,34 +91,36 @@ impl<'a> MDArray<'a> {
     }
 
     pub fn dimensions(&self) -> Result<Vec<Dimension>> {
-        unsafe {
-            let mut num_dimensions: usize = 0;
-            let c_dimensions =
-                GDALMDArrayGetDimensions(self.c_mdarray, std::ptr::addr_of_mut!(num_dimensions));
+        let mut num_dimensions: usize = 0;
 
-            // `num_dimensions` is `0`, we can safely return an empty vector
-            // `GDALMDArrayGetDimensions` does not state that errors can occur
-            if num_dimensions > 0 && c_dimensions.is_null() {
-                return Err(_last_null_pointer_err("GDALMDArrayGetDimensions"));
-            }
+        let c_dimensions = unsafe {
+            GDALMDArrayGetDimensions(self.c_mdarray, std::ptr::addr_of_mut!(num_dimensions))
+        };
 
-            let dimensions_ref = std::slice::from_raw_parts_mut(c_dimensions, num_dimensions);
-
-            let mut dimensions: Vec<Dimension> = Vec::with_capacity(num_dimensions);
-
-            for c_dimension in dimensions_ref {
-                let dimension = Dimension::from_c_dimension(
-                    GroupOrArray::MDArray { _md_array: self },
-                    *c_dimension,
-                );
-                dimensions.push(dimension);
-            }
-
-            // only free the array, not the dimensions themselves
-            VSIFree(c_dimensions as *mut c_void);
-
-            Ok(dimensions)
+        // `num_dimensions` is `0`, we can safely return an empty vector
+        // `GDALMDArrayGetDimensions` does not state that errors can occur
+        if num_dimensions > 0 && c_dimensions.is_null() {
+            return Err(_last_null_pointer_err("GDALMDArrayGetDimensions"));
         }
+
+        let dimensions_ref =
+            unsafe { std::slice::from_raw_parts_mut(c_dimensions, num_dimensions) };
+
+        let mut dimensions: Vec<Dimension> = Vec::with_capacity(num_dimensions);
+
+        for c_dimension in dimensions_ref {
+            let dimension = unsafe {
+                Dimension::from_c_dimension(GroupOrArray::MDArray { _md_array: self }, *c_dimension)
+            };
+            dimensions.push(dimension);
+        }
+
+        // only free the array, not the dimensions themselves
+        unsafe {
+            VSIFree(c_dimensions as *mut c_void);
+        }
+
+        Ok(dimensions)
     }
 
     pub fn datatype(&self) -> ExtendedDataType {
