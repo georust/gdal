@@ -93,9 +93,7 @@ impl<'a> MDArray<'a> {
     pub fn dimensions(&self) -> Result<Vec<Dimension>> {
         let mut num_dimensions: usize = 0;
 
-        let c_dimensions = unsafe {
-            GDALMDArrayGetDimensions(self.c_mdarray, std::ptr::addr_of_mut!(num_dimensions))
-        };
+        let c_dimensions = unsafe { GDALMDArrayGetDimensions(self.c_mdarray, &mut num_dimensions) };
 
         // `num_dimensions` is `0`, we can safely return an empty vector
         // `GDALMDArrayGetDimensions` does not state that errors can occur
@@ -321,9 +319,8 @@ impl<'a> MDArray<'a> {
     pub fn no_data_value_as_double(&self) -> Option<f64> {
         let mut has_nodata = 0;
 
-        let no_data_value = unsafe {
-            GDALMDArrayGetNoDataValueAsDouble(self.c_mdarray, std::ptr::addr_of_mut!(has_nodata))
-        };
+        let no_data_value =
+            unsafe { GDALMDArrayGetNoDataValueAsDouble(self.c_mdarray, &mut has_nodata) };
 
         if has_nodata == 0 {
             None
@@ -457,11 +454,8 @@ impl<'a> Group<'a> {
     pub fn dimensions(&self, options: CslStringList) -> Result<Vec<Dimension>> {
         unsafe {
             let mut num_dimensions: usize = 0;
-            let c_dimensions = GDALGroupGetDimensions(
-                self.c_group,
-                std::ptr::addr_of_mut!(num_dimensions),
-                options.as_ptr(),
-            );
+            let c_dimensions =
+                GDALGroupGetDimensions(self.c_group, &mut num_dimensions, options.as_ptr());
 
             // `num_dimensions` is `0`, we can safely return an empty vector
             // `GDALGroupGetDimensions` does not state that errors can occur
@@ -596,10 +590,8 @@ impl Attribute {
         unsafe {
             let mut num_dimensions = 0;
 
-            let c_dimension_sizes = GDALAttributeGetDimensionsSize(
-                self.c_attribute,
-                std::ptr::addr_of_mut!(num_dimensions),
-            );
+            let c_dimension_sizes =
+                GDALAttributeGetDimensionsSize(self.c_attribute, &mut num_dimensions);
 
             let dimension_sizes = std::slice::from_raw_parts(c_dimension_sizes, num_dimensions)
                 .iter()
@@ -647,8 +639,7 @@ impl Attribute {
     pub fn read_as_i64_array(&self) -> Vec<i32> {
         unsafe {
             let mut array_len = 0;
-            let c_int_array =
-                GDALAttributeReadAsIntArray(self.c_attribute, std::ptr::addr_of_mut!(array_len));
+            let c_int_array = GDALAttributeReadAsIntArray(self.c_attribute, &mut array_len);
 
             let int_array = std::slice::from_raw_parts(c_int_array, array_len).to_vec();
 
@@ -665,8 +656,7 @@ impl Attribute {
     pub fn read_as_f64_array(&self) -> Vec<f64> {
         unsafe {
             let mut array_len = 0;
-            let c_int_array =
-                GDALAttributeReadAsDoubleArray(self.c_attribute, std::ptr::addr_of_mut!(array_len));
+            let c_int_array = GDALAttributeReadAsDoubleArray(self.c_attribute, &mut array_len);
 
             let float_array = std::slice::from_raw_parts(c_int_array, array_len).to_vec();
 
