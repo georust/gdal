@@ -63,6 +63,10 @@
 
   - <https://github.com/georust/gdal/pull/265>
 
+- Add methods to access raster masks and get raster mask flags. (`open_mask_band`, `create_mask_band`, and `mask_flags`).
+
+  - <https://github.com/georust/gdal/pull/285>
+
 - Remove `PartialEq` from `GdalError`
 
   - <https://github.com/georust/gdal/pull/286>
