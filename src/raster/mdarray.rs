@@ -7,14 +7,15 @@ use gdal_sys::{
     CPLErr, CSLDestroy, GDALAttributeGetDataType, GDALAttributeGetDimensionsSize, GDALAttributeH,
     GDALAttributeReadAsDouble, GDALAttributeReadAsDoubleArray, GDALAttributeReadAsInt,
     GDALAttributeReadAsIntArray, GDALAttributeReadAsString, GDALAttributeReadAsStringArray,
-    GDALAttributeRelease, GDALDataType, GDALDimensionGetIndexingVariable, GDALDimensionGetName,
-    GDALDimensionGetSize, GDALDimensionHS, GDALDimensionRelease, GDALExtendedDataTypeClass,
-    GDALExtendedDataTypeGetClass, GDALExtendedDataTypeGetNumericDataType, GDALExtendedDataTypeH,
-    GDALExtendedDataTypeRelease, GDALGroupGetAttribute, GDALGroupGetGroupNames,
-    GDALGroupGetMDArrayNames, GDALGroupGetName, GDALGroupH, GDALGroupOpenGroup,
-    GDALGroupOpenMDArray, GDALGroupRelease, GDALMDArrayGetAttribute, GDALMDArrayGetDataType,
-    GDALMDArrayGetDimensionCount, GDALMDArrayGetDimensions, GDALMDArrayGetNoDataValueAsDouble,
-    GDALMDArrayGetSpatialRef, GDALMDArrayGetTotalElementsCount, GDALMDArrayGetUnit, GDALMDArrayH,
+    GDALAttributeRelease, GDALDataType, GDALDatasetH, GDALDimensionGetIndexingVariable,
+    GDALDimensionGetName, GDALDimensionGetSize, GDALDimensionHS, GDALDimensionRelease,
+    GDALExtendedDataTypeClass, GDALExtendedDataTypeGetClass,
+    GDALExtendedDataTypeGetNumericDataType, GDALExtendedDataTypeH, GDALExtendedDataTypeRelease,
+    GDALGroupGetAttribute, GDALGroupGetGroupNames, GDALGroupGetMDArrayNames, GDALGroupGetName,
+    GDALGroupH, GDALGroupOpenGroup, GDALGroupOpenMDArray, GDALGroupRelease,
+    GDALMDArrayGetAttribute, GDALMDArrayGetDataType, GDALMDArrayGetDimensionCount,
+    GDALMDArrayGetDimensions, GDALMDArrayGetNoDataValueAsDouble, GDALMDArrayGetSpatialRef,
+    GDALMDArrayGetStatistics, GDALMDArrayGetTotalElementsCount, GDALMDArrayGetUnit, GDALMDArrayH,
     GDALMDArrayRelease, OSRDestroySpatialReference, VSIFree,
 };
 use libc::c_void;
@@ -33,6 +34,7 @@ use std::fmt::Debug;
 #[derive(Debug)]
 pub struct MDArray<'a> {
     c_mdarray: GDALMDArrayH,
+    c_dataset: GDALDatasetH,
     _parent: GroupOrDimension<'a>,
 }
 
@@ -58,6 +60,7 @@ impl<'a> MDArray<'a> {
     pub unsafe fn from_c_mdarray_and_group(_group: &'a Group, c_mdarray: GDALMDArrayH) -> Self {
         Self {
             c_mdarray,
+            c_dataset: _group._dataset.c_dataset(),
             _parent: GroupOrDimension::Group { _group },
         }
     }
@@ -72,6 +75,7 @@ impl<'a> MDArray<'a> {
     ) -> Self {
         Self {
             c_mdarray,
+            c_dataset: _dimension._md_array.c_dataset,
             _parent: GroupOrDimension::Dimension { _dimension },
         }
     }
@@ -341,6 +345,66 @@ impl<'a> MDArray<'a> {
             Ok(Attribute::from_c_attribute(c_attribute))
         }
     }
+
+    /// Fetch statistics.
+    ///
+    /// Returns the minimum, maximum, mean and standard deviation of all pixel values in this array.
+    ///
+    /// If `force` is `false` results will only be returned if it can be done quickly (i.e. without scanning the data).
+    /// If `force` is `false` and results cannot be returned efficiently, the method will return `None`.
+    ///
+    /// When cached statistics are not available, and `force` is `true`, ComputeStatistics() is called.
+    ///
+    /// Note that file formats using PAM (Persistent Auxiliary Metadata) services will generally cache statistics in the .aux.xml file allowing fast fetch after the first request.
+    ///
+    /// This methods is a wrapper for [`GDALMDArrayGetStatistics`](https://gdal.org/api/gdalmdarray_cpp.html#_CPPv4N11GDALMDArray13GetStatisticsEbbPdPdPdPdP7GUInt6416GDALProgressFuncPv).
+    ///
+    /// TODO: add option to pass progress callback (`pfnProgress`)
+    ///
+    pub fn get_statistics(
+        &self,
+        force: bool,
+        is_approx_ok: bool,
+    ) -> Result<Option<MdStatisticsAll>> {
+        let mut statistics = MdStatisticsAll {
+            min: 0.,
+            max: 0.,
+            mean: 0.,
+            std_dev: 0.,
+            valid_count: 0,
+        };
+
+        let rv = unsafe {
+            GDALMDArrayGetStatistics(
+                self.c_mdarray,
+                self.c_dataset,
+                libc::c_int::from(is_approx_ok),
+                libc::c_int::from(force),
+                &mut statistics.min,
+                &mut statistics.max,
+                &mut statistics.mean,
+                &mut statistics.std_dev,
+                &mut statistics.valid_count,
+                None,
+                std::ptr::null_mut(),
+            )
+        };
+
+        match CplErrType::from(rv) {
+            CplErrType::None => Ok(Some(statistics)),
+            CplErrType::Warning => Ok(None),
+            _ => Err(_last_cpl_err(rv)),
+        }
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub struct MdStatisticsAll {
+    pub min: f64,
+    pub max: f64,
+    pub mean: f64,
+    pub std_dev: f64,
+    pub valid_count: u64,
 }
 
 /// Represent a mdarray in a dataset
@@ -923,5 +987,39 @@ mod tests {
             .unwrap();
 
         assert_eq!(md_array.unit(), "K");
+    }
+
+    #[test]
+    fn test_stats() {
+        let dataset_options = DatasetOptions {
+            open_flags: GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER,
+            allowed_drivers: None,
+            open_options: None,
+            sibling_files: None,
+        };
+        let dataset = Dataset::open_ex("fixtures/byte_no_cf.nc", dataset_options).unwrap();
+        let root_group = dataset.root_group().unwrap();
+        let array_name = "Band1".to_string();
+        let options = CslStringList::new(); //Driver specific options determining how the array should be opened. Pass nullptr for default behavior.
+        let md_array = root_group.open_md_array(&array_name, options).unwrap();
+
+        assert!(md_array.get_statistics(false, true).unwrap().is_none());
+
+        assert_eq!(
+            md_array.get_statistics(true, true).unwrap().unwrap(),
+            MdStatisticsAll {
+                min: 74.0,
+                max: 255.0,
+                mean: 126.76500000000001,
+                std_dev: 22.928470838675654,
+                valid_count: 400,
+            }
+        );
+
+        // clean up aux file
+        drop(md_array);
+        drop(root_group);
+        drop(dataset);
+        std::fs::remove_file("fixtures/byte_no_cf.nc.aux.xml").unwrap();
     }
 }

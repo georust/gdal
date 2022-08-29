@@ -4,8 +4,9 @@ use crate::metadata::Metadata;
 use crate::raster::{GDALDataType, GdalType};
 use crate::utils::{_last_cpl_err, _last_null_pointer_err, _string};
 use gdal_sys::{
-    self, CPLErr, GDALColorEntry, GDALColorInterp, GDALColorTableH, GDALMajorObjectH,
-    GDALPaletteInterp, GDALRWFlag, GDALRasterBandH, GDALRasterIOExtraArg,
+    self, CPLErr, GDALColorEntry, GDALColorInterp, GDALColorTableH, GDALComputeRasterMinMax,
+    GDALGetRasterStatistics, GDALMajorObjectH, GDALPaletteInterp, GDALRWFlag, GDALRasterBandH,
+    GDALRasterIOExtraArg,
 };
 use libc::c_int;
 use std::ffi::CString;
@@ -564,6 +565,87 @@ impl<'a> RasterBand<'a> {
             Ok(mask_band)
         }
     }
+
+    /// Fetch image statistics.
+    ///
+    /// Returns the minimum, maximum, mean and standard deviation of all pixel values in this band.
+    /// If approximate statistics are sufficient, the `is_approx_ok` flag can be set to true in which case overviews, or a subset of image tiles may be used in computing the statistics.
+    ///
+    /// If `force` is `false` results will only be returned if it can be done quickly (i.e. without scanning the data).
+    /// If force` is `false` and results cannot be returned efficiently, the method will return `None`.
+    ///
+    /// Note that file formats using PAM (Persistent Auxiliary Metadata) services will generally cache statistics in the .pam file allowing fast fetch after the first request.
+    ///
+    /// This methods is a wrapper for [`GDALGetRasterStatistics`](https://gdal.org/api/gdalrasterband_cpp.html#_CPPv4N14GDALRasterBand13GetStatisticsEiiPdPdPdPd).
+    ///
+    pub fn get_statistics(&self, force: bool, is_approx_ok: bool) -> Result<Option<StatisticsAll>> {
+        let mut statistics = StatisticsAll {
+            min: 0.,
+            max: 0.,
+            mean: 0.,
+            std_dev: 0.,
+        };
+
+        let rv = unsafe {
+            GDALGetRasterStatistics(
+                self.c_rasterband,
+                libc::c_int::from(is_approx_ok),
+                libc::c_int::from(force),
+                &mut statistics.min,
+                &mut statistics.max,
+                &mut statistics.mean,
+                &mut statistics.std_dev,
+            )
+        };
+
+        match CplErrType::from(rv) {
+            CplErrType::None => Ok(Some(statistics)),
+            CplErrType::Warning => Ok(None),
+            _ => Err(_last_cpl_err(rv)),
+        }
+    }
+
+    /// Compute the min/max values for a band.
+    ///
+    /// If `is_approx_ok` is `true`, then the band’s GetMinimum()/GetMaximum() will be trusted.
+    /// If it doesn’t work, a subsample of blocks will be read to get an approximate min/max.
+    /// If the band has a nodata value it will be excluded from the minimum and maximum.
+    ///
+    /// If `is_approx_ok` is `false`, then all pixels will be read and used to compute an exact range.
+    ///
+    /// This methods is a wrapper for [`GDALComputeRasterMinMax`](https://gdal.org/api/gdalrasterband_cpp.html#_CPPv4N14GDALRasterBand19ComputeRasterMinMaxEiPd).
+    ///
+    pub fn compute_raster_min_max(&self, is_approx_ok: bool) -> Result<StatisticsMinMax> {
+        let mut min_max = [0., 0.];
+
+        // TODO: The C++ method actually returns a CPLErr, but the C interface does not expose it.
+        unsafe {
+            GDALComputeRasterMinMax(
+                self.c_rasterband,
+                libc::c_int::from(is_approx_ok),
+                &mut min_max as *mut f64,
+            )
+        };
+
+        Ok(StatisticsMinMax {
+            min: min_max[0],
+            max: min_max[1],
+        })
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub struct StatisticsMinMax {
+    pub min: f64,
+    pub max: f64,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct StatisticsAll {
+    pub min: f64,
+    pub max: f64,
+    pub mean: f64,
+    pub std_dev: f64,
 }
 
 impl<'a> MajorObject for RasterBand<'a> {
