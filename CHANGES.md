@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Add prebuild bindings for GDAL 3.5
+
   - <https://github.com/georust/gdal/pull/277>
 
 - **Breaking**: Add `gdal::vector::OwnedLayer`, `gdal::vector::LayerAccess` and `gdal::vector::layer::OwnedFeatureIterator`. This requires importing `gdal::vector::LayerAccess` for using most vector layer methods.
@@ -74,6 +75,10 @@
 - Prevent SIGGEGV when reading a string array on an MD Array that is not of type string.
 
   - <https://github.com/georust/gdal/pull/284>
+
+- Added wrapper methods for `GDALGetRasterStatistics`, `GDALComputeRasterMinMax` and `GDALMDArrayGetStatistics`.
+
+  - <https://github.com/georust/gdal/pull/292>
 
 ## 0.12
 
