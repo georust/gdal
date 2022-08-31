@@ -694,6 +694,26 @@ fn test_set_rasterband_color_interp() {
 }
 
 #[test]
+fn test_set_rasterband_scale() {
+    let driver = Driver::get_by_name("MEM").unwrap();
+    let dataset = driver.create("", 1, 1, 1).unwrap();
+    let mut rasterband = dataset.rasterband(1).unwrap();
+    let scale = 3.14159;
+    rasterband.set_scale(scale).unwrap();
+    assert_eq!(rasterband.scale().unwrap(), scale);
+}
+
+#[test]
+fn test_set_rasterband_offset() {
+    let driver = Driver::get_by_name("MEM").unwrap();
+    let dataset = driver.create("", 1, 1, 1).unwrap();
+    let mut rasterband = dataset.rasterband(1).unwrap();
+    let offset = -123.456;
+    rasterband.set_offset(offset).unwrap();
+    assert_eq!(rasterband.offset().unwrap(), offset);
+}
+
+#[test]
 fn test_color_interp_names() {
     assert_eq!(ColorInterpretation::AlphaBand.name(), "Alpha");
     assert_eq!(
