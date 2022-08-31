@@ -411,6 +411,11 @@ impl Geometry {
             gdal_sys::OGR_G_AssignSpatialReference(self.c_geometry(), spatial_ref.to_c_hsrs())
         };
     }
+
+    /// Create a copy of self as a `geo-types` geometry.
+    pub fn to_geo(&self) -> Result<geo_types::Geometry<f64>> {
+        self.try_into()
+    }
 }
 
 impl Drop for Geometry {
