@@ -698,7 +698,7 @@ fn test_set_rasterband_scale() {
     let driver = Driver::get_by_name("MEM").unwrap();
     let dataset = driver.create("", 1, 1, 1).unwrap();
     let mut rasterband = dataset.rasterband(1).unwrap();
-    let scale = 3.14159;
+    let scale = 1234.5678;
     rasterband.set_scale(scale).unwrap();
     assert_eq!(rasterband.scale().unwrap(), scale);
 }
