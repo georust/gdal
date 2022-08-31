@@ -75,6 +75,11 @@
 
   - <https://github.com/georust/gdal/pull/284>
 
+
+- Added `Geometry::to_geo` method for GDAL to geo-types Geometry conversions.
+
+  - <https://github.com/georust/gdal/pull/295>  
+
 ## 0.12
 
 - Bump Rust edition to 2021
