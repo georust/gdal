@@ -1,3 +1,9 @@
+//! GDAL Virtual File System Library Functions
+//!
+//! This module provides safe access to a subset of the [GDAL VSI Functions](https://gdal.org/doxygen/cpl__vsi_8h.html).
+//! See [GDAL Virtual File Systems document](https://gdal.org/user/virtual_file_systems.html) for details.
+//!
+
 use std::marker::PhantomData;
 use std::mem::ManuallyDrop;
 use std::path::{Path, PathBuf};
