@@ -76,6 +76,10 @@
 
   - <https://github.com/georust/gdal/pull/284>
 
+- Add `Rasterband::set_scale` and `Rasterband::set_offset` methods
+
+  - <https://github.com/georust/gdal/pull/294>
+
 - Test that `GdalError` is `Send`
 
   - <https://github.com/georust/gdal/pull/293>
