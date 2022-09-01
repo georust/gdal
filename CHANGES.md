@@ -64,6 +64,10 @@
 
   - <https://github.com/georust/gdal/pull/265>
 
+- Add methods to access raster masks and get raster mask flags. (`open_mask_band`, `create_mask_band`, and `mask_flags`).
+
+  - <https://github.com/georust/gdal/pull/285>
+
 - Remove `PartialEq` from `GdalError`
 
   - <https://github.com/georust/gdal/pull/286>
@@ -71,6 +75,10 @@
 - Prevent SIGGEGV when reading a string array on an MD Array that is not of type string.
 
   - <https://github.com/georust/gdal/pull/284>
+
+- Add `Rasterband::set_scale` and `Rasterband::set_offset` methods
+
+  - <https://github.com/georust/gdal/pull/294>
 
 - Allow reading `Dimension`s from `Group`s in multimensional `Dataset`s.
 

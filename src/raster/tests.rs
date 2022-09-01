@@ -407,6 +407,38 @@ fn test_read_raster_as() {
 }
 
 #[test]
+fn mask_flags() {
+    let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
+    let rb = dataset.rasterband(1).unwrap();
+    let mask_flags = rb.mask_flags().unwrap();
+    assert!(!mask_flags.is_nodata());
+    assert!(!mask_flags.is_alpha());
+    assert!(!mask_flags.is_per_dataset());
+    assert!(mask_flags.is_all_valid());
+}
+
+#[test]
+fn open_mask_band() {
+    let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
+    let rb = dataset.rasterband(1).unwrap();
+    let mb = rb.open_mask_band().unwrap();
+    let mask_values = mb.read_as::<u8>((20, 30), (2, 3), (2, 3), None).unwrap();
+    assert_eq!(mask_values.data, [255u8; 6])
+}
+
+#[test]
+fn create_mask_band() {
+    let driver = Driver::get_by_name("MEM").unwrap();
+    let dataset = driver.create("", 20, 10, 1).unwrap();
+    let mut rb = dataset.rasterband(1).unwrap();
+    rb.create_mask_band(false).unwrap();
+
+    let mb = rb.open_mask_band().unwrap();
+    let mask_values = mb.read_as::<u8>((0, 0), (20, 10), (20, 10), None).unwrap();
+    assert_eq!(mask_values.data, [0; 200])
+}
+
+#[test]
 #[cfg(feature = "ndarray")]
 fn test_read_raster_as_array() {
     let band_index = 1;
@@ -659,6 +691,26 @@ fn test_set_rasterband_color_interp() {
         .unwrap();
     let band_interp = rasterband.color_interpretation();
     assert_eq!(band_interp, ColorInterpretation::AlphaBand);
+}
+
+#[test]
+fn test_set_rasterband_scale() {
+    let driver = Driver::get_by_name("MEM").unwrap();
+    let dataset = driver.create("", 1, 1, 1).unwrap();
+    let mut rasterband = dataset.rasterband(1).unwrap();
+    let scale = 1234.5678;
+    rasterband.set_scale(scale).unwrap();
+    assert_eq!(rasterband.scale().unwrap(), scale);
+}
+
+#[test]
+fn test_set_rasterband_offset() {
+    let driver = Driver::get_by_name("MEM").unwrap();
+    let dataset = driver.create("", 1, 1, 1).unwrap();
+    let mut rasterband = dataset.rasterband(1).unwrap();
+    let offset = -123.456;
+    rasterband.set_offset(offset).unwrap();
+    assert_eq!(rasterband.offset().unwrap(), offset);
 }
 
 #[test]
