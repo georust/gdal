@@ -473,6 +473,15 @@ impl<'a> RasterBand<'a> {
         None
     }
 
+    /// Set the scale for this band.
+    pub fn set_scale(&mut self, scale: f64) -> Result<()> {
+        let rv = unsafe { gdal_sys::GDALSetRasterScale(self.c_rasterband, scale) };
+        if rv != CPLErr::CE_None {
+            return Err(_last_cpl_err(rv));
+        }
+        Ok(())
+    }
+
     /// Returns the offset of this band if set.
     pub fn offset(&self) -> Option<f64> {
         let mut pb_success = 1;
@@ -481,6 +490,15 @@ impl<'a> RasterBand<'a> {
             return Some(offset as f64);
         }
         None
+    }
+
+    /// Set the offset for this band.
+    pub fn set_offset(&mut self, offset: f64) -> Result<()> {
+        let rv = unsafe { gdal_sys::GDALSetRasterOffset(self.c_rasterband, offset) };
+        if rv != CPLErr::CE_None {
+            return Err(_last_cpl_err(rv));
+        }
+        Ok(())
     }
 
     /// Get actual block size (at the edges) when block size

@@ -76,6 +76,10 @@
 
   - <https://github.com/georust/gdal/pull/284>
 
+- Add `Rasterband::set_scale` and `Rasterband::set_offset` methods
+
+  - <https://github.com/georust/gdal/pull/294>
+
 - Added wrapper methods for `GDALGetRasterStatistics`, `GDALComputeRasterMinMax` and `GDALMDArrayGetStatistics`.
 
   - <https://github.com/georust/gdal/pull/292>
