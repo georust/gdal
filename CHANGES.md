@@ -75,10 +75,13 @@
 
   - <https://github.com/georust/gdal/pull/284>
 
-
 - Added `Geometry::to_geo` method for GDAL to geo-types Geometry conversions.
 
   - <https://github.com/georust/gdal/pull/295>  
+
+- Add `Rasterband::set_scale` and `Rasterband::set_offset` methods
+
+  - <https://github.com/georust/gdal/pull/294>
 
 ## 0.12
 
