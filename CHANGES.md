@@ -83,6 +83,10 @@
 - Added program wrapper for `GDALMultiDimTranslate`
 
   - <https://github.com/georust/gdal/pull/289>
+  
+- Test that `GdalError` is `Send`
+
+  - <https://github.com/georust/gdal/pull/293>
 
 ## 0.12
 
