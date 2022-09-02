@@ -1110,7 +1110,7 @@ mod tests {
         let dataset = Dataset::open_ex("fixtures/byte_no_cf.nc", dataset_options).unwrap();
         let root_group = dataset.root_group().unwrap();
         let array_name = "Band1".to_string();
-        let options = CslStringList::new(); //Driver specific options determining how the array should be opened. Pass nullptr for default behavior.
+        let options = CslStringList::new(); //Driver specific options determining how the array should be opened. Pass an empty one for the default behavior.
         let md_array = root_group.open_md_array(&array_name, options).unwrap();
 
         assert!(md_array.get_statistics(false, true).unwrap().is_none());
