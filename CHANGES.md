@@ -92,6 +92,10 @@
 
   - <https://github.com/georust/gdal/pull/291>
 
+- Added wrapper methods for `GDALGetRasterStatistics`, `GDALComputeRasterMinMax` and `GDALMDArrayGetStatistics`.
+
+  - <https://github.com/georust/gdal/pull/292>
+
 ## 0.12
 
 - Bump Rust edition to 2021

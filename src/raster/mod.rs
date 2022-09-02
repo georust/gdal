@@ -8,10 +8,13 @@ mod types;
 mod warp;
 
 #[cfg(all(major_ge_3, minor_ge_1))]
-pub use mdarray::{Attribute, Dimension, ExtendedDataType, ExtendedDataTypeClass, Group, MDArray};
+pub use mdarray::{
+    Attribute, Dimension, ExtendedDataType, ExtendedDataTypeClass, Group, MDArray, MdStatisticsAll,
+};
 pub use rasterband::{
     Buffer, ByteBuffer, CmykEntry, ColorEntry, ColorInterpretation, ColorTable, GrayEntry,
-    HlsEntry, PaletteInterpretation, RasterBand, ResampleAlg, RgbaEntry,
+    HlsEntry, PaletteInterpretation, RasterBand, ResampleAlg, RgbaEntry, StatisticsAll,
+    StatisticsMinMax,
 };
 pub use rasterize::{rasterize, BurnSource, MergeAlgorithm, OptimizeMode, RasterizeOptions};
 pub use types::{GDALDataType, GdalType};
