@@ -782,51 +782,14 @@ impl Attribute {
 
 #[cfg(test)]
 mod tests {
-    use std::path::{Path, PathBuf};
 
     use super::*;
 
-    use crate::{Dataset, DatasetOptions, GdalOpenFlags};
-
-    /// Create a copy of the test file in a temporary directory
-    /// and returns a tuple of the temp dir (for clean-up) as well as the path to the file.
-    /// We can remove this when <https://github.com/OSGeo/gdal/issues/6253> is resolved.
-    struct TempDataset {
-        _temp_dir: tempfile::TempDir,
-        temp_path: PathBuf,
-    }
-
-    impl TempDataset {
-        pub fn fixture(name: &str) -> Self {
-            let path = std::path::Path::new(file!())
-                .parent()
-                .unwrap()
-                .parent()
-                .unwrap()
-                .parent()
-                .unwrap()
-                .join("fixtures")
-                .join(name);
-
-            let temp_dir = tempfile::tempdir().unwrap();
-            let temp_path = temp_dir.path().join(path.file_name().unwrap());
-
-            std::fs::copy(&path, &temp_path).unwrap();
-
-            Self {
-                _temp_dir: temp_dir,
-                temp_path,
-            }
-        }
-
-        pub fn path(&self) -> &Path {
-            &self.temp_path
-        }
-    }
+    use crate::{test_utils::TempFixture, Dataset, DatasetOptions, GdalOpenFlags};
 
     #[test]
     fn test_root_group_name() {
-        let fixture = TempDataset::fixture("byte_no_cf.nc");
+        let fixture = TempFixture::fixture("byte_no_cf.nc");
 
         let options = DatasetOptions {
             open_flags: GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER,
@@ -834,7 +797,7 @@ mod tests {
             open_options: None,
             sibling_files: None,
         };
-        let dataset = Dataset::open_ex(fixture.path(), options).unwrap();
+        let dataset = Dataset::open_ex(&fixture, options).unwrap();
         let root_group = dataset.root_group().unwrap();
         let root_group_name = root_group.name();
         assert_eq!(root_group_name, "/");
@@ -842,7 +805,7 @@ mod tests {
 
     #[test]
     fn test_array_names() {
-        let fixture = TempDataset::fixture("byte_no_cf.nc");
+        let fixture = TempFixture::fixture("byte_no_cf.nc");
 
         let dataset_options = DatasetOptions {
             open_flags: GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER,
@@ -850,7 +813,7 @@ mod tests {
             open_options: None,
             sibling_files: None,
         };
-        let dataset = Dataset::open_ex(fixture.path(), dataset_options).unwrap();
+        let dataset = Dataset::open_ex(&fixture, dataset_options).unwrap();
         let root_group = dataset.root_group().unwrap();
         let options = CslStringList::new(); //Driver specific options determining how groups should be retrieved. Pass nullptr for default behavior.
         let array_names = root_group.array_names(options);
@@ -859,7 +822,7 @@ mod tests {
 
     #[test]
     fn test_n_dimension() {
-        let fixture = TempDataset::fixture("byte_no_cf.nc");
+        let fixture = TempFixture::fixture("byte_no_cf.nc");
 
         let dataset_options = DatasetOptions {
             open_flags: GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER,
@@ -867,7 +830,7 @@ mod tests {
             open_options: None,
             sibling_files: None,
         };
-        let dataset = Dataset::open_ex(fixture.path(), dataset_options).unwrap();
+        let dataset = Dataset::open_ex(&fixture, dataset_options).unwrap();
         let root_group = dataset.root_group().unwrap();
         let array_name = "Band1".to_string();
         let options = CslStringList::new(); //Driver specific options determining how the array should be opened. Pass nullptr for default behavior.
@@ -878,7 +841,7 @@ mod tests {
 
     #[test]
     fn test_n_elements() {
-        let fixture = TempDataset::fixture("byte_no_cf.nc");
+        let fixture = TempFixture::fixture("byte_no_cf.nc");
 
         let dataset_options = DatasetOptions {
             open_flags: GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER,
@@ -886,7 +849,7 @@ mod tests {
             open_options: None,
             sibling_files: None,
         };
-        let dataset = Dataset::open_ex(fixture.path(), dataset_options).unwrap();
+        let dataset = Dataset::open_ex(&fixture, dataset_options).unwrap();
         let root_group = dataset.root_group().unwrap();
         let array_name = "Band1".to_string();
         let options = CslStringList::new(); //Driver specific options determining how the array should be opened. Pass nullptr for default behavior.
@@ -897,7 +860,7 @@ mod tests {
 
     #[test]
     fn test_dimension_name() {
-        let fixture = TempDataset::fixture("byte_no_cf.nc");
+        let fixture = TempFixture::fixture("byte_no_cf.nc");
 
         let dataset_options = DatasetOptions {
             open_flags: GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER,
@@ -905,7 +868,7 @@ mod tests {
             open_options: None,
             sibling_files: None,
         };
-        let dataset = Dataset::open_ex(fixture.path(), dataset_options).unwrap();
+        let dataset = Dataset::open_ex(&fixture, dataset_options).unwrap();
         let root_group = dataset.root_group().unwrap();
 
         // group dimensions
@@ -931,7 +894,7 @@ mod tests {
 
     #[test]
     fn test_dimension_size() {
-        let fixture = TempDataset::fixture("byte_no_cf.nc");
+        let fixture = TempFixture::fixture("byte_no_cf.nc");
 
         let dataset_options = DatasetOptions {
             open_flags: GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER,
@@ -939,7 +902,7 @@ mod tests {
             open_options: None,
             sibling_files: None,
         };
-        let dataset = Dataset::open_ex(fixture.path(), dataset_options).unwrap();
+        let dataset = Dataset::open_ex(&fixture, dataset_options).unwrap();
         let root_group = dataset.root_group().unwrap();
         let array_name = "Band1".to_string();
         let options = CslStringList::new(); //Driver specific options determining how the array should be opened. Pass nullptr for default behavior.
@@ -954,7 +917,7 @@ mod tests {
 
     #[test]
     fn test_read_data() {
-        let fixture = TempDataset::fixture("byte_no_cf.nc");
+        let fixture = TempFixture::fixture("byte_no_cf.nc");
 
         let dataset_options = DatasetOptions {
             open_flags: GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER,
@@ -962,7 +925,7 @@ mod tests {
             open_options: None,
             sibling_files: None,
         };
-        let dataset = Dataset::open_ex(fixture.path(), dataset_options).unwrap();
+        let dataset = Dataset::open_ex(&fixture, dataset_options).unwrap();
 
         let root_group = dataset.root_group().unwrap();
         let md_array = root_group
@@ -976,7 +939,7 @@ mod tests {
 
     #[test]
     fn test_read_string_array() {
-        let fixture = TempDataset::fixture("alldatatypes.nc");
+        let fixture = TempFixture::fixture("alldatatypes.nc");
 
         let dataset_options = DatasetOptions {
             open_flags: GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER,
@@ -984,7 +947,7 @@ mod tests {
             open_options: None,
             sibling_files: None,
         };
-        let dataset = Dataset::open_ex(fixture.path(), dataset_options).unwrap();
+        let dataset = Dataset::open_ex(&fixture, dataset_options).unwrap();
 
         let root_group = dataset.root_group().unwrap();
 
@@ -1004,7 +967,7 @@ mod tests {
 
     #[test]
     fn test_datatype() {
-        let fixture = TempDataset::fixture("byte_no_cf.nc");
+        let fixture = TempFixture::fixture("byte_no_cf.nc");
 
         let dataset_options = DatasetOptions {
             open_flags: GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER,
@@ -1012,7 +975,7 @@ mod tests {
             open_options: None,
             sibling_files: None,
         };
-        let dataset = Dataset::open_ex(fixture.path(), dataset_options).unwrap();
+        let dataset = Dataset::open_ex(&fixture, dataset_options).unwrap();
 
         let root_group = dataset.root_group().unwrap();
 
@@ -1029,7 +992,7 @@ mod tests {
 
     #[test]
     fn test_spatial_ref() {
-        let fixture = TempDataset::fixture("byte_no_cf.nc");
+        let fixture = TempFixture::fixture("byte_no_cf.nc");
 
         let dataset_options = DatasetOptions {
             open_flags: GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER,
@@ -1037,7 +1000,7 @@ mod tests {
             open_options: None,
             sibling_files: None,
         };
-        let dataset = Dataset::open_ex(fixture.path(), dataset_options).unwrap();
+        let dataset = Dataset::open_ex(&fixture, dataset_options).unwrap();
 
         let root_group = dataset.root_group().unwrap();
         let md_array = root_group
@@ -1053,7 +1016,7 @@ mod tests {
 
     #[test]
     fn test_no_data_value() {
-        let fixture = TempDataset::fixture("byte_no_cf.nc");
+        let fixture = TempFixture::fixture("byte_no_cf.nc");
 
         let dataset_options = DatasetOptions {
             open_flags: GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER,
@@ -1061,7 +1024,7 @@ mod tests {
             open_options: None,
             sibling_files: None,
         };
-        let dataset = Dataset::open_ex(fixture.path(), dataset_options).unwrap();
+        let dataset = Dataset::open_ex(&fixture, dataset_options).unwrap();
 
         let root_group = dataset.root_group().unwrap();
         let md_array = root_group
@@ -1073,7 +1036,7 @@ mod tests {
 
     #[test]
     fn test_attributes() {
-        let fixture = TempDataset::fixture("cf_nasa_4326.nc");
+        let fixture = TempFixture::fixture("cf_nasa_4326.nc");
 
         let dataset_options = DatasetOptions {
             open_flags: GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER,
@@ -1081,7 +1044,7 @@ mod tests {
             open_options: None,
             sibling_files: None,
         };
-        let dataset = Dataset::open_ex(fixture.path(), dataset_options).unwrap();
+        let dataset = Dataset::open_ex(&fixture, dataset_options).unwrap();
 
         let root_group = dataset.root_group().unwrap();
 
@@ -1126,7 +1089,7 @@ mod tests {
 
     #[test]
     fn test_unit() {
-        let fixture = TempDataset::fixture("cf_nasa_4326.nc");
+        let fixture = TempFixture::fixture("cf_nasa_4326.nc");
 
         let dataset_options = DatasetOptions {
             open_flags: GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER,
@@ -1134,7 +1097,7 @@ mod tests {
             open_options: None,
             sibling_files: None,
         };
-        let dataset = Dataset::open_ex(fixture.path(), dataset_options).unwrap();
+        let dataset = Dataset::open_ex(&fixture, dataset_options).unwrap();
 
         let root_group = dataset.root_group().unwrap();
 
@@ -1165,7 +1128,7 @@ mod tests {
 
     #[test]
     fn test_stats() {
-        let fixture = TempDataset::fixture("byte_no_cf.nc");
+        let fixture = TempFixture::fixture("byte_no_cf.nc");
 
         let dataset_options = DatasetOptions {
             open_flags: GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER,
@@ -1173,7 +1136,7 @@ mod tests {
             open_options: None,
             sibling_files: None,
         };
-        let dataset = Dataset::open_ex(fixture.path(), dataset_options).unwrap();
+        let dataset = Dataset::open_ex(&fixture, dataset_options).unwrap();
         let root_group = dataset.root_group().unwrap();
         let array_name = "Band1".to_string();
         let options = CslStringList::new(); //Driver specific options determining how the array should be opened. Pass nullptr for default behavior.

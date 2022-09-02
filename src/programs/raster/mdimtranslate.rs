@@ -227,51 +227,14 @@ fn _multi_dim_translate(
 
 #[cfg(test)]
 mod tests {
+
     use super::*;
 
-    use crate::{DatasetOptions, Driver, GdalOpenFlags};
-
-    /// Create a copy of the test file in a temporary directory
-    /// and returns a tuple of the temp dir (for clean-up) as well as the path to the file.
-    /// We can remove this when <https://github.com/OSGeo/gdal/issues/6253> is resolved.
-    struct TempDataset {
-        _temp_dir: tempfile::TempDir,
-        temp_path: PathBuf,
-    }
-
-    impl TempDataset {
-        pub fn fixture(name: &str) -> Self {
-            let path = std::path::Path::new(file!())
-                .parent()
-                .unwrap()
-                .parent()
-                .unwrap()
-                .parent()
-                .unwrap()
-                .parent()
-                .unwrap()
-                .join("fixtures")
-                .join(name);
-
-            let temp_dir = tempfile::tempdir().unwrap();
-            let temp_path = temp_dir.path().join(path.file_name().unwrap());
-
-            std::fs::copy(&path, &temp_path).unwrap();
-
-            Self {
-                _temp_dir: temp_dir,
-                temp_path,
-            }
-        }
-
-        pub fn path(&self) -> &Path {
-            &self.temp_path
-        }
-    }
+    use crate::{test_utils::TempFixture, DatasetOptions, Driver, GdalOpenFlags};
 
     #[test]
     fn test_build_tiff_from_path() {
-        let fixture = TempDataset::fixture("cf_nasa_4326.nc");
+        let fixture = TempFixture::fixture("cf_nasa_4326.nc");
 
         let dataset_options = DatasetOptions {
             open_flags: GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER,
@@ -279,7 +242,7 @@ mod tests {
             open_options: None,
             sibling_files: None,
         };
-        let dataset = Dataset::open_ex(fixture.path(), dataset_options).unwrap();
+        let dataset = Dataset::open_ex(&fixture, dataset_options).unwrap();
 
         let mem_file_path = "/vsimem/2d3e9124-a7a0-413e-97b5-e79d46e50ff8";
 
@@ -303,7 +266,7 @@ mod tests {
 
     #[test]
     fn test_build_tiff_from_dataset() {
-        let fixture = TempDataset::fixture("cf_nasa_4326.nc");
+        let fixture = TempFixture::fixture("cf_nasa_4326.nc");
 
         let dataset_options = DatasetOptions {
             open_flags: GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER,
@@ -311,7 +274,7 @@ mod tests {
             open_options: None,
             sibling_files: None,
         };
-        let dataset = Dataset::open_ex(fixture.path(), dataset_options).unwrap();
+        let dataset = Dataset::open_ex(&fixture, dataset_options).unwrap();
 
         let driver = Driver::get_by_name("MEM").unwrap();
         let output_dataset = driver.create("", 5, 7, 1).unwrap();
