@@ -227,19 +227,22 @@ fn _multi_dim_translate(
 
 #[cfg(test)]
 mod tests {
+
     use super::*;
 
-    use crate::{DatasetOptions, Driver, GdalOpenFlags};
+    use crate::{test_utils::TempFixture, DatasetOptions, Driver, GdalOpenFlags};
 
     #[test]
     fn test_build_tiff_from_path() {
+        let fixture = TempFixture::fixture("cf_nasa_4326.nc");
+
         let dataset_options = DatasetOptions {
             open_flags: GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER,
             allowed_drivers: None,
             open_options: None,
             sibling_files: None,
         };
-        let dataset = Dataset::open_ex("fixtures/cf_nasa_4326.nc", dataset_options).unwrap();
+        let dataset = Dataset::open_ex(&fixture, dataset_options).unwrap();
 
         let mem_file_path = "/vsimem/2d3e9124-a7a0-413e-97b5-e79d46e50ff8";
 
@@ -263,13 +266,15 @@ mod tests {
 
     #[test]
     fn test_build_tiff_from_dataset() {
+        let fixture = TempFixture::fixture("cf_nasa_4326.nc");
+
         let dataset_options = DatasetOptions {
             open_flags: GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER,
             allowed_drivers: None,
             open_options: None,
             sibling_files: None,
         };
-        let dataset = Dataset::open_ex("fixtures/cf_nasa_4326.nc", dataset_options).unwrap();
+        let dataset = Dataset::open_ex(&fixture, dataset_options).unwrap();
 
         let driver = Driver::get_by_name("MEM").unwrap();
         let output_dataset = driver.create("", 5, 7, 1).unwrap();

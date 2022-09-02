@@ -96,6 +96,10 @@
 
   - <https://github.com/georust/gdal/pull/292>
 
+- Added a workaround in multi-dim tests to not access files multiple times
+
+  - <https://github.com/georust/gdal/pull/302>
+
 ## 0.12
 
 - Bump Rust edition to 2021

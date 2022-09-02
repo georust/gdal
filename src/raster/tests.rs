@@ -4,6 +4,7 @@ use crate::raster::rasterband::ResampleAlg;
 use crate::raster::{
     ByteBuffer, ColorInterpretation, RasterCreationOption, StatisticsAll, StatisticsMinMax,
 };
+use crate::test_utils::TempFixture;
 use crate::vsi::unlink_mem_file;
 use crate::Driver;
 use gdal_sys::GDALDataType;
@@ -806,7 +807,9 @@ fn test_color_table() {
 
 #[test]
 fn test_raster_stats() {
-    let dataset = Dataset::open(fixture!("tinymarble.tif")).unwrap();
+    let fixture = TempFixture::fixture("tinymarble.tif");
+
+    let dataset = Dataset::open(&fixture).unwrap();
     let rb = dataset.rasterband(1).unwrap();
 
     assert!(rb.get_statistics(false, false).unwrap().is_none());
@@ -828,8 +831,4 @@ fn test_raster_stats() {
             max: 255.0,
         }
     );
-
-    // clean up aux file
-    drop(dataset);
-    std::fs::remove_file(fixture!("tinymarble.tif.aux.xml")).unwrap();
 }
