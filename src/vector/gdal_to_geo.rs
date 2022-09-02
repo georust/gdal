@@ -114,6 +114,6 @@ impl TryFrom<&Geometry> for geo_types::Geometry<f64> {
 impl TryFrom<Geometry> for geo_types::Geometry<f64> {
     type Error = GdalError;
     fn try_from(value: Geometry) -> Result<Self, Self::Error> {
-        TryFrom::<&Geometry>::try_from(&value)
+        Self::try_from(&value)
     }
 }
