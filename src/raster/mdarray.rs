@@ -7,15 +7,17 @@ use gdal_sys::{
     CPLErr, CSLDestroy, GDALAttributeGetDataType, GDALAttributeGetDimensionsSize, GDALAttributeH,
     GDALAttributeReadAsDouble, GDALAttributeReadAsDoubleArray, GDALAttributeReadAsInt,
     GDALAttributeReadAsIntArray, GDALAttributeReadAsString, GDALAttributeReadAsStringArray,
-    GDALAttributeRelease, GDALDataType, GDALDimensionGetIndexingVariable, GDALDimensionGetName,
-    GDALDimensionGetSize, GDALDimensionHS, GDALDimensionRelease, GDALExtendedDataTypeClass,
-    GDALExtendedDataTypeGetClass, GDALExtendedDataTypeGetNumericDataType, GDALExtendedDataTypeH,
-    GDALExtendedDataTypeRelease, GDALGroupGetAttribute, GDALGroupGetGroupNames,
-    GDALGroupGetMDArrayNames, GDALGroupGetName, GDALGroupH, GDALGroupOpenGroup,
-    GDALGroupOpenMDArray, GDALGroupRelease, GDALMDArrayGetAttribute, GDALMDArrayGetDataType,
-    GDALMDArrayGetDimensionCount, GDALMDArrayGetDimensions, GDALMDArrayGetNoDataValueAsDouble,
-    GDALMDArrayGetSpatialRef, GDALMDArrayGetTotalElementsCount, GDALMDArrayGetUnit, GDALMDArrayH,
-    GDALMDArrayRelease, OSRDestroySpatialReference, VSIFree,
+    GDALAttributeRelease, GDALDataType, GDALDatasetH, GDALDimensionGetIndexingVariable,
+    GDALDimensionGetName, GDALDimensionGetSize, GDALDimensionHS, GDALDimensionRelease,
+    GDALExtendedDataTypeClass, GDALExtendedDataTypeCreate, GDALExtendedDataTypeGetClass,
+    GDALExtendedDataTypeGetName, GDALExtendedDataTypeGetNumericDataType, GDALExtendedDataTypeH,
+    GDALExtendedDataTypeRelease, GDALGroupGetAttribute, GDALGroupGetDimensions,
+    GDALGroupGetGroupNames, GDALGroupGetMDArrayNames, GDALGroupGetName, GDALGroupH,
+    GDALGroupOpenGroup, GDALGroupOpenMDArray, GDALGroupRelease, GDALMDArrayGetAttribute,
+    GDALMDArrayGetDataType, GDALMDArrayGetDimensionCount, GDALMDArrayGetDimensions,
+    GDALMDArrayGetNoDataValueAsDouble, GDALMDArrayGetSpatialRef, GDALMDArrayGetStatistics,
+    GDALMDArrayGetTotalElementsCount, GDALMDArrayGetUnit, GDALMDArrayH, GDALMDArrayRelease,
+    OSRDestroySpatialReference, VSIFree,
 };
 use libc::c_void;
 use std::ffi::CString;
@@ -23,7 +25,7 @@ use std::os::raw::c_char;
 
 #[cfg(feature = "ndarray")]
 use ndarray::{ArrayD, IxDyn};
-use std::fmt::Debug;
+use std::fmt::{Debug, Display};
 
 /// Represent an MDArray in a Group
 ///
@@ -33,13 +35,20 @@ use std::fmt::Debug;
 #[derive(Debug)]
 pub struct MDArray<'a> {
     c_mdarray: GDALMDArrayH,
+    c_dataset: GDALDatasetH,
     _parent: GroupOrDimension<'a>,
 }
 
 #[derive(Debug)]
-enum GroupOrDimension<'a> {
+pub enum GroupOrDimension<'a> {
     Group { _group: &'a Group<'a> },
     Dimension { _dimension: &'a Dimension<'a> },
+}
+
+#[derive(Debug)]
+pub enum GroupOrArray<'a> {
+    Group { _group: &'a Group<'a> },
+    MDArray { _md_array: &'a MDArray<'a> },
 }
 
 impl Drop for MDArray<'_> {
@@ -58,6 +67,7 @@ impl<'a> MDArray<'a> {
     pub unsafe fn from_c_mdarray_and_group(_group: &'a Group, c_mdarray: GDALMDArrayH) -> Self {
         Self {
             c_mdarray,
+            c_dataset: _group._dataset.c_dataset(),
             _parent: GroupOrDimension::Group { _group },
         }
     }
@@ -72,6 +82,10 @@ impl<'a> MDArray<'a> {
     ) -> Self {
         Self {
             c_mdarray,
+            c_dataset: match _dimension._parent {
+                GroupOrArray::Group { _group } => _group._dataset.c_dataset(),
+                GroupOrArray::MDArray { _md_array } => _md_array.c_dataset,
+            },
             _parent: GroupOrDimension::Dimension { _dimension },
         }
     }
@@ -85,29 +99,34 @@ impl<'a> MDArray<'a> {
     }
 
     pub fn dimensions(&self) -> Result<Vec<Dimension>> {
-        unsafe {
-            let mut num_dimensions: usize = 0;
-            let c_dimensions =
-                GDALMDArrayGetDimensions(self.c_mdarray, std::ptr::addr_of_mut!(num_dimensions));
+        let mut num_dimensions: usize = 0;
 
-            if c_dimensions.is_null() {
-                return Err(_last_null_pointer_err("GDALMDArrayGetDimensions"));
-            }
+        let c_dimensions = unsafe { GDALMDArrayGetDimensions(self.c_mdarray, &mut num_dimensions) };
 
-            let dimensions_ref = std::slice::from_raw_parts_mut(c_dimensions, num_dimensions);
-
-            let mut dimensions: Vec<Dimension> = Vec::with_capacity(num_dimensions);
-
-            for c_dimension in dimensions_ref {
-                let dimension = Dimension::from_c_dimension(self, *c_dimension);
-                dimensions.push(dimension);
-            }
-
-            // only free the array, not the dimensions themselves
-            VSIFree(c_dimensions as *mut c_void);
-
-            Ok(dimensions)
+        // `num_dimensions` is `0`, we can safely return an empty vector
+        // `GDALMDArrayGetDimensions` does not state that errors can occur
+        if num_dimensions > 0 && c_dimensions.is_null() {
+            return Err(_last_null_pointer_err("GDALMDArrayGetDimensions"));
         }
+
+        let dimensions_ref =
+            unsafe { std::slice::from_raw_parts_mut(c_dimensions, num_dimensions) };
+
+        let mut dimensions: Vec<Dimension> = Vec::with_capacity(num_dimensions);
+
+        for c_dimension in dimensions_ref {
+            let dimension = unsafe {
+                Dimension::from_c_dimension(GroupOrArray::MDArray { _md_array: self }, *c_dimension)
+            };
+            dimensions.push(dimension);
+        }
+
+        // only free the array, not the dimensions themselves
+        unsafe {
+            VSIFree(c_dimensions as *mut c_void);
+        }
+
+        Ok(dimensions)
     }
 
     pub fn datatype(&self) -> ExtendedDataType {
@@ -142,7 +161,14 @@ impl<'a> MDArray<'a> {
         let n_dst_buffer_alloc_size = 0;
 
         let rv = unsafe {
-            let data_type = GDALMDArrayGetDataType(self.c_mdarray);
+            let data_type = GDALExtendedDataTypeCreate(T::gdal_type());
+
+            if !self.datatype().class().is_numeric() {
+                return Err(GdalError::UnsupportedMdDataType {
+                    data_type: self.datatype().class(),
+                    method_name: "GDALMDArrayRead",
+                });
+            }
 
             let rv = gdal_sys::GDALMDArrayRead(
                 self.c_mdarray,
@@ -225,13 +251,13 @@ impl<'a> MDArray<'a> {
     /// Read `MDArray` as one-dimensional string array
     pub fn read_as_string_array(&self) -> Result<Vec<String>> {
         let data_type = self.datatype();
-        if data_type.class() != GDALExtendedDataTypeClass::GEDTC_STRING {
+        if !data_type.class().is_string() {
             // We have to check that the data type is string.
             // Only then, GDAL returns an array of string pointers.
             // Otherwise, we will dereference these string pointers and get a segfault.
 
             return Err(GdalError::UnsupportedMdDataType {
-                data_type,
+                data_type: data_type.class(),
                 method_name: "GDALMDArrayRead (string)",
             });
         }
@@ -308,9 +334,8 @@ impl<'a> MDArray<'a> {
     pub fn no_data_value_as_double(&self) -> Option<f64> {
         let mut has_nodata = 0;
 
-        let no_data_value = unsafe {
-            GDALMDArrayGetNoDataValueAsDouble(self.c_mdarray, std::ptr::addr_of_mut!(has_nodata))
-        };
+        let no_data_value =
+            unsafe { GDALMDArrayGetNoDataValueAsDouble(self.c_mdarray, &mut has_nodata) };
 
         if has_nodata == 0 {
             None
@@ -341,6 +366,66 @@ impl<'a> MDArray<'a> {
             Ok(Attribute::from_c_attribute(c_attribute))
         }
     }
+
+    /// Fetch statistics.
+    ///
+    /// Returns the minimum, maximum, mean and standard deviation of all pixel values in this array.
+    ///
+    /// If `force` is `false` results will only be returned if it can be done quickly (i.e. without scanning the data).
+    /// If `force` is `false` and results cannot be returned efficiently, the method will return `None`.
+    ///
+    /// When cached statistics are not available, and `force` is `true`, ComputeStatistics() is called.
+    ///
+    /// Note that file formats using PAM (Persistent Auxiliary Metadata) services will generally cache statistics in the .aux.xml file allowing fast fetch after the first request.
+    ///
+    /// This methods is a wrapper for [`GDALMDArrayGetStatistics`](https://gdal.org/api/gdalmdarray_cpp.html#_CPPv4N11GDALMDArray13GetStatisticsEbbPdPdPdPdP7GUInt6416GDALProgressFuncPv).
+    ///
+    /// TODO: add option to pass progress callback (`pfnProgress`)
+    ///
+    pub fn get_statistics(
+        &self,
+        force: bool,
+        is_approx_ok: bool,
+    ) -> Result<Option<MdStatisticsAll>> {
+        let mut statistics = MdStatisticsAll {
+            min: 0.,
+            max: 0.,
+            mean: 0.,
+            std_dev: 0.,
+            valid_count: 0,
+        };
+
+        let rv = unsafe {
+            GDALMDArrayGetStatistics(
+                self.c_mdarray,
+                self.c_dataset,
+                libc::c_int::from(is_approx_ok),
+                libc::c_int::from(force),
+                &mut statistics.min,
+                &mut statistics.max,
+                &mut statistics.mean,
+                &mut statistics.std_dev,
+                &mut statistics.valid_count,
+                None,
+                std::ptr::null_mut(),
+            )
+        };
+
+        match CplErrType::from(rv) {
+            CplErrType::None => Ok(Some(statistics)),
+            CplErrType::Warning => Ok(None),
+            _ => Err(_last_cpl_err(rv)),
+        }
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub struct MdStatisticsAll {
+    pub min: f64,
+    pub max: f64,
+    pub mean: f64,
+    pub std_dev: f64,
+    pub valid_count: u64,
 }
 
 /// Represent a mdarray in a dataset
@@ -413,7 +498,7 @@ impl<'a> Group<'a> {
         }
     }
 
-    pub fn open_group(&self, name: &str, options: CslStringList) -> Result<Group> {
+    pub fn open_group(&'_ self, name: &str, options: CslStringList) -> Result<Group<'a>> {
         let name = CString::new(name)?;
 
         unsafe {
@@ -440,13 +525,42 @@ impl<'a> Group<'a> {
             Ok(Attribute::from_c_attribute(c_attribute))
         }
     }
+
+    pub fn dimensions(&self, options: CslStringList) -> Result<Vec<Dimension>> {
+        unsafe {
+            let mut num_dimensions: usize = 0;
+            let c_dimensions =
+                GDALGroupGetDimensions(self.c_group, &mut num_dimensions, options.as_ptr());
+
+            // `num_dimensions` is `0`, we can safely return an empty vector
+            // `GDALGroupGetDimensions` does not state that errors can occur
+            if num_dimensions > 0 && c_dimensions.is_null() {
+                return Err(_last_null_pointer_err("GDALGroupGetDimensions"));
+            }
+
+            let dimensions_ref = std::slice::from_raw_parts_mut(c_dimensions, num_dimensions);
+
+            let mut dimensions: Vec<Dimension> = Vec::with_capacity(num_dimensions);
+
+            for c_dimension in dimensions_ref {
+                let dimension =
+                    Dimension::from_c_dimension(GroupOrArray::Group { _group: self }, *c_dimension);
+                dimensions.push(dimension);
+            }
+
+            // only free the array, not the dimensions themselves
+            VSIFree(c_dimensions as *mut c_void);
+
+            Ok(dimensions)
+        }
+    }
 }
 
 /// A `GDALDimension` with name and size
 #[derive(Debug)]
 pub struct Dimension<'a> {
     c_dimension: *mut GDALDimensionHS,
-    _md_array: &'a MDArray<'a>,
+    _parent: GroupOrArray<'a>,
 }
 
 impl Drop for Dimension<'_> {
@@ -462,10 +576,13 @@ impl<'a> Dimension<'a> {
     ///
     /// # Safety
     /// This method operates on a raw C pointer
-    pub fn from_c_dimension(_md_array: &'a MDArray<'a>, c_dimension: *mut GDALDimensionHS) -> Self {
+    pub unsafe fn from_c_dimension(
+        _parent: GroupOrArray<'a>,
+        c_dimension: *mut GDALDimensionHS,
+    ) -> Self {
         Self {
             c_dimension,
-            _md_array,
+            _parent,
         }
     }
     pub fn size(&self) -> usize {
@@ -499,6 +616,48 @@ impl Drop for ExtendedDataType {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ExtendedDataTypeClass {
+    Compound = GDALExtendedDataTypeClass::GEDTC_COMPOUND as isize,
+    Numeric = GDALExtendedDataTypeClass::GEDTC_NUMERIC as isize,
+    String = GDALExtendedDataTypeClass::GEDTC_STRING as isize,
+}
+
+impl ExtendedDataTypeClass {
+    pub fn is_string(&self) -> bool {
+        matches!(self, ExtendedDataTypeClass::String)
+    }
+
+    pub fn is_numeric(&self) -> bool {
+        matches!(self, ExtendedDataTypeClass::Numeric)
+    }
+
+    pub fn is_compound(&self) -> bool {
+        matches!(self, ExtendedDataTypeClass::Compound)
+    }
+}
+
+impl From<GDALExtendedDataTypeClass::Type> for ExtendedDataTypeClass {
+    fn from(class: GDALExtendedDataTypeClass::Type) -> Self {
+        match class {
+            GDALExtendedDataTypeClass::GEDTC_COMPOUND => ExtendedDataTypeClass::Compound,
+            GDALExtendedDataTypeClass::GEDTC_NUMERIC => ExtendedDataTypeClass::Numeric,
+            GDALExtendedDataTypeClass::GEDTC_STRING => ExtendedDataTypeClass::String,
+            _ => panic!("Unknown ExtendedDataTypeClass {class}"),
+        }
+    }
+}
+
+impl Display for ExtendedDataTypeClass {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ExtendedDataTypeClass::Compound => write!(f, "Compound"),
+            ExtendedDataTypeClass::Numeric => write!(f, "Numeric"),
+            ExtendedDataTypeClass::String => write!(f, "String"),
+        }
+    }
+}
+
 impl ExtendedDataType {
     /// Create an `ExtendedDataTypeNumeric` from a wrapped C pointer
     ///
@@ -509,13 +668,17 @@ impl ExtendedDataType {
     }
 
     /// The result is only valid if the data type is numeric
-    pub fn class(&self) -> GDALExtendedDataTypeClass::Type {
-        unsafe { GDALExtendedDataTypeGetClass(self.c_data_type) }
+    pub fn class(&self) -> ExtendedDataTypeClass {
+        unsafe { GDALExtendedDataTypeGetClass(self.c_data_type) }.into()
     }
 
     /// The result is only valid if the data type is numeric
     pub fn numeric_datatype(&self) -> GDALDataType::Type {
         unsafe { GDALExtendedDataTypeGetNumericDataType(self.c_data_type) }
+    }
+
+    pub fn name(&self) -> String {
+        _string(unsafe { GDALExtendedDataTypeGetName(self.c_data_type) })
     }
 }
 
@@ -548,10 +711,8 @@ impl Attribute {
         unsafe {
             let mut num_dimensions = 0;
 
-            let c_dimension_sizes = GDALAttributeGetDimensionsSize(
-                self.c_attribute,
-                std::ptr::addr_of_mut!(num_dimensions),
-            );
+            let c_dimension_sizes =
+                GDALAttributeGetDimensionsSize(self.c_attribute, &mut num_dimensions);
 
             let dimension_sizes = std::slice::from_raw_parts(c_dimension_sizes, num_dimensions)
                 .iter()
@@ -599,8 +760,7 @@ impl Attribute {
     pub fn read_as_i64_array(&self) -> Vec<i32> {
         unsafe {
             let mut array_len = 0;
-            let c_int_array =
-                GDALAttributeReadAsIntArray(self.c_attribute, std::ptr::addr_of_mut!(array_len));
+            let c_int_array = GDALAttributeReadAsIntArray(self.c_attribute, &mut array_len);
 
             let int_array = std::slice::from_raw_parts(c_int_array, array_len).to_vec();
 
@@ -617,8 +777,7 @@ impl Attribute {
     pub fn read_as_f64_array(&self) -> Vec<f64> {
         unsafe {
             let mut array_len = 0;
-            let c_int_array =
-                GDALAttributeReadAsDoubleArray(self.c_attribute, std::ptr::addr_of_mut!(array_len));
+            let c_int_array = GDALAttributeReadAsDoubleArray(self.c_attribute, &mut array_len);
 
             let float_array = std::slice::from_raw_parts(c_int_array, array_len).to_vec();
 
@@ -631,19 +790,22 @@ impl Attribute {
 
 #[cfg(test)]
 mod tests {
+
     use super::*;
 
-    use crate::{Dataset, DatasetOptions, GdalOpenFlags};
+    use crate::{test_utils::TempFixture, Dataset, DatasetOptions, GdalOpenFlags};
 
     #[test]
     fn test_root_group_name() {
+        let fixture = TempFixture::fixture("byte_no_cf.nc");
+
         let options = DatasetOptions {
             open_flags: GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER,
             allowed_drivers: None,
             open_options: None,
             sibling_files: None,
         };
-        let dataset = Dataset::open_ex("fixtures/byte_no_cf.nc", options).unwrap();
+        let dataset = Dataset::open_ex(&fixture, options).unwrap();
         let root_group = dataset.root_group().unwrap();
         let root_group_name = root_group.name();
         assert_eq!(root_group_name, "/");
@@ -651,13 +813,15 @@ mod tests {
 
     #[test]
     fn test_array_names() {
+        let fixture = TempFixture::fixture("byte_no_cf.nc");
+
         let dataset_options = DatasetOptions {
             open_flags: GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER,
             allowed_drivers: None,
             open_options: None,
             sibling_files: None,
         };
-        let dataset = Dataset::open_ex("fixtures/byte_no_cf.nc", dataset_options).unwrap();
+        let dataset = Dataset::open_ex(&fixture, dataset_options).unwrap();
         let root_group = dataset.root_group().unwrap();
         let options = CslStringList::new(); //Driver specific options determining how groups should be retrieved. Pass nullptr for default behavior.
         let array_names = root_group.array_names(options);
@@ -666,13 +830,15 @@ mod tests {
 
     #[test]
     fn test_n_dimension() {
+        let fixture = TempFixture::fixture("byte_no_cf.nc");
+
         let dataset_options = DatasetOptions {
             open_flags: GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER,
             allowed_drivers: None,
             open_options: None,
             sibling_files: None,
         };
-        let dataset = Dataset::open_ex("fixtures/byte_no_cf.nc", dataset_options).unwrap();
+        let dataset = Dataset::open_ex(&fixture, dataset_options).unwrap();
         let root_group = dataset.root_group().unwrap();
         let array_name = "Band1".to_string();
         let options = CslStringList::new(); //Driver specific options determining how the array should be opened. Pass nullptr for default behavior.
@@ -683,13 +849,15 @@ mod tests {
 
     #[test]
     fn test_n_elements() {
+        let fixture = TempFixture::fixture("byte_no_cf.nc");
+
         let dataset_options = DatasetOptions {
             open_flags: GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER,
             allowed_drivers: None,
             open_options: None,
             sibling_files: None,
         };
-        let dataset = Dataset::open_ex("fixtures/byte_no_cf.nc", dataset_options).unwrap();
+        let dataset = Dataset::open_ex(&fixture, dataset_options).unwrap();
         let root_group = dataset.root_group().unwrap();
         let array_name = "Band1".to_string();
         let options = CslStringList::new(); //Driver specific options determining how the array should be opened. Pass nullptr for default behavior.
@@ -700,14 +868,27 @@ mod tests {
 
     #[test]
     fn test_dimension_name() {
+        let fixture = TempFixture::fixture("byte_no_cf.nc");
+
         let dataset_options = DatasetOptions {
             open_flags: GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER,
             allowed_drivers: None,
             open_options: None,
             sibling_files: None,
         };
-        let dataset = Dataset::open_ex("fixtures/byte_no_cf.nc", dataset_options).unwrap();
+        let dataset = Dataset::open_ex(&fixture, dataset_options).unwrap();
         let root_group = dataset.root_group().unwrap();
+
+        // group dimensions
+        let group_dimensions = root_group.dimensions(CslStringList::new()).unwrap();
+        let group_dimensions_names: Vec<String> = group_dimensions
+            .into_iter()
+            .map(|dimensions| dimensions.name())
+            .collect();
+        assert_eq!(group_dimensions_names, vec!["x", "y"]);
+
+        // array dimensions
+
         let array_name = "Band1".to_string();
         let options = CslStringList::new(); //Driver specific options determining how the array should be opened. Pass nullptr for default behavior.
         let md_array = root_group.open_md_array(&array_name, options).unwrap();
@@ -718,15 +899,18 @@ mod tests {
         }
         assert_eq!(dimension_names, vec!["y".to_string(), "x".to_string()])
     }
+
     #[test]
     fn test_dimension_size() {
+        let fixture = TempFixture::fixture("byte_no_cf.nc");
+
         let dataset_options = DatasetOptions {
             open_flags: GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER,
             allowed_drivers: None,
             open_options: None,
             sibling_files: None,
         };
-        let dataset = Dataset::open_ex("fixtures/byte_no_cf.nc", dataset_options).unwrap();
+        let dataset = Dataset::open_ex(&fixture, dataset_options).unwrap();
         let root_group = dataset.root_group().unwrap();
         let array_name = "Band1".to_string();
         let options = CslStringList::new(); //Driver specific options determining how the array should be opened. Pass nullptr for default behavior.
@@ -741,13 +925,15 @@ mod tests {
 
     #[test]
     fn test_read_data() {
+        let fixture = TempFixture::fixture("byte_no_cf.nc");
+
         let dataset_options = DatasetOptions {
             open_flags: GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER,
             allowed_drivers: None,
             open_options: None,
             sibling_files: None,
         };
-        let dataset = Dataset::open_ex("fixtures/byte_no_cf.nc", dataset_options).unwrap();
+        let dataset = Dataset::open_ex(&fixture, dataset_options).unwrap();
 
         let root_group = dataset.root_group().unwrap();
         let md_array = root_group
@@ -757,17 +943,22 @@ mod tests {
         let values = md_array.read_as::<u8>(vec![0, 0], vec![20, 20]).unwrap();
 
         assert_eq!(&values[..4], &[181, 181, 156, 148]);
+
+        let values = md_array.read_as::<u16>(vec![0, 0], vec![20, 20]).unwrap();
+        assert_eq!(&values[..4], &[181, 181, 156, 148]);
     }
 
     #[test]
     fn test_read_string_array() {
+        let fixture = TempFixture::fixture("alldatatypes.nc");
+
         let dataset_options = DatasetOptions {
             open_flags: GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER,
             allowed_drivers: None,
             open_options: None,
             sibling_files: None,
         };
-        let dataset = Dataset::open_ex("fixtures/alldatatypes.nc", dataset_options).unwrap();
+        let dataset = Dataset::open_ex(&fixture, dataset_options).unwrap();
 
         let root_group = dataset.root_group().unwrap();
 
@@ -783,38 +974,46 @@ mod tests {
 
         // check that we don't get a `SIGSEV` here
         assert!(non_string_array.read_as_string_array().is_err());
+
+        assert!(string_array.read_as::<u8>(vec![0, 0], vec![1, 2]).is_err());
     }
 
     #[test]
     fn test_datatype() {
+        let fixture = TempFixture::fixture("byte_no_cf.nc");
+
         let dataset_options = DatasetOptions {
             open_flags: GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER,
             allowed_drivers: None,
             open_options: None,
             sibling_files: None,
         };
-        let dataset = Dataset::open_ex("fixtures/byte_no_cf.nc", dataset_options).unwrap();
+        let dataset = Dataset::open_ex(&fixture, dataset_options).unwrap();
 
         let root_group = dataset.root_group().unwrap();
+
         let md_array = root_group
             .open_md_array("Band1", CslStringList::new())
             .unwrap();
 
         let datatype = md_array.datatype();
 
-        assert_eq!(datatype.class(), GDALExtendedDataTypeClass::GEDTC_NUMERIC);
+        assert_eq!(datatype.class(), ExtendedDataTypeClass::Numeric);
         assert_eq!(datatype.numeric_datatype(), GDALDataType::GDT_Byte);
+        assert_eq!(datatype.name(), "");
     }
 
     #[test]
     fn test_spatial_ref() {
+        let fixture = TempFixture::fixture("byte_no_cf.nc");
+
         let dataset_options = DatasetOptions {
             open_flags: GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER,
             allowed_drivers: None,
             open_options: None,
             sibling_files: None,
         };
-        let dataset = Dataset::open_ex("fixtures/byte_no_cf.nc", dataset_options).unwrap();
+        let dataset = Dataset::open_ex(&fixture, dataset_options).unwrap();
 
         let root_group = dataset.root_group().unwrap();
         let md_array = root_group
@@ -830,13 +1029,15 @@ mod tests {
 
     #[test]
     fn test_no_data_value() {
+        let fixture = TempFixture::fixture("byte_no_cf.nc");
+
         let dataset_options = DatasetOptions {
             open_flags: GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER,
             allowed_drivers: None,
             open_options: None,
             sibling_files: None,
         };
-        let dataset = Dataset::open_ex("fixtures/byte_no_cf.nc", dataset_options).unwrap();
+        let dataset = Dataset::open_ex(&fixture, dataset_options).unwrap();
 
         let root_group = dataset.root_group().unwrap();
         let md_array = root_group
@@ -848,13 +1049,15 @@ mod tests {
 
     #[test]
     fn test_attributes() {
+        let fixture = TempFixture::fixture("cf_nasa_4326.nc");
+
         let dataset_options = DatasetOptions {
             open_flags: GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER,
             allowed_drivers: None,
             open_options: None,
             sibling_files: None,
         };
-        let dataset = Dataset::open_ex("fixtures/cf_nasa_4326.nc", dataset_options).unwrap();
+        let dataset = Dataset::open_ex(&fixture, dataset_options).unwrap();
 
         let root_group = dataset.root_group().unwrap();
 
@@ -866,6 +1069,12 @@ mod tests {
         let group_science = root_group
             .open_group("science", CslStringList::new())
             .unwrap();
+
+        assert!(group_science
+            .dimensions(Default::default())
+            .unwrap()
+            .is_empty());
+
         let group_grids = group_science
             .open_group("grids", CslStringList::new())
             .unwrap();
@@ -893,13 +1102,15 @@ mod tests {
 
     #[test]
     fn test_unit() {
+        let fixture = TempFixture::fixture("cf_nasa_4326.nc");
+
         let dataset_options = DatasetOptions {
             open_flags: GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER,
             allowed_drivers: None,
             open_options: None,
             sibling_files: None,
         };
-        let dataset = Dataset::open_ex("fixtures/cf_nasa_4326.nc", dataset_options).unwrap();
+        let dataset = Dataset::open_ex(&fixture, dataset_options).unwrap();
 
         let root_group = dataset.root_group().unwrap();
 
@@ -914,6 +1125,9 @@ mod tests {
         let group_grids = group_science
             .open_group("grids", CslStringList::new())
             .unwrap();
+
+        drop(group_science); // check that `Group`s do not borrow each other
+
         let group_data = group_grids
             .open_group("data", CslStringList::new())
             .unwrap();
@@ -923,5 +1137,35 @@ mod tests {
             .unwrap();
 
         assert_eq!(md_array.unit(), "K");
+    }
+
+    #[test]
+    fn test_stats() {
+        let fixture = TempFixture::fixture("byte_no_cf.nc");
+
+        let dataset_options = DatasetOptions {
+            open_flags: GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER,
+            allowed_drivers: None,
+            open_options: None,
+            sibling_files: None,
+        };
+        let dataset = Dataset::open_ex(&fixture, dataset_options).unwrap();
+        let root_group = dataset.root_group().unwrap();
+        let array_name = "Band1".to_string();
+        let options = CslStringList::new(); //Driver specific options determining how the array should be opened. Pass nullptr for default behavior.
+        let md_array = root_group.open_md_array(&array_name, options).unwrap();
+
+        assert!(md_array.get_statistics(false, true).unwrap().is_none());
+
+        assert_eq!(
+            md_array.get_statistics(true, true).unwrap().unwrap(),
+            MdStatisticsAll {
+                min: 74.0,
+                max: 255.0,
+                mean: 126.76500000000001,
+                std_dev: 22.928470838675654,
+                valid_count: 400,
+            }
+        );
     }
 }

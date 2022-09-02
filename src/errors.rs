@@ -72,9 +72,9 @@ pub enum GdalError {
     BadArgument(String),
 
     #[cfg(all(major_ge_3, minor_ge_1))]
-    #[error("Unhandled type '{data_type:?}' on GDAL MD method {method_name}")]
+    #[error("Unhandled type '{data_type}' on GDAL MD method {method_name}")]
     UnsupportedMdDataType {
-        data_type: crate::raster::ExtendedDataType,
+        data_type: crate::raster::ExtendedDataTypeClass,
         method_name: &'static str,
     },
 }
@@ -97,5 +97,19 @@ impl From<CPLErr::Type> for CplErrType {
         }
 
         unsafe { std::mem::transmute(error_type) }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_that_gdal_error_is_send() {
+        fn is_send<T: Send>() -> bool {
+            true
+        }
+
+        assert!(is_send::<GdalError>());
     }
 }

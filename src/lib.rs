@@ -33,6 +33,8 @@ mod metadata;
 pub mod programs;
 pub mod raster;
 pub mod spatial_ref;
+#[cfg(test)]
+pub mod test_utils;
 mod utils;
 pub mod vector;
 pub mod version;

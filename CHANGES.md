@@ -2,7 +2,10 @@
 
 ## Unreleased
 
+## 0.13
+
 - Add prebuild bindings for GDAL 3.5
+
   - <https://github.com/georust/gdal/pull/277>
 
 - **Breaking**: Add `gdal::vector::OwnedLayer`, `gdal::vector::LayerAccess` and `gdal::vector::layer::OwnedFeatureIterator`. This requires importing `gdal::vector::LayerAccess` for using most vector layer methods.
@@ -82,6 +85,26 @@
 - Add `Rasterband::set_scale` and `Rasterband::set_offset` methods
 
   - <https://github.com/georust/gdal/pull/294>
+
+- Added program wrapper for `GDALMultiDimTranslate`
+
+  - <https://github.com/georust/gdal/pull/289>
+
+- Test that `GdalError` is `Send`
+
+  - <https://github.com/georust/gdal/pull/293>
+
+- Allow reading `Dimension`s from `Group`s in multimensional `Dataset`s.
+
+  - <https://github.com/georust/gdal/pull/291>
+
+- Added wrapper methods for `GDALGetRasterStatistics`, `GDALComputeRasterMinMax` and `GDALMDArrayGetStatistics`.
+
+  - <https://github.com/georust/gdal/pull/292>
+
+- Added a workaround in multi-dim tests to not access files multiple times
+
+  - <https://github.com/georust/gdal/pull/302>
 
 ## 0.12
 
