@@ -9,13 +9,14 @@ use gdal_sys::{
     GDALAttributeReadAsIntArray, GDALAttributeReadAsString, GDALAttributeReadAsStringArray,
     GDALAttributeRelease, GDALDataType, GDALDimensionGetIndexingVariable, GDALDimensionGetName,
     GDALDimensionGetSize, GDALDimensionHS, GDALDimensionRelease, GDALExtendedDataTypeClass,
-    GDALExtendedDataTypeGetClass, GDALExtendedDataTypeGetNumericDataType, GDALExtendedDataTypeH,
-    GDALExtendedDataTypeRelease, GDALGroupGetAttribute, GDALGroupGetGroupNames,
-    GDALGroupGetMDArrayNames, GDALGroupGetName, GDALGroupH, GDALGroupOpenGroup,
-    GDALGroupOpenMDArray, GDALGroupRelease, GDALMDArrayGetAttribute, GDALMDArrayGetDataType,
-    GDALMDArrayGetDimensionCount, GDALMDArrayGetDimensions, GDALMDArrayGetNoDataValueAsDouble,
-    GDALMDArrayGetSpatialRef, GDALMDArrayGetTotalElementsCount, GDALMDArrayGetUnit, GDALMDArrayH,
-    GDALMDArrayRelease, OSRDestroySpatialReference, VSIFree,
+    GDALExtendedDataTypeGetClass, GDALExtendedDataTypeGetName,
+    GDALExtendedDataTypeGetNumericDataType, GDALExtendedDataTypeH, GDALExtendedDataTypeRelease,
+    GDALGroupGetAttribute, GDALGroupGetGroupNames, GDALGroupGetMDArrayNames, GDALGroupGetName,
+    GDALGroupH, GDALGroupOpenGroup, GDALGroupOpenMDArray, GDALGroupRelease,
+    GDALMDArrayGetAttribute, GDALMDArrayGetDataType, GDALMDArrayGetDimensionCount,
+    GDALMDArrayGetDimensions, GDALMDArrayGetNoDataValueAsDouble, GDALMDArrayGetSpatialRef,
+    GDALMDArrayGetTotalElementsCount, GDALMDArrayGetUnit, GDALMDArrayH, GDALMDArrayRelease,
+    OSRDestroySpatialReference, VSIFree,
 };
 use libc::c_void;
 use std::ffi::CString;
@@ -23,7 +24,7 @@ use std::os::raw::c_char;
 
 #[cfg(feature = "ndarray")]
 use ndarray::{ArrayD, IxDyn};
-use std::fmt::Debug;
+use std::fmt::{Debug, Display};
 
 /// Represent an MDArray in a Group
 ///
@@ -225,13 +226,13 @@ impl<'a> MDArray<'a> {
     /// Read `MDArray` as one-dimensional string array
     pub fn read_as_string_array(&self) -> Result<Vec<String>> {
         let data_type = self.datatype();
-        if data_type.class() != GDALExtendedDataTypeClass::GEDTC_STRING {
+        if !data_type.class().is_string() {
             // We have to check that the data type is string.
             // Only then, GDAL returns an array of string pointers.
             // Otherwise, we will dereference these string pointers and get a segfault.
 
             return Err(GdalError::UnsupportedMdDataType {
-                data_type,
+                data_type: data_type.class(),
                 method_name: "GDALMDArrayRead (string)",
             });
         }
@@ -499,6 +500,48 @@ impl Drop for ExtendedDataType {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ExtendedDataTypeClass {
+    Compound = GDALExtendedDataTypeClass::GEDTC_COMPOUND as isize,
+    Numeric = GDALExtendedDataTypeClass::GEDTC_NUMERIC as isize,
+    String = GDALExtendedDataTypeClass::GEDTC_STRING as isize,
+}
+
+impl ExtendedDataTypeClass {
+    pub fn is_string(&self) -> bool {
+        matches!(self, ExtendedDataTypeClass::String)
+    }
+
+    pub fn is_numeric(&self) -> bool {
+        matches!(self, ExtendedDataTypeClass::Numeric)
+    }
+
+    pub fn is_compound(&self) -> bool {
+        matches!(self, ExtendedDataTypeClass::Compound)
+    }
+}
+
+impl From<GDALExtendedDataTypeClass::Type> for ExtendedDataTypeClass {
+    fn from(class: GDALExtendedDataTypeClass::Type) -> Self {
+        match class {
+            GDALExtendedDataTypeClass::GEDTC_COMPOUND => ExtendedDataTypeClass::Compound,
+            GDALExtendedDataTypeClass::GEDTC_NUMERIC => ExtendedDataTypeClass::Numeric,
+            GDALExtendedDataTypeClass::GEDTC_STRING => ExtendedDataTypeClass::String,
+            _ => panic!("Unknown ExtendedDataTypeClass {class}"),
+        }
+    }
+}
+
+impl Display for ExtendedDataTypeClass {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ExtendedDataTypeClass::Compound => write!(f, "Compound"),
+            ExtendedDataTypeClass::Numeric => write!(f, "Numeric"),
+            ExtendedDataTypeClass::String => write!(f, "String"),
+        }
+    }
+}
+
 impl ExtendedDataType {
     /// Create an `ExtendedDataTypeNumeric` from a wrapped C pointer
     ///
@@ -509,13 +552,17 @@ impl ExtendedDataType {
     }
 
     /// The result is only valid if the data type is numeric
-    pub fn class(&self) -> GDALExtendedDataTypeClass::Type {
-        unsafe { GDALExtendedDataTypeGetClass(self.c_data_type) }
+    pub fn class(&self) -> ExtendedDataTypeClass {
+        unsafe { GDALExtendedDataTypeGetClass(self.c_data_type) }.into()
     }
 
     /// The result is only valid if the data type is numeric
     pub fn numeric_datatype(&self) -> GDALDataType::Type {
         unsafe { GDALExtendedDataTypeGetNumericDataType(self.c_data_type) }
+    }
+
+    pub fn name(&self) -> String {
+        _string(unsafe { GDALExtendedDataTypeGetName(self.c_data_type) })
     }
 }
 
@@ -802,8 +849,9 @@ mod tests {
 
         let datatype = md_array.datatype();
 
-        assert_eq!(datatype.class(), GDALExtendedDataTypeClass::GEDTC_NUMERIC);
+        assert_eq!(datatype.class(), ExtendedDataTypeClass::Numeric);
         assert_eq!(datatype.numeric_datatype(), GDALDataType::GDT_Byte);
+        assert_eq!(datatype.name(), "");
     }
 
     #[test]

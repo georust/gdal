@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Add prebuild bindings for GDAL 3.5
+
   - <https://github.com/georust/gdal/pull/277>
 
 - **Breaking**: Add `gdal::vector::OwnedLayer`, `gdal::vector::LayerAccess` and `gdal::vector::layer::OwnedFeatureIterator`. This requires importing `gdal::vector::LayerAccess` for using most vector layer methods.
@@ -78,6 +79,10 @@
 - Add `Rasterband::set_scale` and `Rasterband::set_offset` methods
 
   - <https://github.com/georust/gdal/pull/294>
+
+- Test that `GdalError` is `Send`
+
+  - <https://github.com/georust/gdal/pull/293>
 
 ## 0.12
 
