@@ -269,7 +269,8 @@ mod tests {
             open_options: None,
             sibling_files: None,
         };
-        let dataset = Dataset::open_ex("fixtures/cf_nasa_4326.nc", dataset_options).unwrap();
+        // HACK: same file as above, https://github.com/OSGeo/gdal/issues/6253
+        let dataset = Dataset::open_ex("fixtures/cf_nasa_4326_copy.nc", dataset_options).unwrap();
 
         let driver = Driver::get_by_name("MEM").unwrap();
         let output_dataset = driver.create("", 5, 7, 1).unwrap();
