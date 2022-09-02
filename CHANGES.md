@@ -2,9 +2,13 @@
 
 ## Unreleased
 
-- Added new content to README.md and root rust docs.
+- Added new content to `README.md` and the root docs.
 
   - <https://github.com/georust/gdal/pull/296>
+
+- Fixed a crash in `Group::dimensions` and `MDArray::dimensions` when no dimensions exist
+
+  - <https://github.com/georust/gdal/pull/303>
 
 ## 0.13
 

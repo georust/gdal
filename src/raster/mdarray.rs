@@ -103,9 +103,12 @@ impl<'a> MDArray<'a> {
 
         let c_dimensions = unsafe { GDALMDArrayGetDimensions(self.c_mdarray, &mut num_dimensions) };
 
-        // `num_dimensions` is `0`, we can safely return an empty vector
-        // `GDALMDArrayGetDimensions` does not state that errors can occur
-        if num_dimensions > 0 && c_dimensions.is_null() {
+        // If `num_dimensions` is `0`, we can safely return an empty vector.
+        // `GDALMDArrayGetDimensions` does not state that errors can occur.
+        if num_dimensions == 0 {
+            return Ok(Vec::new());
+        }
+        if c_dimensions.is_null() {
             return Err(_last_null_pointer_err("GDALMDArrayGetDimensions"));
         }
 
@@ -532,9 +535,12 @@ impl<'a> Group<'a> {
             let c_dimensions =
                 GDALGroupGetDimensions(self.c_group, &mut num_dimensions, options.as_ptr());
 
-            // `num_dimensions` is `0`, we can safely return an empty vector
-            // `GDALGroupGetDimensions` does not state that errors can occur
-            if num_dimensions > 0 && c_dimensions.is_null() {
+            // If `num_dimensions` is `0`, we can safely return an empty vector.
+            // `GDALGroupGetDimensions` does not state that errors can occur.
+            if num_dimensions == 0 {
+                return Ok(Vec::new());
+            }
+            if c_dimensions.is_null() {
                 return Err(_last_null_pointer_err("GDALGroupGetDimensions"));
             }
 
