@@ -171,6 +171,9 @@
 //! ...
 //! ```
 
+// Enable `doc_cfg` features when `docsrs` is defined by docs.rs config
+#![cfg_attr(docsrs, feature(doc_cfg))]
+
 pub use version::version_info;
 
 pub mod config;

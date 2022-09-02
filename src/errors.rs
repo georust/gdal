@@ -16,6 +16,7 @@ pub enum GdalError {
     #[error("StrUtf8Error")]
     StrUtf8Error(#[from] std::str::Utf8Error),
     #[cfg(feature = "ndarray")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "array")))]
     #[error("NdarrayShapeError")]
     NdarrayShapeError(#[from] ndarray::ShapeError),
     #[error("CPL error class: '{class:?}', error number: '{number}', error msg: '{msg}'")]
