@@ -9,14 +9,15 @@ use gdal_sys::{
     GDALAttributeReadAsIntArray, GDALAttributeReadAsString, GDALAttributeReadAsStringArray,
     GDALAttributeRelease, GDALDataType, GDALDatasetH, GDALDimensionGetIndexingVariable,
     GDALDimensionGetName, GDALDimensionGetSize, GDALDimensionHS, GDALDimensionRelease,
-    GDALExtendedDataTypeClass, GDALExtendedDataTypeGetClass, GDALExtendedDataTypeGetName,
-    GDALExtendedDataTypeGetNumericDataType, GDALExtendedDataTypeH, GDALExtendedDataTypeRelease,
-    GDALGroupGetAttribute, GDALGroupGetDimensions, GDALGroupGetGroupNames,
-    GDALGroupGetMDArrayNames, GDALGroupGetName, GDALGroupH, GDALGroupOpenGroup,
-    GDALGroupOpenMDArray, GDALGroupRelease, GDALMDArrayGetAttribute, GDALMDArrayGetDataType,
-    GDALMDArrayGetDimensionCount, GDALMDArrayGetDimensions, GDALMDArrayGetNoDataValueAsDouble,
-    GDALMDArrayGetSpatialRef, GDALMDArrayGetStatistics, GDALMDArrayGetTotalElementsCount,
-    GDALMDArrayGetUnit, GDALMDArrayH, GDALMDArrayRelease, OSRDestroySpatialReference, VSIFree,
+    GDALExtendedDataTypeClass, GDALExtendedDataTypeCreate, GDALExtendedDataTypeGetClass,
+    GDALExtendedDataTypeGetName, GDALExtendedDataTypeGetNumericDataType, GDALExtendedDataTypeH,
+    GDALExtendedDataTypeRelease, GDALGroupGetAttribute, GDALGroupGetDimensions,
+    GDALGroupGetGroupNames, GDALGroupGetMDArrayNames, GDALGroupGetName, GDALGroupH,
+    GDALGroupOpenGroup, GDALGroupOpenMDArray, GDALGroupRelease, GDALMDArrayGetAttribute,
+    GDALMDArrayGetDataType, GDALMDArrayGetDimensionCount, GDALMDArrayGetDimensions,
+    GDALMDArrayGetNoDataValueAsDouble, GDALMDArrayGetSpatialRef, GDALMDArrayGetStatistics,
+    GDALMDArrayGetTotalElementsCount, GDALMDArrayGetUnit, GDALMDArrayH, GDALMDArrayRelease,
+    OSRDestroySpatialReference, VSIFree,
 };
 use libc::c_void;
 use std::ffi::CString;
@@ -160,7 +161,14 @@ impl<'a> MDArray<'a> {
         let n_dst_buffer_alloc_size = 0;
 
         let rv = unsafe {
-            let data_type = GDALMDArrayGetDataType(self.c_mdarray);
+            let data_type = GDALExtendedDataTypeCreate(T::gdal_type());
+
+            if !self.datatype().class().is_numeric() {
+                return Err(GdalError::UnsupportedMdDataType {
+                    data_type: self.datatype().class(),
+                    method_name: "GDALMDArrayRead",
+                });
+            }
 
             let rv = gdal_sys::GDALMDArrayRead(
                 self.c_mdarray,
@@ -920,6 +928,9 @@ mod tests {
         let values = md_array.read_as::<u8>(vec![0, 0], vec![20, 20]).unwrap();
 
         assert_eq!(&values[..4], &[181, 181, 156, 148]);
+
+        let values = md_array.read_as::<u16>(vec![0, 0], vec![20, 20]).unwrap();
+        assert_eq!(&values[..4], &[181, 181, 156, 148]);
     }
 
     #[test]
@@ -946,6 +957,8 @@ mod tests {
 
         // check that we don't get a `SIGSEV` here
         assert!(non_string_array.read_as_string_array().is_err());
+
+        assert!(string_array.read_as::<u8>(vec![0, 0], vec![1, 2]).is_err());
     }
 
     #[test]
