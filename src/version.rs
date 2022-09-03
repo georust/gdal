@@ -144,7 +144,7 @@ impl Debug for VersionInfo {
                 let text = BUILD_INFO.to_string();
 
                 text.lines()
-                    .filter_map(|l| l.split_once("="))
+                    .filter_map(|l| l.split_once('='))
                     .for_each(|(key, value)| {
                         builder.field(key, &value);
                     });
@@ -182,7 +182,7 @@ impl Default for VersionInfo {
 #[cfg(test)]
 mod tests {
     use super::version_info;
-    use super::{VersionInfo, VersionInfo::*};
+    use super::VersionInfo::*;
 
     #[test]
     fn test_version_info() {
@@ -206,7 +206,7 @@ mod tests {
     #[test]
     fn test_version_enum() {
         let rel_name = RELEASE_NAME.to_string();
-        assert!(rel_name.len() > 0);
+        assert!(!rel_name.is_empty());
         let rpt = VERSION_REPORT.to_string();
         assert!(rpt.contains(&rel_name));
     }
