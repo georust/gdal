@@ -5,10 +5,10 @@ use gdal_sys::{self, OGRwkbGeometryType};
 use crate::errors::GdalError;
 use crate::vector::Geometry;
 
-impl TryFrom<Geometry> for geo_types::Geometry<f64> {
+impl TryFrom<&Geometry> for geo_types::Geometry<f64> {
     type Error = GdalError;
 
-    fn try_from(geo: Geometry) -> Result<geo_types::Geometry<f64>, Self::Error> {
+    fn try_from(geo: &Geometry) -> Result<geo_types::Geometry<f64>, Self::Error> {
         let geometry_type = geo.geometry_type();
 
         let ring = |n: usize| {
@@ -108,5 +108,12 @@ impl TryFrom<Geometry> for geo_types::Geometry<f64> {
             }
             _ => Err(GdalError::UnsupportedGdalGeometryType(geometry_type)),
         }
+    }
+}
+
+impl TryFrom<Geometry> for geo_types::Geometry<f64> {
+    type Error = GdalError;
+    fn try_from(value: Geometry) -> Result<Self, Self::Error> {
+        Self::try_from(&value)
     }
 }
