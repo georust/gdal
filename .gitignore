@@ -2,6 +2,7 @@
 /target
 /.vscode
 /gdal-sys/target
+/.idea
 
 # gtags
 GPATH

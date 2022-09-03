@@ -1,3 +1,8 @@
+//! GDAL Common Portability Library Functions
+//!
+//! This module provides safe access to a subset of the [GDAL CPL functions](https://gdal.org/api/cpl.html).
+//!
+
 use std::ffi::CString;
 use std::ptr;
 

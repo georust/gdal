@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added new content to README.md and root rust docs.
+
+  - <https://github.com/georust/gdal/pull/296>
+
 ## 0.13
 
 - Add prebuild bindings for GDAL 3.5

@@ -1,3 +1,7 @@
+//! GDAL Version Information Functions
+//!
+//! See [`GDALVersionInfo`](https://gdal.org/api/raster_c_api.html#_CPPv415GDALVersionInfoPKc) for details.
+
 use crate::utils::_string;
 use std::ffi::CString;
 

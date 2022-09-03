@@ -1,3 +1,5 @@
+//! GDAL Error Types
+
 use libc::c_int;
 use thiserror::Error;
 
