@@ -144,9 +144,9 @@ impl<'a> MDArray<'a> {
     ///
     /// # Params
     /// * buffer - Mutable buffer to read into
-    /// * array_start_index - Values representing the starting index to read in each dimension (in [0, aoDims[i].GetSize()-1] range).
-    ///   Array of GetDimensionCount() values. Must not be empty, unless for a zero-dimensional array.
-    /// * count - Values representing the number of values to extract in each dimension. Array of GetDimensionCount() values.
+    /// * array_start_index - Values representing the starting index to read in each dimension (in `[0, aoDims[i].GetSize()-1]` range).
+    ///   Array of `GetDimensionCount()` values. Must not be empty, unless for a zero-dimensional array.
+    /// * count - Values representing the number of values to extract in each dimension. Array of `GetDimensionCount()` values.
     ///   Must not be empty, unless for a zero-dimensional array.
     ///
     pub fn read_into_slice<T: Copy + GdalType>(
@@ -202,9 +202,9 @@ impl<'a> MDArray<'a> {
     /// Read a 'Buffer<T>' from this band. T implements 'GdalType'
     ///
     /// # Arguments
-    /// * array_start_index - Values representing the starting index to read in each dimension (in [0, aoDims[i].GetSize()-1] range).
-    ///   Array of GetDimensionCount() values. Must not be empty, unless for a zero-dimensional array.
-    /// * count - Values representing the number of values to extract in each dimension. Array of GetDimensionCount() values.
+    /// * array_start_index - Values representing the starting index to read in each dimension (in `[0, aoDims[i].GetSize()-1]` range).
+    ///   Array of `GetDimensionCount()` values. Must not be empty, unless for a zero-dimensional array.
+    /// * count - Values representing the number of values to extract in each dimension. Array of `GetDimensionCount()` values.
     ///   Must not be empty, unless for a zero-dimensional array.
     ///
     pub fn read_as<T: Copy + GdalType>(
