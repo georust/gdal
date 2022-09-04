@@ -23,7 +23,7 @@
 //! This crate provides high-level, idiomatic Rust bindings for GDAL.
 //! To do that, it uses [`gdal-sys`](gdal-sys) internally, a low-level interface to the GDAL C library,
 //! which is generated using [`bindgen`](https://rust-lang.github.io/rust-bindgen/).
-//! Using the `gdal-sys` crate directly is normally not needed, but it can be useful in order to call APIs that have not yet been exposed in `gdal`.
+//! Using the `gdal-sys` crate directly is normally not needed, but it can be useful in order to call APIs that have not yet been exposed in this crate.
 //!
 //! Building this crate assumes a compatible version of GDAL is installed with the corresponding header files and shared libraries.
 //! This repository includes pre-generated bindings for GDAL 2.4 through 3.5 (see the`gdal-sys/prebuilt-bindings` directory).
@@ -39,12 +39,12 @@
 //! use gdal::{Dataset, Metadata};
 //! # fn main() -> gdal::errors::Result<()> {
 //! let ds = Dataset::open("fixtures/m_3607824_se_17_1_20160620_sub.tif")?;
-//! println!("This {} is in '{}' has {} bands.", ds.driver().long_name(), ds.spatial_ref()?.name()?, ds.raster_count());
+//! println!("This {} is in '{}' and has {} bands.", ds.driver().long_name(), ds.spatial_ref()?.name()?, ds.raster_count());
 //! # Ok(())
 //! # }
 //! ```
 //! ```text
-//! This GeoTIFF is in 'NAD83 / UTM zone 17N' has 4 bands.
+//! This GeoTIFF is in 'NAD83 / UTM zone 17N' and has 4 bands.
 //! ```
 //!
 //! ## Data Model
@@ -52,6 +52,7 @@
 //! At the top level, GDAL uses the same data model to access both vector and raster data sets.
 //! There are several shared data model constructs at this level, but the first ones to become
 //! familiar with are [`Driver`], [`Dataset`], and [`Metadata`].
+//! These provide the general access points to [`raster`]- and [`vector`]-specific constructs.
 //!
 //! ### Driver
 //!
@@ -76,6 +77,23 @@
 //! relevant sections of the [`raster`] and [`vector`] modules, and the general-purpose data model
 //! in the [`Metadata`] API.
 //!
+//! ### Raster Data
+//!
+//! A raster `Dataset` has a `size` (`cols`/`rows`), an ordered sequence of [`RasterBand`]s, geospatial
+//! metadata, and general-purpose [`Metadata`], common to all the bands.
+//!
+//! Each `RasterBand` contains a buffer of pixels (a.k.a. _cells_), a _no-data_ value, and other metadata.
+//!
+//! The [`raster`] module covers these concepts in more detail.
+//!
+//! ### Vector Data
+//!
+//! A vector `Dataset` contains a sequence of one or more [`Layer`]s, geospatial metadata,
+//! and general-purpose [`Metadata`], common to all the layers.
+//! Each `Layer` in turn contains zero or more [`Feature`]s, each of which contains  a `geometry`
+//! and set of fields.
+//!
+//! The [`vector`] module covers these concepts in more detail.
 
 pub use version::version_info;
 
