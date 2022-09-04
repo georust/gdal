@@ -42,7 +42,7 @@ pub fn _register_drivers() {
 ///
 /// #### Example
 ///
-/// ```rust
+/// ```rust, no_run
 /// use gdal::Driver;
 /// # fn main() -> gdal::errors::Result<()> {
 /// let cog_driver = Driver::get_by_name("COG")?;
