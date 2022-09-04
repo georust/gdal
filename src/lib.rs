@@ -2,7 +2,10 @@
 #![crate_type = "lib"]
 #![doc = include_str!("../README.md")]
 
-//! ## Examples
+//! ## Quick Examples
+//!
+//! To get you started with GDAL (without having to read the whole manual!),
+//! here are a couple of simple examples illustrating a few of the access patterns.
 //!
 //! ### Raster
 //!
@@ -75,21 +78,7 @@
 //!     Data size: (2, 3)
 //!     Data values: [47, 74, 77, 118, 98, 122]
 //!   Band 2
-//!     Description: ''
-//!     No-data value: None
-//!     Pixel data type: 1
-//!     Scale: None
-//!     Offset: None
-//!     Data size: (2, 3)
-//!     Data values: [50, 79, 77, 118, 95, 119]
-//!   Band 3
-//!     Description: ''
-//!     No-data value: None
-//!     Pixel data type: 1
-//!     Scale: None
-//!     Offset: None
-//!     Data size: (2, 3)
-//!     Data values: [71, 94, 79, 115, 77, 98]
+//!     ...
 //! ```
 //!
 //!
@@ -153,24 +142,48 @@
 //!       railway=
 //!       highway=footway
 //!     Feature fid=236194098, geometry_type='Line String', geometry_len=3
-//!       kind=path
-//!       sort_key=
-//!       is_link=no
-//!       is_tunnel=no
-//!       is_bridge=no
-//!       railway=
-//!       highway=footway
-//!     Feature fid=236194101, geometry_type='Line String', geometry_len=4
-//!       kind=path
-//!       sort_key=
-//!       is_link=no
-//!       is_tunnel=no
-//!       is_bridge=no
-//!       railway=
-//!       highway=footway
+//!       ...
 //! ...
 //! ```
-
+//!
+//! ## Data Model
+//!
+//! At the top level, GDAL uses the same data model to access both vector and raster data sets.
+//! There are several shared data model constructs at this level, but the first ones to become
+//! familiar with are [`Driver`], [`Dataset`], and [`Metadata`].
+//!
+//! ### Driver
+//!
+//! One of GDAL's major strengths is the vast number of data formats it's able to work with.
+//! The GDAL Manual has a full list of available [raster](https://gdal.org/drivers/raster/index.html)
+//! and [vector](https://gdal.org/drivers/vector/index.html) drivers.
+//!
+//! However, due to conditional compilation, not every driver listed will necessarily be available at runtime.
+//! Therefore, one of the primary uses of the the [`Driver`] is to inspect and load the available drivers.
+//! (You can use `gdalinfo --formats` to peruse this list from a CLI installation of GDAL)
+//!
+//! Each driver has its own set of options, capabilities, and limitations.
+//! Furthermore, operations on one driver (e.g. copying a datasets) may or may not be available in another.
+//! So when working with a new dataset it is important to refer to the driver's documentation for its capabilities.
+//!
+//! See [`Driver`] for more details.
+//!
+//! #### Example
+//!
+//! ```rust
+//! use gdal::Driver;
+//! # fn main() -> gdal::errors::Result<()> {
+//! let cog_driver = Driver::get_by_name("COG")?;
+//! println!("{}", cog_driver.long_name());
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! Output:
+//!
+//! ```text
+//! Cloud optimized GeoTIFF generator
+//! ```
 pub use version::version_info;
 
 pub mod config;
