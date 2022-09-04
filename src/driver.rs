@@ -1,5 +1,3 @@
-//! GDAL Driver API
-
 use std::ffi::CString;
 use std::path::Path;
 use std::sync::Once;
@@ -26,6 +24,8 @@ pub fn _register_drivers() {
     }
 }
 
+/// Raster and Vector Driver API
+///
 /// One of GDAL's major strengths is the vast number of data formats it's able to work with.
 /// The GDAL Manual has a full list of available [raster](https://gdal.org/drivers/raster/index.html)
 /// and [vector](https://gdal.org/drivers/vector/index.html) drivers.

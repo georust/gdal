@@ -1,11 +1,11 @@
-//! GDAL General-Purpose Metadata API
-
 use crate::errors::*;
 use crate::gdal_major_object::MajorObject;
 use crate::utils::{_last_cpl_err, _last_null_pointer_err, _string};
 use gdal_sys::{self, CPLErr};
 use std::ffi::CString;
 
+/// General-Purpose Metadata API
+///
 /// The [`Metadata`] trait exposes a simple general-purpose metadata model for both raster and vector datasets.
 /// These data are comprised of key-value strings, organized under parent keys called "domains".
 /// This includes the empty-string (`""`) root domain. There's even an `xml:` domain with it's own

@@ -1,20 +1,67 @@
-//! GDAL Vector Data
+//! GDAL Vector Data API
 //!
-//! ## Reading
+//! This example opens a vector [`Dataset`](crate::Dataset) and iterates over the various levels of structure within it.
+//! The GDAL vector data model is quite sophisticated, so please refer to the GDAL
+//! [Vector Data Model](https://gdal.org/user/vector_data_model.html) document for specifics.
 //!
-//! ```
-//! use std::path::Path;
-//! use gdal::Dataset;
+//! ```rust, no_run
+//! use gdal::{Dataset, Metadata};
+//! // The `LayerAccess` trait enables reading of vector specific fields from the `Dataset`.
 //! use gdal::vector::LayerAccess;
-//!
-//! let dataset = Dataset::open(Path::new("fixtures/roads.geojson")).unwrap();
-//! let mut layer = dataset.layer(0).unwrap();
-//! for feature in layer.features() {
-//!     let highway_field = feature.field("highway").unwrap().unwrap();
-//!     let geometry = feature.geometry();
-//!     println!("{} {}", highway_field.into_string().unwrap(), geometry.wkt().unwrap());
+//! # fn main() -> gdal::errors::Result<()> {
+//! use gdal::errors::GdalError;
+//! use gdal::vector::geometry_type_to_name;
+//! let dataset = Dataset::open("fixtures/roads.geojson")?;
+//! println!("Dataset description: {}", dataset.description()?);
+//! let layer_count = dataset.layer_count();
+//! println!("Number of layers: {layer_count}");
+//! // Unlike raster bands, layers are zero-based
+//! for l in 0..layer_count {
+//!     // We have to get a mutable borrow on the layer because the `Layer::features` iterator
+//!     // requires it.
+//!     let mut layer = dataset.layer(l)?;
+//!     let feature_count = layer.feature_count();
+//!     println!("  Layer {l}, name='{}', features={}", layer.name(), feature_count);
+//!     for feature in layer.features() {
+//!         // The fid is important in cases where the vector dataset is large can you
+//!         // need random access.
+//!         let fid = feature.fid().unwrap_or(0);
+//!         // Summarize the geometry
+//!         let geometry = feature.geometry();
+//!         let geom_type = geometry_type_to_name(geometry.geometry_type());
+//!         let geom_len = geometry.get_point_vec().len();
+//!         println!("    Feature fid={fid:?}, geometry_type='{geom_type}', geometry_len={geom_len}");
+//!         // Get all the available fields and print their values
+//!         for field in feature.fields() {
+//!             let name = field.0;
+//!             let value = field.1.and_then(|f| f.into_string()).unwrap_or("".into());
+//!             println!("      {name}={value}");
+//!         }
+//!     }
 //! }
+//! # Ok(())
+//! # }
 //! ```
+//!
+//! The resulting (truncated) output looks like this:
+//!
+//! ```text
+//! Dataset description: fixtures/roads.geojson
+//! Number of layers: 1
+//!   Layer 0, name='roads', features=21
+//!     Feature fid=236194095, geometry_type='Line String', geometry_len=3
+//!       kind=path
+//!       sort_key=
+//!       is_link=no
+//!       is_tunnel=no
+//!       is_bridge=no
+//!       railway=
+//!       highway=footway
+//!     Feature fid=236194098, geometry_type='Line String', geometry_len=3
+//!       ...
+//! ...
+//! ```
+//!
 
 mod defn;
 mod feature;

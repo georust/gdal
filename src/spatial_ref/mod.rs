@@ -1,6 +1,6 @@
 //! GDAL Spatial Reference System Functions
 //!
-//! https://gdal.org/api/ogr_srs_api.html
+//! <https://gdal.org/api/ogr_srs_api.html>
 
 mod srs;
 
