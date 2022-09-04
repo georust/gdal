@@ -1,9 +1,43 @@
+//! GDAL General-Purpose Metadata API
+
 use crate::errors::*;
 use crate::gdal_major_object::MajorObject;
 use crate::utils::{_last_cpl_err, _last_null_pointer_err, _string};
 use gdal_sys::{self, CPLErr};
 use std::ffi::CString;
 
+/// The [`Metadata`] trait exposes a simple general-purpose metadata model for both raster and vector datasets.
+/// These data are comprised of key-value strings, organized under parent keys called "domains".
+/// This includes the empty-string (`""`) root domain. There's even an `xml:` domain with it's own
+/// world of content.
+///
+/// GDAL's metadata structures could be seen as peculiar, and there are driver-specific nuances to navigate,
+/// but in scientifically rich datasets, or projects aiming for archival-quality content, its capabilities
+/// can fulfill sophisticated requirements.
+///
+/// Reading the _Metadata_ section in the [GDAL Raster Data Model](https://gdal.org/user/raster_data_model.html#metadata)
+/// document can help if you need to deep, fine-grained metadata access, or examples on how it is used.
+///
+/// ## Example
+///
+/// ```rust, no_run
+/// use gdal::{Dataset, Metadata};
+/// # fn main() -> gdal::errors::Result<()> {
+/// let dataset = Dataset::open("fixtures/tinymarble.tif")?;
+/// // `description` on a `Dataset` is usually the file name.
+/// let desc = dataset.description()?;
+/// dbg!(desc);
+///
+/// // `IMAGE_STRUCTURE` is one of the standard domains
+/// let md_domain = "IMAGE_STRUCTURE";
+/// // The `INTERLEAVE` key provides a hint as to how pixel data is organized
+/// let md_key = "INTERLEAVE";
+/// // NB: `domain` comes **after** the `key`
+/// let interleave = dataset.metadata_item(&md_key, &md_domain);
+/// dbg!(interleave);
+/// # Ok(())
+/// # }
+/// ```
 pub trait Metadata: MajorObject {
     fn description(&self) -> Result<String> {
         let c_res = unsafe { gdal_sys::GDALGetDescription(self.gdal_object_ptr()) };

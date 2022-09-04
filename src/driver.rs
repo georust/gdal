@@ -1,3 +1,5 @@
+//! GDAL Driver API
+
 use std::ffi::CString;
 use std::path::Path;
 use std::sync::Once;
@@ -24,6 +26,36 @@ pub fn _register_drivers() {
     }
 }
 
+/// One of GDAL's major strengths is the vast number of data formats it's able to work with.
+/// The GDAL Manual has a full list of available [raster](https://gdal.org/drivers/raster/index.html)
+/// and [vector](https://gdal.org/drivers/vector/index.html) drivers.
+///
+/// However, due to conditional compilation, not every driver listed will necessarily be available at runtime.
+/// Therefore, one of the primary uses of the the [`Driver`] is to inspect and load the available drivers.
+/// (You can use `gdalinfo --formats` to peruse this list from a CLI installation of GDAL)
+///
+/// Each driver has its own set of options, capabilities, and limitations.
+/// Furthermore, operations on one driver (e.g. copying a datasets) may or may not be available in another.
+/// So when working with a new dataset it is important to refer to the driver's documentation for its capabilities.
+///
+/// See [`Driver`] for more details.
+///
+/// #### Example
+///
+/// ```rust
+/// use gdal::Driver;
+/// # fn main() -> gdal::errors::Result<()> {
+/// let cog_driver = Driver::get_by_name("COG")?;
+/// println!("{}", cog_driver.long_name());
+/// # Ok(())
+/// # }
+/// ```
+///
+/// Output:
+///
+/// ```text
+/// Cloud optimized GeoTIFF generator
+/// ```
 #[allow(missing_copy_implementations)]
 pub struct Driver {
     c_driver: GDALDriverH,

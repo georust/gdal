@@ -158,32 +158,24 @@
 //! The GDAL Manual has a full list of available [raster](https://gdal.org/drivers/raster/index.html)
 //! and [vector](https://gdal.org/drivers/vector/index.html) drivers.
 //!
-//! However, due to conditional compilation, not every driver listed will necessarily be available at runtime.
-//! Therefore, one of the primary uses of the the [`Driver`] is to inspect and load the available drivers.
-//! (You can use `gdalinfo --formats` to peruse this list from a CLI installation of GDAL)
+//! The [`Driver` API][Driver] provides the requisite access points for working GDAL's drivers.
 //!
-//! Each driver has its own set of options, capabilities, and limitations.
-//! Furthermore, operations on one driver (e.g. copying a datasets) may or may not be available in another.
-//! So when working with a new dataset it is important to refer to the driver's documentation for its capabilities.
+//! ### Dataset
 //!
-//! See [`Driver`] for more details.
+//! [`Dataset`] is the top-level container for accessing all data within a data set, whether raster or vector.
+//! Some methods and traits on `Dataset` are shared between raster and vector datasets,
+//! and (due to historical reasons) some associated functions are only applicable to one context or the other.
+//! The [`raster`] and [`vector`] modules cover these specifics.
 //!
-//! #### Example
+//! ### Metadata
 //!
-//! ```rust
-//! use gdal::Driver;
-//! # fn main() -> gdal::errors::Result<()> {
-//! let cog_driver = Driver::get_by_name("COG")?;
-//! println!("{}", cog_driver.long_name());
-//! # Ok(())
-//! # }
-//! ```
+//! Metadata in GDAL takes a number of forms, some of which are specific to purpose
+//! (e.g. pixel interpretation, spatial reference system),
+//! and other more general-purpose (e.g. acquisition date-time). The former will be covered in
+//! relevant sections of the [`raster`] and [`vector`] modules, and the general-purpose data model
+//! in the [`Metadata`] API.
 //!
-//! Output:
-//!
-//! ```text
-//! Cloud optimized GeoTIFF generator
-//! ```
+
 pub use version::version_info;
 
 pub mod config;
