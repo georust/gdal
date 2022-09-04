@@ -94,6 +94,10 @@ pub use rasterize::{rasterize, BurnSource, MergeAlgorithm, OptimizeMode, Rasteri
 pub use types::{GDALDataType, GdalType};
 pub use warp::reproject;
 
+/// Key/value pair for passing driver-specific creation options to
+/// [`Driver::create_with_band_type_wth_options`](crate::Driver::create_with_band_type_with_options`).
+///
+/// See `papszOptions` in [GDAL's `Create(...)` API documentation](https://gdal.org/api/gdaldriver_cpp.html#_CPPv4N10GDALDriver6CreateEPKciii12GDALDataType12CSLConstList).
 #[derive(Debug)]
 pub struct RasterCreationOption<'a> {
     pub key: &'a str,

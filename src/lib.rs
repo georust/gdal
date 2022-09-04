@@ -1,6 +1,7 @@
 #![crate_name = "gdal"]
 #![crate_type = "lib"]
 
+//! # GDAL
 //! [GDAL](http://gdal.org/) is a translator and processing library for various raster and vector geospatial data formats.
 //!
 //! This crate provides safe, idiomatic [Rust](http://www.rust-lang.org/) bindings for GDAL.
@@ -79,7 +80,7 @@
 //!
 //! ### Raster Data
 //!
-//! A raster `Dataset` has a `size` (`cols`/`rows`), an ordered sequence of [`RasterBand`]s, geospatial
+//! A raster `Dataset` has a `size` (`cols`/`rows`), an ordered sequence of [`RasterBand`](raster::RasterBand)s, geospatial
 //! metadata, and general-purpose [`Metadata`], common to all the bands.
 //!
 //! Each `RasterBand` contains a buffer of pixels (a.k.a. _cells_), a _no-data_ value, and other metadata.
@@ -88,9 +89,9 @@
 //!
 //! ### Vector Data
 //!
-//! A vector `Dataset` contains a sequence of one or more [`Layer`]s, geospatial metadata,
+//! A vector `Dataset` contains a sequence of one or more [`Layer`](vector::Layer)s, geospatial metadata,
 //! and general-purpose [`Metadata`], common to all the layers.
-//! Each `Layer` in turn contains zero or more [`Feature`]s, each of which contains  a `geometry`
+//! Each `Layer` in turn contains zero or more [`Feature`](vector::Feature)s, each of which contains  a `geometry`
 //! and set of fields.
 //!
 //! The [`vector`] module covers these concepts in more detail.
