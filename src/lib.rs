@@ -1,5 +1,7 @@
 #![crate_name = "gdal"]
 #![crate_type = "lib"]
+// Enable `doc_cfg` features when `docsrs` is defined by docs.rs config
+#![cfg_attr(docsrs, feature(doc_cfg))]
 #![doc = include_str!("../README.md")]
 
 //! ## Examples
