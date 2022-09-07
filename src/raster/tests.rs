@@ -559,6 +559,8 @@ fn test_set_no_data_value() {
     assert_eq!(rasterband.no_data_value(), None);
     assert!(rasterband.set_no_data_value(1.23).is_ok());
     assert_eq!(rasterband.no_data_value(), Some(1.23));
+    assert!(rasterband.set_no_data(None).is_ok());
+    assert_eq!(rasterband.no_data_value(), None);
 }
 
 #[test]
