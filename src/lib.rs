@@ -2,176 +2,101 @@
 #![crate_type = "lib"]
 // Enable `doc_cfg` features when `docsrs` is defined by docs.rs config
 #![cfg_attr(docsrs, feature(doc_cfg))]
-#![doc = include_str!("../README.md")]
 
-//! ## Examples
+//! # GDAL
+//! [GDAL](http://gdal.org/) is a translator and processing library for various raster and vector geospatial data formats.
 //!
-//! ### Raster
+//! This crate provides safe, idiomatic [Rust](http://www.rust-lang.org/) bindings for GDAL.
 //!
-//! This example shows opening a raster [`Dataset`] and using a few of the data access methods.
-//! The GDAL [Raster Data Model](https://gdal.org/user/raster_data_model.html) document provides
-//! details on the various constructs involved, as this example only touches the surface.
+//! ## Capabilities
 //!
-//! ```rust, no_run
-//! // `Dataset` is required for opening files. `Metadata` is required to enable reading of some
-//! // general information properties, such as `description`.
-//! use gdal::{Dataset, Metadata};
-//! # fn main() -> gdal::errors::Result<()> {
-//! // The `Dataset::open` function is used to open all datasets, regardless of type.
-//! // There's a `Dataset:open_ex` variant which provides some additional options.
-//! let dataset = Dataset::open("fixtures/tinymarble.tif")?;
-//! // The `description` property for a `Dataset` is often (but not necessarily) the file name
-//! println!("Dataset description: {}", dataset.description()?);
-//! let band_count = dataset.raster_count();
-//! println!("Number of bands: {band_count}");
-//! // Beware! In GDAL, band indexes are 1-based!
-//! for i in 1..=band_count {
-//!     println!("  Band {i}");
-//!     let band = dataset.rasterband(i)?;
-//!     // Depending on the file, the description field may be the empty string :(
-//!     println!("    Description: '{}'", band.description()?);
-//!     // In GDAL, all no-data values are coerced to floating point types, regardless of the
-//!     // underlying pixel type.
-//!     println!("    No-data value: {:?}", band.no_data_value());
-//!     println!("    Pixel data type: {}", band.band_type());
-//!     // Scale and offset are often used with integral pixel types to convert between pixel value
-//!     // to some physical unit (e.g. watts per square meter per steradian)
-//!     println!("    Scale: {:?}", band.scale());
-//!     println!("    Offset: {:?}", band.offset());
-//!     // In GDAL you can read arbitrary regions of the raster, and have them up- or down-sampled
-//!     // when the output buffer size is different from the read size. The terminology GDAL
-//!     // uses takes getting used to. All parameters here are in pixel coordinates.
-//!     // Also note, tuples are in `(x, y)`/`(cols, rows)` order.
-//!     // `window` is the (x, y) coordinate of the upper left corner of the region to read.
-//!     let window = (20, 30);
-//!     // `window_size` is the amount to read `(cols, rows)`
-//!     let window_size = (2, 3);
-//!     // `size` is the output buffer size. If this is different from `window_size`, then
-//!     // the `resample_alg` parameter below becomes relevant.
-//!     let size = (2, 3);
-//!     // Options here include `NearestNeighbor` (default), `Bilinear`, `Cubic`, etc.
-//!     let resample_alg = None;
-//!     // Note the `u8` type parameter. GDAL will convert the native pixel type to whatever is
-//!     // specified here... which may or may not be right for your use case!
-//!     let rv = band.read_as::<u8>(window, window_size, size, resample_alg)?;
-//!     // `Rasterband::read_as` returns a `Buffer` struct, which contains the shape of the output
-//!     // `(cols, rows)` and a `Vec<_>` containing the pixel values.
-//!     println!("    Data size: {:?}", rv.size);
-//!     println!("    Data values: {:?}", rv.data);
-//! }
-//! # Ok(())
-//! # }
-//! ```
+//! GDAL is an incredibly powerful library. For a general understanding of its capabilities,
+//! a good place to get started is the [GDAL User-oriented documentation](https://gdal.org/user/index.html).
+//! These features include:
 //!
-//! The resulting output is:
+//! * Opening raster and vector file formats for reading/writing
+//! * Translating between file formats
+//! * Reading and writing metadata in raster and vector datasets
+//! * Accessing raster bands and their metadata
+//! * Reading and writing geospatial coordinate system and projection values
+//! * Warping (resampling and re-projecting) between coordinate systems
 //!
-//! ```text
-//! Dataset description: fixtures/tinymarble.tif
-//! Number of bands: 3
-//!   Band 1
-//!     Description: ''
-//!     No-data value: None
-//!     Pixel data type: 1
-//!     Scale: None
-//!     Offset: None
-//!     Data size: (2, 3)
-//!     Data values: [47, 74, 77, 118, 98, 122]
-//!   Band 2
-//!     Description: ''
-//!     No-data value: None
-//!     Pixel data type: 1
-//!     Scale: None
-//!     Offset: None
-//!     Data size: (2, 3)
-//!     Data values: [50, 79, 77, 118, 95, 119]
-//!   Band 3
-//!     Description: ''
-//!     No-data value: None
-//!     Pixel data type: 1
-//!     Scale: None
-//!     Offset: None
-//!     Data size: (2, 3)
-//!     Data values: [71, 94, 79, 115, 77, 98]
-//! ```
+//! ## Usage
 //!
+//! This crate provides high-level, idiomatic Rust bindings for GDAL.
+//! To do that, it uses [`gdal-sys`](gdal-sys) internally, a low-level interface to the GDAL C library,
+//! which is generated using [`bindgen`](https://rust-lang.github.io/rust-bindgen/).
+//! Using the `gdal-sys` crate directly is normally not needed, but it can be useful in order to call APIs that have not yet been exposed in this crate.
 //!
-//! ### Vector
+//! Building this crate assumes a compatible version of GDAL is installed with the corresponding header files and shared libraries.
+//! This repository includes pre-generated bindings for GDAL 2.4 through 3.5 (see the`gdal-sys/prebuilt-bindings` directory).
+//! If you're compiling against a later version of GDAL, you can enable the `bindgen` feature flag to have new bindings generated on the fly.
 //!
-//! This example opens a vector [`Dataset`] and iterates over the various levels of structure within it.
-//! The GDAL vector data model is quite sophisticated, so please refer to the GDAL
-//! [Vector Data Model](https://gdal.org/user/vector_data_model.html) document for specifics.
+//! ## Show Me Code!
+//!
+//! To get you started with GDAL (without having to read the whole manual!),
+//! take a look at the examples in the [`raster`](raster#example) and [`vector`](vector#example) modules,
+//! but for the maximally impatient, here you go:
 //!
 //! ```rust, no_run
 //! use gdal::{Dataset, Metadata};
-//! // The `LayerAccess` trait enables reading of vector specific fields from the `Dataset`.
-//! use gdal::vector::LayerAccess;
 //! # fn main() -> gdal::errors::Result<()> {
-//! use gdal::errors::GdalError;
-//! use gdal::vector::geometry_type_to_name;
-//! let dataset = Dataset::open("fixtures/roads.geojson")?;
-//! println!("Dataset description: {}", dataset.description()?);
-//! let layer_count = dataset.layer_count();
-//! println!("Number of layers: {layer_count}");
-//! // Unlike raster bands, layers are zero-based
-//! for l in 0..layer_count {
-//!     // We have to get a mutable borrow on the layer because the `Layer::features` iterator
-//!     // requires it.
-//!     let mut layer = dataset.layer(l)?;
-//!     let feature_count = layer.feature_count();
-//!     println!("  Layer {l}, name='{}', features={}", layer.name(), feature_count);
-//!     for feature in layer.features() {
-//!         // The fid is important in cases where the vector dataset is large can you
-//!         // need random access.
-//!         let fid = feature.fid().unwrap_or(0);
-//!         // Summarize the geometry
-//!         let geometry = feature.geometry();
-//!         let geom_type = geometry_type_to_name(geometry.geometry_type());
-//!         let geom_len = geometry.get_point_vec().len();
-//!         println!("    Feature fid={fid:?}, geometry_type='{geom_type}', geometry_len={geom_len}");
-//!         // Get all the available fields and print their values
-//!         for field in feature.fields() {
-//!             let name = field.0;
-//!             let value = field.1.and_then(|f| f.into_string()).unwrap_or("".into());
-//!             println!("      {name}={value}");
-//!         }
-//!     }
-//! }
+//! let ds = Dataset::open("fixtures/m_3607824_se_17_1_20160620_sub.tif")?;
+//! println!("This {} is in '{}' and has {} bands.", ds.driver().long_name(), ds.spatial_ref()?.name()?, ds.raster_count());
 //! # Ok(())
 //! # }
 //! ```
-//!
-//! The resulting (truncated) output looks like this:
-//!
 //! ```text
-//! Dataset description: fixtures/roads.geojson
-//! Number of layers: 1
-//!   Layer 0, name='roads', features=21
-//!     Feature fid=236194095, geometry_type='Line String', geometry_len=3
-//!       kind=path
-//!       sort_key=
-//!       is_link=no
-//!       is_tunnel=no
-//!       is_bridge=no
-//!       railway=
-//!       highway=footway
-//!     Feature fid=236194098, geometry_type='Line String', geometry_len=3
-//!       kind=path
-//!       sort_key=
-//!       is_link=no
-//!       is_tunnel=no
-//!       is_bridge=no
-//!       railway=
-//!       highway=footway
-//!     Feature fid=236194101, geometry_type='Line String', geometry_len=4
-//!       kind=path
-//!       sort_key=
-//!       is_link=no
-//!       is_tunnel=no
-//!       is_bridge=no
-//!       railway=
-//!       highway=footway
-//! ...
+//! This GeoTIFF is in 'NAD83 / UTM zone 17N' and has 4 bands.
 //! ```
+//!
+//! ## Data Model
+//!
+//! At the top level, GDAL uses the same data model to access both vector and raster data sets.
+//! There are several shared data model constructs at this level, but the first ones to become
+//! familiar with are [`Driver`], [`Dataset`], and [`Metadata`].
+//! These provide the general access points to [`raster`]- and [`vector`]-specific constructs.
+//!
+//! ### Driver
+//!
+//! One of GDAL's major strengths is the vast number of data formats it's able to work with.
+//! The GDAL Manual has a full list of available [raster](https://gdal.org/drivers/raster/index.html)
+//! and [vector](https://gdal.org/drivers/vector/index.html) drivers.
+//!
+//! The [`Driver` API][Driver] provides the requisite access points for working GDAL's drivers.
+//!
+//! ### Dataset
+//!
+//! [`Dataset`] is the top-level container for accessing all data within a data set, whether raster or vector.
+//! Some methods and traits on `Dataset` are shared between raster and vector datasets,
+//! and (due to historical reasons) some associated functions are only applicable to one context or the other.
+//! The [`raster`] and [`vector`] modules cover these specifics.
+//!
+//! ### Metadata
+//!
+//! Metadata in GDAL takes a number of forms, some of which are specific to purpose
+//! (e.g. pixel interpretation, spatial reference system),
+//! and other more general-purpose (e.g. acquisition date-time). The former will be covered in
+//! relevant sections of the [`raster`] and [`vector`] modules, and the general-purpose data model
+//! in the [`Metadata`] API.
+//!
+//! ### Raster Data
+//!
+//! A raster `Dataset` has a `size` (`cols`,`rows`), an ordered sequence of [`RasterBand`](raster::RasterBand)s, geospatial
+//! metadata, and general-purpose [`Metadata`], common to all the bands.
+//!
+//! Each `RasterBand` contains a buffer of pixels (a.k.a. _cells_), a _no-data_ value, and other metadata.
+//!
+//! The [`raster`] module covers these concepts in more detail.
+//!
+//! ### Vector Data
+//!
+//! A vector `Dataset` contains a sequence of one or more [`Layer`](vector::Layer)s, geospatial metadata,
+//! and general-purpose [`Metadata`], common to all the layers.
+//! Each `Layer` in turn contains zero or more [`Feature`](vector::Feature)s, each of which contains  a `geometry`
+//! and set of fields.
+//!
+//! The [`vector`] module covers these concepts in more detail.
 
 pub use version::version_info;
 
