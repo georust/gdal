@@ -10,6 +10,11 @@
 
   - <https://github.com/georust/gdal/pull/303>
 
+- Added ability to delete no-data when `None` is passed to `RasterBand::set_no_data(&mut self, no_data: Option<f64>))`
+
+  - <https://github.com/georust/gdal/pull/308>
+
+
 ## 0.13
 
 - Add prebuild bindings for GDAL 3.5

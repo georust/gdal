@@ -443,15 +443,13 @@ impl<'a> RasterBand<'a> {
     pub fn set_no_data(&mut self, no_data: Option<f64>) -> Result<()> {
         let rv = if let Some(no_data) = no_data {
             unsafe { gdal_sys::GDALSetRasterNoDataValue(self.c_rasterband, no_data) }
-        }
-        else {
+        } else {
             unsafe { gdal_sys::GDALDeleteRasterNoDataValue(self.c_rasterband) }
         };
 
         if rv != CPLErr::CE_None {
             Err(_last_cpl_err(rv))
-        }
-        else {
+        } else {
             Ok(())
         }
     }
