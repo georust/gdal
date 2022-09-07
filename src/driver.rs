@@ -202,7 +202,7 @@ impl Driver {
     /// Create a new dataset of size (`size_x`, `size_y`) and `bands` band count,
     /// with cell data type specified by `T` and extended options specified via `options`.
     /// [Per GDAL](https://gdal.org/api/gdaldriver_cpp.html#_CPPv4N10GDALDriver6CreateEPKciii12GDALDataType12CSLConstList),
-    /// the set of legal options for `options` is driver specific, and there is no way to query in advance to establish legal values.a
+    /// the set of legal options for `options` is driver specific, and there is no way to query in advance to establish the valid ones.
     ///
     /// See also: [`RasterCreationOption`], [`create`](Self::create), [`create_with_band_type`](Self::create_with_band_type).
     ///

@@ -82,7 +82,7 @@
 //!
 //! ### Raster Data
 //!
-//! A raster `Dataset` has a `size` (`cols`/`rows`), an ordered sequence of [`RasterBand`](raster::RasterBand)s, geospatial
+//! A raster `Dataset` has a `size` (`cols`,`rows`), an ordered sequence of [`RasterBand`](raster::RasterBand)s, geospatial
 //! metadata, and general-purpose [`Metadata`], common to all the bands.
 //!
 //! Each `RasterBand` contains a buffer of pixels (a.k.a. _cells_), a _no-data_ value, and other metadata.
