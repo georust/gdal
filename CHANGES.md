@@ -10,7 +10,8 @@
 
   - <https://github.com/georust/gdal/pull/303>
 
-- Added ability to delete no-data when `None` is passed to `RasterBand::set_no_data(&mut self, no_data: Option<f64>))`
+- **Breaking** `RasterBand::set_no_data_value` takes `Option<f64>` instead of `f64` so that no _no-data_ can be set.
+  Also makes it symmetric with `RasterBand::no_data_value` which returns `Option<f64>`.
 
   - <https://github.com/georust/gdal/pull/308>
 

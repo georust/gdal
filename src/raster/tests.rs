@@ -557,9 +557,9 @@ fn test_set_no_data_value() {
     let dataset = driver.create("", 20, 10, 1).unwrap();
     let mut rasterband = dataset.rasterband(1).unwrap();
     assert_eq!(rasterband.no_data_value(), None);
-    assert!(rasterband.set_no_data_value(1.23).is_ok());
+    assert!(rasterband.set_no_data_value(Some(1.23)).is_ok());
     assert_eq!(rasterband.no_data_value(), Some(1.23));
-    assert!(rasterband.set_no_data(None).is_ok());
+    assert!(rasterband.set_no_data_value(None).is_ok());
     assert_eq!(rasterband.no_data_value(), None);
 }
 
