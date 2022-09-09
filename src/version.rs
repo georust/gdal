@@ -3,11 +3,11 @@
 //! ## Example
 //!
 //! Get the same string provided by using `--version` with the various GDAL CLI tools,
-//! use [`VersionInfo::VERSION_SUMMARY`]:
+//! use [`VersionInfo::version_summary`]:
 //!
 //! ```rust, no_run
 //! use gdal::version::VersionInfo;
-//! let gdal_ver = VersionInfo::VERSION_SUMMARY;
+//! let gdal_ver = VersionInfo::version_summary();
 //! println!("{gdal_ver}")
 //! ```
 //! ```text,
@@ -15,8 +15,9 @@
 //! ```
 
 use crate::utils::_string;
+use std::collections::HashMap;
 use std::ffi::CString;
-use std::fmt::{Debug, Display, Formatter};
+use std::fmt::Write;
 
 /// Calls `GDALVersionInfo`, expecting `key` as one of the following values:
 ///
@@ -30,159 +31,101 @@ pub fn version_info(key: &str) -> String {
     _string(unsafe { gdal_sys::GDALVersionInfo(c_key.as_ptr()) })
 }
 
-/// Convenience selector for the various properties of GDAL version information that may be queried.
-///
-/// `VersionInfo` has a `Display` implementation which fetches the associated value from GDAL
-/// and returns it as a string.
+/// Convenience functions for the various pre-defined queryable properties of GDAL version information.
 ///
 /// ## Example
 ///
 /// For the string returned from passing `--version` to GDAL CLI tools,
-/// use [`VERSION_SUMMARY`](VersionInfo::VERSION_SUMMARY):
+/// use [`VersionInfo::version_summary`]:
 ///
 /// ```rust, no_run
 /// # use gdal::version::VersionInfo;
-/// println!("{}", VersionInfo::VERSION_SUMMARY);
+/// println!("{}", VersionInfo::version_summary());
 /// ```
 /// ```text,
 /// GDAL 3.5.1, released 2022/06/30
 /// ```
-/// For all the available version properties (except [`LICENSE`](VersionInfo::LICENSE)),
-/// use [`VERSION_REPORT`](VersionInfo::VERSION_REPORT):
+/// For all the available version properties (except [`VersionInfo::license`],
+/// use [VersionInfo::version_report]:
 ///
 /// ```rust, no_run
 /// # use gdal::version::VersionInfo;
-/// let report = VersionInfo::VERSION_REPORT.to_string();
+/// let report = VersionInfo::version_report();
 /// println!("{report}");
 /// ```
 /// ```text
 /// GDALVersionInfo {
-///     RELEASE_NAME: "3.5.1",
-///     RELEASE_DATE: "20220630",
-///     VERSION_NUM: "3050100",
-///     BUILD_INFO:  {
-///         PAM_ENABLED: "YES",
-///         OGR_ENABLED: "YES",
-///         GEOS_ENABLED: "YES",
-///         GEOS_VERSION: "3.11.0-CAPI-1.17.0",
-///         PROJ_BUILD_VERSION: "9.0.1",
-///         PROJ_RUNTIME_VERSION: "9.0.1",
-///     },
+///     RELEASE_NAME: "3.5.1"
+///     RELEASE_DATE: "20220630"
+///     VERSION_NUM: "3050100"
+///     BUILD_INFO {
+///         PAM_ENABLED: "YES"
+///         PROJ_BUILD_VERSION: "9.0.1"
+///         OGR_ENABLED: "YES"
+///         PROJ_RUNTIME_VERSION: "9.0.1"
+///         GEOS_ENABLED: "YES"
+///         GEOS_VERSION: "3.11.0-CAPI-1.17.0"
+///     }
 /// }
 /// ```
-#[allow(non_camel_case_types)]
-#[non_exhaustive]
-#[derive(Copy, Clone)]
-pub enum VersionInfo {
-    /// Returns one line version message suitable for use in response to version requests. i.e. “GDAL 1.1.7, released 2002/04/16”
-    VERSION_SUMMARY,
-    /// Returns GDAL_VERSION_NUM formatted as a string. i.e. “1170”
-    VERSION_NUM,
-    /// Returns GDAL_RELEASE_DATE formatted as a string. i.e. “20020416"
-    RELEASE_DATE,
-    /// Returns the GDAL_RELEASE_NAME. ie. “1.1.7”
-    RELEASE_NAME,
-    /// Returns the content of the LICENSE.TXT file from the GDAL_DATA directory.
-    LICENSE,
-    /// List of NAME=VALUE pairs separated by newlines with information on build time options.
-    BUILD_INFO,
-    /// Render all available version and build details in a multiline, debug string
-    VERSION_REPORT,
-}
-
-use VersionInfo::*;
+pub struct VersionInfo;
 impl VersionInfo {
-    /// Get the complete list of variants.
-    pub fn options() -> Vec<Self> {
-        vec![
-            VERSION_SUMMARY,
-            VERSION_NUM,
-            RELEASE_DATE,
-            RELEASE_NAME,
-            LICENSE,
-            BUILD_INFO,
-            VERSION_REPORT,
-        ]
+    /// Returns one line version message suitable for use in response to version requests. i.e. “GDAL 1.1.7, released 2002/04/16”
+    pub fn version_summary() -> String {
+        version_info("--version")
     }
-    /// Get the variant's name
-    pub fn name(&self) -> &'static str {
-        match self {
-            VERSION_SUMMARY => "VERSION_SUMMARY",
-            VERSION_NUM => "VERSION_NUM",
-            RELEASE_DATE => "RELEASE_DATE",
-            RELEASE_NAME => "RELEASE_NAME",
-            LICENSE => "LICENSE",
-            BUILD_INFO => "BUILD_INFO",
-            VERSION_REPORT => "VERSION_REPORT",
+    /// Returns GDAL_VERSION_NUM formatted as a string. i.e. “1170”
+    pub fn version_num() -> String {
+        version_info("VERSION_NUM")
+    }
+    /// Returns GDAL_RELEASE_DATE formatted as a string. i.e. “20020416"
+    pub fn release_date() -> String {
+        version_info("RELEASE_DATE")
+    }
+    /// Returns the GDAL_RELEASE_NAME. ie. “1.1.7”
+    pub fn release_name() -> String {
+        version_info("RELEASE_NAME")
+    }
+    /// Returns the content of the LICENSE.TXT file from the GDAL_DATA directory.
+    pub fn license() -> String {
+        version_info("LICENSE")
+    }
+    /// Get a dictionary of GDAL build configuration options, such as `GEOS_VERSION` and
+    /// `OGR_ENABLED`.
+    pub fn build_info() -> HashMap<String, String> {
+        let text = version_info("BUILD_INFO");
+        text.lines()
+            .filter_map(|l| l.split_once('='))
+            .map(|p| (p.0.to_string(), p.1.to_string()))
+            .collect()
+    }
+    /// Render all available version and build details in a multiline, debug string
+    pub fn version_report() -> String {
+        let mut buff: String = "GDALVersionInfo {\n".into();
+
+        fn kv(buff: &mut String, l: usize, k: &str, v: &str) {
+            writeln!(buff, "{:indent$}{k}: \"{v}\"", " ", indent = l * 4).unwrap();
         }
-    }
 
-    /// Fetch the key accepted by `version_info` if the variant has one.
-    fn gdal_key(&self) -> Option<&'static str> {
-        match self {
-            VERSION_SUMMARY => Some("--version"),
-            VERSION_NUM | RELEASE_DATE | RELEASE_NAME | LICENSE | BUILD_INFO => Some(self.name()),
-            VERSION_REPORT => None,
-        }
-    }
-}
+        kv(&mut buff, 1, "RELEASE_NAME", &Self::release_name());
+        kv(&mut buff, 1, "RELEASE_DATE", &Self::release_date());
+        kv(&mut buff, 1, "VERSION_NUM", &Self::version_num());
+        buff.push_str("    BUILD_INFO {\n");
 
-/// Provides renderings of each variant name along with value provided by GDAL.
-impl Debug for VersionInfo {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            VERSION_REPORT => f
-                .debug_struct("GDALVersionInfo")
-                .field(RELEASE_NAME.name(), &RELEASE_NAME.to_string())
-                .field(RELEASE_DATE.name(), &RELEASE_DATE.to_string())
-                .field(VERSION_NUM.name(), &VERSION_NUM.to_string())
-                .field(BUILD_INFO.name(), &BUILD_INFO)
-                .finish(),
-            BUILD_INFO => {
-                // For uniform formatting, we parse the result from GDAL, which claims to be structured.
-                let mut builder = f.debug_struct("");
-                let text = BUILD_INFO.to_string();
+        Self::build_info()
+            .iter()
+            .for_each(|(k, v)| kv(&mut buff, 2, k, v));
 
-                text.lines()
-                    .filter_map(|l| l.split_once('='))
-                    .for_each(|(key, value)| {
-                        builder.field(key, &value);
-                    });
-
-                builder.finish()
-            }
-            i => f.debug_tuple(i.name()).field(&i.to_string()).finish(),
-        }
-    }
-}
-
-/// Fetches and formats the GDAL version property associated with each variant.
-impl Display for VersionInfo {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        if let Some(key) = self.gdal_key() {
-            f.write_str(&version_info(key))
-        } else {
-            match self {
-                VERSION_REPORT => f.write_fmt(format_args!("{self:#?}")),
-                _ => unreachable!(
-                    "{} should have `gdal_key` or be `VERSION_REPORT`",
-                    self.name()
-                ),
-            }
-        }
-    }
-}
-
-impl Default for VersionInfo {
-    fn default() -> Self {
-        VERSION_SUMMARY
+        buff.push_str("    }\n");
+        buff.push('}');
+        buff
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::version_info;
-    use super::VersionInfo::*;
+    use crate::version::VersionInfo;
 
     #[test]
     fn test_version_info() {
@@ -204,10 +147,17 @@ mod tests {
     }
 
     #[test]
-    fn test_version_enum() {
-        let rel_name = RELEASE_NAME.to_string();
+    fn test_version_info_functions() {
+        let rel_name = VersionInfo::release_name();
         assert!(!rel_name.is_empty());
-        let rpt = VERSION_REPORT.to_string();
+
+        let build = VersionInfo::build_info();
+        assert!(!build.is_empty());
+
+        let rpt = VersionInfo::version_report();
         assert!(rpt.contains(&rel_name));
+
+        let license = VersionInfo::license();
+        assert!(license.contains("opyright"));
     }
 }

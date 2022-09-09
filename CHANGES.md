@@ -10,7 +10,7 @@
 
   - <https://github.com/georust/gdal/pull/303>
 
-- Added a more ergonomic and strongly typed means of accessing GDAL version properties
+- Added a more ergonomic means of accessing GDAL version properties
 
   - <https://github.com/georust/gdal/pull/305>
 
