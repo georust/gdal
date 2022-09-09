@@ -35,3 +35,10 @@ trybuild = "1.0"
 
 [workspace]
 members = ["gdal-sys"]
+
+# docs.rs-specific configuration
+[package.metadata.docs.rs]
+# include `array` feature in documentation
+features = ["array"]
+# define attribute `docsrs` for feature badges
+rustdoc-args = ["--cfg", "docsrs"]

@@ -311,6 +311,7 @@ impl<'a> RasterBand<'a> {
     }
 
     #[cfg(feature = "ndarray")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "array")))]
     /// Read a 'Array2<T>' from this band. T implements 'GdalType'.
     ///
     /// # Arguments
@@ -348,6 +349,7 @@ impl<'a> RasterBand<'a> {
     }
 
     #[cfg(feature = "ndarray")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "array")))]
     /// Read a 'Array2<T>' from a 'Dataset' block. T implements 'GdalType'
     /// # Arguments
     /// * block_index - the block index
