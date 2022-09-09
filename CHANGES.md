@@ -10,6 +10,10 @@
 
   - <https://github.com/georust/gdal/pull/303>
 
+- Provided access to `gdal-sys` discriminant values in `ResampleAlg` enum.
+
+  - <https://github.com/georust/gdal/pull/309>
+
 ## 0.13
 
 - Add prebuild bindings for GDAL 3.5
