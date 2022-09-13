@@ -431,12 +431,20 @@ impl<'a> RasterBand<'a> {
     }
 
     /// Set the no data value of this band.
-    pub fn set_no_data_value(&mut self, no_data: f64) -> Result<()> {
-        let rv = unsafe { gdal_sys::GDALSetRasterNoDataValue(self.c_rasterband, no_data) };
+    ///
+    /// If `no_data` is `None`, any existing no-data value is deleted.
+    pub fn set_no_data_value(&mut self, no_data: Option<f64>) -> Result<()> {
+        let rv = if let Some(no_data) = no_data {
+            unsafe { gdal_sys::GDALSetRasterNoDataValue(self.c_rasterband, no_data) }
+        } else {
+            unsafe { gdal_sys::GDALDeleteRasterNoDataValue(self.c_rasterband) }
+        };
+
         if rv != CPLErr::CE_None {
-            return Err(_last_cpl_err(rv));
+            Err(_last_cpl_err(rv))
+        } else {
+            Ok(())
         }
-        Ok(())
     }
 
     /// Returns the color interpretation of this band.
