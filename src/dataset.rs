@@ -31,7 +31,7 @@ use crate::raster::Group;
 use bitflags::bitflags;
 
 /// A six-element array storing the coefficients of an [affine transform]
-/// used in mapping coordinates between pixel/line `(P,L)` (raster) space,
+/// used in mapping coordinates between pixel/line `(P, L)` (raster) space,
 /// and `(Xp,Yp)` (projection/[`SpatialRef`]) space.
 ///
 /// # Interpretation
@@ -39,11 +39,11 @@ use bitflags::bitflags;
 /// A `GeoTransform`'s components have the following meanings:
 ///
 ///   * `GeoTransform[0]`: x-coordinate of the upper-left corner of the upper-left pixel.
-///   * `GeoTransform[1]`: w-e pixel resolution / pixel width.
+///   * `GeoTransform[1]`: W-E pixel resolution (pixel width).
 ///   * `GeoTransform[2]`: row rotation (typically zero).
 ///   * `GeoTransform[3]`: y-coordinate of the upper-left corner of the upper-left pixel.
 ///   * `GeoTransform[4]`: column rotation (typically zero).
-///   * `GeoTransform[5]`: n-s pixel resolution / pixel height (negative value for a north-up image).
+///   * `GeoTransform[5]`: N-S pixel resolution (pixel height), negative value for a North-up image.
 ///
 ///
 /// ## Note
