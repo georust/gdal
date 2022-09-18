@@ -10,11 +10,14 @@
 
   - <https://github.com/georust/gdal/pull/303>
 
+- Provided access to `gdal-sys` discriminant values in `ResampleAlg` enum.
+
+  - <https://github.com/georust/gdal/pull/309>
+
 - **Breaking** `RasterBand::set_no_data_value` takes `Option<f64>` instead of `f64` so that no _no-data_ can be set.
   Also makes it symmetric with `RasterBand::no_data_value` which returns `Option<f64>`.
 
   - <https://github.com/georust/gdal/pull/308>
-
 
 ## 0.13
 
