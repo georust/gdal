@@ -5,8 +5,8 @@ use crate::raster::{GDALDataType, GdalType};
 use crate::utils::{_last_cpl_err, _last_null_pointer_err, _string};
 use gdal_sys::{
     self, CPLErr, GDALColorEntry, GDALColorInterp, GDALColorTableH, GDALComputeRasterMinMax,
-    GDALGetRasterStatistics, GDALMajorObjectH, GDALPaletteInterp, GDALRWFlag, GDALRasterBandH,
-    GDALRasterIOExtraArg,
+    GDALGetRasterStatistics, GDALMajorObjectH, GDALPaletteInterp, GDALRIOResampleAlg, GDALRWFlag,
+    GDALRasterBandH, GDALRasterIOExtraArg,
 };
 use libc::c_int;
 use std::ffi::CString;
@@ -17,37 +17,49 @@ use ndarray::Array2;
 
 use crate::errors::*;
 
-/// Resampling algorithms, map GDAL defines
+/// Resampling algorithms used throughout various GDAL raster I/O operations.
+///
+/// # Example
+///
+/// ```rust
+/// use gdal::Dataset;
+/// # fn main() -> gdal::errors::Result<()> {
+/// use gdal::raster::ResampleAlg;
+/// let ds = Dataset::open("fixtures/tinymarble.tif")?;
+/// let band1 = ds.rasterband(1)?;
+/// let stats = band1.get_statistics(true, false)?.unwrap();
+/// // Down-sample a image using cubic-spline interpolation
+/// let buf = band1.read_as::<f64>((0, 0), ds.raster_size(), (2, 2), Some(ResampleAlg::CubicSpline))?;
+/// // In this particular image, resulting data should be close to the overall average.
+/// assert!(buf.data.iter().all(|c| (c - stats.mean).abs() < stats.std_dev / 2.0));
+/// # Ok(())
+/// # }
+/// ```
 #[derive(Debug, Copy, Clone)]
+#[repr(u32)]
 pub enum ResampleAlg {
     /// Nearest neighbour
-    NearestNeighbour,
+    NearestNeighbour = GDALRIOResampleAlg::GRIORA_NearestNeighbour,
     /// Bilinear (2x2 kernel)
-    Bilinear,
+    Bilinear = GDALRIOResampleAlg::GRIORA_Bilinear,
     /// Cubic Convolution Approximation (4x4 kernel)
-    Cubic,
+    Cubic = GDALRIOResampleAlg::GRIORA_Cubic,
     /// Cubic B-Spline Approximation (4x4 kernel)
-    CubicSpline,
+    CubicSpline = GDALRIOResampleAlg::GRIORA_CubicSpline,
     /// Lanczos windowed sinc interpolation (6x6 kernel)
-    Lanczos,
+    Lanczos = GDALRIOResampleAlg::GRIORA_Lanczos,
     /// Average
-    Average,
+    Average = GDALRIOResampleAlg::GRIORA_Average,
     /// Mode (selects the value which appears most often of all the sampled points)
-    Mode,
+    Mode = GDALRIOResampleAlg::GRIORA_Mode,
     /// Gauss blurring
-    Gauss,
+    Gauss = GDALRIOResampleAlg::GRIORA_Gauss,
 }
 
-fn map_resample_alg(alg: &ResampleAlg) -> u32 {
-    match alg {
-        ResampleAlg::NearestNeighbour => 0,
-        ResampleAlg::Bilinear => 1,
-        ResampleAlg::Cubic => 2,
-        ResampleAlg::CubicSpline => 3,
-        ResampleAlg::Lanczos => 4,
-        ResampleAlg::Average => 5,
-        ResampleAlg::Mode => 6,
-        ResampleAlg::Gauss => 7,
+impl ResampleAlg {
+    /// Convert Rust enum discriminant to value expected by [`GDALRasterIOExtraArg`].
+    pub fn to_gdal(&self) -> GDALRIOResampleAlg::Type {
+        *self as GDALRIOResampleAlg::Type
     }
 }
 
@@ -131,7 +143,7 @@ impl From<RasterIOExtraArg> for GDALRasterIOExtraArg {
 
         GDALRasterIOExtraArg {
             nVersion: n_version as c_int,
-            eResampleAlg: map_resample_alg(&e_resample_alg),
+            eResampleAlg: e_resample_alg.to_gdal(),
             pfnProgress: pfn_progress,
             pProgressData: p_progress_data,
             bFloatingPointWindowValidity: b_floating_point_window_validity as c_int,
