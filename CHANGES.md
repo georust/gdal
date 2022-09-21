@@ -10,6 +10,10 @@
 
   - <https://github.com/georust/gdal/pull/303>
 
+- Added a more ergonomic means of accessing GDAL version properties
+
+  - <https://github.com/georust/gdal/pull/305>
+
 - Provided access to `gdal-sys` discriminant values in `ResampleAlg` enum.
 
   - <https://github.com/georust/gdal/pull/309>
