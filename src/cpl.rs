@@ -73,7 +73,7 @@ impl CslStringList {
 
     /// Determine the number of entries in the list.
     pub fn len(&self) -> isize {
-        unsafe { CSLCount(self.as_ptr()) as isize }
+        (unsafe { CSLCount(self.as_ptr()) }) as isize
     }
 
     /// Determine if the list has any values
@@ -86,7 +86,7 @@ impl CslStringList {
         CslStringListIterator::new(self)
     }
 
-    /// Get the raw pointer behind list's data.
+    /// Get the raw pointer to the underlying data.
     pub fn as_ptr(&self) -> gdal_sys::CSLConstList {
         self.list_ptr
     }
