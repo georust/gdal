@@ -7,7 +7,7 @@ use std::ffi::CString;
 use std::fmt::{Debug, Formatter};
 use std::ptr;
 
-use gdal_sys::{CSLCount, CSLDestroy, CSLFetchNameValue, CSLGetField, CSLSetNameValue};
+use gdal_sys::{CSLCount, CSLDestroy, CSLFetchNameValue, CSLSetNameValue};
 use libc::c_char;
 
 use crate::errors::{GdalError, Result};
@@ -72,13 +72,13 @@ impl CslStringList {
     }
 
     /// Determine the number of entries in the list.
-    pub fn len(&self) -> isize {
-        (unsafe { CSLCount(self.as_ptr()) }) as isize
+    pub fn len(&self) -> usize {
+        (unsafe { CSLCount(self.as_ptr()) }) as usize
     }
 
     /// Determine if the list has any values
     pub fn is_empty(&self) -> bool {
-        self.len() <= 0
+        self.len() == 0
     }
 
     /// Get an iterator over the name/value elements of the list.
@@ -106,8 +106,8 @@ impl Default for CslStringList {
 
 pub struct CslStringListIterator<'a> {
     list: &'a CslStringList,
-    idx: isize,
-    count: isize,
+    idx: usize,
+    count: usize,
 }
 
 impl<'a> CslStringListIterator<'a> {
@@ -131,7 +131,12 @@ impl<'a> Iterator for CslStringListIterator<'a> {
             return None;
         }
 
-        let field = unsafe { CSLGetField(self.list.as_ptr(), self.idx as libc::c_int) };
+        let field = unsafe {
+            // Equivalent to, but less traversals than:
+            // CSLGetField(self.list.as_ptr(), self.idx as libc::c_int)
+            let slice = std::slice::from_raw_parts(self.list.list_ptr, self.count);
+            slice[self.idx]
+        };
         if field.is_null() {
             None
         } else {
