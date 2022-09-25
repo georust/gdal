@@ -149,7 +149,7 @@ impl GeoTransformEx for GeoTransform {
         let rv = unsafe {
             gdal_sys::GDALInvGeoTransform(
                 self.as_ptr() as *mut f64,
-                (&mut *gt_out.as_mut_ptr()).as_mut_ptr(),
+                (*gt_out.as_mut_ptr()).as_mut_ptr(),
             )
         };
         if rv == 0 {

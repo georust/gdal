@@ -10,6 +10,14 @@ pub fn _string(raw_ptr: *const c_char) -> String {
     c_str.to_string_lossy().into_owned()
 }
 
+pub(crate) fn _string_tuple(raw_ptr: *const c_char, delim: char) -> Option<(String, String)> {
+    let c_str = unsafe { CStr::from_ptr(raw_ptr) };
+    c_str
+        .to_string_lossy()
+        .split_once(delim)
+        .map(|(k, v)| (k.to_string(), v.to_string()))
+}
+
 pub fn _string_array(raw_ptr: *mut *mut c_char) -> Vec<String> {
     _convert_raw_ptr_array(raw_ptr, _string)
 }

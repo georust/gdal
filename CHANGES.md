@@ -23,6 +23,10 @@
 
   - <https://github.com/georust/gdal/pull/308>
 
+- Added quality-of-life features to `CslStringList`: `len`, `is_empty`, `Debug` and `Iterator` implementations. 
+
+  - <https://github.com/georust/gdal/pull/311>
+
 ## 0.13
 
 - Add prebuild bindings for GDAL 3.5
