@@ -1,9 +1,7 @@
 use crate::dataset::Dataset;
 use crate::metadata::Metadata;
 use crate::raster::rasterband::ResampleAlg;
-use crate::raster::{
-    ByteBuffer, ColorInterpretation, RasterCreationOption, StatisticsAll, StatisticsMinMax,
-};
+use crate::raster::{ByteBuffer, ColorEntry, ColorInterpretation, ColorTable, RasterCreationOption, StatisticsAll, StatisticsMinMax};
 use crate::test_utils::TempFixture;
 use crate::vsi::unlink_mem_file;
 use crate::Driver;
@@ -12,6 +10,7 @@ use std::path::Path;
 
 #[cfg(feature = "ndarray")]
 use ndarray::arr2;
+use crate::errors::GdalError;
 
 macro_rules! fixture {
     ($name:expr) => {
@@ -805,6 +804,39 @@ fn test_color_table() {
             panic!();
         }
     }
+}
+
+#[test]
+fn test_create_color_table() -> crate::errors::Result<()>{
+    let fixture = TempFixture::fixture("labels.tif");
+    // Open, modify, then close the base file.
+    {
+        let dataset = Dataset::open(&fixture)?;
+        assert_eq!(dataset.raster_count(), 1);
+        let mut band = dataset.rasterband(1)?;
+        assert_eq!(band.band_type(), GDALDataType::GDT_Byte);
+        assert!(band.color_table().is_none());
+
+        let mut ct = ColorTable::default();
+        ct.set_color_entry(2, ColorEntry::rgba(255, 0, 0, 255));
+        ct.set_color_entry(5, ColorEntry::rgba(0, 255, 0, 255));
+        ct.set_color_entry(7, ColorEntry::rgba(0, 0, 255, 255));
+
+        assert_eq!(ct.entry_count(), 8);
+        assert_eq!(ct.entry(0), Some(ColorEntry::rgba(0, 0, 0, 0)));
+        assert_eq!(ct.entry(2), Some(ColorEntry::rgba(255, 0, 0, 255)));
+        assert_eq!(ct.entry(8), None);
+
+        band.set_color_table(ct);
+
+    }
+
+    // Reopen to confirm the changes.
+    let dataset = Dataset::open(&fixture)?;
+    let band = dataset.rasterband(1)?;
+    let ct = band.color_table().ok_or_else(|| GdalError::BadArgument("missing color table".into()))?;
+
+    Ok(())
 }
 
 #[test]
