@@ -856,11 +856,13 @@ impl PaletteInterpretation {
     }
 }
 
+/// Grayscale [`ColorTable`] entry.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct GrayEntry {
     pub g: i16,
 }
 
+/// Red, green, blue, alpha [`ColorTable`] entry.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct RgbaEntry {
     pub r: i16,
@@ -869,6 +871,7 @@ pub struct RgbaEntry {
     pub a: i16,
 }
 
+/// Cyan, magenta, yellow, black [`ColorTable`] entry.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct CmykEntry {
     pub c: i16,
@@ -877,6 +880,7 @@ pub struct CmykEntry {
     pub k: i16,
 }
 
+/// Hue, lightness, saturation [`ColorTable`] entry.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct HlsEntry {
     pub h: i16,
@@ -884,6 +888,7 @@ pub struct HlsEntry {
     pub s: i16,
 }
 
+/// Options for defining [`ColorInterpretation::PaletteIndex`] entries in a [`ColorTable`].
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum ColorEntry {
     Gray(GrayEntry),
@@ -993,9 +998,6 @@ impl Debug for ColorEntry {
 
 /// Color table for raster bands that use [`ColorInterpretation::PaletteIndex`] color interpretation.
 ///
-/// This object carries the lifetime of the raster band that
-/// contains it. This is necessary to prevent the raster band
-/// from being dropped before the color table.
 ///
 /// # Example
 ///
