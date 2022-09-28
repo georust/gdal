@@ -1,16 +1,19 @@
 use crate::dataset::Dataset;
 use crate::metadata::Metadata;
 use crate::raster::rasterband::ResampleAlg;
-use crate::raster::{ByteBuffer, ColorEntry, ColorInterpretation, ColorTable, RasterCreationOption, StatisticsAll, StatisticsMinMax};
+use crate::raster::{
+    ByteBuffer, ColorEntry, ColorInterpretation, ColorTable, RasterCreationOption, StatisticsAll,
+    StatisticsMinMax,
+};
 use crate::test_utils::TempFixture;
 use crate::vsi::unlink_mem_file;
 use crate::Driver;
 use gdal_sys::GDALDataType;
 use std::path::Path;
 
+use crate::errors::GdalError;
 #[cfg(feature = "ndarray")]
 use ndarray::arr2;
-use crate::errors::GdalError;
 
 macro_rules! fixture {
     ($name:expr) => {
@@ -807,7 +810,7 @@ fn test_color_table() {
 }
 
 #[test]
-fn test_create_color_table() -> crate::errors::Result<()>{
+fn test_create_color_table() -> crate::errors::Result<()> {
     let fixture = TempFixture::fixture("labels.tif");
     // Open, modify, then close the base file.
     {
@@ -818,27 +821,39 @@ fn test_create_color_table() -> crate::errors::Result<()>{
         assert!(band.color_table().is_none());
 
         let mut ct = ColorTable::default();
-        ct.set_color_entry(2, ColorEntry::rgba(255, 0, 0, 255));
-        ct.set_color_entry(5, ColorEntry::rgba(0, 255, 0, 255));
-        ct.set_color_entry(7, ColorEntry::rgba(0, 0, 255, 255));
+        ct.set_color_entry(2, &ColorEntry::rgba(255, 0, 0, 255));
+        ct.set_color_entry(5, &ColorEntry::rgba(0, 255, 0, 255));
+        ct.set_color_entry(7, &ColorEntry::rgba(0, 0, 255, 255));
 
         assert_eq!(ct.entry_count(), 8);
         assert_eq!(ct.entry(0), Some(ColorEntry::rgba(0, 0, 0, 0)));
         assert_eq!(ct.entry(2), Some(ColorEntry::rgba(255, 0, 0, 255)));
         assert_eq!(ct.entry(8), None);
 
-        band.set_color_table(ct);
-
+        band.set_color_table(&ct);
     }
 
     // Reopen to confirm the changes.
     let dataset = Dataset::open(&fixture)?;
     let band = dataset.rasterband(1)?;
-    let ct = band.color_table().ok_or_else(|| GdalError::BadArgument("missing color table".into()))?;
+    let ct = band
+        .color_table()
+        .ok_or_else(|| GdalError::BadArgument("missing color table".into()))?;
     assert_eq!(ct.entry_count(), 8);
     assert_eq!(ct.entry(0), Some(ColorEntry::rgba(0, 0, 0, 0)));
     assert_eq!(ct.entry(2), Some(ColorEntry::rgba(255, 0, 0, 255)));
     assert_eq!(ct.entry(8), None);
+
+    Ok(())
+}
+
+#[test]
+fn test_color_ramp() -> crate::errors::Result<()> {
+    let ct = ColorTable::color_ramp(0, &ColorEntry::grey(0), 99, &ColorEntry::grey(99))?;
+    assert_eq!(ct.entry(0), Some(ColorEntry::grey(0)));
+    assert_eq!(ct.entry(57), Some(ColorEntry::grey(57)));
+    assert_eq!(ct.entry(99), Some(ColorEntry::grey(99)));
+    assert_eq!(ct.entry(100), None);
 
     Ok(())
 }

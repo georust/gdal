@@ -3,7 +3,12 @@ use crate::gdal_major_object::MajorObject;
 use crate::metadata::Metadata;
 use crate::raster::{GDALDataType, GdalType};
 use crate::utils::{_last_cpl_err, _last_null_pointer_err, _string};
-use gdal_sys::{self, CPLErr, GDALColorEntry, GDALColorInterp, GDALColorTableH, GDALComputeRasterMinMax, GDALGetRasterStatistics, GDALMajorObjectH, GDALPaletteInterp, GDALRIOResampleAlg, GDALRWFlag, GDALRasterBandH, GDALRasterIOExtraArg, GDALCreateColorTable, GDALSetColorEntry, GDALSetRasterColorTable};
+use gdal_sys::{
+    self, CPLErr, GDALColorEntry, GDALColorInterp, GDALColorTableH, GDALComputeRasterMinMax,
+    GDALCreateColorRamp, GDALCreateColorTable, GDALDestroyColorTable, GDALGetPaletteInterpretation,
+    GDALGetRasterStatistics, GDALMajorObjectH, GDALPaletteInterp, GDALRIOResampleAlg, GDALRWFlag,
+    GDALRasterBandH, GDALRasterIOExtraArg, GDALSetColorEntry, GDALSetRasterColorTable,
+};
 use libc::c_int;
 use std::ffi::CString;
 use std::fmt::{Debug, Formatter};
@@ -483,7 +488,9 @@ impl<'a> RasterBand<'a> {
     }
 
     /// Set the color table for this band.
-    pub fn set_color_table(&mut self, colors: ColorTable) {
+    ///
+    /// See [`ColorTable`] for usage example.
+    pub fn set_color_table(&mut self, colors: &ColorTable) {
         unsafe { GDALSetRasterColorTable(self.c_rasterband, colors.c_color_table) };
     }
 
@@ -844,7 +851,7 @@ impl PaletteInterpretation {
             Self::Gray => GDALPaletteInterp::GPI_Gray,
             Self::Rgba => GDALPaletteInterp::GPI_RGB,
             Self::Cmyk => GDALPaletteInterp::GPI_CMYK,
-            Self::Hls => GDALPaletteInterp::GPI_HLS
+            Self::Hls => GDALPaletteInterp::GPI_HLS,
         }
     }
 }
@@ -893,7 +900,7 @@ impl ColorEntry {
 
     /// Instantiate an red, green, blue, alpha color entry
     pub fn rgba(r: i16, g: i16, b: i16, a: i16) -> Self {
-        Self::Rgba(RgbaEntry { r, g, b, a})
+        Self::Rgba(RgbaEntry { r, g, b, a })
     }
 
     /// Instantiate a cyan, magenta, yellow, black color entry
@@ -906,11 +913,20 @@ impl ColorEntry {
         Self::Hls(HlsEntry { h, l, s })
     }
 
+    /// Get the ['PaletteInterpretation'] describing `self`.
+    pub fn palette_interpretation(&self) -> PaletteInterpretation {
+        match self {
+            ColorEntry::Gray(_) => PaletteInterpretation::Gray,
+            ColorEntry::Rgba(_) => PaletteInterpretation::Rgba,
+            ColorEntry::Cmyk(_) => PaletteInterpretation::Cmyk,
+            ColorEntry::Hls(_) => PaletteInterpretation::Hls,
+        }
+    }
+
+    /// Create from a C [`GDALColorEntry`].
     fn from(e: GDALColorEntry, interp: PaletteInterpretation) -> ColorEntry {
         match interp {
-            PaletteInterpretation::Gray => ColorEntry::Gray(GrayEntry {
-                g: e.c1
-            }),
+            PaletteInterpretation::Gray => ColorEntry::Gray(GrayEntry { g: e.c1 }),
             PaletteInterpretation::Rgba => ColorEntry::Rgba(RgbaEntry {
                 r: e.c1,
                 g: e.c2,
@@ -932,33 +948,33 @@ impl ColorEntry {
     }
 }
 
-impl From<ColorEntry> for GDALColorEntry {
-    fn from(e: ColorEntry) -> Self {
+impl From<&ColorEntry> for GDALColorEntry {
+    fn from(e: &ColorEntry) -> Self {
         match e {
             ColorEntry::Gray(e) => GDALColorEntry {
                 c1: e.g,
                 c2: 0,
                 c3: 0,
-                c4: 0
+                c4: 0,
             },
             ColorEntry::Rgba(e) => GDALColorEntry {
                 c1: e.r,
                 c2: e.g,
                 c3: e.b,
-                c4: e.a
+                c4: e.a,
             },
             ColorEntry::Cmyk(e) => GDALColorEntry {
                 c1: e.c,
                 c2: e.m,
                 c3: e.y,
-                c4: e.k
+                c4: e.k,
             },
             ColorEntry::Hls(e) => GDALColorEntry {
                 c1: e.h,
                 c2: e.l,
                 c3: e.s,
-                c4: 0
-            }
+                c4: 0,
+            },
         }
     }
 }
@@ -970,19 +986,18 @@ impl Debug for ColorEntry {
             ColorEntry::Gray(e) => e.fmt(f),
             ColorEntry::Rgba(e) => e.fmt(f),
             ColorEntry::Cmyk(e) => e.fmt(f),
-            ColorEntry::Hls(e) => e.fmt(f)
+            ColorEntry::Hls(e) => e.fmt(f),
         }
     }
 }
 
-/// Color table for raster bands that use the PaletteIndex color interpretation.
+/// Color table for raster bands that use [`ColorInterpretation::PaletteIndex`] color interpretation.
 ///
 /// This object carries the lifetime of the raster band that
 /// contains it. This is necessary to prevent the raster band
 /// from being dropped before the color table.
 ///
 /// # Example
-///
 ///
 /// ```rust, no_run
 /// use gdal::{Dataset, Driver};
@@ -1000,11 +1015,11 @@ impl Debug for ColorEntry {
 ///
 /// // Create a new color table for 3 classes + no-data
 /// let mut ct = ColorTable::new(PaletteInterpretation::Rgba);
-/// ct.set_color_entry(0, ColorEntry::rgba(255, 255, 0, 255));
-/// ct.set_color_entry(1, ColorEntry::rgba(0, 255, 255, 255));
-/// ct.set_color_entry(2, ColorEntry::rgba(255, 0, 255, 255));
-/// ct.set_color_entry(255, ColorEntry::rgba(0, 0, 0, 0));
-/// band.set_color_table(ct);
+/// ct.set_color_entry(0, &ColorEntry::rgba(255, 255, 0, 255));
+/// ct.set_color_entry(1, &ColorEntry::rgba(0, 255, 255, 255));
+/// ct.set_color_entry(2, &ColorEntry::rgba(255, 0, 255, 255));
+/// ct.set_color_entry(255, &ColorEntry::rgba(0, 0, 0, 0));
+/// band.set_color_table(&ct);
 ///
 /// // Render a PNG
 /// let png_driver = Driver::get_by_name("PNG")?;
@@ -1016,25 +1031,77 @@ impl Debug for ColorEntry {
 pub struct ColorTable<'a> {
     palette_interpretation: PaletteInterpretation,
     c_color_table: GDALColorTableH,
+    /// If `true`, Rust is responsible for deallocating color table pointed to by
+    /// `c_color_table`, which is the case when instantiated directly, as opposed to
+    /// when read via [`RasterBand::color_table`].
+    rust_owned: bool,
     phantom_raster_band: PhantomData<&'a RasterBand<'a>>,
 }
 
 impl<'a> ColorTable<'a> {
     /// Instantiate a new color table with the given palette interpretation.
     pub fn new(interp: PaletteInterpretation) -> Self {
-        let c_color_table =  unsafe { GDALCreateColorTable(interp.c_int()) };
+        let c_color_table = unsafe { GDALCreateColorTable(interp.c_int()) };
         Self {
             palette_interpretation: interp,
             c_color_table,
-            phantom_raster_band: PhantomData
+            rust_owned: true,
+            phantom_raster_band: PhantomData,
         }
     }
 
+    /// Constructs a color ramp from one color entry to another.
+    ///
+    /// `start_index` and `end_index` must be `0..=255`.
+    ///
+    /// Returns `None` if `start_color` and `end_color` do not have the same [`PaletteInterpretation`].
+    ///
+    /// # Example
+    ///
+    /// ```rust, no_run
+    /// use gdal::{Dataset, Driver};
+    /// use gdal::raster::{ColorEntry, ColorTable, PaletteInterpretation};
+    /// # fn main() -> gdal::errors::Result<()> {
+    /// // Create a 16 step blue to white color table.
+    /// let ct = ColorTable::color_ramp(
+    ///     0, &ColorEntry::rgba(0, 0, 255, 255),
+    ///     15, &ColorEntry::rgba(255, 255, 255, 255)
+    /// )?;
+    /// println!("{ct:?}");
+    /// # Ok(())
+    /// # }
+    pub fn color_ramp(
+        start_index: u8,
+        start_color: &ColorEntry,
+        end_index: u8,
+        end_color: &ColorEntry,
+    ) -> Result<ColorTable<'a>> {
+        if start_color.palette_interpretation() != end_color.palette_interpretation() {
+            Err(GdalError::BadArgument(
+                "start_color and end_color must have the same palette_interpretation".into(),
+            ))
+        } else {
+            let ct = ColorTable::new(start_color.palette_interpretation());
+            unsafe {
+                GDALCreateColorRamp(
+                    ct.c_color_table,
+                    start_index as c_int,
+                    &start_color.into(),
+                    end_index as c_int,
+                    &end_color.into(),
+                );
+            }
+            Ok(ct)
+        }
+    }
+
+    /// Wrap C color table
     fn from_c_color_table(c_color_table: GDALColorTableH) -> Self {
-        let interp_index = unsafe { gdal_sys::GDALGetPaletteInterpretation(c_color_table) };
+        let interp_index = unsafe { GDALGetPaletteInterpretation(c_color_table) };
         ColorTable {
             palette_interpretation: PaletteInterpretation::from_c_int(interp_index),
             c_color_table,
+            rust_owned: false,
             phantom_raster_band: PhantomData,
         }
     }
@@ -1062,6 +1129,8 @@ impl<'a> ColorTable<'a> {
     }
 
     /// Get a color entry as RGB.
+    ///
+    /// Returns `None` if `palette_interpretation` is not `Rgba`.
     pub fn entry_as_rgb(&self, index: usize) -> Option<RgbaEntry> {
         let mut color_entry = GDALColorEntry {
             c1: 0,
@@ -1085,11 +1154,20 @@ impl<'a> ColorTable<'a> {
 
     /// Set entry in the RasterBand color table.
     ///
-    /// The passed in entry must match the color interpretation of `self`.
+    /// The `entry` variant type must match `palette_interpretation`.
     ///
-    /// The table is grown as needed to hold the supplied index.
-    pub fn set_color_entry(&mut self, index: u16, entry: ColorEntry) {
-        unsafe  { GDALSetColorEntry(self.c_color_table, index as c_int, &entry.into()) }
+    /// The table is grown as needed to hold the supplied index, filling in gaps with
+    /// the default [`GDALColorEntry`] value.
+    pub fn set_color_entry(&mut self, index: u16, entry: &ColorEntry) {
+        unsafe { GDALSetColorEntry(self.c_color_table, index as c_int, &entry.into()) }
+    }
+}
+
+impl Drop for ColorTable<'_> {
+    fn drop(&mut self) {
+        if self.rust_owned {
+            unsafe { GDALDestroyColorTable(self.c_color_table) }
+        }
     }
 }
 
@@ -1104,7 +1182,6 @@ impl Debug for ColorTable<'_> {
         let entries = (0..self.entry_count())
             .filter_map(|i| self.entry(i))
             .collect::<Vec<_>>();
-
 
         f.debug_struct("ColorTable")
             .field("palette_interpretation", &self.palette_interpretation)
