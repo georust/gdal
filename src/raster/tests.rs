@@ -11,7 +11,6 @@ use crate::Driver;
 use gdal_sys::GDALDataType;
 use std::path::Path;
 
-use crate::errors::GdalError;
 #[cfg(feature = "ndarray")]
 use ndarray::arr2;
 
@@ -810,13 +809,13 @@ fn test_color_table() {
 }
 
 #[test]
-fn test_create_color_table() -> crate::errors::Result<()> {
+fn test_create_color_table() {
     let fixture = TempFixture::fixture("labels.tif");
     // Open, modify, then close the base file.
     {
-        let dataset = Dataset::open(&fixture)?;
+        let dataset = Dataset::open(&fixture).unwrap();
         assert_eq!(dataset.raster_count(), 1);
-        let mut band = dataset.rasterband(1)?;
+        let mut band = dataset.rasterband(1).unwrap();
         assert_eq!(band.band_type(), GDALDataType::GDT_Byte);
         assert!(band.color_table().is_none());
 
@@ -831,31 +830,28 @@ fn test_create_color_table() -> crate::errors::Result<()> {
         assert_eq!(ct.entry(8), None);
 
         band.set_color_table(&ct);
+        dataset.flush_cache();
+        drop(dataset);
     }
 
     // Reopen to confirm the changes.
-    let dataset = Dataset::open(&fixture)?;
-    let band = dataset.rasterband(1)?;
-    let ct = band
-        .color_table()
-        .ok_or_else(|| GdalError::BadArgument("missing color table".into()))?;
+    let dataset = Dataset::open(&fixture).unwrap();
+    let band = dataset.rasterband(1).unwrap();
+    let ct = band.color_table().expect("saved color table");
+
     assert_eq!(ct.entry_count(), 8);
     assert_eq!(ct.entry(0), Some(ColorEntry::rgba(0, 0, 0, 0)));
     assert_eq!(ct.entry(2), Some(ColorEntry::rgba(255, 0, 0, 255)));
     assert_eq!(ct.entry(8), None);
-
-    Ok(())
 }
 
 #[test]
-fn test_color_ramp() -> crate::errors::Result<()> {
-    let ct = ColorTable::color_ramp(0, &ColorEntry::grey(0), 99, &ColorEntry::grey(99))?;
+fn test_color_ramp() {
+    let ct = ColorTable::color_ramp(0, &ColorEntry::grey(0), 99, &ColorEntry::grey(99)).unwrap();
     assert_eq!(ct.entry(0), Some(ColorEntry::grey(0)));
     assert_eq!(ct.entry(57), Some(ColorEntry::grey(57)));
     assert_eq!(ct.entry(99), Some(ColorEntry::grey(99)));
     assert_eq!(ct.entry(100), None);
-
-    Ok(())
 }
 
 #[test]

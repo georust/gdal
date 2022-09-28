@@ -19,10 +19,10 @@ use crate::{
     Driver, Metadata,
 };
 
-use gdal_sys::OGRGeometryH;
 use gdal_sys::{
     self, CPLErr, GDALAccess, GDALDatasetH, GDALMajorObjectH, OGRErr, OGRLayerH, OGRwkbGeometryType,
 };
+use gdal_sys::{GDALFlushCache, OGRGeometryH};
 use libc::{c_double, c_int, c_uint};
 
 #[cfg(all(major_ge_3, minor_ge_1))]
@@ -398,6 +398,13 @@ impl Dataset {
             return Err(_last_null_pointer_err("GDALOpenEx"));
         }
         Ok(Dataset { c_dataset })
+    }
+
+    /// Flush all write cached data to disk.
+    ///
+    /// See [`GDALFlushCache`].
+    pub fn flush_cache(&self) {
+        unsafe { GDALFlushCache(self.c_dataset) }
     }
 
     /// Creates a new Dataset by wrapping a C pointer

@@ -30,7 +30,7 @@
 - Added ability to set color table for bands with palette color interpretation. 
   Added ability to create a color ramp (interpolated) color table.
 
-  - <>
+  - <https://github.com/georust/gdal/pull/314>
 
 ## 0.13
 
