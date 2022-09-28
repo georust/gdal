@@ -980,6 +980,39 @@ impl Debug for ColorEntry {
 /// This object carries the lifetime of the raster band that
 /// contains it. This is necessary to prevent the raster band
 /// from being dropped before the color table.
+///
+/// # Example
+///
+///
+/// ```rust, no_run
+/// use gdal::{Dataset, Driver};
+/// use gdal::raster::{ColorEntry, ColorTable, PaletteInterpretation};
+/// # fn main() -> gdal::errors::Result<()> {
+///
+/// // Open source multinomial classification raster
+/// let ds = Dataset::open("fixtures/labels.tif")?;
+///
+/// // Create in-memory copy to mutate
+/// let mem_driver = Driver::get_by_name("MEM")?;
+/// let ds = ds.create_copy(&mem_driver, "<mem>", &[])?;
+/// let mut band = ds.rasterband(1)?;
+/// assert!(band.color_table().is_none());
+///
+/// // Create a new color table for 3 classes + no-data
+/// let mut ct = ColorTable::new(PaletteInterpretation::Rgba);
+/// ct.set_color_entry(0, ColorEntry::rgba(255, 255, 0, 255));
+/// ct.set_color_entry(1, ColorEntry::rgba(0, 255, 255, 255));
+/// ct.set_color_entry(2, ColorEntry::rgba(255, 0, 255, 255));
+/// ct.set_color_entry(255, ColorEntry::rgba(0, 0, 0, 0));
+/// band.set_color_table(ct);
+///
+/// // Render a PNG
+/// let png_driver = Driver::get_by_name("PNG")?;
+/// ds.create_copy(&png_driver, "/tmp/labels.png", &[])?;
+///
+/// # Ok(())
+/// # }
+/// ```
 pub struct ColorTable<'a> {
     palette_interpretation: PaletteInterpretation,
     c_color_table: GDALColorTableH,

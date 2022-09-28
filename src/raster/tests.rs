@@ -835,6 +835,10 @@ fn test_create_color_table() -> crate::errors::Result<()>{
     let dataset = Dataset::open(&fixture)?;
     let band = dataset.rasterband(1)?;
     let ct = band.color_table().ok_or_else(|| GdalError::BadArgument("missing color table".into()))?;
+    assert_eq!(ct.entry_count(), 8);
+    assert_eq!(ct.entry(0), Some(ColorEntry::rgba(0, 0, 0, 0)));
+    assert_eq!(ct.entry(2), Some(ColorEntry::rgba(255, 0, 0, 255)));
+    assert_eq!(ct.entry(8), None);
 
     Ok(())
 }
