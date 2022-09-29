@@ -810,15 +810,25 @@ fn test_color_table() {
 
 #[test]
 fn test_create_color_table() {
-    let fixture = TempFixture::fixture("labels.tif");
+    let outfile = TempFixture::empty("color_labels.tif");
     // Open, modify, then close the base file.
     {
-        let dataset = Dataset::open(&fixture).unwrap();
+        let dataset = Dataset::open(fixture!("labels.tif")).unwrap();
+        // Confirm we have a band without a color table.
         assert_eq!(dataset.raster_count(), 1);
-        let mut band = dataset.rasterband(1).unwrap();
+        let band = dataset.rasterband(1).unwrap();
         assert_eq!(band.band_type(), GDALDataType::GDT_Byte);
         assert!(band.color_table().is_none());
 
+        // Create a new file to put color table in
+        let dataset = dataset
+            .create_copy(&dataset.driver(), &outfile, &[])
+            .unwrap();
+        dataset
+            .rasterband(1)
+            .unwrap()
+            .set_no_data_value(None)
+            .unwrap();
         let mut ct = ColorTable::default();
         ct.set_color_entry(2, &ColorEntry::rgba(255, 0, 0, 255));
         ct.set_color_entry(5, &ColorEntry::rgba(0, 255, 0, 255));
@@ -829,20 +839,21 @@ fn test_create_color_table() {
         assert_eq!(ct.entry(2), Some(ColorEntry::rgba(255, 0, 0, 255)));
         assert_eq!(ct.entry(8), None);
 
-        band.set_color_table(&ct);
-        dataset.flush_cache();
-        drop(dataset);
+        dataset.rasterband(1).unwrap().set_color_table(&ct);
     }
 
     // Reopen to confirm the changes.
-    let dataset = Dataset::open(&fixture).unwrap();
+    let dataset = Dataset::open(&outfile).unwrap();
     let band = dataset.rasterband(1).unwrap();
     let ct = band.color_table().expect("saved color table");
 
-    assert_eq!(ct.entry_count(), 8);
-    assert_eq!(ct.entry(0), Some(ColorEntry::rgba(0, 0, 0, 0)));
+    // Note: the GeoTIFF driver alters the palette, creating black entries to fill up all indexes
+    // up to 255. Other drivers may do things differently.
+    assert_eq!(ct.entry(0), Some(ColorEntry::rgba(0, 0, 0, 255)));
     assert_eq!(ct.entry(2), Some(ColorEntry::rgba(255, 0, 0, 255)));
-    assert_eq!(ct.entry(8), None);
+    assert_eq!(ct.entry(5), Some(ColorEntry::rgba(0, 255, 0, 255)));
+    assert_eq!(ct.entry(7), Some(ColorEntry::rgba(0, 0, 255, 255)));
+    assert_eq!(ct.entry(8), Some(ColorEntry::rgba(0, 0, 0, 255)));
 }
 
 #[test]
