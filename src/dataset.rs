@@ -403,7 +403,7 @@ impl Dataset {
     /// Flush all write cached data to disk.
     ///
     /// See [`GDALFlushCache`].
-    pub fn flush_cache(&self) {
+    pub fn flush_cache(&mut self) {
         unsafe { GDALFlushCache(self.c_dataset) }
     }
 
