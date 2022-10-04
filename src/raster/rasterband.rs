@@ -834,7 +834,7 @@ pub enum PaletteInterpretation {
 }
 
 impl PaletteInterpretation {
-    /// Instantiates Self from the C API int value of [`GDALPaletteInterp`].
+    /// Creates a Rust [`PaletteInterpretation`] from  a C API [`GDALPaletteInterp`] value.
     fn from_c_int(palette_interpretation: GDALPaletteInterp::Type) -> Self {
         match palette_interpretation {
             GDALPaletteInterp::GPI_Gray => Self::Gray,
