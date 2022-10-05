@@ -2,7 +2,8 @@ use crate::dataset::Dataset;
 use crate::metadata::Metadata;
 use crate::raster::rasterband::ResampleAlg;
 use crate::raster::{
-    ByteBuffer, ColorInterpretation, RasterCreationOption, StatisticsAll, StatisticsMinMax,
+    ByteBuffer, ColorEntry, ColorInterpretation, ColorTable, RasterCreationOption, StatisticsAll,
+    StatisticsMinMax,
 };
 use crate::test_utils::TempFixture;
 use crate::vsi::unlink_mem_file;
@@ -805,6 +806,63 @@ fn test_color_table() {
             panic!();
         }
     }
+}
+
+#[test]
+fn test_create_color_table() {
+    let outfile = TempFixture::empty("color_labels.tif");
+    // Open, modify, then close the base file.
+    {
+        let dataset = Dataset::open(fixture!("labels.tif")).unwrap();
+        // Confirm we have a band without a color table.
+        assert_eq!(dataset.raster_count(), 1);
+        let band = dataset.rasterband(1).unwrap();
+        assert_eq!(band.band_type(), GDALDataType::GDT_Byte);
+        assert!(band.color_table().is_none());
+
+        // Create a new file to put color table in
+        let dataset = dataset
+            .create_copy(&dataset.driver(), &outfile, &[])
+            .unwrap();
+        dataset
+            .rasterband(1)
+            .unwrap()
+            .set_no_data_value(None)
+            .unwrap();
+        let mut ct = ColorTable::default();
+        ct.set_color_entry(2, &ColorEntry::rgba(255, 0, 0, 255));
+        ct.set_color_entry(5, &ColorEntry::rgba(0, 255, 0, 255));
+        ct.set_color_entry(7, &ColorEntry::rgba(0, 0, 255, 255));
+
+        assert_eq!(ct.entry_count(), 8);
+        assert_eq!(ct.entry(0), Some(ColorEntry::rgba(0, 0, 0, 0)));
+        assert_eq!(ct.entry(2), Some(ColorEntry::rgba(255, 0, 0, 255)));
+        assert_eq!(ct.entry(8), None);
+
+        dataset.rasterband(1).unwrap().set_color_table(&ct);
+    }
+
+    // Reopen to confirm the changes.
+    let dataset = Dataset::open(&outfile).unwrap();
+    let band = dataset.rasterband(1).unwrap();
+    let ct = band.color_table().expect("saved color table");
+
+    // Note: the GeoTIFF driver alters the palette, creating black entries to fill up all indexes
+    // up to 255. Other drivers may do things differently.
+    assert_eq!(ct.entry(0), Some(ColorEntry::rgba(0, 0, 0, 255)));
+    assert_eq!(ct.entry(2), Some(ColorEntry::rgba(255, 0, 0, 255)));
+    assert_eq!(ct.entry(5), Some(ColorEntry::rgba(0, 255, 0, 255)));
+    assert_eq!(ct.entry(7), Some(ColorEntry::rgba(0, 0, 255, 255)));
+    assert_eq!(ct.entry(8), Some(ColorEntry::rgba(0, 0, 0, 255)));
+}
+
+#[test]
+fn test_color_ramp() {
+    let ct = ColorTable::color_ramp(0, &ColorEntry::grey(0), 99, &ColorEntry::grey(99)).unwrap();
+    assert_eq!(ct.entry(0), Some(ColorEntry::grey(0)));
+    assert_eq!(ct.entry(57), Some(ColorEntry::grey(57)));
+    assert_eq!(ct.entry(99), Some(ColorEntry::grey(99)));
+    assert_eq!(ct.entry(100), None);
 }
 
 #[test]

@@ -12,13 +12,20 @@ impl TempFixture {
     ///
     /// This can potentially be removed when <https://github.com/OSGeo/gdal/issues/6253> is resolved.
     pub fn fixture(name: &str) -> Self {
-        let path = std::path::Path::new("fixtures").join(name);
+        let staging = Self::empty(name);
+        let source = Path::new("fixtures").join(name);
+        std::fs::copy(&source, &staging.temp_path).unwrap();
+        staging
+    }
 
+    /// Creates a temporary directory and path to a non-existent file with given `name`.
+    /// Useful for writing results to during testing
+    ///
+    /// Returns the struct `TempFixture` that contains the temp dir (for clean-up on `drop`)
+    /// as well as the empty file path.
+    pub fn empty(name: &str) -> Self {
         let _temp_dir = tempfile::tempdir().unwrap();
-        let temp_path = _temp_dir.path().join(path.file_name().unwrap());
-
-        std::fs::copy(&path, &temp_path).unwrap();
-
+        let temp_path = _temp_dir.path().join(name);
         Self {
             _temp_dir,
             temp_path,
