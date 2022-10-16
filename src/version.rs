@@ -13,6 +13,32 @@
 //! ```text,
 //! GDAL 3.5.1, released 2022/06/30
 //! ```
+//!
+//! For all the available version properties (except [`VersionInfo::license`], which is long),
+//! use [VersionInfo::version_report]:
+//!
+//! ```rust, no_run
+//! # use gdal::version::VersionInfo;
+//! let report = VersionInfo::version_report();
+//! println!("{report}");
+//! ```
+//! ```text
+//! GDALVersionInfo {
+//!     RELEASE_NAME: "3.5.1"
+//!     RELEASE_DATE: "20220630"
+//!     VERSION_NUM: "3050100"
+//!     BUILD_INFO {
+//!         PAM_ENABLED: "YES"
+//!         PROJ_BUILD_VERSION: "9.0.1"
+//!         OGR_ENABLED: "YES"
+//!         PROJ_RUNTIME_VERSION: "9.0.1"
+//!         GEOS_ENABLED: "YES"
+//!         GEOS_VERSION: "3.11.0-CAPI-1.17.0"
+//!     }
+//! }
+//! ```
+//!
+//! See [`VersionInfo`] for further options.
 
 use crate::utils::_string;
 use std::collections::HashMap;
@@ -33,60 +59,27 @@ pub fn version_info(key: &str) -> String {
 
 /// Convenience functions for the various pre-defined queryable properties of GDAL version information.
 ///
-/// ## Example
+/// See [module documentation](crate::version) for examples.
 ///
-/// For the string returned from passing `--version` to GDAL CLI tools,
-/// use [`VersionInfo::version_summary`]:
-///
-/// ```rust, no_run
-/// # use gdal::version::VersionInfo;
-/// println!("{}", VersionInfo::version_summary());
-/// ```
-/// ```text,
-/// GDAL 3.5.1, released 2022/06/30
-/// ```
-/// For all the available version properties (except [`VersionInfo::license`],
-/// use [VersionInfo::version_report]:
-///
-/// ```rust, no_run
-/// # use gdal::version::VersionInfo;
-/// let report = VersionInfo::version_report();
-/// println!("{report}");
-/// ```
-/// ```text
-/// GDALVersionInfo {
-///     RELEASE_NAME: "3.5.1"
-///     RELEASE_DATE: "20220630"
-///     VERSION_NUM: "3050100"
-///     BUILD_INFO {
-///         PAM_ENABLED: "YES"
-///         PROJ_BUILD_VERSION: "9.0.1"
-///         OGR_ENABLED: "YES"
-///         PROJ_RUNTIME_VERSION: "9.0.1"
-///         GEOS_ENABLED: "YES"
-///         GEOS_VERSION: "3.11.0-CAPI-1.17.0"
-///     }
-/// }
-/// ```
 pub struct VersionInfo;
 impl VersionInfo {
     /// Returns one line version message suitable for use in response to version requests. i.e. “GDAL 1.1.7, released 2002/04/16”
     pub fn version_summary() -> String {
         version_info("--version")
     }
-    /// Returns GDAL_VERSION_NUM formatted as a string. i.e. “1170”
+    /// Returns `GDAL_VERSION_NUM` formatted as a string. i.e. “1170”
     pub fn version_num() -> String {
         version_info("VERSION_NUM")
     }
-    /// Returns GDAL_RELEASE_DATE formatted as a string. i.e. “20020416"
+    /// Returns `GDAL_RELEASE_DATE` formatted as a string. i.e. “20020416"
     pub fn release_date() -> String {
         version_info("RELEASE_DATE")
     }
-    /// Returns the GDAL_RELEASE_NAME. ie. “1.1.7”
+    /// Returns the `GDAL_RELEASE_NAME`. ie. “1.1.7”
     pub fn release_name() -> String {
         version_info("RELEASE_NAME")
     }
-    /// Returns the content of the LICENSE.TXT file from the GDAL_DATA directory.
+    /// Returns the content of the `LICENSE.TXT` file from the `GDAL_DATA` directory.
     pub fn license() -> String {
         version_info("LICENSE")
     }
