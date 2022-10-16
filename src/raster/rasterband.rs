@@ -179,7 +179,8 @@ impl<'a> RasterBand<'a> {
         }
     }
 
-    /// Get block size from a 'Dataset'.
+    /// The size of a preferred I/O raster block size as a (cols, rows) tuple. Reading/writing
+    /// chunks corresponding to the returned value should offer the best performance.
     pub fn block_size(&self) -> (usize, usize) {
         let mut size_x = 0;
         let mut size_y = 0;
@@ -188,7 +189,8 @@ impl<'a> RasterBand<'a> {
         (size_x as usize, size_y as usize)
     }
 
-    /// Get x-size of the band
+    /// Get x-size (width, or number of column) of the band.
+    /// *Note*: This may not be the same as number of columns of the owning [`Dataset`], due to scale.
     pub fn x_size(&self) -> usize {
         let out;
         unsafe {
@@ -197,28 +199,52 @@ impl<'a> RasterBand<'a> {
         out as usize
     }
 
-    /// Get y-size of the band
+    /// Get y-size (height, or number of rows) of the band
+    /// *Note*: This may not be the same as number of rows of the owning [`Dataset`], due to scale.
     pub fn y_size(&self) -> usize {
         let out;
         unsafe { out = gdal_sys::GDALGetRasterBandYSize(self.c_rasterband) }
         out as usize
     }
 
-    /// Get dimensions of the band.
-    /// Note that this may not be the same as `size` on the
-    /// `owning_dataset` due to scale.
+    /// Get dimensions of the band, as a (cols, rows) tuple.
+    /// *Note*: This may not be the same as `raster_size` on the `owning_dataset` due to scale.
+    ///
     pub fn size(&self) -> (usize, usize) {
         (self.x_size(), self.y_size())
     }
 
-    /// Read data from this band into a slice. T implements 'GdalType'
+    /// Read data from this band into a slice. `T` implements 'GdalType'
     ///
     /// # Arguments
-    /// * window - the window position from top left
-    /// * window_size - the window size (GDAL will interpolate data if window_size != buffer_size)
-    /// * size - the desired size to read
-    /// * buffer - a slice to hold the data (length must equal product of size parameter)
-    /// * e_resample_alg - the resample algorithm used for the interpolation
+    ///
+    /// * `window` - the window position from top left
+    /// * `window_size` - the window size (GDAL will interpolate data if window_size != buffer_size)
+    /// * `size` - the desired size to read
+    /// * `buffer` - a slice to hold the data (length must equal product of size parameter)
+    /// * `e_resample_alg` - the resample algorithm used for the interpolation. Default: `NearestNeighbor`.
+    ///
+    /// # Example
+    ///
+    /// ```rust, no_run
+    /// # fn main() -> gdal::errors::Result<()> {
+    /// use gdal::Dataset;
+    /// use gdal::raster::{GdalType, ResampleAlg};
+    /// let dataset = Dataset::open("fixtures/m_3607824_se_17_1_20160620_sub.tif")?;
+    /// let band1 = dataset.rasterband(1)?;
+    /// assert_eq!(band1.band_type(), u8::gdal_type());
+    /// let size = 4;
+    /// let mut buf = vec![0; size*size];
+    /// band1.read_into_slice::<u8>((0, 0), band1.size(), (size, size), buf.as_mut_slice(), Some(ResampleAlg::Bilinear))?;
+    /// assert!(buf.iter().all(|&c| c > 0));
+    /// println!("{:?}", buf.chunks(4).collect::<Vec<_>>());
+    /// # Ok(())
+    /// # }
+    /// ```
+    /// Output:
+    /// ```text
+    /// [[101, 119, 94, 87], [92, 110, 92, 87], [91, 90, 89, 87], [92, 91, 88, 88]]
+    /// ```
     pub fn read_into_slice<T: Copy + GdalType>(
         &self,
         window: (isize, isize),
