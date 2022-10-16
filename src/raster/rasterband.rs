@@ -214,7 +214,7 @@ impl<'a> RasterBand<'a> {
         (self.x_size(), self.y_size())
     }
 
-    /// Read data from this band into a slice. `T` implements 'GdalType'
+    /// Read data from this band into a slice, where `T` implements ['GdalType']
     ///
     /// # Arguments
     ///
@@ -236,14 +236,9 @@ impl<'a> RasterBand<'a> {
     /// let size = 4;
     /// let mut buf = vec![0; size*size];
     /// band1.read_into_slice::<u8>((0, 0), band1.size(), (size, size), buf.as_mut_slice(), Some(ResampleAlg::Bilinear))?;
-    /// assert!(buf.iter().all(|&c| c > 0));
-    /// println!("{:?}", buf.chunks(4).collect::<Vec<_>>());
+    /// assert_eq!(buf, [101u8, 119, 94, 87, 92, 110, 92, 87, 91, 90, 89, 87, 92, 91, 88, 88]);
     /// # Ok(())
     /// # }
-    /// ```
-    /// Output:
-    /// ```text
-    /// [[101, 119, 94, 87], [92, 110, 92, 87], [91, 90, 89, 87], [92, 91, 88, 88]]
     /// ```
     pub fn read_into_slice<T: Copy + GdalType>(
         &self,
@@ -290,13 +285,31 @@ impl<'a> RasterBand<'a> {
         Ok(())
     }
 
-    /// Read a 'Buffer<T>' from this band. T implements 'GdalType'
+    /// Read a 'Buffer<T>' from this band, where `T` implements ['GdalType'].
     ///
     /// # Arguments
-    /// * window - the window position from top left
-    /// * window_size - the window size (GDAL will interpolate data if window_size != buffer_size)
-    /// * buffer_size - the desired size of the 'Buffer'
-    /// * e_resample_alg - the resample algorithm used for the interpolation
+    ///
+    /// * `window` - the window position from top left
+    /// * `window_size` - the window size (GDAL will interpolate data if `window_size` != `buffer_size`)
+    /// * `buffer_size` - the desired size of the 'Buffer'
+    /// * `e_resample_alg` - the resample algorithm used for the interpolation. Default: `NearestNeighbor`.
+    ///
+    /// # Example
+    ///
+    /// ```rust, no_run
+    /// # fn main() -> gdal::errors::Result<()> {
+    /// use gdal::Dataset;
+    /// use gdal::raster::{GdalType, ResampleAlg};
+    /// let dataset = Dataset::open("fixtures/m_3607824_se_17_1_20160620_sub.tif")?;
+    /// let band1 = dataset.rasterband(1)?;
+    /// assert_eq!(band1.band_type(), u8::gdal_type());
+    /// let size = 4;
+    /// let buf = band1.read_as::<u8>((0, 0), band1.size(), (size, size), Some(ResampleAlg::Bilinear))?;
+    /// assert_eq!(buf.size, (size, size));
+    /// assert_eq!(buf.data, [101u8, 119, 94, 87, 92, 110, 92, 87, 91, 90, 89, 87, 92, 91, 88, 88]);
+    /// # Ok(())
+    /// # }
+    /// ```
     pub fn read_as<T: Copy + GdalType>(
         &self,
         window: (isize, isize),
@@ -352,14 +365,16 @@ impl<'a> RasterBand<'a> {
 
     #[cfg(feature = "ndarray")]
     #[cfg_attr(docsrs, doc(cfg(feature = "array")))]
-    /// Read a 'Array2<T>' from this band. T implements 'GdalType'.
+    /// Read a 'Array2<T>' from this band, where `T` implements ['GdalType'].
     ///
     /// # Arguments
-    /// * window - the window position from top left
-    /// * window_size - the window size (GDAL will interpolate data if window_size != array_size)
-    /// * array_size - the desired size of the 'Array'
-    /// * e_resample_alg - the resample algorithm used for the interpolation
-    /// # Docs
+    ///
+    /// * `window` - the window position from top left
+    /// * `window_size` - the window size (GDAL will interpolate data if window_size != array_size)
+    /// * `array_size` - the desired size of the 'Array'
+    /// * `e_resample_alg` - the resample algorithm used for the interpolation
+    ///
+    /// # Note
     /// The Matrix shape is (rows, cols) and raster shape is (cols in x-axis, rows in y-axis).
     pub fn read_as_array<T: Copy + GdalType>(
         &self,
@@ -377,7 +392,7 @@ impl<'a> RasterBand<'a> {
         )?)
     }
 
-    /// Read the full band as a 'Buffer<T>'.
+    /// Read the full band as a 'Buffer<T>', where `T` implements ['GdalType'].
     pub fn read_band_as<T: Copy + GdalType>(&self) -> Result<Buffer<T>> {
         let size = self.size();
         self.read_as::<T>(
@@ -390,10 +405,12 @@ impl<'a> RasterBand<'a> {
 
     #[cfg(feature = "ndarray")]
     #[cfg_attr(docsrs, doc(cfg(feature = "array")))]
-    /// Read a 'Array2<T>' from a 'Dataset' block. T implements 'GdalType'
+    /// Read a 'Array2<T>' from a 'Dataset' block, where `T` implements ['GdalType'].
+    ///
     /// # Arguments
-    /// * block_index - the block index
-    /// # Docs
+    /// * `block_index` - the block index
+    ///
+    /// # Note
     /// The Matrix shape is (rows, cols) and raster shape is (cols in x-axis, rows in y-axis).
     pub fn read_block<T: Copy + GdalType>(&self, block_index: (usize, usize)) -> Result<Array2<T>> {
         let size = self.block_size();
@@ -421,10 +438,13 @@ impl<'a> RasterBand<'a> {
     }
 
     /// Write a 'Buffer<T>' into a 'Dataset'.
+    ///
     /// # Arguments
-    /// * window - the window position from top left
-    /// * window_size - the window size (GDAL will interpolate data if window_size != Buffer.size)
-    /// * buffer - the data to write into the window
+    ///
+    /// * `window` - the window position from top left
+    /// * `window_size` - the window size (GDAL will interpolate data if window_size != Buffer.size)
+    /// * `buffer` - the data to write into the window
+    ///
     pub fn write<T: GdalType + Copy>(
         &mut self,
         window: (isize, isize),
@@ -459,7 +479,7 @@ impl<'a> RasterBand<'a> {
         unsafe { gdal_sys::GDALGetRasterDataType(self.c_rasterband) }
     }
 
-    /// Returns the no data value of this band.
+    /// Returns the no-data value of this band.
     pub fn no_data_value(&self) -> Option<f64> {
         let mut pb_success = 1;
         let no_data =
