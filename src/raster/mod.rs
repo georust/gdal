@@ -91,7 +91,7 @@ pub use rasterband::{
     StatisticsMinMax,
 };
 pub use rasterize::{rasterize, BurnSource, MergeAlgorithm, OptimizeMode, RasterizeOptions};
-pub use types::{GDALDataType, GdalType};
+pub use types::{GDALDataType, GdalType, GdalTypeDescriptor};
 pub use warp::reproject;
 
 /// Key/value pair for passing driver-specific creation options to

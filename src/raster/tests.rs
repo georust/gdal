@@ -1,10 +1,7 @@
 use crate::dataset::Dataset;
 use crate::metadata::Metadata;
 use crate::raster::rasterband::ResampleAlg;
-use crate::raster::{
-    ByteBuffer, ColorEntry, ColorInterpretation, ColorTable, RasterCreationOption, StatisticsAll,
-    StatisticsMinMax,
-};
+use crate::raster::{ByteBuffer, ColorEntry, ColorInterpretation, ColorTable, GdalTypeDescriptor, RasterCreationOption, StatisticsAll, StatisticsMinMax};
 use crate::test_utils::TempFixture;
 use crate::vsi::unlink_mem_file;
 use crate::DriverManager;
@@ -891,4 +888,15 @@ fn test_raster_stats() {
             max: 255.0,
         }
     );
+}
+
+#[test]
+fn test_gdal_data_type() {
+    for t in GdalTypeDescriptor::available_types() {
+        // Test converting from GDALDataType:Type
+        let t2: GdalTypeDescriptor = t.gdal_type().try_into().unwrap();
+        assert_eq!(t, &t2, "{}", t);
+        assert!(t.bits() > 0, "{}", t);
+        assert_eq!(t.bits(), t.bytes() * 8, "{}", t);
+    }
 }
