@@ -2,7 +2,7 @@ use crate::dataset::Dataset;
 use crate::metadata::Metadata;
 use crate::raster::rasterband::ResampleAlg;
 use crate::raster::{
-    ByteBuffer, ColorEntry, ColorInterpretation, ColorTable, GdalTypeDescriptor,
+    ByteBuffer, ColorEntry, ColorInterpretation, ColorTable, GdalType, GdalTypeDescriptor,
     RasterCreationOption, StatisticsAll, StatisticsMinMax,
 };
 use crate::test_utils::TempFixture;
@@ -925,4 +925,41 @@ fn test_gdal_data_type() {
             o => panic!("unknown type ordinal '{}'", o),
         }
     }
+}
+
+#[test]
+fn test_data_type_from_name() {
+    assert!(GdalTypeDescriptor::from_name("foobar").is_err());
+
+    for t in GdalTypeDescriptor::available_types() {
+        let name = t.name().unwrap();
+        let t2 = GdalTypeDescriptor::from_name(&name);
+        assert!(t2.is_ok());
+    }
+}
+
+#[test]
+fn test_data_type_union() {
+    let f32d = <f32>::descriptor();
+    let f64d = <f64>::descriptor();
+
+    let u8d = <u8>::descriptor();
+    let u16d = <u16>::descriptor();
+    let i16d = <i16>::descriptor();
+    let u32d = <u32>::descriptor();
+    let i32d = <i32>::descriptor();
+
+    #[cfg(all(major_ge_3, minor_ge_5))]
+    let i64d = <i64>::descriptor();
+
+    // reflexivity
+    assert_eq!(i16d.union(i16d), i16d);
+    // symmetry
+    assert_eq!(i16d.union(f32d), f32d);
+    assert_eq!(f32d.union(i16d), f32d);
+    // widening
+    assert_eq!(u8d.union(u16d), u16d);
+    assert_eq!(f32d.union(i32d), f64d);
+    #[cfg(all(major_ge_3, minor_ge_5))]
+    assert_eq!(i16d.union(u32d), i64d);
 }
