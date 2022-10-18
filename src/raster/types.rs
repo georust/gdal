@@ -1,8 +1,11 @@
-use std::fmt::{Display, Formatter};
-pub use gdal_sys::GDALDataType;
-use gdal_sys::{GDALGetDataTypeName, GDALGetDataTypeSizeBits, GDALGetDataTypeSizeBytes};
 use crate::errors::{GdalError, Result};
 use crate::utils::{_last_null_pointer_err, _string};
+pub use gdal_sys::GDALDataType;
+use gdal_sys::{
+    GDALDataTypeIsFloating, GDALDataTypeIsInteger, GDALDataTypeIsSigned, GDALGetDataTypeName,
+    GDALGetDataTypeSizeBits, GDALGetDataTypeSizeBytes,
+};
+use std::fmt::{Display, Formatter};
 
 /// Type-level constraint for limiting which primitive numeric values can be passed
 /// to functions needing target data type.
@@ -73,12 +76,31 @@ impl GdalTypeDescriptor {
 
     /// Get the gdal type size in **bits**.
     pub fn bits(&self) -> u8 {
-        unsafe { GDALGetDataTypeSizeBits(self.gdal_type()) }.try_into().unwrap()
+        unsafe { GDALGetDataTypeSizeBits(self.gdal_type()) }
+            .try_into()
+            .unwrap()
     }
 
     /// Get the gdal type size in **bytes**.
     pub fn bytes(&self) -> u8 {
-        unsafe { GDALGetDataTypeSizeBytes(self.gdal_type()) }.try_into().unwrap()
+        unsafe { GDALGetDataTypeSizeBytes(self.gdal_type()) }
+            .try_into()
+            .unwrap()
+    }
+
+    /// Returns `true` if data type is integral (non-floating point)
+    pub fn is_integer(&self) -> bool {
+        (unsafe { GDALDataTypeIsInteger(self.gdal_type()) }) > 0
+    }
+
+    /// Returns `true` if data type is floating point (non-integral)
+    pub fn is_floating(&self) -> bool {
+        (unsafe { GDALDataTypeIsFloating(self.gdal_type()) }) > 0
+    }
+
+    /// Returns `true` if data type supports negative values.
+    pub fn is_signed(&self) -> bool {
+        (unsafe { GDALDataTypeIsSigned(self.gdal_type()) }) > 0
     }
 
     /// Subset of the GDAL data types supported by Rust bindings.
@@ -93,7 +115,7 @@ impl GdalTypeDescriptor {
             GdalTypeDescriptor(GDT_UInt64),
             GdalTypeDescriptor(GDT_Int64),
             GdalTypeDescriptor(GDT_Float32),
-            GdalTypeDescriptor(GDT_Float64)
+            GdalTypeDescriptor(GDT_Float64),
         ]
     }
 }
@@ -110,10 +132,11 @@ impl TryFrom<GDALDataType::Type> for GdalTypeDescriptor {
     fn try_from(value: GDALDataType::Type) -> std::result::Result<Self, Self::Error> {
         let wrapped = GdalTypeDescriptor(value);
         if !GdalTypeDescriptor::available_types().contains(&wrapped) {
-            Err(GdalError::BadArgument(format!("unknown GDALDataType {value}")))
+            Err(GdalError::BadArgument(format!(
+                "unknown GDALDataType {value}"
+            )))
         } else {
             Ok(wrapped)
         }
     }
 }
-

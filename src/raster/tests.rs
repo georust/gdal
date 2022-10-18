@@ -1,13 +1,17 @@
 use crate::dataset::Dataset;
 use crate::metadata::Metadata;
 use crate::raster::rasterband::ResampleAlg;
-use crate::raster::{ByteBuffer, ColorEntry, ColorInterpretation, ColorTable, GdalTypeDescriptor, RasterCreationOption, StatisticsAll, StatisticsMinMax};
+use crate::raster::{
+    ByteBuffer, ColorEntry, ColorInterpretation, ColorTable, GdalTypeDescriptor,
+    RasterCreationOption, StatisticsAll, StatisticsMinMax,
+};
 use crate::test_utils::TempFixture;
 use crate::vsi::unlink_mem_file;
 use crate::DriverManager;
 use gdal_sys::GDALDataType;
 use std::path::Path;
 
+use gdal_sys::GDALDataType::*;
 #[cfg(feature = "ndarray")]
 use ndarray::arr2;
 
@@ -891,6 +895,7 @@ fn test_raster_stats() {
 }
 
 #[test]
+#[allow(non_upper_case_globals)]
 fn test_gdal_data_type() {
     for t in GdalTypeDescriptor::available_types() {
         // Test converting from GDALDataType:Type
@@ -898,5 +903,26 @@ fn test_gdal_data_type() {
         assert_eq!(t, &t2, "{}", t);
         assert!(t.bits() > 0, "{}", t);
         assert_eq!(t.bits(), t.bytes() * 8, "{}", t);
+        let name = t.name().unwrap();
+        match t.gdal_type() {
+            GDT_Byte | GDT_UInt16 | GDT_Int16 | GDT_UInt32 | GDT_Int32 | GDT_UInt64 | GDT_Int64 => {
+                assert!(t.is_integer(), "{}", &name);
+                assert!(!t.is_floating(), "{}", &name);
+            }
+            GDT_Float32 | GDT_Float64 => {
+                assert!(!t.is_integer(), "{}", &name);
+                assert!(t.is_floating(), "{}", &name);
+            }
+            o => panic!("unknown type ordinal '{}'", o),
+        }
+        match t.gdal_type() {
+            GDT_Byte | GDT_UInt16 | GDT_UInt32 | GDT_UInt64 => {
+                assert!(!t.is_signed(), "{}", &name);
+            }
+            GDT_Int16 | GDT_Int32 | GDT_Int64 | GDT_Float32 | GDT_Float64 => {
+                assert!(t.is_signed(), "{}", &name);
+            }
+            o => panic!("unknown type ordinal '{}'", o),
+        }
     }
 }
