@@ -797,12 +797,16 @@ impl Attribute {
 
 #[cfg(test)]
 mod tests {
+    // Note: tests herein are run in serial as NetCDF is not thread safe on some platforms
+    // (e.g. MacOS) and crashes when tests are run in parallel.
 
     use super::*;
+    use serial_test::serial;
 
     use crate::{test_utils::TempFixture, Dataset, DatasetOptions, GdalOpenFlags};
 
     #[test]
+    #[serial]
     fn test_root_group_name() {
         let fixture = TempFixture::fixture("byte_no_cf.nc");
 
@@ -819,6 +823,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_array_names() {
         let fixture = TempFixture::fixture("byte_no_cf.nc");
 
@@ -836,6 +841,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_n_dimension() {
         let fixture = TempFixture::fixture("byte_no_cf.nc");
 
@@ -855,6 +861,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_n_elements() {
         let fixture = TempFixture::fixture("byte_no_cf.nc");
 
@@ -874,6 +881,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_dimension_name() {
         let fixture = TempFixture::fixture("byte_no_cf.nc");
 
@@ -908,6 +916,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_dimension_size() {
         let fixture = TempFixture::fixture("byte_no_cf.nc");
 
@@ -931,6 +940,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_read_data() {
         let fixture = TempFixture::fixture("byte_no_cf.nc");
 
@@ -956,6 +966,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_read_string_array() {
         let fixture = TempFixture::fixture("alldatatypes.nc");
 
@@ -986,6 +997,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_datatype() {
         let fixture = TempFixture::fixture("byte_no_cf.nc");
 
@@ -1011,6 +1023,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_spatial_ref() {
         let fixture = TempFixture::fixture("byte_no_cf.nc");
 
@@ -1035,6 +1048,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_no_data_value() {
         let fixture = TempFixture::fixture("byte_no_cf.nc");
 
@@ -1055,6 +1069,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_attributes() {
         let fixture = TempFixture::fixture("cf_nasa_4326.nc");
 
@@ -1108,6 +1123,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_unit() {
         let fixture = TempFixture::fixture("cf_nasa_4326.nc");
 
@@ -1147,6 +1163,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_stats() {
         let fixture = TempFixture::fixture("byte_no_cf.nc");
 
