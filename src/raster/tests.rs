@@ -905,7 +905,7 @@ fn test_gdal_data_type() {
         assert_eq!(t.bits(), t.bytes() * 8, "{}", t);
         let name = t.name().unwrap();
         match t.gdal_type() {
-            GDT_Byte | GDT_UInt16 | GDT_Int16 | GDT_UInt32 | GDT_Int32 | GDT_UInt64 | GDT_Int64 => {
+            GDT_Byte | GDT_UInt16 | GDT_Int16 | GDT_UInt32 | GDT_Int32 => {
                 assert!(t.is_integer(), "{}", &name);
                 assert!(!t.is_floating(), "{}", &name);
             }
@@ -916,10 +916,10 @@ fn test_gdal_data_type() {
             o => panic!("unknown type ordinal '{}'", o),
         }
         match t.gdal_type() {
-            GDT_Byte | GDT_UInt16 | GDT_UInt32 | GDT_UInt64 => {
+            GDT_Byte | GDT_UInt16 | GDT_UInt32 => {
                 assert!(!t.is_signed(), "{}", &name);
             }
-            GDT_Int16 | GDT_Int32 | GDT_Int64 | GDT_Float32 | GDT_Float64 => {
+            GDT_Int16 | GDT_Int32 | GDT_Float32 | GDT_Float64 => {
                 assert!(t.is_signed(), "{}", &name);
             }
             o => panic!("unknown type ordinal '{}'", o),
@@ -946,11 +946,7 @@ fn test_data_type_union() {
     let u8d = <u8>::descriptor();
     let u16d = <u16>::descriptor();
     let i16d = <i16>::descriptor();
-    let u32d = <u32>::descriptor();
     let i32d = <i32>::descriptor();
-
-    #[cfg(all(major_ge_3, minor_ge_5))]
-    let i64d = <i64>::descriptor();
 
     // reflexivity
     assert_eq!(i16d.union(i16d), i16d);
@@ -960,6 +956,13 @@ fn test_data_type_union() {
     // widening
     assert_eq!(u8d.union(u16d), u16d);
     assert_eq!(f32d.union(i32d), f64d);
+
+
     #[cfg(all(major_ge_3, minor_ge_5))]
-    assert_eq!(i16d.union(u32d), i64d);
+    {
+        let u32d = <u32>::descriptor();
+        let i64d = <i64>::descriptor();
+        assert_eq!(i16d.union(u32d), i64d);
+    }
 }
+
