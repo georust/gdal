@@ -804,7 +804,7 @@ mod tests {
 
     #[test]
     fn test_root_group_name() {
-        let fixture = TempFixture::fixture("byte_no_cf.nc");
+        let fixture = "/vsizip/fixtures/byte_no_cf.zarr.zip";
 
         let options = DatasetOptions {
             open_flags: GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER,
@@ -820,7 +820,7 @@ mod tests {
 
     #[test]
     fn test_array_names() {
-        let fixture = TempFixture::fixture("byte_no_cf.nc");
+        let fixture = "/vsizip/fixtures/byte_no_cf.zarr.zip";
 
         let dataset_options = DatasetOptions {
             open_flags: GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER,
@@ -830,14 +830,17 @@ mod tests {
         };
         let dataset = Dataset::open_ex(&fixture, dataset_options).unwrap();
         let root_group = dataset.root_group().unwrap();
-        let options = CslStringList::new(); //Driver specific options determining how groups should be retrieved. Pass nullptr for default behavior.
+        let options = CslStringList::new();
         let array_names = root_group.array_names(options);
-        assert_eq!(array_names, vec!["Band1".to_string()])
+        assert_eq!(
+            array_names,
+            vec!["X".to_string(), "Y".to_string(), "byte_no_cf".to_string()]
+        )
     }
 
     #[test]
     fn test_n_dimension() {
-        let fixture = TempFixture::fixture("byte_no_cf.nc");
+        let fixture = "/vsizip/fixtures/byte_no_cf.zarr.zip";
 
         let dataset_options = DatasetOptions {
             open_flags: GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER,
@@ -847,8 +850,8 @@ mod tests {
         };
         let dataset = Dataset::open_ex(&fixture, dataset_options).unwrap();
         let root_group = dataset.root_group().unwrap();
-        let array_name = "Band1".to_string();
-        let options = CslStringList::new(); //Driver specific options determining how the array should be opened. Pass nullptr for default behavior.
+        let array_name = "byte_no_cf".to_string();
+        let options = CslStringList::new();
         let md_array = root_group.open_md_array(&array_name, options).unwrap();
         let n_dimension = md_array.num_dimensions();
         assert_eq!(2, n_dimension);
@@ -856,7 +859,7 @@ mod tests {
 
     #[test]
     fn test_n_elements() {
-        let fixture = TempFixture::fixture("byte_no_cf.nc");
+        let fixture = "/vsizip/fixtures/byte_no_cf.zarr.zip";
 
         let dataset_options = DatasetOptions {
             open_flags: GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER,
@@ -866,8 +869,8 @@ mod tests {
         };
         let dataset = Dataset::open_ex(&fixture, dataset_options).unwrap();
         let root_group = dataset.root_group().unwrap();
-        let array_name = "Band1".to_string();
-        let options = CslStringList::new(); //Driver specific options determining how the array should be opened. Pass nullptr for default behavior.
+        let array_name = "byte_no_cf".to_string();
+        let options = CslStringList::new();
         let md_array = root_group.open_md_array(&array_name, options).unwrap();
         let n_elements = md_array.num_elements();
         assert_eq!(400, n_elements);
@@ -875,7 +878,7 @@ mod tests {
 
     #[test]
     fn test_dimension_name() {
-        let fixture = TempFixture::fixture("byte_no_cf.nc");
+        let fixture = "/vsizip/fixtures/byte_no_cf.zarr.zip";
 
         let dataset_options = DatasetOptions {
             open_flags: GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER,
@@ -892,24 +895,24 @@ mod tests {
             .into_iter()
             .map(|dimensions| dimensions.name())
             .collect();
-        assert_eq!(group_dimensions_names, vec!["x", "y"]);
+        assert_eq!(group_dimensions_names, vec!["X", "Y"]);
 
         // array dimensions
 
-        let array_name = "Band1".to_string();
-        let options = CslStringList::new(); //Driver specific options determining how the array should be opened. Pass nullptr for default behavior.
+        let array_name = "byte_no_cf".to_string();
+        let options = CslStringList::new();
         let md_array = root_group.open_md_array(&array_name, options).unwrap();
         let dimensions = md_array.dimensions().unwrap();
         let mut dimension_names = Vec::new();
         for dimension in dimensions {
             dimension_names.push(dimension.name());
         }
-        assert_eq!(dimension_names, vec!["y".to_string(), "x".to_string()])
+        assert_eq!(dimension_names, vec!["Y".to_string(), "X".to_string()])
     }
 
     #[test]
     fn test_dimension_size() {
-        let fixture = TempFixture::fixture("byte_no_cf.nc");
+        let fixture = "/vsizip/fixtures/byte_no_cf.zarr.zip";
 
         let dataset_options = DatasetOptions {
             open_flags: GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER,
@@ -919,8 +922,8 @@ mod tests {
         };
         let dataset = Dataset::open_ex(&fixture, dataset_options).unwrap();
         let root_group = dataset.root_group().unwrap();
-        let array_name = "Band1".to_string();
-        let options = CslStringList::new(); //Driver specific options determining how the array should be opened. Pass nullptr for default behavior.
+        let array_name = "byte_no_cf".to_string();
+        let options = CslStringList::new();
         let md_array = root_group.open_md_array(&array_name, options).unwrap();
         let dimensions = md_array.dimensions().unwrap();
         let mut dimensions_size = Vec::new();
@@ -932,7 +935,7 @@ mod tests {
 
     #[test]
     fn test_read_data() {
-        let fixture = TempFixture::fixture("byte_no_cf.nc");
+        let fixture = "/vsizip/fixtures/byte_no_cf.zarr.zip";
 
         let dataset_options = DatasetOptions {
             open_flags: GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER,
@@ -944,7 +947,7 @@ mod tests {
 
         let root_group = dataset.root_group().unwrap();
         let md_array = root_group
-            .open_md_array("Band1", CslStringList::new())
+            .open_md_array("byte_no_cf", CslStringList::new())
             .unwrap();
 
         let values = md_array.read_as::<u8>(vec![0, 0], vec![20, 20]).unwrap();
@@ -987,7 +990,7 @@ mod tests {
 
     #[test]
     fn test_datatype() {
-        let fixture = TempFixture::fixture("byte_no_cf.nc");
+        let fixture = "/vsizip/fixtures/byte_no_cf.zarr.zip";
 
         let dataset_options = DatasetOptions {
             open_flags: GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER,
@@ -1000,7 +1003,7 @@ mod tests {
         let root_group = dataset.root_group().unwrap();
 
         let md_array = root_group
-            .open_md_array("Band1", CslStringList::new())
+            .open_md_array("byte_no_cf", CslStringList::new())
             .unwrap();
 
         let datatype = md_array.datatype();
@@ -1012,7 +1015,7 @@ mod tests {
 
     #[test]
     fn test_spatial_ref() {
-        let fixture = TempFixture::fixture("byte_no_cf.nc");
+        let fixture = "/vsizip/fixtures/byte_no_cf.zarr.zip";
 
         let dataset_options = DatasetOptions {
             open_flags: GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER,
@@ -1024,7 +1027,7 @@ mod tests {
 
         let root_group = dataset.root_group().unwrap();
         let md_array = root_group
-            .open_md_array("Band1", CslStringList::new())
+            .open_md_array("byte_no_cf", CslStringList::new())
             .unwrap();
 
         let spatial_ref = md_array.spatial_reference().unwrap();
@@ -1036,7 +1039,7 @@ mod tests {
 
     #[test]
     fn test_no_data_value() {
-        let fixture = TempFixture::fixture("byte_no_cf.nc");
+        let fixture = "/vsizip/fixtures/byte_no_cf.zarr.zip";
 
         let dataset_options = DatasetOptions {
             open_flags: GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER,
@@ -1048,7 +1051,7 @@ mod tests {
 
         let root_group = dataset.root_group().unwrap();
         let md_array = root_group
-            .open_md_array("Band1", CslStringList::new())
+            .open_md_array("byte_no_cf", CslStringList::new())
             .unwrap();
 
         assert_eq!(md_array.no_data_value_as_double(), Some(0.));
@@ -1056,7 +1059,7 @@ mod tests {
 
     #[test]
     fn test_attributes() {
-        let fixture = TempFixture::fixture("cf_nasa_4326.nc");
+        let fixture = "/vsizip/fixtures/cf_nasa_4326.zarr.zip";
 
         let dataset_options = DatasetOptions {
             open_flags: GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER,
@@ -1101,15 +1104,12 @@ mod tests {
             "air_temperature"
         );
 
-        assert_eq!(
-            md_array.attribute("_FillValue").unwrap().read_as_f64(),
-            -9999.
-        );
+        assert_eq!(md_array.no_data_value_as_double().unwrap(), -9999.);
     }
 
     #[test]
     fn test_unit() {
-        let fixture = TempFixture::fixture("cf_nasa_4326.nc");
+        let fixture = "/vsizip/fixtures/cf_nasa_4326.zarr.zip";
 
         let dataset_options = DatasetOptions {
             open_flags: GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER,
@@ -1148,7 +1148,8 @@ mod tests {
 
     #[test]
     fn test_stats() {
-        let fixture = TempFixture::fixture("byte_no_cf.nc");
+        // make a copy to avoid writing the statistics into the original file
+        let fixture = TempFixture::fixture("byte_no_cf.zarr.zip");
 
         let dataset_options = DatasetOptions {
             open_flags: GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER,
@@ -1156,10 +1157,14 @@ mod tests {
             open_options: None,
             sibling_files: None,
         };
-        let dataset = Dataset::open_ex(&fixture, dataset_options).unwrap();
+        let dataset = Dataset::open_ex(
+            format!("/vsizip/{}", fixture.path().display()),
+            dataset_options,
+        )
+        .unwrap();
         let root_group = dataset.root_group().unwrap();
-        let array_name = "Band1".to_string();
-        let options = CslStringList::new(); //Driver specific options determining how the array should be opened. Pass nullptr for default behavior.
+        let array_name = "byte_no_cf".to_string();
+        let options = CslStringList::new();
         let md_array = root_group.open_md_array(&array_name, options).unwrap();
 
         assert!(md_array.get_statistics(false, true).unwrap().is_none());
