@@ -233,6 +233,7 @@ mod tests {
     use crate::{DatasetOptions, Driver, GdalOpenFlags};
 
     #[test]
+    #[cfg_attr(not(all(major_ge_3, minor_ge_4)), ignore)]
     fn test_build_tiff_from_path() {
         let fixture = "/vsizip/fixtures/cf_nasa_4326.zarr.zip";
 
@@ -264,6 +265,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(not(all(major_ge_3, minor_ge_4)), ignore)]
     fn test_build_tiff_from_dataset() {
         let fixture = "/vsizip/fixtures/cf_nasa_4326.zarr.zip";
 
