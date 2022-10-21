@@ -230,11 +230,12 @@ mod tests {
 
     use super::*;
 
-    use crate::{test_utils::TempFixture, DatasetOptions, Driver, GdalOpenFlags};
+    use crate::{DatasetOptions, Driver, GdalOpenFlags};
 
     #[test]
+    #[cfg_attr(not(all(major_ge_3, minor_ge_4)), ignore)]
     fn test_build_tiff_from_path() {
-        let fixture = TempFixture::fixture("cf_nasa_4326.nc");
+        let fixture = "/vsizip/fixtures/cf_nasa_4326.zarr.zip";
 
         let dataset_options = DatasetOptions {
             open_flags: GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER,
@@ -243,7 +244,6 @@ mod tests {
             sibling_files: None,
         };
         let dataset = Dataset::open_ex(&fixture, dataset_options).unwrap();
-
         let mem_file_path = "/vsimem/2d3e9124-a7a0-413e-97b5-e79d46e50ff8";
 
         let dataset = multi_dim_translate(
@@ -265,8 +265,9 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(not(all(major_ge_3, minor_ge_4)), ignore)]
     fn test_build_tiff_from_dataset() {
-        let fixture = TempFixture::fixture("cf_nasa_4326.nc");
+        let fixture = "/vsizip/fixtures/cf_nasa_4326.zarr.zip";
 
         let dataset_options = DatasetOptions {
             open_flags: GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER,
