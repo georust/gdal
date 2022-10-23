@@ -1,13 +1,14 @@
 use crate::dataset::Dataset;
 use crate::gdal_major_object::MajorObject;
 use crate::metadata::Metadata;
-use crate::raster::{GDALDataType, GdalType};
+use crate::raster::GdalType;
 use crate::utils::{_last_cpl_err, _last_null_pointer_err, _string};
 use gdal_sys::{
     self, CPLErr, GDALColorEntry, GDALColorInterp, GDALColorTableH, GDALComputeRasterMinMax,
-    GDALCreateColorRamp, GDALCreateColorTable, GDALDestroyColorTable, GDALGetPaletteInterpretation,
-    GDALGetRasterStatistics, GDALMajorObjectH, GDALPaletteInterp, GDALRIOResampleAlg, GDALRWFlag,
-    GDALRasterBandH, GDALRasterIOExtraArg, GDALSetColorEntry, GDALSetRasterColorTable,
+    GDALCreateColorRamp, GDALCreateColorTable, GDALDataType, GDALDestroyColorTable,
+    GDALGetPaletteInterpretation, GDALGetRasterStatistics, GDALMajorObjectH, GDALPaletteInterp,
+    GDALRIOResampleAlg, GDALRWFlag, GDALRasterBandH, GDALRasterIOExtraArg, GDALSetColorEntry,
+    GDALSetRasterColorTable,
 };
 use libc::c_int;
 use std::ffi::CString;

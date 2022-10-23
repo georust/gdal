@@ -36,9 +36,16 @@
 
   - <https://github.com/georust/gdal/pull/324>
 
+- Added `GdalTypeDescriptor` to provide access to metadata and supporting routines around `GDALDataType` ordinals.
+- **Breaking**: `GDALDataType` is no longer `pub use` in `gdal::raster`, 
+  as `GdalType` and `GdalTypeDescriptor` sufficiently cover use cases in safe code. 
+  Still accessible via `gdal_sys::GDALDataType`.
+
+  - <https://github.com/georust/gdal/pull/318>
+
 ## 0.13
 
-- Add prebuild bindings for GDAL 3.5
+- Add prebuilt bindings for GDAL 3.5
 
   - <https://github.com/georust/gdal/pull/277>
 

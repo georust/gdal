@@ -1,8 +1,7 @@
 use crate::errors::{GdalError, Result};
 use crate::utils::{_last_null_pointer_err, _string};
-pub use gdal_sys::GDALDataType;
 use gdal_sys::{
-    GDALAdjustValueToDataType, GDALDataTypeIsConversionLossy, GDALDataTypeIsFloating,
+    GDALAdjustValueToDataType, GDALDataType, GDALDataTypeIsConversionLossy, GDALDataTypeIsFloating,
     GDALDataTypeIsInteger, GDALDataTypeIsSigned, GDALDataTypeUnion, GDALFindDataTypeForValue,
     GDALGetDataTypeByName, GDALGetDataTypeName, GDALGetDataTypeSizeBits, GDALGetDataTypeSizeBytes,
 };
