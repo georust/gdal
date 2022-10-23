@@ -52,14 +52,7 @@ pub trait Metadata: MajorObject {
         let c_res = unsafe { gdal_sys::GDALGetMetadataDomainList(self.gdal_object_ptr()) };
 
         if !c_res.is_null() {
-            for i in 0.. {
-                let p = unsafe { *c_res.offset(i) };
-                if p.is_null() {
-                    break;
-                }
-
-                domains.push(_string(p));
-            }
+            domains.append(&mut _string_array(c_res));
         }
         unsafe { gdal_sys::CSLDestroy(c_res) };
 
@@ -75,16 +68,8 @@ pub trait Metadata: MajorObject {
             if c_res.is_null() {
                 return None;
             }
-
-            if !c_res.is_null() {
-                for i in 0.. {
-                    let p = unsafe { *c_res.offset(i) };
-                    if p.is_null() {
-                        break;
-                    }
-
-                    metadata.push(_string(p));
-                }
+            else {
+                metadata.append(&mut _string_array(c_res));
             }
         }
 
