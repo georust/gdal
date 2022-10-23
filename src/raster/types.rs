@@ -2,9 +2,9 @@ use crate::errors::{GdalError, Result};
 use crate::utils::{_last_null_pointer_err, _string};
 pub use gdal_sys::GDALDataType;
 use gdal_sys::{
-    GDALAdjustValueToDataType, GDALDataTypeIsFloating, GDALDataTypeIsInteger, GDALDataTypeIsSigned,
-    GDALDataTypeUnion, GDALFindDataTypeForValue, GDALGetDataTypeByName, GDALGetDataTypeName,
-    GDALGetDataTypeSizeBits, GDALGetDataTypeSizeBytes,
+    GDALAdjustValueToDataType, GDALDataTypeIsConversionLossy, GDALDataTypeIsFloating,
+    GDALDataTypeIsInteger, GDALDataTypeIsSigned, GDALDataTypeUnion, GDALFindDataTypeForValue,
+    GDALGetDataTypeByName, GDALGetDataTypeName, GDALGetDataTypeSizeBits, GDALGetDataTypeSizeBytes,
 };
 use std::ffi::CString;
 use std::fmt::{Debug, Display, Formatter};
@@ -27,13 +27,13 @@ use std::fmt::{Debug, Display, Formatter};
 pub struct GdalTypeDescriptor(GDALDataType::Type);
 
 impl GdalTypeDescriptor {
-    /// Find `GdalTypeDescriptor` by name, as would be returned by [`GdalTypeDescriptor.name()`].
+    /// Find `GdalTypeDescriptor` by name, as would be returned by [`name`][Self::name].
     ///
     /// # Example
     ///
     /// ```rust, no_run
     /// use gdal::raster::{GdalType, GdalTypeDescriptor};
-    /// assert_eq!(GdalTypeDescriptor::from_name("UInt16").unwrap().gdal_type(), <u16>::gdal_type())
+    /// assert_eq!(GdalTypeDescriptor::from_name("UInt16").unwrap(), <u16>::descriptor())
     /// ```
     #[allow(non_snake_case)]
     pub fn from_name(name: &str) -> Result<Self> {
@@ -66,12 +66,19 @@ impl GdalTypeDescriptor {
         GdalTypeDescriptor(gdal_type)
     }
 
-    /// Get the `GDALDataType` ordinal value
+    /// Get the [`GDALDataType`] ordinal value
     pub fn gdal_type(&self) -> GDALDataType::Type {
         self.0
     }
 
-    /// Get the name of the `GDALDataType`.
+    /// Get the name of the [`GDALDataType`].
+    ///
+    /// # Example
+    ///
+    /// ```rust, no_run
+    /// use gdal::raster::GdalType;
+    /// assert_eq!(<u16>::descriptor().name(), "UInt16");
+    /// ```
     pub fn name(&self) -> String {
         let c_str = unsafe { GDALGetDataTypeName(self.gdal_type()) };
         if c_str.is_null() {
@@ -82,37 +89,37 @@ impl GdalTypeDescriptor {
         _string(c_str)
     }
 
-    /// Get the gdal type size in **bits**.
+    /// Get the [`GDALDataType`] size in **bits**.
     pub fn bits(&self) -> u8 {
         unsafe { GDALGetDataTypeSizeBits(self.gdal_type()) }
             .try_into()
             .unwrap()
     }
 
-    /// Get the gdal type size in **bytes**.
+    /// Get the [`GDALDataType`] size in **bytes**.
     pub fn bytes(&self) -> u8 {
         unsafe { GDALGetDataTypeSizeBytes(self.gdal_type()) }
             .try_into()
             .unwrap()
     }
 
-    /// Returns `true` if data type is integral (non-floating point)
+    /// Returns `true` if [`GDALDataType`] is integral (non-floating point)
     pub fn is_integer(&self) -> bool {
         (unsafe { GDALDataTypeIsInteger(self.gdal_type()) }) > 0
     }
 
-    /// Returns `true` if data type is floating point (non-integral)
+    /// Returns `true` if [`GDALDataType`] is floating point (non-integral)
     pub fn is_floating(&self) -> bool {
         (unsafe { GDALDataTypeIsFloating(self.gdal_type()) }) > 0
     }
 
-    /// Returns `true` if data type supports negative values.
+    /// Returns `true` if [`GDALDataType`] supports negative values.
     pub fn is_signed(&self) -> bool {
         (unsafe { GDALDataTypeIsSigned(self.gdal_type()) }) > 0
     }
 
-    /// Return the smallest data type that can fully express both `self` and
-    /// `other` data types.
+    /// Return the descriptor for smallest [`GDALDataType`] fully contains both data types
+    /// indicated by `self` and `other`.
     ///
     /// # Example
     ///
@@ -127,6 +134,54 @@ impl GdalTypeDescriptor {
     pub fn union(&self, other: Self) -> Self {
         let gdal_type = unsafe { GDALDataTypeUnion(self.gdal_type(), other.gdal_type()) };
         Self(gdal_type)
+    }
+
+    /// Change a given value to fit within the constraints of this [`GDALDataType`].
+    ///
+    /// Returns an enum indicating if the wrapped value is unchanged, clamped
+    /// (to min or max datatype value) or rounded (for integral data types).
+    ///
+    /// # Example
+    ///
+    /// ```rust, no_run
+    /// use gdal::raster::{GdalType, AdjustedValue::*};
+    /// assert_eq!(<u8>::descriptor().adjust_value(255), Unchanged(255.));
+    /// assert_eq!(<u8>::descriptor().adjust_value(1.2334), Rounded(1.));
+    /// assert_eq!(<u8>::descriptor().adjust_value(1000.2334), Clamped(255.));
+    /// ```
+    pub fn adjust_value<N: GdalType + Into<f64>>(&self, value: N) -> AdjustedValue {
+        let mut is_clamped: libc::c_int = 0;
+        let mut is_rounded: libc::c_int = 0;
+
+        let result = unsafe {
+            GDALAdjustValueToDataType(
+                self.gdal_type(),
+                value.into(),
+                &mut is_clamped,
+                &mut is_rounded,
+            )
+        };
+
+        match (is_clamped > 0, is_rounded > 0) {
+            (false, false) => AdjustedValue::Unchanged(result),
+            (true, false) => AdjustedValue::Clamped(result),
+            (false, true) => AdjustedValue::Rounded(result),
+            (true, true) => panic!("Unexpected adjustment result: clamped and rounded."),
+        }
+    }
+
+    /// Determine if converting a value from [`GDALDataType`] described by `self` to one
+    /// described by `other` is potentially lossy.
+    ///
+    /// # Example
+    ///
+    /// ```rust, no_run
+    /// use gdal::raster::GdalType;
+    /// assert!(<i16>::descriptor().is_conversion_lossy(<u8>::descriptor()))
+    /// ```
+    pub fn is_conversion_lossy(&self, other: Self) -> bool {
+        let r = unsafe { GDALDataTypeIsConversionLossy(self.gdal_type(), other.gdal_type()) };
+        r != 0
     }
 
     /// Subset of the GDAL data types supported by Rust bindings.
@@ -190,12 +245,15 @@ impl TryFrom<GDALDataType::Type> for GdalTypeDescriptor {
     }
 }
 
+/// Return type for [`GdalTypeDescriptor::adjust_value`].
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum AdjustedValue {
+    /// Value was not changed
     Unchanged(f64),
+    /// Value was clamped to fit within the min/max bounds of data type
     Clamped(f64),
+    /// The value was rounded to fit in an integral type
     Rounded(f64),
-    ClampedRounded(f64),
 }
 
 impl From<AdjustedValue> for f64 {
@@ -204,13 +262,12 @@ impl From<AdjustedValue> for f64 {
             AdjustedValue::Unchanged(v) => v,
             AdjustedValue::Clamped(v) => v,
             AdjustedValue::Rounded(v) => v,
-            AdjustedValue::ClampedRounded(v) => v,
         }
     }
 }
 
 /// Type-level constraint for bounding primitive numeric values for generic
-/// functions requiring a data type.
+/// functions requiring a [`GDALDataType`].
 ///
 /// See [`GdalTypeDescriptor`] for access to metadata describing the data type.
 pub trait GdalType {
@@ -303,8 +360,8 @@ impl GdalType for f64 {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::raster::types::AdjustedValue::{Clamped, Rounded, Unchanged};
     use gdal_sys::GDALDataType::*;
-    use crate::raster::types::AdjustedValue::{ClampedRounded, Rounded};
 
     #[test]
     #[allow(non_upper_case_globals)]
@@ -400,5 +457,27 @@ mod tests {
             GdalTypeDescriptor::for_value(<u16>::MAX as f64 * -2.0),
             <i32>::descriptor()
         );
+    }
+
+    #[test]
+    fn test_adjust_value() {
+        assert_eq!(<u8>::descriptor().adjust_value(255), Unchanged(255.));
+        assert_eq!(<u8>::descriptor().adjust_value(1.2334), Rounded(1.));
+        assert_eq!(<u8>::descriptor().adjust_value(1000.2334), Clamped(255.));
+        assert_eq!(<u8>::descriptor().adjust_value(-1), Clamped(0.));
+        assert_eq!(
+            <i16>::descriptor().adjust_value(-32768),
+            Unchanged(-32768.0)
+        );
+        assert_eq!(
+            <i16>::descriptor().adjust_value(-32767.4),
+            Rounded(-32767.0)
+        );
+        assert_eq!(
+            <f32>::descriptor().adjust_value(1e300),
+            Clamped(f32::MAX as f64)
+        );
+        let v: f64 = <i16>::descriptor().adjust_value(-32767.4).into();
+        assert_eq!(v, -32767.0);
     }
 }
