@@ -42,3 +42,10 @@ impl AsRef<Path> for TempFixture {
         self.path()
     }
 }
+
+#[macro_export]
+macro_rules! fixture {
+    ($name:expr) => {
+        std::path::Path::new(env!("FIXTURES_DIR")).join($name)
+    };
+}

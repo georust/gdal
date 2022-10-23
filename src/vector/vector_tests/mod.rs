@@ -3,28 +3,9 @@ use super::{
     OGRwkbGeometryType, OwnedLayer,
 };
 use crate::spatial_ref::SpatialRef;
-use crate::{assert_almost_eq, Dataset, DatasetOptions, GdalOpenFlags};
+use crate::{assert_almost_eq, fixture, Dataset, DatasetOptions, GdalOpenFlags};
 mod convert_geo;
 mod sql;
-
-#[macro_export]
-macro_rules! fixture {
-    ($name:expr) => {
-        std::path::Path::new(file!())
-            .parent()
-            .unwrap()
-            .parent()
-            .unwrap()
-            .parent()
-            .unwrap()
-            .parent()
-            .unwrap()
-            .join("fixtures")
-            .as_path()
-            .join($name)
-            .as_path()
-    };
-}
 
 #[test]
 fn test_layer_count() {

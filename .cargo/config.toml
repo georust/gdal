@@ -3,3 +3,6 @@
 dto = "test --doc -- --show-output"
 # Run clippy, raising warnings to errors
 nowarn = "clippy --all-targets -- -D warnings"
+[env]
+# Used by `fixture!` macro.
+FIXTURES_DIR = { value = "fixtures", relative = true }

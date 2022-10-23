@@ -1083,22 +1083,9 @@ impl<'a> Drop for Transaction<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::fixture;
     use crate::vector::{Geometry, LayerAccess};
     use tempfile::TempPath;
-
-    macro_rules! fixture {
-        ($name:expr) => {
-            Path::new(file!())
-                .parent()
-                .unwrap()
-                .parent()
-                .unwrap()
-                .join("fixtures")
-                .as_path()
-                .join($name)
-                .as_path()
-        };
-    }
 
     /// Copies the given file to a temporary file and opens it for writing. When the returned
     /// `TempPath` is dropped, the file is deleted.
@@ -1237,7 +1224,7 @@ mod tests {
     #[test]
     fn test_create_layer_options() {
         use gdal_sys::OGRwkbGeometryType::wkbPoint;
-        let (_temp_path, mut ds) = open_gpkg_for_update(fixture!("poly.gpkg"));
+        let (_temp_path, mut ds) = open_gpkg_for_update(&fixture!("poly.gpkg"));
         let mut options = LayerOptions {
             name: "new",
             ty: wkbPoint,
@@ -1251,14 +1238,14 @@ mod tests {
 
     #[test]
     fn test_start_transaction() {
-        let (_temp_path, mut ds) = open_gpkg_for_update(fixture!("poly.gpkg"));
+        let (_temp_path, mut ds) = open_gpkg_for_update(&fixture!("poly.gpkg"));
         let txn = ds.start_transaction();
         assert!(txn.is_ok());
     }
 
     #[test]
     fn test_transaction_commit() {
-        let (_temp_path, mut ds) = open_gpkg_for_update(fixture!("poly.gpkg"));
+        let (_temp_path, mut ds) = open_gpkg_for_update(&fixture!("poly.gpkg"));
         let orig_feature_count = ds.layer(0).unwrap().feature_count();
 
         let txn = ds.start_transaction().unwrap();
@@ -1271,7 +1258,7 @@ mod tests {
 
     #[test]
     fn test_transaction_rollback() {
-        let (_temp_path, mut ds) = open_gpkg_for_update(fixture!("poly.gpkg"));
+        let (_temp_path, mut ds) = open_gpkg_for_update(&fixture!("poly.gpkg"));
         let orig_feature_count = ds.layer(0).unwrap().feature_count();
 
         let txn = ds.start_transaction().unwrap();
@@ -1284,7 +1271,7 @@ mod tests {
 
     #[test]
     fn test_transaction_implicit_rollback() {
-        let (_temp_path, mut ds) = open_gpkg_for_update(fixture!("poly.gpkg"));
+        let (_temp_path, mut ds) = open_gpkg_for_update(&fixture!("poly.gpkg"));
         let orig_feature_count = ds.layer(0).unwrap().feature_count();
 
         {
