@@ -1,6 +1,6 @@
 use crate::errors::*;
 use crate::gdal_major_object::MajorObject;
-use crate::utils::{_last_cpl_err, _last_null_pointer_err, _string};
+use crate::utils::{_last_cpl_err, _last_null_pointer_err, _string, _string_array};
 use gdal_sys::{self, CPLErr};
 use std::ffi::CString;
 
@@ -52,14 +52,7 @@ pub trait Metadata: MajorObject {
         let c_res = unsafe { gdal_sys::GDALGetMetadataDomainList(self.gdal_object_ptr()) };
 
         if !c_res.is_null() {
-            for i in 0.. {
-                let p = unsafe { *c_res.offset(i) };
-                if p.is_null() {
-                    break;
-                }
-
-                domains.push(_string(p));
-            }
+            domains.append(&mut _string_array(c_res));
         }
         unsafe { gdal_sys::CSLDestroy(c_res) };
 
@@ -75,16 +68,8 @@ pub trait Metadata: MajorObject {
             if c_res.is_null() {
                 return None;
             }
-
-            if !c_res.is_null() {
-                for i in 0.. {
-                    let p = unsafe { *c_res.offset(i) };
-                    if p.is_null() {
-                        break;
-                    }
-
-                    metadata.push(_string(p));
-                }
+            else {
+                metadata.append(&mut _string_array(c_res));
             }
         }
 
