@@ -1,8 +1,9 @@
 use std::ffi::CString;
+use std::fmt::{Debug, Formatter};
 use std::path::Path;
 use std::sync::Once;
 
-use gdal_sys::{self, CPLErr, GDALDriverH, GDALMajorObjectH};
+use gdal_sys::{self, CPLErr, GDALDriverH, GDALGetDriverCreationOptionList, GDALGetDriverHelpTopic, GDALMajorObjectH};
 use libc::c_int;
 
 use crate::cpl::CslStringList;
@@ -118,6 +119,12 @@ impl Driver {
         count.try_into().unwrap()
     }
 
+    /// Get an [`Iterator`] over registered drivers.
+    pub fn iter() -> impl Iterator<Item=Driver> {
+        _register_drivers();
+        DriverIter::default()
+    }
+
     /// Return the short name of a driver.
     ///
     /// For the GeoTIFF driver, this is “GTiff”
@@ -135,6 +142,23 @@ impl Driver {
     /// See also: [`short_name`](Self::short_name`).
     pub fn long_name(&self) -> String {
         let rv = unsafe { gdal_sys::GDALGetDriverLongName(self.c_driver) };
+        _string(rv)
+    }
+
+    /// Get the relative path to the driver's help in the GDAL documentation directory.
+    pub fn help_topic(&self) -> Option<String> {
+        let rv = unsafe { GDALGetDriverHelpTopic(self.c_driver) };
+        if rv.is_null() {
+            None
+        }
+        else {
+            Some(_string(rv))
+        }
+    }
+
+    /// Get the XML document describing creation options used by [`create`][Self::create].
+    pub fn creation_options_xml(&self) -> String {
+        let rv = unsafe { GDALGetDriverCreationOptionList(self.c_driver) };
         _string(rv)
     }
 
@@ -359,6 +383,25 @@ impl Driver {
     }
 }
 
+impl Debug for Driver {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        if f.alternate() {
+            f.debug_struct("Driver")
+                .field("short_name", &self.short_name())
+                .field("long_name", &self.long_name())
+                .field("help_topic", &self.help_topic())
+                .field("creation_options", &self.creation_options_xml())
+                .field("metadata", &"todo")
+                .finish()
+        }
+        else {
+            f.debug_tuple("Driver")
+                .field(&self.short_name())
+                .finish()
+        }
+    }
+}
+
 impl MajorObject for Driver {
     unsafe fn gdal_object_ptr(&self) -> GDALMajorObjectH {
         self.c_driver
@@ -366,3 +409,48 @@ impl MajorObject for Driver {
 }
 
 impl Metadata for Driver {}
+
+/// Iterator over registered drivers.
+#[derive(Default)]
+struct DriverIter {
+    index: usize
+}
+
+impl Iterator for DriverIter {
+    type Item = Driver;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.index < Driver::count() {
+            let r = Driver::get(self.index);
+            self.index += 1;
+            r.ok()
+        }
+        else {
+            None
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::Driver;
+
+    #[test]
+    fn driver_iter() {
+        let expected = Driver::count();
+        let mut count: usize = 0;
+        for _ in Driver::iter() {
+            count += 1;
+        }
+        assert_eq!(expected, count);
+    }
+
+    #[test]
+    fn driver_info() {
+        for d in Driver::iter() {
+            assert!(!d.short_name().is_empty());
+
+            dbg!(d);
+        }
+    }
+}
