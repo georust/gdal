@@ -32,6 +32,10 @@
 
   - <https://github.com/georust/gdal/pull/314>
 
+- Added `MetadataIter`
+
+  - <>
+
 ## 0.13
 
 - Add prebuild bindings for GDAL 3.5

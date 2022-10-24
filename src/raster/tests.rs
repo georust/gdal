@@ -173,7 +173,6 @@ fn test_rename_remove_raster() {
     assert!(Dataset::open(mem_file_path_b).is_err());
 }
 
-
 #[test]
 fn test_create() {
     let driver = Driver::get_by_name("MEM").unwrap();

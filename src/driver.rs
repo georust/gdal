@@ -3,7 +3,10 @@ use std::fmt::{Debug, Formatter};
 use std::path::Path;
 use std::sync::Once;
 
-use gdal_sys::{self, CPLErr, GDALDriverH, GDALGetDriverCreationOptionList, GDALGetDriverHelpTopic, GDALMajorObjectH};
+use gdal_sys::{
+    self, CPLErr, GDALDriverH, GDALGetDriverCreationOptionList, GDALGetDriverHelpTopic,
+    GDALMajorObjectH,
+};
 use libc::c_int;
 
 use crate::cpl::CslStringList;
@@ -120,7 +123,7 @@ impl Driver {
     }
 
     /// Get an [`Iterator`] over registered drivers.
-    pub fn iter() -> impl Iterator<Item=Driver> {
+    pub fn iter() -> impl Iterator<Item = Driver> {
         _register_drivers();
         DriverIter::default()
     }
@@ -150,8 +153,7 @@ impl Driver {
         let rv = unsafe { GDALGetDriverHelpTopic(self.c_driver) };
         if rv.is_null() {
             None
-        }
-        else {
+        } else {
             Some(_string(rv))
         }
     }
@@ -393,11 +395,8 @@ impl Debug for Driver {
                 .field("creation_options", &self.creation_options_xml())
                 .field("metadata", &"todo")
                 .finish()
-        }
-        else {
-            f.debug_tuple("Driver")
-                .field(&self.short_name())
-                .finish()
+        } else {
+            f.debug_tuple("Driver").field(&self.short_name()).finish()
         }
     }
 }
@@ -413,7 +412,7 @@ impl Metadata for Driver {}
 /// Iterator over registered drivers.
 #[derive(Default)]
 struct DriverIter {
-    index: usize
+    index: usize,
 }
 
 impl Iterator for DriverIter {
@@ -424,8 +423,7 @@ impl Iterator for DriverIter {
             let r = Driver::get(self.index);
             self.index += 1;
             r.ok()
-        }
-        else {
+        } else {
             None
         }
     }

@@ -1083,9 +1083,9 @@ impl<'a> Drop for Transaction<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::fixture;
     use crate::vector::{Geometry, LayerAccess};
     use tempfile::TempPath;
-    use crate::fixture;
 
     /// Copies the given file to a temporary file and opens it for writing. When the returned
     /// `TempPath` is dropped, the file is deleted.

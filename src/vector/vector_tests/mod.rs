@@ -3,7 +3,7 @@ use super::{
     OGRwkbGeometryType, OwnedLayer,
 };
 use crate::spatial_ref::SpatialRef;
-use crate::{assert_almost_eq, Dataset, DatasetOptions, Driver, fixture, GdalOpenFlags};
+use crate::{assert_almost_eq, fixture, Dataset, DatasetOptions, Driver, GdalOpenFlags};
 mod convert_geo;
 mod sql;
 

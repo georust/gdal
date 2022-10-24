@@ -39,6 +39,8 @@ use std::ffi::CString;
 /// # }
 /// ```
 pub trait Metadata: MajorObject {
+    /// For most [`crate::Dataset`]s, this is the originating filename.
+    /// For [`crate::raster::RasterBand`]s it is actually a description (if supported) or `""`.
     fn description(&self) -> Result<String> {
         let c_res = unsafe { gdal_sys::GDALGetDescription(self.gdal_object_ptr()) };
         if c_res.is_null() {
@@ -67,8 +69,7 @@ pub trait Metadata: MajorObject {
 
             if c_res.is_null() {
                 return None;
-            }
-            else {
+            } else {
                 metadata.append(&mut _string_array(c_res));
             }
         }
@@ -92,6 +93,13 @@ pub trait Metadata: MajorObject {
             }
         }
         None
+    }
+
+    fn metadata_iter(&self) -> MetadataIter
+    where
+        Self: Sized,
+    {
+        MetadataIter::new(self)
     }
 
     fn set_metadata_item(&mut self, key: &str, value: &str, domain: &str) -> Result<()> {
@@ -118,15 +126,76 @@ pub trait Metadata: MajorObject {
     /// GDALDatasets. For RasterBands it is actually a description
     /// (if supported) or "".
     fn set_description(&mut self, description: &str) -> Result<()> {
-
         let c_description = CString::new(description.to_owned())?;
         unsafe { gdal_sys::GDALSetDescription(self.gdal_object_ptr(), c_description.as_ptr()) };
         Ok(())
     }
 }
 
+/// Standalone metadata entry.
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd)]
+pub struct MetadataEntry {
+    pub domain: String,
+    pub key: String,
+    pub value: String,
+}
+
+impl MetadataEntry {
+    pub fn new<D, K, V>(domain: D, key: K, value: V) -> Self
+    where
+        D: Into<String>,
+        K: Into<String>,
+        V: Into<String>,
+    {
+        Self {
+            domain: domain.into(),
+            key: key.into(),
+            value: value.into(),
+        }
+    }
+
+    /// Determine if this entry is from the default domain, which is named `""`.
+    pub fn is_default_domain(&self) -> bool {
+        self.domain.is_empty()
+    }
+}
+
+/// Metadata iterator state
+pub struct MetadataIter<'a> {
+    stream: Box<dyn Iterator<Item = MetadataEntry> + 'a>,
+}
+
+impl<'a> MetadataIter<'a> {
+    pub fn new<P: Metadata>(parent: &'a P) -> Self {
+        let stream = parent
+            .metadata_domains()
+            .into_iter()
+            .flat_map(move |domain| {
+                let keyvals = parent.metadata_domain(&domain).unwrap_or_default();
+                keyvals.into_iter().filter_map(move |keyval| {
+                    keyval
+                        .split_once('=')
+                        .map(|(key, value)| MetadataEntry::new(domain.clone(), key, value))
+                })
+            });
+
+        Self {
+            stream: Box::new(stream),
+        }
+    }
+}
+
+impl<'a> Iterator for MetadataIter<'a> {
+    type Item = MetadataEntry;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.stream.next()
+    }
+}
+
 #[cfg(test)]
 mod tests {
+    use crate::metadata::MetadataEntry;
     use crate::*;
 
     #[test]
@@ -214,5 +283,29 @@ mod tests {
 
         band.set_description(description).unwrap();
         assert_eq!(band.description().unwrap(), description);
+    }
+
+    #[test]
+    fn test_md_iter() {
+        // Driver metadata...
+        let driver = Driver::get_by_name("GTiff").unwrap();
+        driver.metadata_iter().any(|e| e.key == "LIBGEOTIFF");
+
+        // Dataset metadata...
+        let ds = Dataset::open(fixture!("m_3607824_se_17_1_20160620_sub.tif")).unwrap();
+        assert_eq!(ds.metadata_item("AREA_OR_POINT", ""), Some("Area".into()));
+        assert!(ds
+            .metadata_iter()
+            .any(|e| e == MetadataEntry::new("", "AREA_OR_POINT", "Area")));
+        assert!(ds
+            .metadata_iter()
+            .any(|e| e.domain == "DERIVED_SUBDATASETS"));
+
+        // RasterBand metadata...
+        let ds = Dataset::open(fixture!("tinymarble.tif")).unwrap();
+        let band = ds.rasterband(1).unwrap();
+        assert!(band
+            .metadata_iter()
+            .any(|e| e.key == "STATISTICS_VALID_PERCENT"));
     }
 }
