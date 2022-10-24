@@ -34,7 +34,7 @@
 
 - Added `MetadataIter`
 
-  - <>
+  - <https://github.com/georust/gdal/pull/323>
 
 ## 0.13
 

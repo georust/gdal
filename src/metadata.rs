@@ -302,10 +302,9 @@ mod tests {
             .any(|e| e.domain == "DERIVED_SUBDATASETS"));
 
         // RasterBand metadata...
-        let ds = Dataset::open(fixture!("tinymarble.tif")).unwrap();
+        let ds = Dataset::open(fixture!("labels.tif")).unwrap();
         let band = ds.rasterband(1).unwrap();
-        assert!(band
-            .metadata_iter()
-            .any(|e| e.key == "STATISTICS_VALID_PERCENT"));
+
+        assert!(band.metadata_iter().any(|e| e.key == "CLASSES"));
     }
 }
