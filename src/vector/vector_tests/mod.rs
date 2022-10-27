@@ -3,7 +3,7 @@ use super::{
     OGRwkbGeometryType, OwnedLayer,
 };
 use crate::spatial_ref::SpatialRef;
-use crate::{assert_almost_eq, Dataset, DatasetOptions, Driver, GdalOpenFlags};
+use crate::{assert_almost_eq, Dataset, DatasetOptions, GdalOpenFlags};
 mod convert_geo;
 mod sql;
 
@@ -120,7 +120,10 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::errors::{GdalError, Result};
+    use crate::{
+        errors::{GdalError, Result},
+        DriverManager,
+    };
     use gdal_sys::OGRwkbGeometryType::{wkbLineString, wkbLinearRing, wkbPolygon};
 
     #[test]
@@ -755,7 +758,7 @@ mod tests {
         use std::fs;
 
         {
-            let driver = Driver::get_by_name("GeoJSON").unwrap();
+            let driver = DriverManager::get_driver_by_name("GeoJSON").unwrap();
             let mut ds = driver
                 .create_vector_only(&fixture!("output.geojson"))
                 .unwrap();

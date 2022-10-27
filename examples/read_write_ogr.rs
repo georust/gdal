@@ -1,7 +1,7 @@
 use gdal::errors::Result;
 use gdal::spatial_ref::{CoordTransform, SpatialRef};
-use gdal::vector::*;
-use gdal::{Dataset, Driver};
+use gdal::Dataset;
+use gdal::{vector::*, DriverManager};
 use std::fs;
 use std::path::Path;
 
@@ -17,7 +17,7 @@ fn run() -> Result<()> {
     // Create a new dataset:
     let path = std::env::temp_dir().join("abcde.shp");
     let _ = fs::remove_file(&path);
-    let drv = Driver::get_by_name("ESRI Shapefile")?;
+    let drv = DriverManager::get_driver_by_name("ESRI Shapefile")?;
     let mut ds = drv.create_vector_only(path.to_str().unwrap())?;
     let lyr = ds.create_layer(Default::default())?;
 

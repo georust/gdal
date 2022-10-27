@@ -7,7 +7,7 @@ use crate::raster::{
 };
 use crate::test_utils::TempFixture;
 use crate::vsi::unlink_mem_file;
-use crate::Driver;
+use crate::DriverManager;
 use gdal_sys::GDALDataType;
 use std::path::Path;
 
@@ -125,7 +125,7 @@ fn test_read_raster_with_average_resample() {
 
 #[test]
 fn test_write_raster() {
-    let driver = Driver::get_by_name("MEM").unwrap();
+    let driver = DriverManager::get_driver_by_name("MEM").unwrap();
     let dataset = driver.create("", 20, 10, 1).unwrap();
 
     // create a 2x1 raster
@@ -157,7 +157,7 @@ fn test_rename_remove_raster() {
     let mem_file_path_a = Path::new("/vsimem/030bd1d1-8955-4604-8e37-177dade13863");
     let mem_file_path_b = Path::new("/vsimem/c7bfce32-2474-48fa-a907-2af95f83c824");
 
-    let driver = Driver::get_by_name("GTiff").unwrap();
+    let driver = DriverManager::get_driver_by_name("GTiff").unwrap();
 
     dataset.create_copy(&driver, &mem_file_path_a, &[]).unwrap();
 
@@ -183,7 +183,7 @@ fn test_get_dataset_driver() {
 
 #[test]
 fn test_get_description() {
-    let driver = Driver::get_by_name("mem").unwrap();
+    let driver = DriverManager::get_driver_by_name("mem").unwrap();
     assert_eq!(driver.description().unwrap(), "MEM".to_string());
 }
 
@@ -234,7 +234,7 @@ fn test_get_metadata_item() {
 
 #[test]
 fn test_set_metadata_item() {
-    let driver = Driver::get_by_name("MEM").unwrap();
+    let driver = DriverManager::get_driver_by_name("MEM").unwrap();
     let mut dataset = driver.create("", 1, 1, 1).unwrap();
 
     let key = "Test_Key";
@@ -249,7 +249,7 @@ fn test_set_metadata_item() {
 
 #[test]
 fn test_set_description() {
-    let driver = Driver::get_by_name("MEM").unwrap();
+    let driver = DriverManager::get_driver_by_name("MEM").unwrap();
     let dataset = driver.create("", 1, 1, 1).unwrap();
     let mut band = dataset.rasterband(1).unwrap();
 
@@ -262,7 +262,7 @@ fn test_set_description() {
 
 #[test]
 fn test_create() {
-    let driver = Driver::get_by_name("MEM").unwrap();
+    let driver = DriverManager::get_driver_by_name("MEM").unwrap();
     let dataset = driver.create("", 10, 20, 3).unwrap();
     assert_eq!(dataset.raster_size(), (10, 20));
     assert_eq!(dataset.raster_count(), 3);
@@ -271,7 +271,7 @@ fn test_create() {
 
 #[test]
 fn test_create_with_band_type() {
-    let driver = Driver::get_by_name("MEM").unwrap();
+    let driver = DriverManager::get_driver_by_name("MEM").unwrap();
     let dataset = driver
         .create_with_band_type::<f32, _>("", 10, 20, 3)
         .unwrap();
@@ -284,7 +284,7 @@ fn test_create_with_band_type() {
 
 #[test]
 fn test_create_with_band_type_with_options() {
-    let driver = Driver::get_by_name("GTiff").unwrap();
+    let driver = DriverManager::get_driver_by_name("GTiff").unwrap();
     let options = [
         RasterCreationOption {
             key: "TILED",
@@ -331,7 +331,7 @@ fn test_create_with_band_type_with_options() {
 
 #[test]
 fn test_create_copy() {
-    let driver = Driver::get_by_name("MEM").unwrap();
+    let driver = DriverManager::get_driver_by_name("MEM").unwrap();
     let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
     let copy = dataset.create_copy(&driver, "", &[]).unwrap();
     assert_eq!(copy.raster_size(), (100, 50));
@@ -351,7 +351,7 @@ fn test_create_copy_with_options() {
 
     let copy = dataset
         .create_copy(
-            &Driver::get_by_name("GTiff").unwrap(),
+            &DriverManager::get_driver_by_name("GTiff").unwrap(),
             mem_file_path,
             &[
                 RasterCreationOption {
@@ -380,7 +380,7 @@ fn test_create_copy_with_options() {
 #[test]
 #[allow(clippy::float_cmp)]
 fn test_geo_transform() {
-    let driver = Driver::get_by_name("MEM").unwrap();
+    let driver = DriverManager::get_driver_by_name("MEM").unwrap();
     let mut dataset = driver.create("", 20, 10, 1).unwrap();
     let transform = [0., 1., 0., 0., 0., 1.];
     assert!(dataset.set_geo_transform(&transform).is_ok());
@@ -389,10 +389,10 @@ fn test_geo_transform() {
 
 #[test]
 fn test_get_driver_by_name() {
-    let missing_driver = Driver::get_by_name("wtf");
+    let missing_driver = DriverManager::get_driver_by_name("wtf");
     assert!(missing_driver.is_err());
 
-    let ok_driver = Driver::get_by_name("GTiff");
+    let ok_driver = DriverManager::get_driver_by_name("GTiff");
     assert!(ok_driver.is_ok());
     let driver = ok_driver.unwrap();
     assert_eq!(driver.short_name(), "GTiff");
@@ -432,7 +432,7 @@ fn open_mask_band() {
 
 #[test]
 fn create_mask_band() {
-    let driver = Driver::get_by_name("MEM").unwrap();
+    let driver = DriverManager::get_driver_by_name("MEM").unwrap();
     let dataset = driver.create("", 20, 10, 1).unwrap();
     let mut rb = dataset.rasterband(1).unwrap();
     rb.create_mask_band(false).unwrap();
@@ -522,7 +522,7 @@ fn test_read_block_data() {
 
 #[test]
 fn test_get_band_type() {
-    let driver = Driver::get_by_name("MEM").unwrap();
+    let driver = DriverManager::get_driver_by_name("MEM").unwrap();
     let dataset = driver.create("", 20, 10, 1).unwrap();
     let rb = dataset.rasterband(1).unwrap();
     assert_eq!(rb.band_type(), GDALDataType::GDT_Byte);
@@ -530,7 +530,7 @@ fn test_get_band_type() {
 
 #[test]
 fn test_get_rasterband() {
-    let driver = Driver::get_by_name("MEM").unwrap();
+    let driver = DriverManager::get_driver_by_name("MEM").unwrap();
     let dataset = driver.create("", 20, 10, 1).unwrap();
     let rasterband = dataset.rasterband(1);
     assert!(rasterband.is_ok());
@@ -554,7 +554,7 @@ fn test_get_no_data_value() {
 #[test]
 #[allow(clippy::float_cmp)]
 fn test_set_no_data_value() {
-    let driver = Driver::get_by_name("MEM").unwrap();
+    let driver = DriverManager::get_driver_by_name("MEM").unwrap();
     let dataset = driver.create("", 20, 10, 1).unwrap();
     let mut rasterband = dataset.rasterband(1).unwrap();
     assert_eq!(rasterband.no_data_value(), None);
@@ -689,7 +689,7 @@ fn test_get_rasterband_color_interp() {
 
 #[test]
 fn test_set_rasterband_color_interp() {
-    let driver = Driver::get_by_name("MEM").unwrap();
+    let driver = DriverManager::get_driver_by_name("MEM").unwrap();
     let dataset = driver.create("", 1, 1, 1).unwrap();
     let mut rasterband = dataset.rasterband(1).unwrap();
     rasterband
@@ -701,7 +701,7 @@ fn test_set_rasterband_color_interp() {
 
 #[test]
 fn test_set_rasterband_scale() {
-    let driver = Driver::get_by_name("MEM").unwrap();
+    let driver = DriverManager::get_driver_by_name("MEM").unwrap();
     let dataset = driver.create("", 1, 1, 1).unwrap();
     let mut rasterband = dataset.rasterband(1).unwrap();
     let scale = 1234.5678;
@@ -711,7 +711,7 @@ fn test_set_rasterband_scale() {
 
 #[test]
 fn test_set_rasterband_offset() {
-    let driver = Driver::get_by_name("MEM").unwrap();
+    let driver = DriverManager::get_driver_by_name("MEM").unwrap();
     let dataset = driver.create("", 1, 1, 1).unwrap();
     let mut rasterband = dataset.rasterband(1).unwrap();
     let offset = -123.456;
@@ -739,7 +739,7 @@ fn test_rasterize() {
 
     let rows = 5;
     let cols = 5;
-    let driver = Driver::get_by_name("MEM").unwrap();
+    let driver = DriverManager::get_driver_by_name("MEM").unwrap();
     let mut dataset = driver.create("", rows, cols, 1).unwrap();
 
     let bands = [1];
