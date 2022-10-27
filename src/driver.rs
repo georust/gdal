@@ -17,11 +17,7 @@ use crate::errors::*;
 static START: Once = Once::new();
 
 pub fn _register_drivers() {
-    unsafe {
-        START.call_once(|| {
-            gdal_sys::GDALAllRegister();
-        });
-    }
+    START.call_once(DriverManager::register_all);
 }
 
 /// # Raster and Vector Driver API
@@ -63,14 +59,9 @@ impl Driver {
     /// ```text
     /// Cloud optimized GeoTIFF generator
     /// ```
+    #[deprecated(note = "Please use `DriverManager::get_driver_by_name()` instead")]
     pub fn get_by_name(name: &str) -> Result<Driver> {
-        _register_drivers();
-        let c_name = CString::new(name)?;
-        let c_driver = unsafe { gdal_sys::GDALGetDriverByName(c_name.as_ptr()) };
-        if c_driver.is_null() {
-            return Err(_last_null_pointer_err("GDALGetDriverByName"));
-        };
-        Ok(Driver { c_driver })
+        DriverManager::get_driver_by_name(name)
     }
 
     /// Returns the driver with the given index, which must be less than the value returned by
@@ -92,13 +83,9 @@ impl Driver {
     /// ```text
     /// 'VRT' is 'Virtual Raster'
     /// ```
+    #[deprecated(note = "Please use `DriverManager::get_driver()` instead")]
     pub fn get(index: usize) -> Result<Driver> {
-        _register_drivers();
-        let c_driver = unsafe { gdal_sys::GDALGetDriver(index.try_into().unwrap()) };
-        if c_driver.is_null() {
-            return Err(_last_null_pointer_err("GDALGetDriver"));
-        }
-        Ok(Driver { c_driver })
+        DriverManager::get_driver(index)
     }
 
     /// Returns the number of registered drivers.
@@ -112,10 +99,9 @@ impl Driver {
     /// ```text
     /// 203 drivers are registered
     /// ```
+    #[deprecated(note = "Please use `DriverManager::count()` instead")]
     pub fn count() -> usize {
-        _register_drivers();
-        let count = unsafe { gdal_sys::GDALGetDriverCount() };
-        count.try_into().unwrap()
+        DriverManager::count()
     }
 
     /// Return the short name of a driver.
@@ -366,3 +352,125 @@ impl MajorObject for Driver {
 }
 
 impl Metadata for Driver {}
+
+/// A wrapper around `GDALDriverManager`.
+/// This struct helps listing and registering [`Driver`]s.
+pub struct DriverManager;
+
+impl DriverManager {
+    /// Returns the number of registered drivers.
+    ///
+    /// # Example
+    ///
+    /// ```rust, no_run
+    /// use gdal::Driver;
+    /// println!("{} drivers are registered", Driver::count());
+    /// ```
+    /// ```text
+    /// 203 drivers are registered
+    /// ```
+    pub fn count() -> usize {
+        _register_drivers();
+        let count = unsafe { gdal_sys::GDALGetDriverCount() };
+        count
+            .try_into()
+            .expect("The returned count should be zero or positive")
+    }
+
+    /// Returns the driver with the given index, which must be less than the value returned by
+    /// `Driver::count()`.
+    ///
+    /// See also: [`count`](Self::count)
+    ///
+    /// # Example
+    ///
+    /// ```rust, no_run
+    /// use gdal::Driver;
+    /// # fn main() -> gdal::errors::Result<()> {
+    /// assert!(Driver::count() > 0);
+    /// let d = Driver::get(0)?;
+    /// println!("'{}' is '{}'", d.short_name(), d.long_name());
+    /// # Ok(())
+    /// # }
+    /// ```
+    /// ```text
+    /// 'VRT' is 'Virtual Raster'
+    /// ```
+    pub fn get_driver(index: usize) -> Result<Driver> {
+        _register_drivers();
+        let c_driver = unsafe { gdal_sys::GDALGetDriver(index.try_into().unwrap()) };
+        if c_driver.is_null() {
+            return Err(_last_null_pointer_err("GDALGetDriver"));
+        }
+        Ok(Driver { c_driver })
+    }
+
+    /// Returns the driver with the given short name or [`Err`] if not found.
+    ///
+    /// See also: [`count`](Self::count), [`get`](Self::get)
+    ///
+    /// # Example
+    ///
+    /// ```rust, no_run
+    /// use gdal::Driver;
+    /// # fn main() -> gdal::errors::Result<()> {
+    /// let cog_driver = Driver::get_by_name("COG")?;
+    /// println!("{}", cog_driver.long_name());
+    /// # Ok(())
+    /// # }
+    /// ```
+    /// ```text
+    /// Cloud optimized GeoTIFF generator
+    /// ```
+    pub fn get_driver_by_name(name: &str) -> Result<Driver> {
+        _register_drivers();
+        let c_name = CString::new(name)?;
+        let c_driver = unsafe { gdal_sys::GDALGetDriverByName(c_name.as_ptr()) };
+        if c_driver.is_null() {
+            return Err(_last_null_pointer_err("GDALGetDriverByName"));
+        };
+        Ok(Driver { c_driver })
+    }
+
+    /// Register a driver for use.
+    ///
+    /// Wraps [`GDALRegisterDriver()`](https://gdal.org/api/raster_c_api.html#_CPPv418GDALRegisterDriver11GDALDriverH)
+    pub fn register_driver(driver: &Driver) -> usize {
+        let index = unsafe { gdal_sys::GDALRegisterDriver(driver.c_driver) };
+        index
+            .try_into()
+            .expect("The returned index should be zero or positive")
+    }
+
+    /// Deregister the passed driver.
+    ///
+    /// Wraps [`GDALDeregisterDriver()`](https://gdal.org/api/raster_c_api.html#_CPPv420GDALDeregisterDriver11GDALDriverH)
+    pub fn deregister_driver(driver: &Driver) {
+        unsafe {
+            gdal_sys::GDALDeregisterDriver(driver.c_driver);
+        }
+    }
+
+    /// Register all known GDAL drivers.
+    ///
+    /// Wraps [`GDALAllRegister()`](https://gdal.org/api/raster_c_api.html#gdal_8h_1a9d40bc998bd6ed07ccde96028e85ae26)
+    pub fn register_all() {
+        unsafe {
+            gdal_sys::GDALAllRegister();
+        }
+    }
+
+    /// Prevents the automatic registration of all known GDAL drivers when first calling create, open, etc.
+    pub fn prevent_auto_registration() {
+        START.call_once(|| {});
+    }
+
+    /// Destroys the driver manager, i.e., unloads all drivers.
+    ///
+    /// Wraps [`GDALDestroyDriverManager()`](https://gdal.org/api/raster_c_api.html#_CPPv417GDALDestroyDriver11GDALDriverH)
+    pub fn destroy() {
+        unsafe {
+            gdal_sys::GDALDestroyDriverManager();
+        }
+    }
+}
