@@ -135,9 +135,9 @@ impl Driver {
     ///
     /// ```rust, no_run
     /// # fn main() -> gdal::errors::Result<()> {
-    /// use gdal::Driver;
+    /// use gdal::DriverManager;
     /// use gdal::raster::GdalType;
-    /// let d = Driver::get_by_name("MEM")?;
+    /// let d = DriverManager::get_driver_by_name("MEM")?;
     /// let ds = d.create("in-memory", 64, 64, 3)?;
     /// assert_eq!(ds.raster_count(), 3);
     /// assert_eq!(ds.raster_size(), (64, 64));
@@ -164,9 +164,9 @@ impl Driver {
     ///
     /// ```rust, no_run
     /// # fn main() -> gdal::errors::Result<()> {
-    /// use gdal::Driver;
+    /// use gdal::DriverManager;
     /// use gdal::raster::GdalType;
-    /// let d = Driver::get_by_name("MEM")?;
+    /// let d = DriverManager::get_driver_by_name("MEM")?;
     /// let ds = d.create_with_band_type::<f64, _>("in-memory", 64, 64, 3)?;
     /// assert_eq!(ds.raster_count(), 3);
     /// assert_eq!(ds.raster_size(), (64, 64));
@@ -196,11 +196,11 @@ impl Driver {
     ///
     /// ```rust, no_run
     /// # fn main() -> gdal::errors::Result<()> {
-    /// use gdal::Driver;
+    /// use gdal::DriverManager;
     /// use gdal::raster::RasterCreationOption;
     /// use gdal::raster::GdalType;
     /// use gdal::spatial_ref::SpatialRef;
-    /// let d = Driver::get_by_name("BMP")?;
+    /// let d = DriverManager::get_driver_by_name("BMP")?;
     /// let options = [
     ///     RasterCreationOption {
     ///         key: "WORLDFILE",
@@ -363,8 +363,8 @@ impl DriverManager {
     /// # Example
     ///
     /// ```rust, no_run
-    /// use gdal::Driver;
-    /// println!("{} drivers are registered", Driver::count());
+    /// use gdal::DriverManager;
+    /// println!("{} drivers are registered", DriverManager::count());
     /// ```
     /// ```text
     /// 203 drivers are registered
@@ -378,17 +378,17 @@ impl DriverManager {
     }
 
     /// Returns the driver with the given index, which must be less than the value returned by
-    /// `Driver::count()`.
+    /// `DriverManager::count()`.
     ///
     /// See also: [`count`](Self::count)
     ///
     /// # Example
     ///
     /// ```rust, no_run
-    /// use gdal::Driver;
+    /// use gdal::DriverManager;
     /// # fn main() -> gdal::errors::Result<()> {
-    /// assert!(Driver::count() > 0);
-    /// let d = Driver::get(0)?;
+    /// assert!(DriverManager::count() > 0);
+    /// let d = DriverManager::get_driver(0)?;
     /// println!("'{}' is '{}'", d.short_name(), d.long_name());
     /// # Ok(())
     /// # }
@@ -412,9 +412,9 @@ impl DriverManager {
     /// # Example
     ///
     /// ```rust, no_run
-    /// use gdal::Driver;
+    /// use gdal::DriverManager;
     /// # fn main() -> gdal::errors::Result<()> {
-    /// let cog_driver = Driver::get_by_name("COG")?;
+    /// let cog_driver = DriverManager::get_driver_by_name("COG")?;
     /// println!("{}", cog_driver.long_name());
     /// # Ok(())
     /// # }
