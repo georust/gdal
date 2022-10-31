@@ -805,25 +805,6 @@ mod tests {
     }
 
     #[test]
-    fn test_features_aliasing_compile_fail() {
-        let t = trybuild::TestCases::new(); // A compilation test that should fail.
-        t.compile_fail("tests/compile-tests/01-features-aliasing-errors.rs");
-    }
-
-    // It tries to iterate over a layer's features, while
-    // also trying to read the layer's definition. The
-    // features iterator borrows layer as a mutable ref as
-    // it increments the internal state of the layer.
-    //
-    // fn test_features_mut_lifetime_enforce() {
-    //     with_layer("roads.geojson", |mut layer| {
-    //         for _ in layer.features() {
-    //             let _ = layer.defn();
-    //         }
-    //     });
-    // }
-
-    #[test]
     fn test_set_attribute_filter() {
         with_layer("roads.geojson", |mut layer| {
             // check number without calling any function

@@ -31,7 +31,6 @@ semver = "1.0"
 
 [dev-dependencies]
 tempfile = "3.3"
-trybuild = "1.0"
 
 [workspace]
 members = ["gdal-sys"]
