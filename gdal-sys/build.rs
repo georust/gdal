@@ -46,7 +46,7 @@ fn env_dir(var: &str) -> Option<PathBuf> {
 }
 
 fn find_gdal_dll(lib_dir: &Path) -> io::Result<Option<String>> {
-    for e in fs::read_dir(&lib_dir)? {
+    for e in fs::read_dir(lib_dir)? {
         let e = e?;
         let name = e.file_name();
         let name = name.to_str().unwrap();

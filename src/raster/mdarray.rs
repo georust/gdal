@@ -813,7 +813,7 @@ mod tests {
             open_options: None,
             sibling_files: None,
         };
-        let dataset = Dataset::open_ex(&fixture, options).unwrap();
+        let dataset = Dataset::open_ex(fixture, options).unwrap();
         let root_group = dataset.root_group().unwrap();
         let root_group_name = root_group.name();
         assert_eq!(root_group_name, "/");
@@ -830,7 +830,7 @@ mod tests {
             open_options: None,
             sibling_files: None,
         };
-        let dataset = Dataset::open_ex(&fixture, dataset_options).unwrap();
+        let dataset = Dataset::open_ex(fixture, dataset_options).unwrap();
         let root_group = dataset.root_group().unwrap();
         let options = CslStringList::new();
         let array_names = root_group.array_names(options);
@@ -851,7 +851,7 @@ mod tests {
             open_options: None,
             sibling_files: None,
         };
-        let dataset = Dataset::open_ex(&fixture, dataset_options).unwrap();
+        let dataset = Dataset::open_ex(fixture, dataset_options).unwrap();
         let root_group = dataset.root_group().unwrap();
         let array_name = "byte_no_cf".to_string();
         let options = CslStringList::new();
@@ -871,7 +871,7 @@ mod tests {
             open_options: None,
             sibling_files: None,
         };
-        let dataset = Dataset::open_ex(&fixture, dataset_options).unwrap();
+        let dataset = Dataset::open_ex(fixture, dataset_options).unwrap();
         let root_group = dataset.root_group().unwrap();
         let array_name = "byte_no_cf".to_string();
         let options = CslStringList::new();
@@ -891,7 +891,7 @@ mod tests {
             open_options: None,
             sibling_files: None,
         };
-        let dataset = Dataset::open_ex(&fixture, dataset_options).unwrap();
+        let dataset = Dataset::open_ex(fixture, dataset_options).unwrap();
         let root_group = dataset.root_group().unwrap();
 
         // group dimensions
@@ -926,7 +926,7 @@ mod tests {
             open_options: None,
             sibling_files: None,
         };
-        let dataset = Dataset::open_ex(&fixture, dataset_options).unwrap();
+        let dataset = Dataset::open_ex(fixture, dataset_options).unwrap();
         let root_group = dataset.root_group().unwrap();
         let array_name = "byte_no_cf".to_string();
         let options = CslStringList::new();
@@ -950,7 +950,7 @@ mod tests {
             open_options: None,
             sibling_files: None,
         };
-        let dataset = Dataset::open_ex(&fixture, dataset_options).unwrap();
+        let dataset = Dataset::open_ex(fixture, dataset_options).unwrap();
 
         let root_group = dataset.root_group().unwrap();
         let md_array = root_group
@@ -978,7 +978,7 @@ mod tests {
             open_options: None,
             sibling_files: None,
         };
-        let dataset = Dataset::open_ex(&fixture, dataset_options).unwrap();
+        let dataset = Dataset::open_ex(fixture, dataset_options).unwrap();
 
         let root_group = dataset.root_group().unwrap();
 
@@ -1009,7 +1009,7 @@ mod tests {
             open_options: None,
             sibling_files: None,
         };
-        let dataset = Dataset::open_ex(&fixture, dataset_options).unwrap();
+        let dataset = Dataset::open_ex(fixture, dataset_options).unwrap();
 
         let root_group = dataset.root_group().unwrap();
 
@@ -1035,7 +1035,7 @@ mod tests {
             open_options: None,
             sibling_files: None,
         };
-        let dataset = Dataset::open_ex(&fixture, dataset_options).unwrap();
+        let dataset = Dataset::open_ex(fixture, dataset_options).unwrap();
 
         let root_group = dataset.root_group().unwrap();
         let md_array = root_group
@@ -1060,7 +1060,7 @@ mod tests {
             open_options: None,
             sibling_files: None,
         };
-        let dataset = Dataset::open_ex(&fixture, dataset_options).unwrap();
+        let dataset = Dataset::open_ex(fixture, dataset_options).unwrap();
 
         let root_group = dataset.root_group().unwrap();
         let md_array = root_group
@@ -1081,7 +1081,7 @@ mod tests {
             open_options: None,
             sibling_files: None,
         };
-        let dataset = Dataset::open_ex(&fixture, dataset_options).unwrap();
+        let dataset = Dataset::open_ex(fixture, dataset_options).unwrap();
 
         let root_group = dataset.root_group().unwrap();
 
@@ -1132,7 +1132,7 @@ mod tests {
             open_options: None,
             sibling_files: None,
         };
-        let dataset = Dataset::open_ex(&fixture, dataset_options).unwrap();
+        let dataset = Dataset::open_ex(fixture, dataset_options).unwrap();
 
         let root_group = dataset.root_group().unwrap();
 

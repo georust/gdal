@@ -159,7 +159,7 @@ fn test_rename_remove_raster() {
 
     let driver = Driver::get_by_name("GTiff").unwrap();
 
-    dataset.create_copy(&driver, &mem_file_path_a, &[]).unwrap();
+    dataset.create_copy(&driver, mem_file_path_a, &[]).unwrap();
 
     driver.rename(mem_file_path_b, mem_file_path_a).unwrap();
 
