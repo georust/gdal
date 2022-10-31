@@ -400,7 +400,11 @@ impl DriverManager {
         _register_drivers();
         let c_driver = unsafe { gdal_sys::GDALGetDriver(index.try_into().unwrap()) };
         if c_driver.is_null() {
-            return Err(_last_null_pointer_err("GDALGetDriver"));
+            // `GDALGetDriver` just returns `null` and sets no error message
+            return Err(GdalError::NullPointer {
+                method_name: "GDALGetDriver",
+                msg: "Unable to find driver".to_string(),
+            });
         }
         Ok(Driver { c_driver })
     }
@@ -427,7 +431,11 @@ impl DriverManager {
         let c_name = CString::new(name)?;
         let c_driver = unsafe { gdal_sys::GDALGetDriverByName(c_name.as_ptr()) };
         if c_driver.is_null() {
-            return Err(_last_null_pointer_err("GDALGetDriverByName"));
+            // `GDALGetDriverByName` just returns `null` and sets no error message
+            return Err(GdalError::NullPointer {
+                method_name: "GDALGetDriverByName",
+                msg: "Unable to find driver".to_string(),
+            });
         };
         Ok(Driver { c_driver })
     }
