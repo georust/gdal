@@ -757,7 +757,7 @@ mod tests {
         {
             let driver = Driver::get_by_name("GeoJSON").unwrap();
             let mut ds = driver
-                .create_vector_only(&fixture!("output.geojson"))
+                .create_vector_only(fixture!("output.geojson"))
                 .unwrap();
             let mut layer = ds.create_layer(Default::default()).unwrap();
             layer
