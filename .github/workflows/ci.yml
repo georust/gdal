@@ -41,25 +41,14 @@ jobs:
           override: true
           components: rustfmt, clippy
       - name: Check with Rustfmt
-        uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --all -- --check
+        run: cargo fmt --all --check
       - name: Check with Clippy
-        uses: actions-rs/clippy-check@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          args: --all-targets ${{ matrix.features }} -- -D warnings
+        run: cargo clippy --all-targets ${{ matrix.features }} -- -D warnings
       - name: Build
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: ${{ matrix.features }} --verbose
+        run: cargo build ${{ matrix.features }} --verbose
       - name: Run tests
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: ${{ matrix.features }} --verbose
+        run: cargo test ${{ matrix.features }} --verbose
+
   gdal_34:
     name: "ci gdal-34"
     runs-on: ubuntu-latest
@@ -89,25 +78,13 @@ jobs:
           override: true
           components: rustfmt, clippy
       - name: Check with Rustfmt
-        uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --all -- --check
+        run: cargo fmt --all --check
       - name: Check with Clippy
-        uses: actions-rs/clippy-check@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          args: --all-targets ${{ matrix.features }} -- -D warnings
+        run: cargo clippy --all-targets ${{ matrix.features }} -- -D warnings
       - name: Build
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: ${{ matrix.features }} --verbose
+        run: cargo build ${{ matrix.features }} --verbose
       - name: Run tests
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: ${{ matrix.features }} --verbose
+        run: cargo test ${{ matrix.features }} --verbose
 
   gdal_33:
     name: "ci gdal-33"
@@ -138,25 +115,13 @@ jobs:
           override: true
           components: rustfmt, clippy
       - name: Check with Rustfmt
-        uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --all -- --check
+        run: cargo fmt --all --check
       - name: Check with Clippy
-        uses: actions-rs/clippy-check@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          args: --all-targets ${{ matrix.features }} -- -D warnings
+        run: cargo clippy --all-targets ${{ matrix.features }} -- -D warnings
       - name: Build
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: ${{ matrix.features }} --verbose
+        run: cargo build ${{ matrix.features }} --verbose
       - name: Run tests
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: ${{ matrix.features }} --verbose
+        run: cargo test ${{ matrix.features }} --verbose
 
   gdal_32:
     name: "ci gdal-32"
@@ -187,25 +152,13 @@ jobs:
           override: true
           components: rustfmt, clippy
       - name: Check with Rustfmt
-        uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --all -- --check
+        run: cargo fmt --all --check
       - name: Check with Clippy
-        uses: actions-rs/clippy-check@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          args: --all-targets ${{ matrix.features }} -- -D warnings
+        run: cargo clippy --all-targets ${{ matrix.features }} -- -D warnings
       - name: Build
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: ${{ matrix.features }} --verbose
+        run: cargo build ${{ matrix.features }} --verbose
       - name: Run tests
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: ${{ matrix.features }} --verbose
+        run: cargo test ${{ matrix.features }} --verbose
 
   ubuntu_lts:
     name: "ci ubuntu-lts"
@@ -230,22 +183,10 @@ jobs:
           export CC="clang-9"
           export CXX="clang++-9"
       - name: Check with Rustfmt
-        uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --all -- --check
+        run: cargo fmt --all --check
       - name: Check with Clippy
-        uses: actions-rs/clippy-check@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          args: --all-targets ${{ matrix.features }} -- -D warnings
+        run: cargo clippy --all-targets ${{ matrix.features }} -- -D warnings
       - name: Build
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: ${{ matrix.features }} --verbose
+        run: cargo build ${{ matrix.features }} --verbose
       - name: Run tests
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: ${{ matrix.features }} --verbose
+        run: cargo test ${{ matrix.features }} --verbose
