@@ -121,7 +121,7 @@ pub use dataset::{
     Dataset, DatasetOptions, GdalOpenFlags, GeoTransform, GeoTransformEx, LayerIterator,
     LayerOptions, Transaction,
 };
-pub use driver::Driver;
+pub use driver::{Driver, DriverManager};
 pub use metadata::Metadata;
 
 #[cfg(test)]

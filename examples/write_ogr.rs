@@ -1,13 +1,13 @@
 use gdal::errors::Result;
 use gdal::vector::{Defn, Feature, FieldDefn, FieldValue, Geometry, LayerAccess, OGRFieldType};
-use gdal::Driver;
+use gdal::DriverManager;
 use std::fs;
 
 /// Example 1, the detailed way:
 fn example_1() -> Result<()> {
     let path = std::env::temp_dir().join("output1.geojson");
     let _ = fs::remove_file(&path);
-    let drv = Driver::get_by_name("GeoJSON")?;
+    let drv = DriverManager::get_driver_by_name("GeoJSON")?;
     let mut ds = drv.create_vector_only(path.to_str().unwrap())?;
 
     let lyr = ds.create_layer(Default::default())?;
@@ -52,7 +52,7 @@ fn example_1() -> Result<()> {
 fn example_2() -> Result<()> {
     let path = std::env::temp_dir().join("output2.geojson");
     let _ = fs::remove_file(&path);
-    let driver = Driver::get_by_name("GeoJSON")?;
+    let driver = DriverManager::get_driver_by_name("GeoJSON")?;
     let mut ds = driver.create_vector_only(path.to_str().unwrap())?;
     let mut layer = ds.create_layer(Default::default())?;
 

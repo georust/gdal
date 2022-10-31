@@ -230,7 +230,7 @@ mod tests {
 
     use super::*;
 
-    use crate::{DatasetOptions, Driver, GdalOpenFlags};
+    use crate::{DatasetOptions, DriverManager, GdalOpenFlags};
 
     #[test]
     #[cfg_attr(not(all(major_ge_3, minor_ge_4)), ignore)]
@@ -277,7 +277,7 @@ mod tests {
         };
         let dataset = Dataset::open_ex(fixture, dataset_options).unwrap();
 
-        let driver = Driver::get_by_name("MEM").unwrap();
+        let driver = DriverManager::get_driver_by_name("MEM").unwrap();
         let output_dataset = driver.create("", 5, 7, 1).unwrap();
 
         let error = multi_dim_translate(

@@ -23,14 +23,18 @@
 
   - <https://github.com/georust/gdal/pull/308>
 
-- Added quality-of-life features to `CslStringList`: `len`, `is_empty`, `Debug` and `Iterator` implementations. 
+- Added quality-of-life features to `CslStringList`: `len`, `is_empty`, `Debug` and `Iterator` implementations.
 
   - <https://github.com/georust/gdal/pull/311>
 
-- Added ability to set color table for bands with palette color interpretation. 
+- Added ability to set color table for bands with palette color interpretation.
   Added ability to create a color ramp (interpolated) color table.
 
   - <https://github.com/georust/gdal/pull/314>
+
+- Added a wrapper for the `DriverManager`
+
+  - <https://github.com/georust/gdal/pull/324>
 
 ## 0.13
 
@@ -110,7 +114,7 @@
 
 - Added `Geometry::to_geo` method for GDAL to geo-types Geometry conversions.
 
-  - <https://github.com/georust/gdal/pull/295>  
+  - <https://github.com/georust/gdal/pull/295>
 
 - Add `Rasterband::set_scale` and `Rasterband::set_offset` methods
 
