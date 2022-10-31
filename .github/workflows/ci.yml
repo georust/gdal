@@ -26,20 +26,23 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
       - name: Install build deps
+        shell: bash
         run: |
           apt-get update -y
-          apt-get install build-essential pkg-config libclang-dev -y
+          apt-get install build-essential curl pkg-config libclang-dev -y
+          curl --proto '=https' --tlsv1.2 --retry 10 --retry-connrefused -fsSL "https://sh.rustup.rs" | sh -s -- --profile minimal --default-toolchain none -y
+          echo "${CARGO_HOME:-$HOME/.cargo}/bin" >> $GITHUB_PATH
+
       - name: Setup building
         run: |
           export CC="clang-9"
           export CXX="clang++-9"
 
       - name: Install stable
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          override: true
-          components: rustfmt, clippy
+        run: |
+          rustup install --no-self-update --profile minimal stable
+          rustup component add rustfmt clippy
+
       - name: Check with Rustfmt
         run: cargo fmt --all --check
       - name: Check with Clippy
@@ -63,20 +66,23 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
       - name: Install build deps
+        shell: bash
         run: |
           apt-get update -y
-          apt-get install build-essential pkg-config libclang-dev -y
+          apt-get install build-essential curl pkg-config libclang-dev -y
+          curl --proto '=https' --tlsv1.2 --retry 10 --retry-connrefused -fsSL "https://sh.rustup.rs" | sh -s -- --profile minimal --default-toolchain none -y
+          echo "${CARGO_HOME:-$HOME/.cargo}/bin" >> $GITHUB_PATH
+
       - name: Setup building
         run: |
           export CC="clang-9"
           export CXX="clang++-9"
 
       - name: Install stable
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          override: true
-          components: rustfmt, clippy
+        run: |
+          rustup install --no-self-update --profile minimal stable
+          rustup component add rustfmt clippy
+
       - name: Check with Rustfmt
         run: cargo fmt --all --check
       - name: Check with Clippy
@@ -100,20 +106,23 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
       - name: Install build deps
+        shell: bash
         run: |
           apt-get update -y
-          apt-get install build-essential pkg-config libclang-dev -y
+          apt-get install build-essential curl pkg-config libclang-dev -y
+          curl --proto '=https' --tlsv1.2 --retry 10 --retry-connrefused -fsSL "https://sh.rustup.rs" | sh -s -- --profile minimal --default-toolchain none -y
+          echo "${CARGO_HOME:-$HOME/.cargo}/bin" >> $GITHUB_PATH
+
       - name: Setup building
         run: |
           export CC="clang-9"
           export CXX="clang++-9"
 
       - name: Install stable
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          override: true
-          components: rustfmt, clippy
+        run: |
+          rustup install --no-self-update --profile minimal stable
+          rustup component add rustfmt clippy
+
       - name: Check with Rustfmt
         run: cargo fmt --all --check
       - name: Check with Clippy
@@ -137,20 +146,23 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
       - name: Install build deps
+        shell: bash
         run: |
           apt-get update -y
-          apt-get install build-essential pkg-config libclang-dev -y
+          apt-get install build-essential curl pkg-config libclang-dev -y
+          curl --proto '=https' --tlsv1.2 --retry 10 --retry-connrefused -fsSL "https://sh.rustup.rs" | sh -s -- --profile minimal --default-toolchain none -y
+          echo "${CARGO_HOME:-$HOME/.cargo}/bin" >> $GITHUB_PATH
+
       - name: Setup building
         run: |
           export CC="clang-9"
           export CXX="clang++-9"
 
       - name: Install stable
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          override: true
-          components: rustfmt, clippy
+        run: |
+          rustup install --no-self-update --profile minimal stable
+          rustup component add rustfmt clippy
+
       - name: Check with Rustfmt
         run: cargo fmt --all --check
       - name: Check with Clippy
@@ -171,17 +183,27 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-      - name: Install GDAL
+      - name: Install build deps
+        shell: bash
         run: |
-          sudo apt-get update
-          sudo apt-get install libgdal-dev gdal-bin build-essential
+          sudo apt-get update -y
+          sudo apt-get install libgdal-dev gdal-bin build-essential curl pkg-config libclang-dev -y
           export C_INCLUDE_PATH=/usr/include/gdal:$C_INCLUDE_PATH
           export CPLUS_INCLUDE_PATH=/usr/include/gdal:$CPLUS_INCLUDE_PATH
           sudo ldconfig
+          curl --proto '=https' --tlsv1.2 --retry 10 --retry-connrefused -fsSL "https://sh.rustup.rs" | sh -s -- --profile minimal --default-toolchain none -y
+          echo "${CARGO_HOME:-$HOME/.cargo}/bin" >> $GITHUB_PATH
+
       - name: Setup building
         run: |
           export CC="clang-9"
           export CXX="clang++-9"
+
+      - name: Install stable
+        run: |
+          rustup install --no-self-update --profile minimal stable
+          rustup component add rustfmt clippy
+
       - name: Check with Rustfmt
         run: cargo fmt --all --check
       - name: Check with Clippy
