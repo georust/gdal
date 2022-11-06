@@ -1,5 +1,5 @@
 use crate::errors::{GdalError, Result};
-use crate::utils::{_last_null_pointer_err, _string};
+use crate::utils::_string;
 use gdal_sys::{
     GDALAdjustValueToDataType, GDALDataType, GDALDataTypeIsConversionLossy, GDALDataTypeIsFloating,
     GDALDataTypeIsInteger, GDALDataTypeIsSigned, GDALDataTypeUnion, GDALFindDataTypeForValue,
@@ -34,9 +34,8 @@ impl GdalTypeDescriptor {
     /// use gdal::raster::{GdalType, GdalTypeDescriptor};
     /// assert_eq!(GdalTypeDescriptor::from_name("UInt16").unwrap(), <u16>::descriptor())
     /// ```
-    #[allow(non_snake_case)]
     pub fn from_name(name: &str) -> Result<Self> {
-        let c_name = CString::new(name.to_owned())?;
+        let c_name = CString::new(name)?;
         let gdal_type = unsafe { GDALGetDataTypeByName(c_name.as_ptr()) };
         match gdal_type {
             GDALDataType::GDT_Unknown => Err(GdalError::BadArgument(format!(
@@ -83,7 +82,10 @@ impl GdalTypeDescriptor {
         if c_str.is_null() {
             // This case shouldn't happen, because `self` only exists for valid
             // GDALDataType ordinals.
-            panic!("{}", _last_null_pointer_err("GDALGetDataTypeName"));
+            panic!(
+                "GDALGetDataTypeName unexpectedly returned an empty name for {:?}",
+                &self
+            );
         }
         _string(c_str)
     }
@@ -117,7 +119,7 @@ impl GdalTypeDescriptor {
         (unsafe { GDALDataTypeIsSigned(self.gdal_type()) }) > 0
     }
 
-    /// Return the descriptor for smallest [`GDALDataType`] fully contains both data types
+    /// Return the descriptor for smallest [`GDALDataType`] that fully contains both data types
     /// indicated by `self` and `other`.
     ///
     /// # Example
