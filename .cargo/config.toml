@@ -1,0 +1,3 @@
+[alias]
+# Run doctests, displaying compiler output
+dto = "test --doc -- --show-output"
