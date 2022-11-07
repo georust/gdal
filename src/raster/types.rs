@@ -15,7 +15,7 @@ use std::fmt::{Debug, Display, Formatter};
 /// # Example
 /// ```rust, no_run
 /// use gdal::raster::{GdalType, GdalDataType};
-/// let td = <u32>::descriptor();
+/// let td = <u32>::datatype();
 /// println!("{} is {} and uses {} bits.",
 ///     td.name(),
 ///     if td.is_signed() { "signed" } else { "unsigned" },
@@ -56,7 +56,7 @@ impl GdalDataType {
     ///
     /// ```rust, no_run
     /// use gdal::raster::{GdalType, GdalDataType};
-    /// assert_eq!(GdalDataType::from_name("UInt16").unwrap(), <u16>::descriptor())
+    /// assert_eq!(GdalDataType::from_name("UInt16").unwrap(), <u16>::datatype())
     /// ```
     pub fn from_name(name: &str) -> Result<Self> {
         let c_name = CString::new(name)?;
@@ -78,10 +78,10 @@ impl GdalDataType {
     ///
     /// ```rust, no_run
     /// use gdal::raster::{GdalType, GdalDataType};
-    /// assert_eq!(GdalDataType::for_value(0), <u8>::descriptor());
-    /// assert_eq!(GdalDataType::for_value(256), <u16>::descriptor());
-    /// assert_eq!(GdalDataType::for_value(-1), <i16>::descriptor());
-    /// assert_eq!(GdalDataType::for_value(<u16>::MAX as f64 * -2.0), <i32>::descriptor());
+    /// assert_eq!(GdalDataType::for_value(0), <u8>::datatype());
+    /// assert_eq!(GdalDataType::for_value(256), <u16>::datatype());
+    /// assert_eq!(GdalDataType::for_value(-1), <i16>::datatype());
+    /// assert_eq!(GdalDataType::for_value(<u16>::MAX as f64 * -2.0), <i32>::datatype());
     /// ```
     pub fn for_value<N: GdalType + Into<f64>>(value: N) -> Self {
         let gdal_type = unsafe { GDALFindDataTypeForValue(value.into(), 0) };
@@ -94,7 +94,7 @@ impl GdalDataType {
     ///
     /// ```rust, no_run
     /// use gdal::raster::GdalType;
-    /// assert_eq!(<u16>::descriptor().name(), "UInt16");
+    /// assert_eq!(<u16>::datatype().name(), "UInt16");
     /// ```
     pub fn name(&self) -> String {
         let c_str = unsafe { GDALGetDataTypeName(self.gdal_ordinal()) };
@@ -146,9 +146,9 @@ impl GdalDataType {
     /// ```rust, no_run
     /// use gdal::raster::GdalType;
     /// println!("To safely store all possible '{}' and '{}' values, you should use  '{}'",
-    ///     <f32>::descriptor(),
-    ///     <i32>::descriptor(),
-    ///     <f32>::descriptor().union(<i32>::descriptor())
+    ///     <f32>::datatype(),
+    ///     <i32>::datatype(),
+    ///     <f32>::datatype().union(<i32>::datatype())
     /// );
     /// ```
     pub fn union(&self, other: Self) -> Self {
@@ -165,9 +165,9 @@ impl GdalDataType {
     ///
     /// ```rust, no_run
     /// use gdal::raster::{GdalType, AdjustedValue::*};
-    /// assert_eq!(<u8>::descriptor().adjust_value(255), Unchanged(255.));
-    /// assert_eq!(<u8>::descriptor().adjust_value(1.2334), Rounded(1.));
-    /// assert_eq!(<u8>::descriptor().adjust_value(1000.2334), Clamped(255.));
+    /// assert_eq!(<u8>::datatype().adjust_value(255), Unchanged(255.));
+    /// assert_eq!(<u8>::datatype().adjust_value(1.2334), Rounded(1.));
+    /// assert_eq!(<u8>::datatype().adjust_value(1000.2334), Clamped(255.));
     /// ```
     pub fn adjust_value<N: GdalType + Into<f64>>(&self, value: N) -> AdjustedValue {
         let mut is_clamped: libc::c_int = 0;
@@ -197,7 +197,7 @@ impl GdalDataType {
     ///
     /// ```rust, no_run
     /// use gdal::raster::GdalType;
-    /// assert!(<i16>::descriptor().is_conversion_lossy(<u8>::descriptor()))
+    /// assert!(<i16>::datatype().is_conversion_lossy(<u8>::datatype()))
     /// ```
     pub fn is_conversion_lossy(&self, other: Self) -> bool {
         let r = unsafe { GDALDataTypeIsConversionLossy(self.gdal_ordinal(), other.gdal_ordinal()) };
@@ -297,7 +297,7 @@ pub trait GdalType {
     /// data type.
     ///
     /// See also: [GDAL API](https://gdal.org/api/raster_c_api.html#_CPPv412GDALDataType)
-    fn gdal_type() -> GDALDataType::Type;
+    fn gdal_ordinal() -> GDALDataType::Type;
 
     /// Get the metadata type over a `GdalType`.
     ///
@@ -305,32 +305,32 @@ pub trait GdalType {
     ///
     /// ```rust, no_run
     /// use gdal::raster::GdalType;
-    /// let gdt = <u32>::descriptor();
+    /// let gdt = <u32>::datatype();
     /// println!("{gdt:#?}");
     /// ```
-    fn descriptor() -> GdalDataType {
+    fn datatype() -> GdalDataType {
         // We can call `unwrap` because existence is guaranteed in this case.
-        Self::gdal_type().try_into().unwrap()
+        Self::gdal_ordinal().try_into().unwrap()
     }
 }
 
 /// Provides evidence `u8` is a valid [`GDALDataType`].
 impl GdalType for u8 {
-    fn gdal_type() -> GDALDataType::Type {
+    fn gdal_ordinal() -> GDALDataType::Type {
         GDALDataType::GDT_Byte
     }
 }
 
 /// Provides evidence `u16` is a valid [`GDALDataType`].
 impl GdalType for u16 {
-    fn gdal_type() -> GDALDataType::Type {
+    fn gdal_ordinal() -> GDALDataType::Type {
         GDALDataType::GDT_UInt16
     }
 }
 
 /// Provides evidence `u32` is a valid [`GDALDataType`].
 impl GdalType for u32 {
-    fn gdal_type() -> GDALDataType::Type {
+    fn gdal_ordinal() -> GDALDataType::Type {
         GDALDataType::GDT_UInt32
     }
 }
@@ -338,21 +338,21 @@ impl GdalType for u32 {
 #[cfg(all(major_ge_3, minor_ge_5))]
 /// Provides evidence `u64` is a valid [`GDALDataType`].
 impl GdalType for u64 {
-    fn gdal_type() -> GDALDataType::Type {
+    fn gdal_ordinal() -> GDALDataType::Type {
         GDALDataType::GDT_UInt64
     }
 }
 
 /// Provides evidence `i16` is a valid [`GDALDataType`].
 impl GdalType for i16 {
-    fn gdal_type() -> GDALDataType::Type {
+    fn gdal_ordinal() -> GDALDataType::Type {
         GDALDataType::GDT_Int16
     }
 }
 
 /// Provides evidence `i32` is a valid [`GDALDataType`].
 impl GdalType for i32 {
-    fn gdal_type() -> GDALDataType::Type {
+    fn gdal_ordinal() -> GDALDataType::Type {
         GDALDataType::GDT_Int32
     }
 }
@@ -360,21 +360,21 @@ impl GdalType for i32 {
 #[cfg(all(major_ge_3, minor_ge_5))]
 /// Provides evidence `i64` is a valid [`GDALDataType`].
 impl GdalType for i64 {
-    fn gdal_type() -> GDALDataType::Type {
+    fn gdal_ordinal() -> GDALDataType::Type {
         GDALDataType::GDT_Int64
     }
 }
 
 /// Provides evidence `f32` is a valid [`GDALDataType`].
 impl GdalType for f32 {
-    fn gdal_type() -> GDALDataType::Type {
+    fn gdal_ordinal() -> GDALDataType::Type {
         GDALDataType::GDT_Float32
     }
 }
 
 /// Provides evidence `f64` is a valid [`GDALDataType`].
 impl GdalType for f64 {
-    fn gdal_type() -> GDALDataType::Type {
+    fn gdal_ordinal() -> GDALDataType::Type {
         GDALDataType::GDT_Float64
     }
 }
@@ -445,13 +445,13 @@ mod tests {
 
     #[test]
     fn test_data_type_union() {
-        let f32d = <f32>::descriptor();
-        let f64d = <f64>::descriptor();
+        let f32d = <f32>::datatype();
+        let f64d = <f64>::datatype();
 
-        let u8d = <u8>::descriptor();
-        let u16d = <u16>::descriptor();
-        let i16d = <i16>::descriptor();
-        let i32d = <i32>::descriptor();
+        let u8d = <u8>::datatype();
+        let u16d = <u16>::datatype();
+        let i16d = <i16>::datatype();
+        let i32d = <i32>::datatype();
 
         // reflexivity
         assert_eq!(i16d.union(i16d), i16d);
@@ -464,42 +464,42 @@ mod tests {
 
         #[cfg(all(major_ge_3, minor_ge_5))]
         {
-            let u32d = <u32>::descriptor();
-            let i64d = <i64>::descriptor();
+            let u32d = <u32>::datatype();
+            let i64d = <i64>::datatype();
             assert_eq!(i16d.union(u32d), i64d);
         }
     }
 
     #[test]
     fn test_for_value() {
-        assert_eq!(GdalDataType::for_value(0), <u8>::descriptor());
-        assert_eq!(GdalDataType::for_value(256), <u16>::descriptor());
-        assert_eq!(GdalDataType::for_value(-1), <i16>::descriptor());
+        assert_eq!(GdalDataType::for_value(0), <u8>::datatype());
+        assert_eq!(GdalDataType::for_value(256), <u16>::datatype());
+        assert_eq!(GdalDataType::for_value(-1), <i16>::datatype());
         assert_eq!(
             GdalDataType::for_value(<u16>::MAX as f64 * -2.0),
-            <i32>::descriptor()
+            <i32>::datatype()
         );
     }
 
     #[test]
     fn test_adjust_value() {
-        assert_eq!(<u8>::descriptor().adjust_value(255), Unchanged(255.));
-        assert_eq!(<u8>::descriptor().adjust_value(1.2334), Rounded(1.));
-        assert_eq!(<u8>::descriptor().adjust_value(1000.2334), Clamped(255.));
-        assert_eq!(<u8>::descriptor().adjust_value(-1), Clamped(0.));
+        assert_eq!(<u8>::datatype().adjust_value(255), Unchanged(255.));
+        assert_eq!(<u8>::datatype().adjust_value(1.2334), Rounded(1.));
+        assert_eq!(<u8>::datatype().adjust_value(1000.2334), Clamped(255.));
+        assert_eq!(<u8>::datatype().adjust_value(-1), Clamped(0.));
         assert_eq!(
-            <i16>::descriptor().adjust_value(-32768),
+            <i16>::datatype().adjust_value(-32768),
             Unchanged(-32768.0)
         );
         assert_eq!(
-            <i16>::descriptor().adjust_value(-32767.4),
+            <i16>::datatype().adjust_value(-32767.4),
             Rounded(-32767.0)
         );
         assert_eq!(
-            <f32>::descriptor().adjust_value(1e300),
+            <f32>::datatype().adjust_value(1e300),
             Clamped(f32::MAX as f64)
         );
-        let v: f64 = <i16>::descriptor().adjust_value(-32767.4).into();
+        let v: f64 = <i16>::datatype().adjust_value(-32767.4).into();
         assert_eq!(v, -32767.0);
     }
 }
