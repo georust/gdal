@@ -487,14 +487,8 @@ mod tests {
         assert_eq!(<u8>::datatype().adjust_value(1.2334), Rounded(1.));
         assert_eq!(<u8>::datatype().adjust_value(1000.2334), Clamped(255.));
         assert_eq!(<u8>::datatype().adjust_value(-1), Clamped(0.));
-        assert_eq!(
-            <i16>::datatype().adjust_value(-32768),
-            Unchanged(-32768.0)
-        );
-        assert_eq!(
-            <i16>::datatype().adjust_value(-32767.4),
-            Rounded(-32767.0)
-        );
+        assert_eq!(<i16>::datatype().adjust_value(-32768), Unchanged(-32768.0));
+        assert_eq!(<i16>::datatype().adjust_value(-32767.4), Rounded(-32767.0));
         assert_eq!(
             <f32>::datatype().adjust_value(1e300),
             Clamped(f32::MAX as f64)
