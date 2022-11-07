@@ -42,7 +42,7 @@
 //! but for the maximally impatient, here you go:
 //!
 //! ```rust, no_run
-//! use gdal::{Dataset, Metadata};
+//! use gdal::Dataset;
 //! # fn main() -> gdal::errors::Result<()> {
 //! let ds = Dataset::open("fixtures/m_3607824_se_17_1_20160620_sub.tif")?;
 //! println!("This {} is in '{}' and has {} bands.", ds.driver().long_name(), ds.spatial_ref()?.name()?, ds.raster_count());

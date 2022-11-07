@@ -9,7 +9,6 @@
 //! // The `LayerAccess` trait enables reading of vector specific fields from the `Dataset`.
 //! use gdal::vector::LayerAccess;
 //! # fn main() -> gdal::errors::Result<()> {
-//! use gdal::errors::GdalError;
 //! use gdal::vector::geometry_type_to_name;
 //! let dataset = Dataset::open("fixtures/roads.geojson")?;
 //! println!("Dataset description: {}", dataset.description()?);

@@ -1048,7 +1048,7 @@ impl Debug for ColorEntry {
 /// # Example
 ///
 /// ```rust, no_run
-/// use gdal::{Dataset, Driver};
+/// use gdal::{Dataset, DriverManager};
 /// use gdal::raster::{ColorEntry, ColorTable, PaletteInterpretation};
 /// # fn main() -> gdal::errors::Result<()> {
 ///
@@ -1056,7 +1056,7 @@ impl Debug for ColorEntry {
 /// let ds = Dataset::open("fixtures/labels.tif")?;
 ///
 /// // Create in-memory copy to mutate
-/// let mem_driver = Driver::get_by_name("MEM")?;
+/// let mem_driver = DriverManager::get_driver_by_name("MEM")?;
 /// let ds = ds.create_copy(&mem_driver, "<mem>", &[])?;
 /// let mut band = ds.rasterband(1)?;
 /// assert!(band.color_table().is_none());
@@ -1070,7 +1070,7 @@ impl Debug for ColorEntry {
 /// band.set_color_table(&ct);
 ///
 /// // Render a PNG
-/// let png_driver = Driver::get_by_name("PNG")?;
+/// let png_driver = DriverManager::get_driver_by_name("PNG")?;
 /// ds.create_copy(&png_driver, "/tmp/labels.png", &[])?;
 ///
 /// # Ok(())
@@ -1107,8 +1107,7 @@ impl<'a> ColorTable<'a> {
     /// # Example
     ///
     /// ```rust, no_run
-    /// use gdal::{Dataset, Driver};
-    /// use gdal::raster::{ColorEntry, ColorTable, PaletteInterpretation};
+    /// use gdal::raster::{ColorEntry, ColorTable};
     /// # fn main() -> gdal::errors::Result<()> {
     /// // Create a 16 step blue to white color table.
     /// let ct = ColorTable::color_ramp(
