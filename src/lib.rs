@@ -2,6 +2,7 @@
 #![crate_type = "lib"]
 // Enable `doc_cfg` features when `docsrs` is defined by docs.rs config
 #![cfg_attr(docsrs, feature(doc_cfg))]
+#![doc(test(attr(deny(warnings), allow(dead_code, unused_variables))))]
 
 //! # GDAL
 //! [GDAL](http://gdal.org/) is a translator and processing library for various raster and vector geospatial data formats.
@@ -39,7 +40,7 @@
 //! but for the maximally impatient, here you go:
 //!
 //! ```rust, no_run
-//! use gdal::{Dataset, Metadata};
+//! use gdal::Dataset;
 //! # fn main() -> gdal::errors::Result<()> {
 //! let ds = Dataset::open("fixtures/m_3607824_se_17_1_20160620_sub.tif")?;
 //! println!("This {} is in '{}' and has {} bands.", ds.driver().long_name(), ds.spatial_ref()?.name()?, ds.raster_count());

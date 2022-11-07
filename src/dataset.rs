@@ -637,8 +637,8 @@ impl Dataset {
     /// Create a new layer with an empty name, no spatial reference, and unknown geometry type:
     ///
     /// ```
-    /// # use gdal::Driver;
-    /// # let driver = Driver::get_by_name("GPKG").unwrap();
+    /// # use gdal::DriverManager;
+    /// # let driver = DriverManager::get_driver_by_name("GPKG").unwrap();
     /// # let mut dataset = driver.create_vector_only("/vsimem/example.gpkg").unwrap();
     /// let blank_layer = dataset.create_layer(Default::default()).unwrap();
     /// ```
@@ -646,9 +646,9 @@ impl Dataset {
     /// Create a new named line string layer using WGS84:
     ///
     /// ```
-    /// # use gdal::{Driver, LayerOptions};
+    /// # use gdal::{DriverManager, LayerOptions};
     /// # use gdal::spatial_ref::SpatialRef;
-    /// # let driver = Driver::get_by_name("GPKG").unwrap();
+    /// # let driver = DriverManager::get_driver_by_name("GPKG").unwrap();
     /// # let mut dataset = driver.create_vector_only("/vsimem/example.gpkg").unwrap();
     /// let roads = dataset.create_layer(LayerOptions {
     ///     name: "roads",
@@ -806,7 +806,7 @@ impl Dataset {
     /// }
     /// #
     /// # fn main() -> gdal::errors::Result<()> {
-    /// #     let driver = gdal::Driver::get_by_name("SQLite")?;
+    /// #     let driver = gdal::DriverManager::get_driver_by_name("SQLite")?;
     /// #     let mut dataset = driver.create_vector_only(":memory:")?;
     /// #     create_point_grid(&mut dataset)?;
     /// #     assert_eq!(dataset.layer(0)?.features().count(), 10000);
