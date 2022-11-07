@@ -2,6 +2,9 @@
 #![crate_type = "lib"]
 // Enable `doc_cfg` features when `docsrs` is defined by docs.rs config
 #![cfg_attr(docsrs, feature(doc_cfg))]
+#![doc(test(
+    attr(deny(warnings), allow(dead_code, unused_variables))
+))]
 
 //! # GDAL
 //! [GDAL](http://gdal.org/) is a translator and processing library for various raster and vector geospatial data formats.
