@@ -14,7 +14,7 @@ use std::fmt::{Debug, Display, Formatter};
 ///
 /// # Example
 /// ```rust, no_run
-/// use gdal::raster::{GdalType, GdalTypeDescriptor};
+/// use gdal::raster::{GdalType, GdalDataType};
 /// let td = <u32>::descriptor();
 /// println!("{} is {} and uses {} bits.",
 ///     td.name(),
@@ -23,16 +23,40 @@ use std::fmt::{Debug, Display, Formatter};
 /// );
 /// ```
 #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
-pub struct GdalTypeDescriptor(GDALDataType::Type);
+#[repr(u32)]
+pub enum GdalDataType {
+    /// Unknown or unspecified type
+    Unknown = GDALDataType::GDT_Unknown,
+    /// Eight bit unsigned integer
+    UInt8 = GDALDataType::GDT_Byte,
+    /// Sixteen bit unsigned integer
+    UInt16 = GDALDataType::GDT_UInt16,
+    /// Sixteen bit signed integer
+    Int16 = GDALDataType::GDT_Int16,
+    /// Thirty two bit unsigned integer
+    UInt32 = GDALDataType::GDT_UInt32,
+    /// Thirty two bit signed integer
+    Int32 = GDALDataType::GDT_Int32,
+    #[cfg(all(major_ge_3, minor_ge_5))]
+    /// 64 bit unsigned integer (GDAL >= 3.5)
+    UInt64 = GDALDataType::GDT_UInt64,
+    #[cfg(all(major_ge_3, minor_ge_5))]
+    /// 64 bit signed integer  (GDAL >= 3.5)
+    Int64 = GDALDataType::GDT_Int64,
+    /// Thirty two bit floating point
+    Float32 = GDALDataType::GDT_Float32,
+    /// Sixty four bit floating point
+    Float64 = GDALDataType::GDT_Float64,
+}
 
-impl GdalTypeDescriptor {
+impl GdalDataType {
     /// Find `GdalTypeDescriptor` by name, as would be returned by [`name`][Self::name].
     ///
     /// # Example
     ///
     /// ```rust, no_run
-    /// use gdal::raster::{GdalType, GdalTypeDescriptor};
-    /// assert_eq!(GdalTypeDescriptor::from_name("UInt16").unwrap(), <u16>::descriptor())
+    /// use gdal::raster::{GdalType, GdalDataType};
+    /// assert_eq!(GdalDataType::from_name("UInt16").unwrap(), <u16>::descriptor())
     /// ```
     pub fn from_name(name: &str) -> Result<Self> {
         let c_name = CString::new(name)?;
@@ -53,20 +77,15 @@ impl GdalTypeDescriptor {
     /// # Example
     ///
     /// ```rust, no_run
-    /// use gdal::raster::{GdalType, GdalTypeDescriptor};
-    /// assert_eq!(GdalTypeDescriptor::for_value(0), <u8>::descriptor());
-    /// assert_eq!(GdalTypeDescriptor::for_value(256), <u16>::descriptor());
-    /// assert_eq!(GdalTypeDescriptor::for_value(-1), <i16>::descriptor());
-    /// assert_eq!(GdalTypeDescriptor::for_value(<u16>::MAX as f64 * -2.0), <i32>::descriptor());
+    /// use gdal::raster::{GdalType, GdalDataType};
+    /// assert_eq!(GdalDataType::for_value(0), <u8>::descriptor());
+    /// assert_eq!(GdalDataType::for_value(256), <u16>::descriptor());
+    /// assert_eq!(GdalDataType::for_value(-1), <i16>::descriptor());
+    /// assert_eq!(GdalDataType::for_value(<u16>::MAX as f64 * -2.0), <i32>::descriptor());
     /// ```
     pub fn for_value<N: GdalType + Into<f64>>(value: N) -> Self {
         let gdal_type = unsafe { GDALFindDataTypeForValue(value.into(), 0) };
-        GdalTypeDescriptor(gdal_type)
-    }
-
-    /// Get the [`GDALDataType`] ordinal value
-    pub fn gdal_type(&self) -> GDALDataType::Type {
-        self.0
+        Self::try_from(gdal_type).unwrap()
     }
 
     /// Get the name of the [`GDALDataType`].
@@ -78,7 +97,7 @@ impl GdalTypeDescriptor {
     /// assert_eq!(<u16>::descriptor().name(), "UInt16");
     /// ```
     pub fn name(&self) -> String {
-        let c_str = unsafe { GDALGetDataTypeName(self.gdal_type()) };
+        let c_str = unsafe { GDALGetDataTypeName(self.gdal_ordinal()) };
         if c_str.is_null() {
             // This case shouldn't happen, because `self` only exists for valid
             // GDALDataType ordinals.
@@ -92,31 +111,31 @@ impl GdalTypeDescriptor {
 
     /// Get the [`GDALDataType`] size in **bits**.
     pub fn bits(&self) -> u8 {
-        unsafe { GDALGetDataTypeSizeBits(self.gdal_type()) }
+        unsafe { GDALGetDataTypeSizeBits(self.gdal_ordinal()) }
             .try_into()
             .unwrap()
     }
 
     /// Get the [`GDALDataType`] size in **bytes**.
     pub fn bytes(&self) -> u8 {
-        unsafe { GDALGetDataTypeSizeBytes(self.gdal_type()) }
+        unsafe { GDALGetDataTypeSizeBytes(self.gdal_ordinal()) }
             .try_into()
             .unwrap()
     }
 
     /// Returns `true` if [`GDALDataType`] is integral (non-floating point)
     pub fn is_integer(&self) -> bool {
-        (unsafe { GDALDataTypeIsInteger(self.gdal_type()) }) > 0
+        (unsafe { GDALDataTypeIsInteger(self.gdal_ordinal()) }) > 0
     }
 
     /// Returns `true` if [`GDALDataType`] is floating point (non-integral)
     pub fn is_floating(&self) -> bool {
-        (unsafe { GDALDataTypeIsFloating(self.gdal_type()) }) > 0
+        (unsafe { GDALDataTypeIsFloating(self.gdal_ordinal()) }) > 0
     }
 
     /// Returns `true` if [`GDALDataType`] supports negative values.
     pub fn is_signed(&self) -> bool {
-        (unsafe { GDALDataTypeIsSigned(self.gdal_type()) }) > 0
+        (unsafe { GDALDataTypeIsSigned(self.gdal_ordinal()) }) > 0
     }
 
     /// Return the descriptor for smallest [`GDALDataType`] that fully contains both data types
@@ -133,8 +152,8 @@ impl GdalTypeDescriptor {
     /// );
     /// ```
     pub fn union(&self, other: Self) -> Self {
-        let gdal_type = unsafe { GDALDataTypeUnion(self.gdal_type(), other.gdal_type()) };
-        Self(gdal_type)
+        let gdal_type = unsafe { GDALDataTypeUnion(self.gdal_ordinal(), other.gdal_ordinal()) };
+        Self::try_from(gdal_type).unwrap()
     }
 
     /// Change a given value to fit within the constraints of this [`GDALDataType`].
@@ -156,7 +175,7 @@ impl GdalTypeDescriptor {
 
         let result = unsafe {
             GDALAdjustValueToDataType(
-                self.gdal_type(),
+                self.gdal_ordinal(),
                 value.into(),
                 &mut is_clamped,
                 &mut is_rounded,
@@ -181,42 +200,49 @@ impl GdalTypeDescriptor {
     /// assert!(<i16>::descriptor().is_conversion_lossy(<u8>::descriptor()))
     /// ```
     pub fn is_conversion_lossy(&self, other: Self) -> bool {
-        let r = unsafe { GDALDataTypeIsConversionLossy(self.gdal_type(), other.gdal_type()) };
+        let r = unsafe { GDALDataTypeIsConversionLossy(self.gdal_ordinal(), other.gdal_ordinal()) };
         r != 0
     }
 
     /// Subset of the GDAL data types supported by Rust bindings.
-    pub fn available_types() -> &'static [GdalTypeDescriptor] {
-        use GDALDataType::*;
-        &[
-            GdalTypeDescriptor(GDT_Byte),
-            GdalTypeDescriptor(GDT_UInt16),
-            GdalTypeDescriptor(GDT_Int16),
-            GdalTypeDescriptor(GDT_UInt32),
-            GdalTypeDescriptor(GDT_Int32),
+    pub fn iter() -> impl Iterator<Item = GdalDataType> {
+        use GdalDataType::*;
+        [
+            UInt8,
+            UInt16,
+            Int16,
+            UInt32,
+            Int32,
             #[cfg(all(major_ge_3, minor_ge_5))]
-            GdalTypeDescriptor(GDT_UInt64),
+            UInt64,
             #[cfg(all(major_ge_3, minor_ge_5))]
-            GdalTypeDescriptor(GDT_Int64),
-            GdalTypeDescriptor(GDT_Float32),
-            GdalTypeDescriptor(GDT_Float64),
+            Int64,
+            Float32,
+            Float64,
         ]
+        .iter()
+        .copied()
+    }
+
+    #[inline]
+    pub(crate) fn gdal_ordinal(&self) -> GDALDataType::Type {
+        *self as GDALDataType::Type
     }
 }
 
-impl Debug for GdalTypeDescriptor {
+impl Debug for GdalDataType {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("GdalTypeDescriptor")
             .field("name", &self.name())
             .field("bits", &self.bits())
             .field("signed", &self.is_signed())
             .field("floating", &self.is_floating())
-            .field("gdal_ordinal", &self.gdal_type())
+            .field("gdal_ordinal", &self.gdal_ordinal())
             .finish()
     }
 }
 
-impl Display for GdalTypeDescriptor {
+impl Display for GdalDataType {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         f.write_str(&self.name())
     }
@@ -227,22 +253,17 @@ impl Display for GdalTypeDescriptor {
 /// # Example
 ///
 /// ```rust, no_run
-/// use gdal::raster::{GdalType, GdalTypeDescriptor};
-/// let gdt: GdalTypeDescriptor = 3.try_into().unwrap();
+/// use gdal::raster::{GdalType, GdalDataType};
+/// let gdt: GdalDataType = 3.try_into().unwrap();
 /// println!("{gdt:#?}")
 /// ```
-impl TryFrom<GDALDataType::Type> for GdalTypeDescriptor {
+impl TryFrom<u32> for GdalDataType {
     type Error = GdalError;
 
-    fn try_from(value: GDALDataType::Type) -> std::result::Result<Self, Self::Error> {
-        let wrapped = GdalTypeDescriptor(value);
-        if !GdalTypeDescriptor::available_types().contains(&wrapped) {
-            Err(GdalError::BadArgument(format!(
-                "unknown GDALDataType {value}"
-            )))
-        } else {
-            Ok(wrapped)
-        }
+    fn try_from(value: u32) -> std::result::Result<Self, Self::Error> {
+        Self::iter()
+            .find(|t| *t as u32 == value)
+            .ok_or_else(|| GdalError::BadArgument(format!("unknown GDALDataType {value}")))
     }
 }
 
@@ -287,7 +308,7 @@ pub trait GdalType {
     /// let gdt = <u32>::descriptor();
     /// println!("{gdt:#?}");
     /// ```
-    fn descriptor() -> GdalTypeDescriptor {
+    fn descriptor() -> GdalDataType {
         // We can call `unwrap` because existence is guaranteed in this case.
         Self::gdal_type().try_into().unwrap()
     }
@@ -367,14 +388,14 @@ mod tests {
     #[test]
     #[allow(non_upper_case_globals)]
     fn test_gdal_data_type() {
-        for t in GdalTypeDescriptor::available_types() {
+        for t in GdalDataType::iter() {
             // Test converting from GDALDataType:Type
-            let t2: GdalTypeDescriptor = t.gdal_type().try_into().unwrap();
-            assert_eq!(t, &t2, "{}", t);
+            let t2: GdalDataType = t.gdal_ordinal().try_into().unwrap();
+            assert_eq!(&t, &t2, "{}", t);
             assert!(t.bits() > 0, "{}", t);
             assert_eq!(t.bits(), t.bytes() * 8, "{}", t);
             let name = t.name();
-            match t.gdal_type() {
+            match t.gdal_ordinal() {
                 GDT_Byte | GDT_UInt16 | GDT_Int16 | GDT_UInt32 | GDT_Int32 => {
                     assert!(t.is_integer(), "{}", &name);
                     assert!(!t.is_floating(), "{}", &name);
@@ -391,7 +412,7 @@ mod tests {
 
                 o => panic!("unknown type ordinal '{}'", o),
             }
-            match t.gdal_type() {
+            match t.gdal_ordinal() {
                 GDT_Byte | GDT_UInt16 | GDT_UInt32 => {
                     assert!(!t.is_signed(), "{}", &name);
                 }
@@ -413,11 +434,11 @@ mod tests {
 
     #[test]
     fn test_data_type_from_name() {
-        assert!(GdalTypeDescriptor::from_name("foobar").is_err());
+        assert!(GdalDataType::from_name("foobar").is_err());
 
-        for t in GdalTypeDescriptor::available_types() {
+        for t in GdalDataType::iter() {
             let name = t.name();
-            let t2 = GdalTypeDescriptor::from_name(&name);
+            let t2 = GdalDataType::from_name(&name);
             assert!(t2.is_ok());
         }
     }
@@ -451,11 +472,11 @@ mod tests {
 
     #[test]
     fn test_for_value() {
-        assert_eq!(GdalTypeDescriptor::for_value(0), <u8>::descriptor());
-        assert_eq!(GdalTypeDescriptor::for_value(256), <u16>::descriptor());
-        assert_eq!(GdalTypeDescriptor::for_value(-1), <i16>::descriptor());
+        assert_eq!(GdalDataType::for_value(0), <u8>::descriptor());
+        assert_eq!(GdalDataType::for_value(256), <u16>::descriptor());
+        assert_eq!(GdalDataType::for_value(-1), <i16>::descriptor());
         assert_eq!(
-            GdalTypeDescriptor::for_value(<u16>::MAX as f64 * -2.0),
+            GdalDataType::for_value(<u16>::MAX as f64 * -2.0),
             <i32>::descriptor()
         );
     }
