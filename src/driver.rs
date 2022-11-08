@@ -43,22 +43,6 @@ pub struct Driver {
 
 impl Driver {
     /// Returns the driver with the given short name or [`Err`] if not found.
-    ///
-    /// See also: [`count`](Self::count), [`get`](Self::get)
-    ///
-    /// # Example
-    ///
-    /// ```rust, no_run
-    /// use gdal::Driver;
-    /// # fn main() -> gdal::errors::Result<()> {
-    /// let cog_driver = Driver::get_by_name("COG")?;
-    /// println!("{}", cog_driver.long_name());
-    /// # Ok(())
-    /// # }
-    /// ```
-    /// ```text
-    /// Cloud optimized GeoTIFF generator
-    /// ```
     #[deprecated(note = "Please use `DriverManager::get_driver_by_name()` instead")]
     pub fn get_by_name(name: &str) -> Result<Driver> {
         DriverManager::get_driver_by_name(name)
@@ -66,39 +50,12 @@ impl Driver {
 
     /// Returns the driver with the given index, which must be less than the value returned by
     /// `Driver::count()`.
-    ///
-    /// See also: [`count`](Self::count)
-    ///
-    /// # Example
-    ///
-    /// ```rust, no_run
-    /// use gdal::Driver;
-    /// # fn main() -> gdal::errors::Result<()> {
-    /// assert!(Driver::count() > 0);
-    /// let d = Driver::get(0)?;
-    /// println!("'{}' is '{}'", d.short_name(), d.long_name());
-    /// # Ok(())
-    /// # }
-    /// ```
-    /// ```text
-    /// 'VRT' is 'Virtual Raster'
-    /// ```
     #[deprecated(note = "Please use `DriverManager::get_driver()` instead")]
     pub fn get(index: usize) -> Result<Driver> {
         DriverManager::get_driver(index)
     }
 
     /// Returns the number of registered drivers.
-    ///
-    /// # Example
-    ///
-    /// ```rust, no_run
-    /// use gdal::Driver;
-    /// println!("{} drivers are registered", Driver::count());
-    /// ```
-    /// ```text
-    /// 203 drivers are registered
-    /// ```
     #[deprecated(note = "Please use `DriverManager::count()` instead")]
     pub fn count() -> usize {
         DriverManager::count()
