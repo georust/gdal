@@ -14,7 +14,7 @@ use std::fmt::{Debug, Display, Formatter};
 ///
 /// # Example
 /// ```rust, no_run
-/// use gdal::raster::{GdalType, GdalDataType};
+/// use gdal::raster::GdalType;
 /// let td = <u32>::datatype();
 /// println!("{} is {} and uses {} bits.",
 ///     td.name(),
@@ -253,7 +253,7 @@ impl Display for GdalDataType {
 /// # Example
 ///
 /// ```rust, no_run
-/// use gdal::raster::{GdalType, GdalDataType};
+/// use gdal::raster::GdalDataType;
 /// let gdt: GdalDataType = 3.try_into().unwrap();
 /// println!("{gdt:#?}")
 /// ```
@@ -276,9 +276,12 @@ impl TryFrom<u32> for GdalDataType {
             GDT_Int64 => Ok(GdalDataType::Int64),
             GDT_Float32 => Ok(GdalDataType::Float32),
             GDT_Float64 => Ok(GdalDataType::Float64),
-            GDT_CInt16 | GDT_CInt32 | GDT_CFloat32 | GDT_CFloat64 =>
-                Err(GdalError::BadArgument("Complex data types are not available".into())),
-            o => Err(GdalError::BadArgument(format!("unknown GDALDataType ordinal' {o}'")))
+            GDT_CInt16 | GDT_CInt32 | GDT_CFloat32 | GDT_CFloat64 => Err(GdalError::BadArgument(
+                "Complex data types are not available".into(),
+            )),
+            o => Err(GdalError::BadArgument(format!(
+                "unknown GDALDataType ordinal' {o}'"
+            ))),
         }
     }
 }
@@ -450,7 +453,6 @@ mod tests {
         for t in [GDT_CInt16, GDT_CInt32, GDT_CFloat32, GDT_CFloat64] {
             assert!(TryInto::<GdalDataType>::try_into(t).is_err());
         }
-
     }
 
     #[test]
