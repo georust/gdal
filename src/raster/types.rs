@@ -261,9 +261,25 @@ impl TryFrom<u32> for GdalDataType {
     type Error = GdalError;
 
     fn try_from(value: u32) -> std::result::Result<Self, Self::Error> {
-        Self::iter()
-            .find(|t| *t as u32 == value)
-            .ok_or_else(|| GdalError::BadArgument(format!("unknown GDALDataType {value}")))
+        use GDALDataType::*;
+        #[allow(non_upper_case_globals)]
+        match value {
+            GDT_Unknown => Ok(GdalDataType::Unknown),
+            GDT_Byte => Ok(GdalDataType::UInt8),
+            GDT_UInt16 => Ok(GdalDataType::UInt16),
+            GDT_Int16 => Ok(GdalDataType::Int16),
+            GDT_UInt32 => Ok(GdalDataType::UInt32),
+            GDT_Int32 => Ok(GdalDataType::Int32),
+            #[cfg(all(major_ge_3, minor_ge_5))]
+            GDT_UInt64 => Ok(GdalDataType::UInt64),
+            #[cfg(all(major_ge_3, minor_ge_5))]
+            GDT_Int64 => Ok(GdalDataType::Int64),
+            GDT_Float32 => Ok(GdalDataType::Float32),
+            GDT_Float64 => Ok(GdalDataType::Float64),
+            GDT_CInt16 | GDT_CInt32 | GDT_CFloat32 | GDT_CFloat64 =>
+                Err(GdalError::BadArgument("Complex data types are not available".into())),
+            o => Err(GdalError::BadArgument(format!("unknown GDALDataType ordinal' {o}'")))
+        }
     }
 }
 
@@ -430,6 +446,11 @@ mod tests {
                 o => panic!("unknown type ordinal '{}'", o),
             }
         }
+
+        for t in [GDT_CInt16, GDT_CInt32, GDT_CFloat32, GDT_CFloat64] {
+            assert!(TryInto::<GdalDataType>::try_into(t).is_err());
+        }
+
     }
 
     #[test]
