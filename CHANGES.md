@@ -36,9 +36,9 @@
 
   - <https://github.com/georust/gdal/pull/324>
 
-- Added `GdalTypeDescriptor` to provide access to metadata and supporting routines around `GDALDataType` ordinals.
+- Added `GdalDataType` to provide access to metadata and supporting routines around `GDALDataType` ordinals.
 - **Breaking**: `GDALDataType` is no longer `pub use` in `gdal::raster`, 
-  as `GdalType` and `GdalTypeDescriptor` sufficiently cover use cases in safe code. 
+  as `GdalType` and `GdalDataType` sufficiently cover use cases in safe code. 
   Still accessible via `gdal_sys::GDALDataType`.
 
   - <https://github.com/georust/gdal/pull/318>
