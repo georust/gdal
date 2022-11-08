@@ -85,7 +85,7 @@ impl GdalDataType {
     /// ```
     pub fn for_value<N: GdalType + Into<f64>>(value: N) -> Self {
         let gdal_type = unsafe { GDALFindDataTypeForValue(value.into(), 0) };
-        Self::try_from(gdal_type).unwrap()
+        Self::try_from(gdal_type).expect("GDALFindDataTypeForValue")
     }
 
     /// Get the name of the [`GDALDataType`].
@@ -113,14 +113,14 @@ impl GdalDataType {
     pub fn bits(&self) -> u8 {
         unsafe { GDALGetDataTypeSizeBits(self.gdal_ordinal()) }
             .try_into()
-            .unwrap()
+            .expect("GDALGetDataTypeSizeBits")
     }
 
     /// Get the [`GDALDataType`] size in **bytes**.
     pub fn bytes(&self) -> u8 {
         unsafe { GDALGetDataTypeSizeBytes(self.gdal_ordinal()) }
             .try_into()
-            .unwrap()
+            .expect("GDALGetDataTypeSizeBytes")
     }
 
     /// Returns `true` if [`GDALDataType`] is integral (non-floating point)
@@ -153,7 +153,7 @@ impl GdalDataType {
     /// ```
     pub fn union(&self, other: Self) -> Self {
         let gdal_type = unsafe { GDALDataTypeUnion(self.gdal_ordinal(), other.gdal_ordinal()) };
-        Self::try_from(gdal_type).unwrap()
+        Self::try_from(gdal_type).expect("GDALDataTypeUnion")
     }
 
     /// Change a given value to fit within the constraints of this [`GDALDataType`].
@@ -310,7 +310,7 @@ pub trait GdalType {
     /// ```
     fn datatype() -> GdalDataType {
         // We can call `unwrap` because existence is guaranteed in this case.
-        Self::gdal_ordinal().try_into().unwrap()
+        Self::gdal_ordinal().try_into().expect("GdalDataType")
     }
 }
 
