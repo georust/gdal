@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.14
+
 - Added new content to `README.md` and the root docs.
 
   - <https://github.com/georust/gdal/pull/296>
@@ -37,8 +39,8 @@
   - <https://github.com/georust/gdal/pull/324>
 
 - Added `GdalDataType` to provide access to metadata and supporting routines around `GDALDataType` ordinals.
-- **Breaking**: `GDALDataType` is no longer `pub use` in `gdal::raster`, 
-  as `GdalType` and `GdalDataType` sufficiently cover use cases in safe code. 
+- **Breaking**: `GDALDataType` is no longer `pub use` in `gdal::raster`,
+  as `GdalType` and `GdalDataType` sufficiently cover use cases in safe code.
   Still accessible via `gdal_sys::GDALDataType`.
 
   - <https://github.com/georust/gdal/pull/318>
