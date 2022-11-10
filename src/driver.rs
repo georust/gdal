@@ -98,7 +98,7 @@ impl Driver {
     /// let ds = d.create("in-memory", 64, 64, 3)?;
     /// assert_eq!(ds.raster_count(), 3);
     /// assert_eq!(ds.raster_size(), (64, 64));
-    /// assert_eq!(ds.rasterband(1)?.band_type(), u8::gdal_type());
+    /// assert_eq!(ds.rasterband(1)?.band_type(), u8::gdal_ordinal());
     /// # Ok(())
     /// # }
     /// ```
@@ -127,7 +127,7 @@ impl Driver {
     /// let ds = d.create_with_band_type::<f64, _>("in-memory", 64, 64, 3)?;
     /// assert_eq!(ds.raster_count(), 3);
     /// assert_eq!(ds.raster_size(), (64, 64));
-    /// assert_eq!(ds.rasterband(1)?.band_type(), f64::gdal_type());
+    /// assert_eq!(ds.rasterband(1)?.band_type(), f64::gdal_ordinal());
     /// # Ok(())
     /// # }
     /// ```
@@ -168,7 +168,7 @@ impl Driver {
     /// ds.set_spatial_ref(&SpatialRef::from_epsg(4326)?)?;
     /// assert_eq!(ds.raster_count(), 1);
     /// assert_eq!(ds.raster_size(), (64, 64));
-    /// assert_eq!(ds.rasterband(1)?.band_type(), u8::gdal_type());
+    /// assert_eq!(ds.rasterband(1)?.band_type(), u8::gdal_ordinal());
     /// assert_eq!(ds.spatial_ref()?.auth_code()?, 4326);
     /// # Ok(())
     /// # }
@@ -212,7 +212,7 @@ impl Driver {
                 size_x as c_int,
                 size_y as c_int,
                 bands as c_int,
-                T::gdal_type(),
+                T::gdal_ordinal(),
                 options_c.as_ptr(),
             )
         };

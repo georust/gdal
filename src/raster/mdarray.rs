@@ -164,7 +164,7 @@ impl<'a> MDArray<'a> {
         let n_dst_buffer_alloc_size = 0;
 
         let rv = unsafe {
-            let data_type = GDALExtendedDataTypeCreate(T::gdal_type());
+            let data_type = GDALExtendedDataTypeCreate(T::gdal_ordinal());
 
             if !self.datatype().class().is_numeric() {
                 return Err(GdalError::UnsupportedMdDataType {
