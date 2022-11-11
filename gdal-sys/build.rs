@@ -157,7 +157,7 @@ fn main() {
         }
         if !found {
             if cfg!(target_env = "msvc") {
-                panic!("windows-gnu requires gdal_i.lib to be present in either $GDAL_LIB_DIR or $GDAL_HOME\\lib.");
+                panic!("windows-msvc requires gdal_i.lib to be present in either $GDAL_LIB_DIR or $GDAL_HOME\\lib.");
             }
 
             // otherwise, look for a gdalxxx.dll in $GDAL_HOME/bin
