@@ -329,7 +329,9 @@ pub trait GdalType {
     /// ```
     fn datatype() -> GdalDataType {
         // We can call `unwrap` because existence is guaranteed in this case.
-        Self::gdal_ordinal().try_into().expect("GdalDataType")
+        Self::gdal_ordinal()
+            .try_into()
+            .unwrap_or(GdalDataType::Unknown)
     }
 }
 

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- **Breaking**: `RasterBand::band_type` returns `GdalDataType` enum instead of `GDALDataType::Type` ordinal. Fixes [#333](https://github.com/georust/gdal/issues/333)
+
+  - <>
+
 ## 0.14
 
 - Added new content to `README.md` and the root docs.

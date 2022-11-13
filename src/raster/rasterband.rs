@@ -1,14 +1,13 @@
 use crate::dataset::Dataset;
 use crate::gdal_major_object::MajorObject;
 use crate::metadata::Metadata;
-use crate::raster::GdalType;
+use crate::raster::{GdalDataType, GdalType};
 use crate::utils::{_last_cpl_err, _last_null_pointer_err, _string};
 use gdal_sys::{
     self, CPLErr, GDALColorEntry, GDALColorInterp, GDALColorTableH, GDALComputeRasterMinMax,
-    GDALCreateColorRamp, GDALCreateColorTable, GDALDataType, GDALDestroyColorTable,
-    GDALGetPaletteInterpretation, GDALGetRasterStatistics, GDALMajorObjectH, GDALPaletteInterp,
-    GDALRIOResampleAlg, GDALRWFlag, GDALRasterBandH, GDALRasterIOExtraArg, GDALSetColorEntry,
-    GDALSetRasterColorTable,
+    GDALCreateColorRamp, GDALCreateColorTable, GDALDestroyColorTable, GDALGetPaletteInterpretation,
+    GDALGetRasterStatistics, GDALMajorObjectH, GDALPaletteInterp, GDALRIOResampleAlg, GDALRWFlag,
+    GDALRasterBandH, GDALRasterIOExtraArg, GDALSetColorEntry, GDALSetRasterColorTable,
 };
 use libc::c_int;
 use std::ffi::CString;
@@ -230,10 +229,10 @@ impl<'a> RasterBand<'a> {
     /// ```rust, no_run
     /// # fn main() -> gdal::errors::Result<()> {
     /// use gdal::Dataset;
-    /// use gdal::raster::{GdalType, ResampleAlg};
+    /// use gdal::raster::{GdalDataType, ResampleAlg};
     /// let dataset = Dataset::open("fixtures/m_3607824_se_17_1_20160620_sub.tif")?;
     /// let band1 = dataset.rasterband(1)?;
-    /// assert_eq!(band1.band_type(), u8::gdal_ordinal());
+    /// assert_eq!(band1.band_type(), GdalDataType::UInt8);
     /// let size = 4;
     /// let mut buf = vec![0; size*size];
     /// band1.read_into_slice::<u8>((0, 0), band1.size(), (size, size), buf.as_mut_slice(), Some(ResampleAlg::Bilinear))?;
@@ -300,10 +299,10 @@ impl<'a> RasterBand<'a> {
     /// ```rust, no_run
     /// # fn main() -> gdal::errors::Result<()> {
     /// use gdal::Dataset;
-    /// use gdal::raster::{GdalType, ResampleAlg};
+    /// use gdal::raster::{GdalDataType, ResampleAlg};
     /// let dataset = Dataset::open("fixtures/m_3607824_se_17_1_20160620_sub.tif")?;
     /// let band1 = dataset.rasterband(1)?;
-    /// assert_eq!(band1.band_type(), u8::gdal_ordinal());
+    /// assert_eq!(band1.band_type(), GdalDataType::UInt8);
     /// let size = 4;
     /// let buf = band1.read_as::<u8>((0, 0), band1.size(), (size, size), Some(ResampleAlg::Bilinear))?;
     /// assert_eq!(buf.size, (size, size));
@@ -476,8 +475,9 @@ impl<'a> RasterBand<'a> {
     }
 
     /// Returns the pixel datatype of this band.
-    pub fn band_type(&self) -> GDALDataType::Type {
-        unsafe { gdal_sys::GDALGetRasterDataType(self.c_rasterband) }
+    pub fn band_type(&self) -> GdalDataType {
+        let ordinal = unsafe { gdal_sys::GDALGetRasterDataType(self.c_rasterband) };
+        ordinal.try_into().unwrap_or(GdalDataType::Unknown)
     }
 
     /// Returns the no-data value of this band.
