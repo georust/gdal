@@ -1,3 +1,4 @@
 [alias]
 # Run doctests, displaying compiler output
 dto = "test --doc -- --show-output"
+nowarn = "clippy --all-targets  -- -D warnings"
