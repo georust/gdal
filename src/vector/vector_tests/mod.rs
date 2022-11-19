@@ -4,6 +4,8 @@ use super::{
 };
 use crate::spatial_ref::SpatialRef;
 use crate::{assert_almost_eq, Dataset, DatasetOptions, GdalOpenFlags};
+use std::path::Path;
+use tempfile::tempdir;
 mod convert_geo;
 mod sql;
 
@@ -755,8 +757,6 @@ mod tests {
 
     #[test]
     fn test_write_features() {
-        use std::fs;
-
         {
             let driver = DriverManager::get_driver_by_name("GeoJSON").unwrap();
             let mut ds = driver
@@ -785,7 +785,6 @@ mod tests {
         }
 
         let ds = Dataset::open(fixture!("output.geojson")).unwrap();
-        fs::remove_file(fixture!("output.geojson")).unwrap();
         let mut layer = ds.layer(0).unwrap();
         let ft = layer.features().next().unwrap();
         assert_eq!(ft.geometry().wkt().unwrap(), "POINT (1 2)");
@@ -851,7 +850,11 @@ mod tests {
             open_flags: GdalOpenFlags::GDAL_OF_UPDATE,
             ..DatasetOptions::default()
         };
-        let tmp_file = "/tmp/test.s3db";
+
+        let tmpdir = tempdir().unwrap();
+        let tmp_pathbuf = tmpdir.path().join("test.s3db");
+        let tmp_file = Path::new(&tmp_pathbuf);
+
         std::fs::copy(fixture!("three_layer_ds.s3db"), tmp_file).unwrap();
         let ds = Dataset::open_ex(tmp_file, ds_options).unwrap();
         let mut layer = ds.layer(0).unwrap();
