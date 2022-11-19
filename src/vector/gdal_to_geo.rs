@@ -23,7 +23,7 @@ impl TryFrom<&Geometry> for geo_types::Geometry<f64> {
             OGRwkbGeometryType::wkbPoint => {
                 let (x, y, _) = geo.get_point(0);
                 Ok(geo_types::Geometry::Point(geo_types::Point(
-                    geo_types::Coordinate { x, y },
+                    geo_types::Coord { x, y },
                 )))
             }
             OGRwkbGeometryType::wkbMultiPoint => {
@@ -47,7 +47,7 @@ impl TryFrom<&Geometry> for geo_types::Geometry<f64> {
                 let coords = geo
                     .get_point_vec()
                     .iter()
-                    .map(|&(x, y, _)| geo_types::Coordinate { x, y })
+                    .map(|&(x, y, _)| geo_types::Coord { x, y })
                     .collect();
                 Ok(geo_types::Geometry::LineString(geo_types::LineString(
                     coords,
