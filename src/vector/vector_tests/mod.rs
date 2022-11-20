@@ -393,11 +393,15 @@ mod tests {
         with_features("points_with_datetime.json", |mut features| {
             let feature = features.next().unwrap();
 
-            let dt = FixedOffset::east(-5 * hour_secs)
-                .ymd(2011, 7, 14)
-                .and_hms(19, 43, 37);
+            let dt = FixedOffset::east_opt(-5 * hour_secs)
+                .unwrap()
+                .with_ymd_and_hms(2011, 7, 14, 19, 43, 37)
+                .unwrap();
 
-            let d = FixedOffset::east(0).ymd(2018, 1, 4).and_hms(0, 0, 0);
+            let d = FixedOffset::east_opt(0)
+                .unwrap()
+                .with_ymd_and_hms(2018, 1, 4, 0, 0, 0)
+                .unwrap();
 
             assert_eq!(feature.field_as_datetime_by_name("dt").unwrap(), Some(dt));
 
