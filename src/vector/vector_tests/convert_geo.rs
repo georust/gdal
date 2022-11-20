@@ -5,7 +5,7 @@ use crate::vector::{Geometry, ToGdal};
 #[test]
 fn test_import_export_point() {
     let wkt = "POINT (1 2)";
-    let coord = geo_types::Coordinate { x: 1., y: 2. };
+    let coord = geo_types::Coord { x: 1., y: 2. };
     let geo = geo_types::Geometry::Point(geo_types::Point(coord));
 
     assert_eq!(
@@ -19,9 +19,9 @@ fn test_import_export_point() {
 fn test_import_export_multipoint() {
     let wkt = "MULTIPOINT (0 0,0 1,1 2)";
     let coord = vec![
-        geo_types::Point(geo_types::Coordinate { x: 0., y: 0. }),
-        geo_types::Point(geo_types::Coordinate { x: 0., y: 1. }),
-        geo_types::Point(geo_types::Coordinate { x: 1., y: 2. }),
+        geo_types::Point(geo_types::Coord { x: 0., y: 0. }),
+        geo_types::Point(geo_types::Coord { x: 0., y: 1. }),
+        geo_types::Point(geo_types::Coord { x: 1., y: 2. }),
     ];
     let geo = geo_types::Geometry::MultiPoint(geo_types::MultiPoint(coord));
 
@@ -36,9 +36,9 @@ fn test_import_export_multipoint() {
 fn test_import_export_linestring() {
     let wkt = "LINESTRING (0 0,0 1,1 2)";
     let coord = vec![
-        geo_types::Coordinate { x: 0., y: 0. },
-        geo_types::Coordinate { x: 0., y: 1. },
-        geo_types::Coordinate { x: 1., y: 2. },
+        geo_types::Coord { x: 0., y: 0. },
+        geo_types::Coord { x: 0., y: 1. },
+        geo_types::Coord { x: 1., y: 2. },
     ];
     let geo = geo_types::Geometry::LineString(geo_types::LineString(coord));
 
@@ -54,14 +54,14 @@ fn test_import_export_multilinestring() {
     let wkt = "MULTILINESTRING ((0 0,0 1,1 2),(3 3,3 4,4 5))";
     let strings = vec![
         geo_types::LineString(vec![
-            geo_types::Coordinate { x: 0., y: 0. },
-            geo_types::Coordinate { x: 0., y: 1. },
-            geo_types::Coordinate { x: 1., y: 2. },
+            geo_types::Coord { x: 0., y: 0. },
+            geo_types::Coord { x: 0., y: 1. },
+            geo_types::Coord { x: 1., y: 2. },
         ]),
         geo_types::LineString(vec![
-            geo_types::Coordinate { x: 3., y: 3. },
-            geo_types::Coordinate { x: 3., y: 4. },
-            geo_types::Coordinate { x: 4., y: 5. },
+            geo_types::Coord { x: 3., y: 3. },
+            geo_types::Coord { x: 3., y: 4. },
+            geo_types::Coord { x: 4., y: 5. },
         ]),
     ];
     let geo = geo_types::Geometry::MultiLineString(geo_types::MultiLineString(strings));
@@ -75,23 +75,23 @@ fn test_import_export_multilinestring() {
 
 fn square(x0: isize, y0: isize, x1: isize, y1: isize) -> geo_types::LineString<f64> {
     geo_types::LineString(vec![
-        geo_types::Coordinate {
+        geo_types::Coord {
             x: x0 as f64,
             y: y0 as f64,
         },
-        geo_types::Coordinate {
+        geo_types::Coord {
             x: x0 as f64,
             y: y1 as f64,
         },
-        geo_types::Coordinate {
+        geo_types::Coord {
             x: x1 as f64,
             y: y1 as f64,
         },
-        geo_types::Coordinate {
+        geo_types::Coord {
             x: x1 as f64,
             y: y0 as f64,
         },
-        geo_types::Coordinate {
+        geo_types::Coord {
             x: x0 as f64,
             y: y0 as f64,
         },
@@ -146,12 +146,12 @@ fn test_import_export_multipolygon() {
 #[test]
 fn test_import_export_geometrycollection() {
     let wkt = "GEOMETRYCOLLECTION (POINT (1 2),LINESTRING (0 0,0 1,1 2))";
-    let coord = geo_types::Coordinate { x: 1., y: 2. };
+    let coord = geo_types::Coord { x: 1., y: 2. };
     let point = geo_types::Geometry::Point(geo_types::Point(coord));
     let coords = vec![
-        geo_types::Coordinate { x: 0., y: 0. },
-        geo_types::Coordinate { x: 0., y: 1. },
-        geo_types::Coordinate { x: 1., y: 2. },
+        geo_types::Coord { x: 0., y: 0. },
+        geo_types::Coord { x: 0., y: 1. },
+        geo_types::Coord { x: 1., y: 2. },
     ];
     let linestring = geo_types::Geometry::LineString(geo_types::LineString(coords));
     let collection = geo_types::GeometryCollection(vec![point, linestring]);
