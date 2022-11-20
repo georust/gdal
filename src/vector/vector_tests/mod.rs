@@ -761,6 +761,8 @@ mod tests {
 
     #[test]
     fn test_write_features() {
+        use std::fs;
+
         {
             let driver = DriverManager::get_driver_by_name("GeoJSON").unwrap();
             let mut ds = driver
@@ -798,6 +800,7 @@ mod tests {
         );
         assert_eq!(ft.field("Value").unwrap().unwrap().into_real(), Some(45.78));
         assert_eq!(ft.field("Int_value").unwrap().unwrap().into_int(), Some(1));
+        fs::remove_file(fixture!("output.geojson")).unwrap();
     }
 
     #[test]
