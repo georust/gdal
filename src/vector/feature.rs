@@ -7,7 +7,7 @@ use std::convert::TryInto;
 use std::ffi::{CString, NulError};
 use std::ptr;
 
-use chrono::{DateTime, Datelike, FixedOffset, NaiveDate, TimeZone, Timelike};
+use chrono::{DateTime, Datelike, FixedOffset, LocalResult, NaiveDate, TimeZone, Timelike};
 
 use crate::errors::*;
 use std::slice;
@@ -429,17 +429,24 @@ impl<'a> Feature<'a> {
             (tzflag as i32 - 100) * 15 * 60
         };
         let rv = FixedOffset::east_opt(tzoffset_secs)
-            .ok_or_else(|| GdalError::BadArgument("Invalid offset".to_string()))?;
-        rv.with_ymd_and_hms(
-            year as i32,
-            month as u32,
-            day as u32,
-            hour as u32,
-            minute as u32,
-            second as u32,
-        )
-        .single()
-        .ok_or_else(|| GdalError::BadArgument("Invalid datetime".to_string()))
+            .ok_or_else(|| GdalError::DateError(tzoffset_secs.to_string()))?
+            .with_ymd_and_hms(
+                year as i32,
+                month as u32,
+                day as u32,
+                hour as u32,
+                minute as u32,
+                second as u32,
+            );
+        match rv {
+            LocalResult::None => Err(
+                GdalError::DateError(format!("Unable to reconstruct valid date from fields: {year}, {month}, {day}, {hour}, {minute}, {second}"))
+            ),
+            LocalResult::Single(d) => Ok(d),
+            LocalResult::Ambiguous(d1, d2) => Err(
+                GdalError::DateError(format!("ambiguous date conversion; either '{d1}' or '{d2}'"))
+            )
+        }
     }
 
     /// Get the field's geometry.
@@ -622,13 +629,16 @@ impl<'a> Feature<'a> {
             FieldValue::RealValue(value) => self.set_field_double(field_name, *value),
             FieldValue::RealListValue(value) => self.set_field_double_list(field_name, value),
             FieldValue::DateValue(value) => {
-                let naive_datetime = value
+
+                let dv = value
                     .and_hms_opt(0, 0, 0)
-                    .ok_or_else(|| GdalError::BadArgument("Bad datetime".to_string()))?;
-                self.set_field_datetime(
-                    field_name,
-                    DateTime::from_local(naive_datetime, FixedOffset::east_opt(0).unwrap()),
-                )
+                    .ok_or_else(|| GdalError::DateError("offset to midnight".into()))?;
+                let dt = DateTime::from_utc(
+                    dv,
+                    FixedOffset::east_opt(0)
+                        .ok_or_else(|| GdalError::DateError("utc offset".into()))?,
+                );
+                self.set_field_datetime(field_name, dt)
             }
             FieldValue::DateTimeValue(value) => self.set_field_datetime(field_name, *value),
         }
@@ -762,7 +772,7 @@ impl FieldValue {
         }
     }
 
-    /// Interpret the value as `Date`. Returns `None` if the value is something else.
+    /// Interpret the value as `NaiveDate`. Returns `None` if the value is something else.
     pub fn into_date(self) -> Option<NaiveDate> {
         match self {
             FieldValue::DateValue(rv) => Some(rv),
