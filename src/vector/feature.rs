@@ -629,7 +629,6 @@ impl<'a> Feature<'a> {
             FieldValue::RealValue(value) => self.set_field_double(field_name, *value),
             FieldValue::RealListValue(value) => self.set_field_double_list(field_name, value),
             FieldValue::DateValue(value) => {
-
                 let dv = value
                     .and_hms_opt(0, 0, 0)
                     .ok_or_else(|| GdalError::DateError("offset to midnight".into()))?;
