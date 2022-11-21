@@ -856,9 +856,7 @@ mod tests {
             open_flags: GdalOpenFlags::GDAL_OF_UPDATE,
             ..DatasetOptions::default()
         };
-
         let tmp_file = TempFixture::empty("test.s3db");
-
         std::fs::copy(fixture!("three_layer_ds.s3db"), &tmp_file).unwrap();
         let ds = Dataset::open_ex(&tmp_file, ds_options).unwrap();
         let mut layer = ds.layer(0).unwrap();
