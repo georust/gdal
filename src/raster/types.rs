@@ -248,14 +248,14 @@ impl Display for GdalDataType {
     }
 }
 
-/// Converts from a possible [`GDALDataType`] ordinal value to a [`GdalTypeDescriptor`].
+/// Converts from a possible [`GDALDataType`] ordinal value to a [`GdalDataType`] (note case).
 ///
 /// # Example
 ///
 /// ```rust, no_run
 /// use gdal::raster::GdalDataType;
 /// let gdt: GdalDataType = 3.try_into().unwrap();
-/// println!("{gdt:#?}")
+/// assert_eq!(gdt.name(), "Int16");
 /// ```
 impl TryFrom<u32> for GdalDataType {
     type Error = GdalError;
@@ -286,7 +286,7 @@ impl TryFrom<u32> for GdalDataType {
     }
 }
 
-/// Return type for [`GdalTypeDescriptor::adjust_value`].
+/// Return type for [`GdalDataType::adjust_value`].
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum AdjustedValue {
     /// Value was not changed
@@ -310,7 +310,7 @@ impl From<AdjustedValue> for f64 {
 /// Type-level constraint for bounding primitive numeric values for generic
 /// functions requiring a [`GDALDataType`].
 ///
-/// See [`GdalTypeDescriptor`] for access to metadata describing the data type.
+/// See [`GdalDataType`] for access to metadata describing the data type.
 pub trait GdalType {
     /// Get the [`GDALDataType`] ordinal value used in `gdal_sys` to represent a GDAL cell/pixel
     /// data type.

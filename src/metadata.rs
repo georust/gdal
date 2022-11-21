@@ -6,7 +6,10 @@ use std::ffi::CString;
 
 /// General-Purpose Metadata API
 ///
-/// The [`Metadata`] trait exposes a simple general-purpose metadata model for both raster and vector datasets.
+/// The [`Metadata`] trait exposes a simple, general-purpose metadata model for various types
+/// in the GDAL datamodel, including [`Driver`](crate::Driver),
+/// [`Dataset`](crate::Dataset), [`RasterBand`](crate::raster::RasterBand),
+/// and [`Layer`](crate::vector::Layer).
 /// These data are comprised of key-value strings, organized under parent keys called "domains".
 /// This includes the empty-string (`""`) root domain. There's even an `xml:` domain with it's own
 /// world of content.
@@ -18,7 +21,7 @@ use std::ffi::CString;
 /// Reading the _Metadata_ section in the [GDAL Raster Data Model](https://gdal.org/user/raster_data_model.html#metadata)
 /// document can help if you need to deep, fine-grained metadata access, or examples on how it is used.
 ///
-/// ## Example
+/// # Example
 ///
 /// ```rust, no_run
 /// use gdal::{Dataset, Metadata};
@@ -41,6 +44,19 @@ use std::ffi::CString;
 pub trait Metadata: MajorObject {
     /// For most [`crate::Dataset`]s, method returns this is the originating filename.
     /// For [`crate::raster::RasterBand`]s it is a description (if supported) or `""`.
+    ///
+    /// # Example
+    ///
+    /// ```rust, no_run
+    /// use gdal::{Dataset, Metadata};
+    /// # fn main() -> gdal::errors::Result<()> {
+    /// let dataset = Dataset::open("fixtures/tinymarble.tif")?;
+    /// // `description` on a `Dataset` is usually the file name.
+    /// let desc = dataset.description()?;
+    /// assert_eq!(desc, "fixtures/tinymarble.tif");
+    /// # Ok(())
+    /// # }
+    /// ```
     fn description(&self) -> Result<String> {
         let c_res = unsafe { gdal_sys::GDALGetDescription(self.gdal_object_ptr()) };
         if c_res.is_null() {
@@ -49,6 +65,24 @@ pub trait Metadata: MajorObject {
         Ok(_string(c_res))
     }
 
+    /// Metadata in GDAL is partitioned into namespaces, knows as "domains" in the
+    /// [GDAL Data Model](https://gdal.org/user/raster_data_model.html#metadata).
+    /// GDAL types with metadata (a.k.a. "Major Objects") have a default or "root" domain
+    /// identified by the empty string (`""`).
+    /// Specific "Major Object" types may have other conventionally recognized domains.
+    /// For example, in raster [`Dataset`][crate::Dataset]s you may come across the domains
+    /// `SUBDATASETS`, `IMAGE_STRUCTURE`, `RPC`, `IMAGERY`, `xml:`, etc.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use gdal::{Dataset, Metadata};
+    /// # fn main() -> gdal::errors::Result<()> {
+    /// let dataset = Dataset::open("fixtures/labels.tif")?;
+    /// assert!(dataset.metadata_domains().contains(&"IMAGE_STRUCTURE".to_string()));
+    /// # Ok(())
+    /// # }
+    /// ```
     fn metadata_domains(&self) -> Vec<String> {
         let mut domains = Vec::new();
         let c_res = unsafe { gdal_sys::GDALGetMetadataDomainList(self.gdal_object_ptr()) };
@@ -61,6 +95,24 @@ pub trait Metadata: MajorObject {
         domains
     }
 
+    /// Get all the metadata values within the given `domain`. Returns `None` if
+    /// domain is not defined.
+    /// Entries in the returned `Vec<String>` are formatted as “Name=value” pairs
+    ///
+    /// # Arguments
+    ///
+    /// * domain – the domain of interest. Use `“”` for the default domain.
+    ///
+    /// # Example
+    ///
+    /// ```rust, no_run
+    /// use gdal::{Dataset, Metadata};
+    /// # fn main() -> gdal::errors::Result<()> {
+    /// let dataset = Dataset::open("fixtures/labels.tif")?;
+    /// assert_eq!(dataset.metadata_domain("IMAGE_STRUCTURE").unwrap(),vec!["INTERLEAVE=BAND"] );
+    /// # Ok(())
+    /// # }
+    /// ```
     fn metadata_domain(&self, domain: &str) -> Option<Vec<String>> {
         let mut metadata = Vec::new();
         if let Ok(c_domain) = CString::new(domain.to_owned()) {
@@ -77,6 +129,18 @@ pub trait Metadata: MajorObject {
         Some(metadata)
     }
 
+    /// Get a single metadata entry, as indicated by `key` and `domain`.
+    ///
+    /// # Example
+    ///
+    /// ```rust, no_run
+    /// use gdal::{Dataset, Metadata};
+    /// # fn main() -> gdal::errors::Result<()> {
+    /// let dataset = Dataset::open("fixtures/labels.tif")?;
+    /// assert_eq!(dataset.metadata_item("INTERLEAVE", "IMAGE_STRUCTURE").unwrap(),"BAND");
+    /// # Ok(())
+    /// # }
+    /// ```
     fn metadata_item(&self, key: &str, domain: &str) -> Option<String> {
         if let Ok(c_key) = CString::new(key.to_owned()) {
             if let Ok(c_domain) = CString::new(domain.to_owned()) {
@@ -95,18 +159,26 @@ pub trait Metadata: MajorObject {
         None
     }
 
-    /// Get an iterator over [`MajorObject`] metadata.
-    fn metadata_iter(&self) -> MetadataIter
-    where
-        Self: Sized,
-    {
-        MetadataIter::new(self)
-    }
-
+    /// Set a metadata item in given `domain` at given `key`.
+    ///
+    /// # Example
+    ///
+    /// ```rust, no_run
+    /// use gdal::{DriverManager, Metadata};
+    /// # fn main() -> gdal::errors::Result<()> {
+    /// let mut driver = DriverManager::get_driver_by_name("MEM")?;
+    /// let (domain, key, value) = ("FOOBAR", "fake", "data");
+    /// assert!(driver.metadata_domain(domain).is_none());
+    /// driver.set_metadata_item(key, value, domain)?;
+    /// assert!(driver.metadata_domain(domain).is_some());
+    /// assert_eq!(driver.metadata_item(key, domain), Some(value.to_string()));
+    /// # Ok(())
+    /// # }
+    /// ```
     fn set_metadata_item(&mut self, key: &str, value: &str, domain: &str) -> Result<()> {
-        let c_key = CString::new(key.to_owned())?;
-        let c_domain = CString::new(domain.to_owned())?;
-        let c_value = CString::new(value.to_owned())?;
+        let c_key = CString::new(key)?;
+        let c_domain = CString::new(domain)?;
+        let c_value = CString::new(value)?;
 
         let c_res = unsafe {
             gdal_sys::GDALSetMetadataItem(
@@ -125,15 +197,47 @@ pub trait Metadata: MajorObject {
     /// For Datasets this sets the dataset name; normally
     /// application code should not set the "description" for
     /// GDALDatasets. For RasterBands it is actually a description
-    /// (if supported) or "".
+    /// (if supported) or `""`.
     fn set_description(&mut self, description: &str) -> Result<()> {
         let c_description = CString::new(description.to_owned())?;
         unsafe { gdal_sys::GDALSetDescription(self.gdal_object_ptr(), c_description.as_ptr()) };
         Ok(())
     }
+
+    /// Get an iterator over metadata entries, across all domains.
+    ///
+    /// # Example
+    ///
+    /// ```rust, no_run
+    /// use gdal::{Dataset, Metadata, MetadataEntry};
+    /// # fn main() -> gdal::errors::Result<()> {
+    /// let dataset = Dataset::open("fixtures/tinymarble.tif")?;
+    /// for MetadataEntry { domain, key, value } in dataset.metadata_iter() {
+    ///   let domain = if domain == "" { "DEFAULT".to_string() } else { domain };
+    ///   println!("{domain}: {key}={value}");
+    /// }
+    /// # Ok(())
+    /// # }
+    /// ```
+    /// Output:
+    /// ```text
+    /// IMAGE_STRUCTURE: INTERLEAVE=PIXEL
+    /// DEFAULT: AREA_OR_POINT=Area
+    /// ...
+    /// DERIVED_SUBDATASETS: DERIVED_SUBDATASET_1_NAME=DERIVED_SUBDATASET:LOGAMPLITUDE:fixtures/tinymarble.tif
+    /// DERIVED_SUBDATASETS: DERIVED_SUBDATASET_1_DESC=log10 of amplitude of input bands from fixtures/tinymarble.tif
+    /// ```
+    fn metadata_iter(&self) -> MetadataIter
+    where
+        Self: Sized,
+    {
+        MetadataIter::new(self)
+    }
 }
 
-/// Standalone metadata entry.
+/// Standalone metadata entry, as returned by iterator from [`Metadata::metadata_iter`].
+///
+/// Defined by it's parent `domain`, and `key`/`value` pair.
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd)]
 pub struct MetadataEntry {
     pub domain: String,
@@ -166,8 +270,9 @@ pub struct MetadataIter<'a> {
     stream: Box<dyn Iterator<Item = MetadataEntry> + 'a>,
 }
 
+/// Iterator over metadata entries
 impl<'a> MetadataIter<'a> {
-    pub fn new<P: Metadata>(parent: &'a P) -> Self {
+    fn new<P: Metadata>(parent: &'a P) -> Self {
         let stream = parent
             .metadata_domains()
             .into_iter()
@@ -198,6 +303,21 @@ impl<'a> Iterator for MetadataIter<'a> {
 mod tests {
     use crate::metadata::MetadataEntry;
     use crate::*;
+
+    // Temporary: Remove after https://github.com/georust/gdal/pull/342
+    macro_rules! fixture {
+        ($name:expr) => {
+            std::path::Path::new(file!())
+                .parent()
+                .unwrap()
+                .parent()
+                .unwrap()
+                .join("fixtures")
+                .as_path()
+                .join($name)
+                .as_path()
+        };
+    }
 
     #[test]
     fn test_get_dataset_driver() {
@@ -285,6 +405,7 @@ mod tests {
         band.set_description(description).unwrap();
         assert_eq!(band.description().unwrap(), description);
     }
+
     #[test]
     fn test_md_iter() {
         // Driver metadata...
