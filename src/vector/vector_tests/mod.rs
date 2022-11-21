@@ -3,6 +3,7 @@ use super::{
     OGRwkbGeometryType, OwnedLayer,
 };
 use crate::spatial_ref::SpatialRef;
+use crate::test_utils::TempFixture;
 use crate::{assert_almost_eq, Dataset, DatasetOptions, GdalOpenFlags};
 mod convert_geo;
 mod sql;
@@ -788,17 +789,19 @@ mod tests {
             // dataset is closed here
         }
 
-        let ds = Dataset::open(fixture!("output.geojson")).unwrap();
+        {
+            let ds = Dataset::open(fixture!("output.geojson")).unwrap();
+            let mut layer = ds.layer(0).unwrap();
+            let ft = layer.features().next().unwrap();
+            assert_eq!(ft.geometry().wkt().unwrap(), "POINT (1 2)");
+            assert_eq!(
+                ft.field("Name").unwrap().unwrap().into_string(),
+                Some("Feature 1".to_string())
+            );
+            assert_eq!(ft.field("Value").unwrap().unwrap().into_real(), Some(45.78));
+            assert_eq!(ft.field("Int_value").unwrap().unwrap().into_int(), Some(1));
+        }
         fs::remove_file(fixture!("output.geojson")).unwrap();
-        let mut layer = ds.layer(0).unwrap();
-        let ft = layer.features().next().unwrap();
-        assert_eq!(ft.geometry().wkt().unwrap(), "POINT (1 2)");
-        assert_eq!(
-            ft.field("Name").unwrap().unwrap().into_string(),
-            Some("Feature 1".to_string())
-        );
-        assert_eq!(ft.field("Value").unwrap().unwrap().into_real(), Some(45.78));
-        assert_eq!(ft.field("Int_value").unwrap().unwrap().into_int(), Some(1));
     }
 
     #[test]
@@ -855,9 +858,9 @@ mod tests {
             open_flags: GdalOpenFlags::GDAL_OF_UPDATE,
             ..DatasetOptions::default()
         };
-        let tmp_file = "/tmp/test.s3db";
-        std::fs::copy(fixture!("three_layer_ds.s3db"), tmp_file).unwrap();
-        let ds = Dataset::open_ex(tmp_file, ds_options).unwrap();
+        let tmp_file = TempFixture::empty("test.s3db");
+        std::fs::copy(fixture!("three_layer_ds.s3db"), &tmp_file).unwrap();
+        let ds = Dataset::open_ex(&tmp_file, ds_options).unwrap();
         let mut layer = ds.layer(0).unwrap();
         let fids: Vec<u64> = layer.features().map(|f| f.fid().unwrap()).collect();
         let feature = layer.feature(fids[0]).unwrap();
@@ -866,7 +869,7 @@ mod tests {
         layer.set_feature(feature).ok();
 
         // now we check that the field is 1.
-        let ds = Dataset::open(tmp_file).unwrap();
+        let ds = Dataset::open(&tmp_file).unwrap();
         let layer = ds.layer(0).unwrap();
         let feature = layer.feature(fids[0]).unwrap();
         let value = feature.field("id").unwrap().unwrap().into_int().unwrap();
