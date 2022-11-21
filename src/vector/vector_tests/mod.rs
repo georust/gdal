@@ -3,9 +3,8 @@ use super::{
     OGRwkbGeometryType, OwnedLayer,
 };
 use crate::spatial_ref::SpatialRef;
+use crate::test_utils::TempFixture;
 use crate::{assert_almost_eq, Dataset, DatasetOptions, GdalOpenFlags};
-use std::path::Path;
-use tempfile::tempdir;
 mod convert_geo;
 mod sql;
 
@@ -858,12 +857,10 @@ mod tests {
             ..DatasetOptions::default()
         };
 
-        let tmpdir = tempdir().unwrap();
-        let tmp_pathbuf = tmpdir.path().join("test.s3db");
-        let tmp_file = Path::new(&tmp_pathbuf);
+        let tmp_file = TempFixture::empty("test.s3db");
 
-        std::fs::copy(fixture!("three_layer_ds.s3db"), tmp_file).unwrap();
-        let ds = Dataset::open_ex(tmp_file, ds_options).unwrap();
+        std::fs::copy(fixture!("three_layer_ds.s3db"), &tmp_file).unwrap();
+        let ds = Dataset::open_ex(&tmp_file, ds_options).unwrap();
         let mut layer = ds.layer(0).unwrap();
         let fids: Vec<u64> = layer.features().map(|f| f.fid().unwrap()).collect();
         let feature = layer.feature(fids[0]).unwrap();
@@ -872,7 +869,7 @@ mod tests {
         layer.set_feature(feature).ok();
 
         // now we check that the field is 1.
-        let ds = Dataset::open(tmp_file).unwrap();
+        let ds = Dataset::open(&tmp_file).unwrap();
         let layer = ds.layer(0).unwrap();
         let feature = layer.feature(fids[0]).unwrap();
         let value = feature.field("id").unwrap().unwrap().into_int().unwrap();

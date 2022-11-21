@@ -10,7 +10,6 @@ use crate::vsi::unlink_mem_file;
 use crate::DriverManager;
 use gdal_sys::GDALDataType;
 use std::path::Path;
-use tempfile::tempdir;
 
 #[cfg(feature = "ndarray")]
 use ndarray::arr2;
@@ -309,8 +308,7 @@ fn test_create_with_band_type_with_options() {
         },
     ];
 
-    let tmp_dir = tempdir().unwrap();
-    let tmp_filename = tmp_dir.path().join("test.tif");
+    let tmp_filename = TempFixture::empty("test.tif");
     {
         let dataset = driver
             .create_with_band_type_with_options::<u8, _>(&tmp_filename, 256, 256, 1, &options)
