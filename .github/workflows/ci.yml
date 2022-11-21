@@ -212,3 +212,37 @@ jobs:
         run: cargo build ${{ matrix.features }} --verbose
       - name: Run tests
         run: cargo test ${{ matrix.features }} --verbose
+
+  windows:
+    name: "ci windows-2019"
+    runs-on: windows-2019
+
+    strategy:
+      matrix:
+        features: ["", "--all-features"]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install GDAL
+      shell: bash
+      run: |
+        curl -S -O https://download.gisinternals.com/sdk/downloads/release-1928-x64-dev.zip
+        7z x -aoa release-1928-x64-dev.zip
+    - name: Build and test
+      shell: bash
+      run: |
+        rustc -Vv
+        cargo -V
+        vswhere
+
+        export GDAL_HOME=$PWD/release-1928-x64
+        export PROJ_LIB=$GDAL_HOME/bin/proj7/share
+        export PATH=$GDAL_HOME/bin:$GDAL_HOME/bin/gdal/apps:$PATH
+        # Workaround for https://github.com/actions/virtual-environments/issues/3316
+        export PATH=/c/msys64/mingw64/bin:$PATH
+
+        gdalinfo --version
+        export GDAL_VERSION=$(gdalinfo --version | sed 's/GDAL \(.*\), .*/\1/')
+
+        cargo build ${{ matrix.features }} -j 1 --tests --verbose
+        cargo test ${{ matrix.features }} --verbose
