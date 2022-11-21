@@ -789,16 +789,18 @@ mod tests {
             // dataset is closed here
         }
 
-        let ds = Dataset::open(fixture!("output.geojson")).unwrap();
-        let mut layer = ds.layer(0).unwrap();
-        let ft = layer.features().next().unwrap();
-        assert_eq!(ft.geometry().wkt().unwrap(), "POINT (1 2)");
-        assert_eq!(
-            ft.field("Name").unwrap().unwrap().into_string(),
-            Some("Feature 1".to_string())
-        );
-        assert_eq!(ft.field("Value").unwrap().unwrap().into_real(), Some(45.78));
-        assert_eq!(ft.field("Int_value").unwrap().unwrap().into_int(), Some(1));
+        {
+            let ds = Dataset::open(fixture!("output.geojson")).unwrap();
+            let mut layer = ds.layer(0).unwrap();
+            let ft = layer.features().next().unwrap();
+            assert_eq!(ft.geometry().wkt().unwrap(), "POINT (1 2)");
+            assert_eq!(
+                ft.field("Name").unwrap().unwrap().into_string(),
+                Some("Feature 1".to_string())
+            );
+            assert_eq!(ft.field("Value").unwrap().unwrap().into_real(), Some(45.78));
+            assert_eq!(ft.field("Int_value").unwrap().unwrap().into_int(), Some(1));
+        }
         fs::remove_file(fixture!("output.geojson")).unwrap();
     }
 
