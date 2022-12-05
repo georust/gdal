@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 
-use crate::test_utils::fixture;
 use crate::{
+    test_utils::fixture,
     vector::{sql, Geometry, LayerAccess},
     Dataset,
 };
