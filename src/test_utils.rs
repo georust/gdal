@@ -43,9 +43,7 @@ impl AsRef<Path> for TempFixture {
     }
 }
 
-#[macro_export]
-macro_rules! fixture {
-    ($name:expr) => {
-        std::path::Path::new(env!("FIXTURES_DIR")).join($name)
-    };
+/// Returns the fully qualified path to `filename` in `${CARGO_MANIFEST_DIR}/fixtures`.
+pub(crate) fn fixture(filename: &str) -> PathBuf {
+    Path::new(env!("FIXTURES_DIR")).join(filename)
 }
