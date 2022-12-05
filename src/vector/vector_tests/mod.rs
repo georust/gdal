@@ -523,7 +523,7 @@ mod tests {
     #[test]
     fn test_geom_accessors() {
         with_feature("roads.geojson", 236194095, |feature| {
-            let geom = feature.geometry();
+            let geom = feature.geometry().unwrap();
             assert_eq!(geom.geometry_type(), OGRwkbGeometryType::wkbLineString);
             let coords = geom.get_point_vec();
             assert_eq!(
@@ -587,7 +587,7 @@ mod tests {
     #[test]
     fn test_wkt() {
         with_feature("roads.geojson", 236194095, |feature| {
-            let wkt = feature.geometry().wkt().unwrap();
+            let wkt = feature.geometry().unwrap().wkt().unwrap();
             let wkt_ok = format!(
                 "{}{}",
                 "LINESTRING (26.1019276 44.4302748,",
@@ -600,7 +600,7 @@ mod tests {
     #[test]
     fn test_json() {
         with_feature("roads.geojson", 236194095, |feature| {
-            let json = feature.geometry().json();
+            let json = feature.geometry().unwrap().json();
             let json_ok = format!(
                 "{}{}{}{}",
                 "{ \"type\": \"LineString\", \"coordinates\": [ ",
@@ -778,7 +778,7 @@ mod tests {
             let ds = Dataset::open(fixture("output.geojson")).unwrap();
             let mut layer = ds.layer(0).unwrap();
             let ft = layer.features().next().unwrap();
-            assert_eq!(ft.geometry().wkt().unwrap(), "POINT (1 2)");
+            assert_eq!(ft.geometry().unwrap().wkt().unwrap(), "POINT (1 2)");
             assert_eq!(
                 ft.field("Name").unwrap().unwrap().into_string(),
                 Some("Feature 1".to_string())
