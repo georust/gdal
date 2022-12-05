@@ -449,13 +449,27 @@ impl<'a> Feature<'a> {
         }
     }
 
-    /// Get the field's geometry.
+    /// Get the feature's geometry.
+    /// 
+    /// # Panics
+    /// 
+    /// This function will panic if the feature does not have any geometry. 
+    /// When working with data that may not have geometry use the `has_geometry` function to guard calls to `geometry`.
     pub fn geometry(&self) -> &Geometry {
+        if self.geometry.is_empty() {
+            panic!("gdal: Feature {:?} has no geometry", self.fid())
+        }
+
         if !self.geometry[0].has_gdal_ptr() {
             let c_geom = unsafe { gdal_sys::OGR_F_GetGeometryRef(self.c_feature) };
             unsafe { self.geometry[0].set_c_geometry(c_geom) };
         }
         &self.geometry[0]
+    }
+
+    /// Check if this feature has geometry
+    pub fn has_geometry(&self) -> bool{
+        return self.geometry.len() > 0
     }
 
     pub fn geometry_by_name(&self, field_name: &str) -> Result<&Geometry> {
@@ -476,7 +490,7 @@ impl<'a> Feature<'a> {
         if idx >= self.geometry.len() {
             return Err(GdalError::InvalidFieldIndex {
                 index: idx,
-                method_name: "geometry_by_name",
+                method_name: "geometry_by_index",
             });
         }
         if !self.geometry[idx].has_gdal_ptr() {
