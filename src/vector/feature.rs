@@ -450,26 +450,17 @@ impl<'a> Feature<'a> {
     }
 
     /// Get the feature's geometry.
-    ///
-    /// # Panics
-    ///
-    /// This function will panic if the feature does not have any geometry.
-    /// When working with data that may not have geometry use the `has_geometry` function to guard calls to `geometry`.
-    pub fn geometry(&self) -> &Geometry {
-        if self.geometry.is_empty() {
-            panic!("gdal: Feature {:?} has no geometry", self.fid())
+    pub fn geometry(&self) -> Option<&Geometry> {
+        match self.geometry.first() {
+            Some(geom) => {
+                if !geom.has_gdal_ptr() {
+                    let c_geom = unsafe { gdal_sys::OGR_F_GetGeometryRef(self.c_feature) };
+                    unsafe { geom.set_c_geometry(c_geom) };
+                }
+                Some(geom)
+            }
+            None => None,
         }
-
-        if !self.geometry[0].has_gdal_ptr() {
-            let c_geom = unsafe { gdal_sys::OGR_F_GetGeometryRef(self.c_feature) };
-            unsafe { self.geometry[0].set_c_geometry(c_geom) };
-        }
-        &self.geometry[0]
-    }
-
-    /// Check if this feature has geometry
-    pub fn has_geometry(&self) -> bool {
-        !self.geometry.is_empty()
     }
 
     pub fn geometry_by_name(&self, field_name: &str) -> Result<&Geometry> {

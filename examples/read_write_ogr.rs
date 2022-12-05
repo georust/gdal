@@ -39,13 +39,18 @@ fn run() -> Result<()> {
     let defn = Defn::from_layer(&lyr);
 
     for feature_a in layer_a.features() {
-        // Get the original geometry:
-        let geom = feature_a.geometry();
-        // Get a new transformed geometry:
-        let new_geom = geom.transform(&htransform)?;
-        // Create the new feature, set its geometry:
+        // Create the new feature
         let mut ft = Feature::new(&defn)?;
-        ft.set_geometry(new_geom)?;
+
+        // Get the original geometry
+        if let Some(geom) = feature_a.geometry() {
+            // Get a new transformed geometry:
+            let new_geom = geom.transform(&htransform)?;
+
+            // Set the new feature's geometry
+            ft.set_geometry(new_geom)?;
+        }
+
         // copy each field value of the feature:
         for fd in &fields_defn {
             if let Some(value) = feature_a.field(&fd.0)? {
