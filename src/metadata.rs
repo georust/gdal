@@ -277,26 +277,12 @@ impl MetadataEntry {
 #[cfg(test)]
 mod tests {
     use crate::metadata::MetadataEntry;
+    use crate::test_utils::fixture;
     use crate::*;
-
-    // Temporary: Remove after https://github.com/georust/gdal/pull/342
-    macro_rules! fixture {
-        ($name:expr) => {
-            std::path::Path::new(file!())
-                .parent()
-                .unwrap()
-                .parent()
-                .unwrap()
-                .join("fixtures")
-                .as_path()
-                .join($name)
-                .as_path()
-        };
-    }
 
     #[test]
     fn test_get_dataset_driver() {
-        let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
+        let dataset = Dataset::open(fixture("tinymarble.png")).unwrap();
         let driver = dataset.driver();
         assert_eq!(driver.short_name(), "PNG");
         assert_eq!(driver.long_name(), "Portable Network Graphics");
@@ -310,7 +296,7 @@ mod tests {
 
     #[test]
     fn test_get_metadata_domains() {
-        let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
+        let dataset = Dataset::open(fixture("tinymarble.png")).unwrap();
         let mut domains = dataset.metadata_domains();
         if domains[0].is_empty() {
             domains.remove(0);
@@ -329,7 +315,7 @@ mod tests {
 
     #[test]
     fn test_get_metadata_domain() {
-        let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
+        let dataset = Dataset::open(fixture("tinymarble.png")).unwrap();
         let domain = "None";
         let meta = dataset.metadata_domain(domain);
         assert_eq!(meta, None);
@@ -341,7 +327,7 @@ mod tests {
 
     #[test]
     fn test_get_metadata_item() {
-        let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
+        let dataset = Dataset::open(fixture("tinymarble.png")).unwrap();
         let key = "None";
         let domain = "None";
         let meta = dataset.metadata_item(key, domain);
@@ -388,7 +374,7 @@ mod tests {
         driver.metadata().any(|e| e.key == "LIBGEOTIFF");
 
         // Dataset metadata...
-        let ds = Dataset::open(fixture!("m_3607824_se_17_1_20160620_sub.tif")).unwrap();
+        let ds = Dataset::open(fixture("m_3607824_se_17_1_20160620_sub.tif")).unwrap();
         assert_eq!(ds.metadata_item("AREA_OR_POINT", ""), Some("Area".into()));
         assert!(ds
             .metadata()
@@ -396,7 +382,7 @@ mod tests {
         assert!(ds.metadata().any(|e| e.domain == "DERIVED_SUBDATASETS"));
 
         // RasterBand metadata...
-        let ds = Dataset::open(fixture!("labels.tif")).unwrap();
+        let ds = Dataset::open(fixture("labels.tif")).unwrap();
         let band = ds.rasterband(1).unwrap();
         assert!(band.metadata().any(|e| e.key == "CLASSES"));
     }
