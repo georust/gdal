@@ -450,10 +450,10 @@ impl<'a> Feature<'a> {
     }
 
     /// Get the feature's geometry.
-    /// 
+    ///
     /// # Panics
-    /// 
-    /// This function will panic if the feature does not have any geometry. 
+    ///
+    /// This function will panic if the feature does not have any geometry.
     /// When working with data that may not have geometry use the `has_geometry` function to guard calls to `geometry`.
     pub fn geometry(&self) -> &Geometry {
         if self.geometry.is_empty() {
@@ -468,8 +468,8 @@ impl<'a> Feature<'a> {
     }
 
     /// Check if this feature has geometry
-    pub fn has_geometry(&self) -> bool{
-        return self.geometry.len() > 0
+    pub fn has_geometry(&self) -> bool {
+        return self.geometry.len() > 0;
     }
 
     pub fn geometry_by_name(&self, field_name: &str) -> Result<&Geometry> {
