@@ -469,7 +469,7 @@ impl<'a> Feature<'a> {
 
     /// Check if this feature has geometry
     pub fn has_geometry(&self) -> bool {
-        return self.geometry.len() > 0;
+        !self.geometry.is_empty()
     }
 
     pub fn geometry_by_name(&self, field_name: &str) -> Result<&Geometry> {
