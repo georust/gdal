@@ -1,14 +1,14 @@
 use std::collections::HashSet;
 
 use crate::{
-    fixture,
+    test_utils::fixture,
     vector::{sql, Geometry, LayerAccess},
     Dataset,
 };
 
 #[test]
 fn test_sql() {
-    let ds = Dataset::open(fixture!("roads.geojson")).unwrap();
+    let ds = Dataset::open(fixture("roads.geojson")).unwrap();
     let query = "SELECT kind, is_bridge, highway FROM roads WHERE highway = 'pedestrian'";
     let mut result_set = ds
         .execute_sql(query, None, sql::Dialect::DEFAULT)
@@ -44,7 +44,7 @@ fn test_sql() {
 #[test]
 fn test_sql_with_spatial_filter() {
     let query = "SELECT * FROM roads WHERE highway = 'pedestrian'";
-    let ds = Dataset::open(fixture!("roads.geojson")).unwrap();
+    let ds = Dataset::open(fixture("roads.geojson")).unwrap();
     let bbox = Geometry::bbox(26.1017, 44.4297, 26.1025, 44.4303).unwrap();
     let mut result_set = ds
         .execute_sql(query, Some(&bbox), sql::Dialect::DEFAULT)
@@ -75,7 +75,7 @@ fn test_sql_with_spatial_filter() {
 #[test]
 fn test_sql_with_dialect() {
     let query = "SELECT * FROM roads WHERE highway = 'pedestrian' and NumPoints(GEOMETRY) = 3";
-    let ds = Dataset::open(fixture!("roads.geojson")).unwrap();
+    let ds = Dataset::open(fixture("roads.geojson")).unwrap();
     let bbox = Geometry::bbox(26.1017, 44.4297, 26.1025, 44.4303).unwrap();
     let mut result_set = ds
         .execute_sql(query, Some(&bbox), sql::Dialect::SQLITE)
@@ -97,7 +97,7 @@ fn test_sql_with_dialect() {
 
 #[test]
 fn test_sql_empty_result() {
-    let ds = Dataset::open(fixture!("roads.geojson")).unwrap();
+    let ds = Dataset::open(fixture("roads.geojson")).unwrap();
     let query = "SELECT kind, is_bridge, highway FROM roads WHERE highway = 'jazz hands 👐'";
     let mut result_set = ds
         .execute_sql(query, None, sql::Dialect::DEFAULT)
@@ -109,7 +109,7 @@ fn test_sql_empty_result() {
 
 #[test]
 fn test_sql_no_result() {
-    let ds = Dataset::open(fixture!("roads.geojson")).unwrap();
+    let ds = Dataset::open(fixture("roads.geojson")).unwrap();
     let query = "ALTER TABLE roads ADD COLUMN fun integer";
     let result_set = ds.execute_sql(query, None, sql::Dialect::DEFAULT).unwrap();
     assert!(result_set.is_none());
@@ -117,7 +117,7 @@ fn test_sql_no_result() {
 
 #[test]
 fn test_sql_bad_query() {
-    let ds = Dataset::open(fixture!("roads.geojson")).unwrap();
+    let ds = Dataset::open(fixture("roads.geojson")).unwrap();
 
     let query = "SELECT nope FROM roads";
     let result_set = ds.execute_sql(query, None, sql::Dialect::DEFAULT);

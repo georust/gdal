@@ -42,3 +42,10 @@ impl AsRef<Path> for TempFixture {
         self.path()
     }
 }
+
+/// Returns the fully qualified path to `filename` in `${CARGO_MANIFEST_DIR}/fixtures`.
+pub(crate) fn fixture(filename: &str) -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("fixtures")
+        .join(filename)
+}

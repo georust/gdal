@@ -1,47 +1,30 @@
+use crate::spatial_ref::SpatialRef;
+use crate::test_utils::{fixture, TempFixture};
+use crate::{assert_almost_eq, Dataset, DatasetOptions, GdalOpenFlags};
+
 use super::{
     Feature, FeatureIterator, FieldValue, Geometry, Layer, LayerAccess, LayerCaps::*, OGRFieldType,
     OGRwkbGeometryType, OwnedLayer,
 };
-use crate::spatial_ref::SpatialRef;
-use crate::test_utils::TempFixture;
-use crate::{assert_almost_eq, Dataset, DatasetOptions, GdalOpenFlags};
+
 mod convert_geo;
 mod sql;
 
-#[macro_export]
-macro_rules! fixture {
-    ($name:expr) => {
-        std::path::Path::new(file!())
-            .parent()
-            .unwrap()
-            .parent()
-            .unwrap()
-            .parent()
-            .unwrap()
-            .parent()
-            .unwrap()
-            .join("fixtures")
-            .as_path()
-            .join($name)
-            .as_path()
-    };
-}
-
 #[test]
 fn test_layer_count() {
-    let ds = Dataset::open(fixture!("roads.geojson")).unwrap();
+    let ds = Dataset::open(fixture("roads.geojson")).unwrap();
     assert_eq!(ds.layer_count(), 1);
 }
 
 #[test]
 fn test_many_layer_count() {
-    let ds = Dataset::open(fixture!("three_layer_ds.s3db")).unwrap();
+    let ds = Dataset::open(fixture("three_layer_ds.s3db")).unwrap();
     assert_eq!(ds.layer_count(), 3);
 }
 
 #[test]
 fn test_layer_get_extent() {
-    let ds = Dataset::open(fixture!("roads.geojson")).unwrap();
+    let ds = Dataset::open(fixture("roads.geojson")).unwrap();
     let layer = ds.layer(0).unwrap();
     let extent = layer.get_extent().unwrap();
     assert_almost_eq(extent.MinX, 26.100768);
@@ -52,14 +35,14 @@ fn test_layer_get_extent() {
 
 #[test]
 fn test_layer_try_get_extent() {
-    let ds = Dataset::open(fixture!("roads.geojson")).unwrap();
+    let ds = Dataset::open(fixture("roads.geojson")).unwrap();
     let layer = ds.layer(0).unwrap();
     assert!(layer.try_get_extent().unwrap().is_none());
 }
 
 #[test]
 fn test_layer_spatial_ref() {
-    let ds = Dataset::open(fixture!("roads.geojson")).unwrap();
+    let ds = Dataset::open(fixture("roads.geojson")).unwrap();
     let layer = ds.layer(0).unwrap();
     let srs = layer.spatial_ref().unwrap();
     assert_eq!(srs.auth_code().unwrap(), 4326);
@@ -67,7 +50,7 @@ fn test_layer_spatial_ref() {
 
 #[test]
 fn test_layer_capabilities() {
-    let ds = Dataset::open(fixture!("roads.geojson")).unwrap();
+    let ds = Dataset::open(fixture("roads.geojson")).unwrap();
     let layer = ds.layer(0).unwrap();
 
     assert!(!layer.has_capability(OLCFastSpatialFilter));
@@ -81,7 +64,7 @@ fn ds_with_layer<F>(ds_name: &str, layer_name: &str, f: F)
 where
     F: Fn(Layer),
 {
-    let ds = Dataset::open(fixture!(ds_name)).unwrap();
+    let ds = Dataset::open(fixture(ds_name)).unwrap();
     let layer = ds.layer_by_name(layer_name).unwrap();
     f(layer);
 }
@@ -90,7 +73,7 @@ fn with_layer<F>(name: &str, f: F)
 where
     F: Fn(Layer),
 {
-    let ds = Dataset::open(fixture!(name)).unwrap();
+    let ds = Dataset::open(fixture(name)).unwrap();
     let layer = ds.layer(0).unwrap();
     f(layer);
 }
@@ -99,7 +82,7 @@ fn with_owned_layer<F>(name: &str, f: F)
 where
     F: Fn(OwnedLayer),
 {
-    let ds = Dataset::open(fixture!(name)).unwrap();
+    let ds = Dataset::open(fixture(name)).unwrap();
     let layer = ds.into_layer(0).unwrap();
     f(layer);
 }
@@ -120,12 +103,14 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use gdal_sys::OGRwkbGeometryType::{wkbLineString, wkbLinearRing, wkbPolygon};
+
     use crate::{
         errors::{GdalError, Result},
         DriverManager,
     };
-    use gdal_sys::OGRwkbGeometryType::{wkbLineString, wkbLinearRing, wkbPolygon};
+
+    use super::*;
 
     #[test]
     fn test_feature_count() {
@@ -168,7 +153,7 @@ mod tests {
 
     #[test]
     fn test_iterate_layers() {
-        let ds = Dataset::open(fixture!("three_layer_ds.s3db")).unwrap();
+        let ds = Dataset::open(fixture("three_layer_ds.s3db")).unwrap();
         let layers = ds.layers();
         assert_eq!(layers.size_hint(), (3, Some(3)));
         assert_eq!(layers.count(), 3);
@@ -176,7 +161,7 @@ mod tests {
 
     #[test]
     fn test_owned_layers() {
-        let ds = Dataset::open(fixture!("three_layer_ds.s3db")).unwrap();
+        let ds = Dataset::open(fixture("three_layer_ds.s3db")).unwrap();
 
         assert_eq!(ds.layer_count(), 3);
 
@@ -629,7 +614,7 @@ mod tests {
 
     #[test]
     fn test_schema() {
-        let ds = Dataset::open(fixture!("roads.geojson")).unwrap();
+        let ds = Dataset::open(fixture("roads.geojson")).unwrap();
         let layer = ds.layer(0).unwrap();
         // The layer name is "roads" in GDAL 2.2
         assert!(layer.name() == "OGRGeoJSON" || layer.name() == "roads");
@@ -655,7 +640,7 @@ mod tests {
 
     #[test]
     fn test_geom_fields() {
-        let ds = Dataset::open(fixture!("roads.geojson")).unwrap();
+        let ds = Dataset::open(fixture("roads.geojson")).unwrap();
         let layer = ds.layer(0).unwrap();
         let name_list = layer
             .defn()
@@ -678,7 +663,7 @@ mod tests {
 
     #[test]
     fn test_get_layer_by_name() {
-        let ds = Dataset::open(fixture!("roads.geojson")).unwrap();
+        let ds = Dataset::open(fixture("roads.geojson")).unwrap();
         // The layer name is "roads" in GDAL 2.2
         if let Ok(layer) = ds.layer_by_name("OGRGeoJSON") {
             assert_eq!(layer.name(), "OGRGeoJSON");
@@ -696,7 +681,7 @@ mod tests {
 
     #[test]
     fn test_spatial_filter() {
-        let ds = Dataset::open(fixture!("roads.geojson")).unwrap();
+        let ds = Dataset::open(fixture("roads.geojson")).unwrap();
         let mut layer = ds.layer(0).unwrap();
         assert_eq!(layer.features().count(), 21);
 
@@ -765,7 +750,7 @@ mod tests {
         {
             let driver = DriverManager::get_driver_by_name("GeoJSON").unwrap();
             let mut ds = driver
-                .create_vector_only(fixture!("output.geojson"))
+                .create_vector_only(fixture("output.geojson"))
                 .unwrap();
             let mut layer = ds.create_layer(Default::default()).unwrap();
             layer
@@ -790,7 +775,7 @@ mod tests {
         }
 
         {
-            let ds = Dataset::open(fixture!("output.geojson")).unwrap();
+            let ds = Dataset::open(fixture("output.geojson")).unwrap();
             let mut layer = ds.layer(0).unwrap();
             let ft = layer.features().next().unwrap();
             assert_eq!(ft.geometry().wkt().unwrap(), "POINT (1 2)");
@@ -801,7 +786,7 @@ mod tests {
             assert_eq!(ft.field("Value").unwrap().unwrap().into_real(), Some(45.78));
             assert_eq!(ft.field("Int_value").unwrap().unwrap().into_int(), Some(1));
         }
-        fs::remove_file(fixture!("output.geojson")).unwrap();
+        fs::remove_file(fixture("output.geojson")).unwrap();
     }
 
     #[test]
@@ -859,7 +844,7 @@ mod tests {
             ..DatasetOptions::default()
         };
         let tmp_file = TempFixture::empty("test.s3db");
-        std::fs::copy(fixture!("three_layer_ds.s3db"), &tmp_file).unwrap();
+        std::fs::copy(fixture("three_layer_ds.s3db"), &tmp_file).unwrap();
         let ds = Dataset::open_ex(&tmp_file, ds_options).unwrap();
         let mut layer = ds.layer(0).unwrap();
         let fids: Vec<u64> = layer.features().map(|f| f.fid().unwrap()).collect();
