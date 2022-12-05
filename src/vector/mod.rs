@@ -26,7 +26,7 @@
 //!         // need random access.
 //!         let fid = feature.fid().unwrap_or(0);
 //!         // Summarize the geometry
-//!         let geometry = feature.geometry();
+//!         let geometry = feature.geometry().unwrap();
 //!         let geom_type = geometry_type_to_name(geometry.geometry_type());
 //!         let geom_len = geometry.get_point_vec().len();
 //!         println!("    Feature fid={fid:?}, geometry_type='{geom_type}', geometry_len={geom_len}");

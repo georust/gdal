@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+- **Breaking**: `Feature::geometry` returns an `Option<&Geometry>` instead of `&Geometry`. Calls to `Feature::geometry` will no longer panic.
+
+  - <https://github.com/georust/gdal/pull/349>
+
+- **Breaking**: `RasterBand::band_type` returns the `GdalDataType` enum instead of `GDALDataType::Type` ordinal. Fixes [#333](https://github.com/georust/gdal/issues/333)
+
+  - <https://github.com/georust/gdal/pull/334>
+
+- The default features of the `chrono` dependency are now disabled
+
+  - <https://github.com/georust/gdal/pull/347>
+
 ## 0.14
 
 - Added new content to `README.md` and the root docs.

@@ -93,12 +93,12 @@ impl Driver {
     /// ```rust, no_run
     /// # fn main() -> gdal::errors::Result<()> {
     /// use gdal::DriverManager;
-    /// use gdal::raster::GdalType;
+    /// use gdal::raster::GdalDataType;
     /// let d = DriverManager::get_driver_by_name("MEM")?;
     /// let ds = d.create("in-memory", 64, 64, 3)?;
     /// assert_eq!(ds.raster_count(), 3);
     /// assert_eq!(ds.raster_size(), (64, 64));
-    /// assert_eq!(ds.rasterband(1)?.band_type(), u8::gdal_ordinal());
+    /// assert_eq!(ds.rasterband(1)?.band_type(), GdalDataType::UInt8);
     /// # Ok(())
     /// # }
     /// ```
@@ -122,12 +122,12 @@ impl Driver {
     /// ```rust, no_run
     /// # fn main() -> gdal::errors::Result<()> {
     /// use gdal::DriverManager;
-    /// use gdal::raster::GdalType;
+    /// use gdal::raster::GdalDataType;
     /// let d = DriverManager::get_driver_by_name("MEM")?;
     /// let ds = d.create_with_band_type::<f64, _>("in-memory", 64, 64, 3)?;
     /// assert_eq!(ds.raster_count(), 3);
     /// assert_eq!(ds.raster_size(), (64, 64));
-    /// assert_eq!(ds.rasterband(1)?.band_type(), f64::gdal_ordinal());
+    /// assert_eq!(ds.rasterband(1)?.band_type(), GdalDataType::Float64);
     /// # Ok(())
     /// # }
     /// ```
@@ -155,7 +155,7 @@ impl Driver {
     /// # fn main() -> gdal::errors::Result<()> {
     /// use gdal::DriverManager;
     /// use gdal::raster::RasterCreationOption;
-    /// use gdal::raster::GdalType;
+    /// use gdal::raster::GdalDataType;
     /// use gdal::spatial_ref::SpatialRef;
     /// let d = DriverManager::get_driver_by_name("BMP")?;
     /// let options = [
@@ -168,7 +168,7 @@ impl Driver {
     /// ds.set_spatial_ref(&SpatialRef::from_epsg(4326)?)?;
     /// assert_eq!(ds.raster_count(), 1);
     /// assert_eq!(ds.raster_size(), (64, 64));
-    /// assert_eq!(ds.rasterband(1)?.band_type(), u8::gdal_ordinal());
+    /// assert_eq!(ds.rasterband(1)?.band_type(), GdalDataType::UInt8);
     /// assert_eq!(ds.spatial_ref()?.auth_code()?, 4326);
     /// # Ok(())
     /// # }

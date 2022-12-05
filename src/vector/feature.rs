@@ -449,13 +449,18 @@ impl<'a> Feature<'a> {
         }
     }
 
-    /// Get the field's geometry.
-    pub fn geometry(&self) -> &Geometry {
-        if !self.geometry[0].has_gdal_ptr() {
-            let c_geom = unsafe { gdal_sys::OGR_F_GetGeometryRef(self.c_feature) };
-            unsafe { self.geometry[0].set_c_geometry(c_geom) };
+    /// Get the feature's geometry.
+    pub fn geometry(&self) -> Option<&Geometry> {
+        match self.geometry.first() {
+            Some(geom) => {
+                if !geom.has_gdal_ptr() {
+                    let c_geom = unsafe { gdal_sys::OGR_F_GetGeometryRef(self.c_feature) };
+                    unsafe { geom.set_c_geometry(c_geom) };
+                }
+                Some(geom)
+            }
+            None => None,
         }
-        &self.geometry[0]
     }
 
     pub fn geometry_by_name(&self, field_name: &str) -> Result<&Geometry> {
@@ -476,7 +481,7 @@ impl<'a> Feature<'a> {
         if idx >= self.geometry.len() {
             return Err(GdalError::InvalidFieldIndex {
                 index: idx,
-                method_name: "geometry_by_name",
+                method_name: "geometry_by_index",
             });
         }
         if !self.geometry[idx].has_gdal_ptr() {

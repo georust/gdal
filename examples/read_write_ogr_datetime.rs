@@ -31,7 +31,9 @@ fn run() -> gdal::errors::Result<()> {
 
     for feature_a in layer_a.features() {
         let mut ft = Feature::new(&defn)?;
-        ft.set_geometry(feature_a.geometry().clone())?;
+        if let Some(geom) = feature_a.geometry() {
+            ft.set_geometry(geom.clone())?;
+        }
         // copy each field value of the feature:
         for field in defn.fields() {
             ft.set_field(
