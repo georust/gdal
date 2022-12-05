@@ -3,7 +3,6 @@ use crate::gdal_major_object::MajorObject;
 use crate::utils::{_last_cpl_err, _last_null_pointer_err, _string, _string_array};
 use gdal_sys::{self, CPLErr};
 use std::ffi::CString;
-use std::iter::FromFn;
 
 /// General-Purpose Metadata API
 ///
@@ -228,7 +227,7 @@ pub trait Metadata: MajorObject {
     /// DERIVED_SUBDATASETS: DERIVED_SUBDATASET_1_NAME=DERIVED_SUBDATASET:LOGAMPLITUDE:fixtures/tinymarble.tif
     /// DERIVED_SUBDATASETS: DERIVED_SUBDATASET_1_DESC=log10 of amplitude of input bands from fixtures/tinymarble.tif
     /// ```
-    fn metadata(&self) -> FromFn<Box<dyn FnMut() -> Option<MetadataEntry> + '_>>
+    fn metadata(&self) -> Box<dyn Iterator<Item = MetadataEntry> + '_>
     where
         Self: Sized,
     {
@@ -241,7 +240,7 @@ pub trait Metadata: MajorObject {
             })
         });
 
-        std::iter::from_fn(Box::new(move || stream.next()))
+        Box::new(std::iter::from_fn(move || stream.next()))
     }
 }
 
