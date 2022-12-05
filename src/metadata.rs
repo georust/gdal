@@ -3,6 +3,7 @@ use crate::gdal_major_object::MajorObject;
 use crate::utils::{_last_cpl_err, _last_null_pointer_err, _string, _string_array};
 use gdal_sys::{self, CPLErr};
 use std::ffi::CString;
+use std::iter::FromFn;
 
 /// General-Purpose Metadata API
 ///
@@ -75,7 +76,7 @@ pub trait Metadata: MajorObject {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```rust, no_run
     /// use gdal::{Dataset, Metadata};
     /// # fn main() -> gdal::errors::Result<()> {
     /// let dataset = Dataset::open("fixtures/labels.tif")?;
@@ -97,11 +98,11 @@ pub trait Metadata: MajorObject {
 
     /// Get all the metadata values within the given `domain`. Returns `None` if
     /// domain is not defined.
-    /// Entries in the returned `Vec<String>` are formatted as “Name=value” pairs
+    /// Entries in the returned `Vec<String>` are formatted as "Name=value" pairs
     ///
     /// # Arguments
     ///
-    /// * domain – the domain of interest. Use `“”` for the default domain.
+    /// * domain – the domain of interest. Use `""` for the default domain.
     ///
     /// # Example
     ///
@@ -212,7 +213,7 @@ pub trait Metadata: MajorObject {
     /// use gdal::{Dataset, Metadata, MetadataEntry};
     /// # fn main() -> gdal::errors::Result<()> {
     /// let dataset = Dataset::open("fixtures/tinymarble.tif")?;
-    /// for MetadataEntry { domain, key, value } in dataset.metadata_iter() {
+    /// for MetadataEntry { domain, key, value } in dataset.metadata() {
     ///   let domain = if domain == "" { "DEFAULT".to_string() } else { domain };
     ///   println!("{domain}: {key}={value}");
     /// }
@@ -227,11 +228,20 @@ pub trait Metadata: MajorObject {
     /// DERIVED_SUBDATASETS: DERIVED_SUBDATASET_1_NAME=DERIVED_SUBDATASET:LOGAMPLITUDE:fixtures/tinymarble.tif
     /// DERIVED_SUBDATASETS: DERIVED_SUBDATASET_1_DESC=log10 of amplitude of input bands from fixtures/tinymarble.tif
     /// ```
-    fn metadata_iter(&self) -> MetadataIter
+    fn metadata(&self) -> FromFn<Box<dyn FnMut() -> Option<MetadataEntry> + '_>>
     where
         Self: Sized,
     {
-        MetadataIter::new(self)
+        let mut stream = self.metadata_domains().into_iter().flat_map(move |domain| {
+            let keyvals = self.metadata_domain(&domain).unwrap_or_default();
+            keyvals.into_iter().filter_map(move |keyval| {
+                keyval
+                    .split_once('=')
+                    .map(|(key, value)| MetadataEntry::new(domain.clone(), key, value))
+            })
+        });
+
+        std::iter::from_fn(Box::new(move || stream.next()))
     }
 }
 
@@ -262,40 +272,6 @@ impl MetadataEntry {
     /// Determine if this entry is from the default domain, which is named `""`.
     pub fn is_default_domain(&self) -> bool {
         self.domain.is_empty()
-    }
-}
-
-/// Metadata iterator state
-pub struct MetadataIter<'a> {
-    stream: Box<dyn Iterator<Item = MetadataEntry> + 'a>,
-}
-
-/// Iterator over metadata entries
-impl<'a> MetadataIter<'a> {
-    fn new<P: Metadata>(parent: &'a P) -> Self {
-        let stream = parent
-            .metadata_domains()
-            .into_iter()
-            .flat_map(move |domain| {
-                let keyvals = parent.metadata_domain(&domain).unwrap_or_default();
-                keyvals.into_iter().filter_map(move |keyval| {
-                    keyval
-                        .split_once('=')
-                        .map(|(key, value)| MetadataEntry::new(domain.clone(), key, value))
-                })
-            });
-
-        Self {
-            stream: Box::new(stream),
-        }
-    }
-}
-
-impl<'a> Iterator for MetadataIter<'a> {
-    type Item = MetadataEntry;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        self.stream.next()
     }
 }
 
@@ -410,21 +386,19 @@ mod tests {
     fn test_md_iter() {
         // Driver metadata...
         let driver = DriverManager::get_driver_by_name("GTiff").unwrap();
-        driver.metadata_iter().any(|e| e.key == "LIBGEOTIFF");
+        driver.metadata().any(|e| e.key == "LIBGEOTIFF");
 
         // Dataset metadata...
         let ds = Dataset::open(fixture!("m_3607824_se_17_1_20160620_sub.tif")).unwrap();
         assert_eq!(ds.metadata_item("AREA_OR_POINT", ""), Some("Area".into()));
         assert!(ds
-            .metadata_iter()
+            .metadata()
             .any(|e| e == MetadataEntry::new("", "AREA_OR_POINT", "Area")));
-        assert!(ds
-            .metadata_iter()
-            .any(|e| e.domain == "DERIVED_SUBDATASETS"));
+        assert!(ds.metadata().any(|e| e.domain == "DERIVED_SUBDATASETS"));
 
         // RasterBand metadata...
         let ds = Dataset::open(fixture!("labels.tif")).unwrap();
         let band = ds.rasterband(1).unwrap();
-        assert!(band.metadata_iter().any(|e| e.key == "CLASSES"));
+        assert!(band.metadata().any(|e| e.key == "CLASSES"));
     }
 }
