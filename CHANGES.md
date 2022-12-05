@@ -6,6 +6,10 @@
 
   - <https://github.com/georust/gdal/pull/334>
 
+- The default features of the `chrono` dependency are now disabled
+
+  - <https://github.com/georust/gdal/pull/347>
+
 ## 0.14
 
 - Added new content to `README.md` and the root docs.
