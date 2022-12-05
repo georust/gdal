@@ -2,13 +2,12 @@ use crate::dataset::Dataset;
 use crate::metadata::Metadata;
 use crate::raster::rasterband::ResampleAlg;
 use crate::raster::{
-    ByteBuffer, ColorEntry, ColorInterpretation, ColorTable, RasterCreationOption, StatisticsAll,
-    StatisticsMinMax,
+    ByteBuffer, ColorEntry, ColorInterpretation, ColorTable, GdalDataType, RasterCreationOption,
+    StatisticsAll, StatisticsMinMax,
 };
 use crate::test_utils::TempFixture;
 use crate::vsi::unlink_mem_file;
 use crate::DriverManager;
-use gdal_sys::GDALDataType;
 use std::path::Path;
 
 #[cfg(feature = "ndarray")]
@@ -279,7 +278,7 @@ fn test_create_with_band_type() {
     assert_eq!(dataset.raster_count(), 3);
     assert_eq!(dataset.driver().short_name(), "MEM");
     let rb = dataset.rasterband(1).unwrap();
-    assert_eq!(rb.band_type(), GDALDataType::GDT_Float32)
+    assert_eq!(rb.band_type(), GdalDataType::Float32);
 }
 
 #[test]
@@ -308,17 +307,17 @@ fn test_create_with_band_type_with_options() {
         },
     ];
 
-    let tmp_filename = "/tmp/test.tif";
+    let tmp_filename = TempFixture::empty("test.tif");
     {
         let dataset = driver
-            .create_with_band_type_with_options::<u8, _>(tmp_filename, 256, 256, 1, &options)
+            .create_with_band_type_with_options::<u8, _>(&tmp_filename, 256, 256, 1, &options)
             .unwrap();
         let rasterband = dataset.rasterband(1).unwrap();
         let block_size = rasterband.block_size();
         assert_eq!(block_size, (128, 64));
     }
 
-    let dataset = Dataset::open(Path::new(tmp_filename)).unwrap();
+    let dataset = Dataset::open(tmp_filename).unwrap();
     let key = "INTERLEAVE";
     let domain = "IMAGE_STRUCTURE";
     let meta = dataset.metadata_item(key, domain);
@@ -407,7 +406,7 @@ fn test_read_raster_as() {
     assert_eq!(rv.data, vec!(7, 7, 7, 10, 8, 12));
     assert_eq!(rv.size.0, 2);
     assert_eq!(rv.size.1, 3);
-    assert_eq!(rb.band_type(), GDALDataType::GDT_Byte);
+    assert_eq!(rb.band_type(), GdalDataType::UInt8);
 }
 
 #[test]
@@ -468,7 +467,7 @@ fn test_read_raster_as_array() {
     ]);
 
     assert_eq!(values, data);
-    assert_eq!(rb.band_type(), GDALDataType::GDT_Byte);
+    assert_eq!(rb.band_type(), GdalDataType::UInt8);
 }
 
 #[test]
@@ -525,7 +524,7 @@ fn test_get_band_type() {
     let driver = DriverManager::get_driver_by_name("MEM").unwrap();
     let dataset = driver.create("", 20, 10, 1).unwrap();
     let rb = dataset.rasterband(1).unwrap();
-    assert_eq!(rb.band_type(), GDALDataType::GDT_Byte);
+    assert_eq!(rb.band_type(), GdalDataType::UInt8);
 }
 
 #[test]
@@ -817,7 +816,7 @@ fn test_create_color_table() {
         // Confirm we have a band without a color table.
         assert_eq!(dataset.raster_count(), 1);
         let band = dataset.rasterband(1).unwrap();
-        assert_eq!(band.band_type(), GDALDataType::GDT_Byte);
+        assert_eq!(band.band_type(), GdalDataType::UInt8);
         assert!(band.color_table().is_none());
 
         // Create a new file to put color table in
