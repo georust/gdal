@@ -227,20 +227,11 @@ pub trait Metadata: MajorObject {
     /// DERIVED_SUBDATASETS: DERIVED_SUBDATASET_1_NAME=DERIVED_SUBDATASET:LOGAMPLITUDE:fixtures/tinymarble.tif
     /// DERIVED_SUBDATASETS: DERIVED_SUBDATASET_1_DESC=log10 of amplitude of input bands from fixtures/tinymarble.tif
     /// ```
-    fn metadata(&self) -> Box<dyn Iterator<Item = MetadataEntry> + '_>
+    fn metadata(&self) -> MetadataIter
     where
         Self: Sized,
     {
-        let mut stream = self.metadata_domains().into_iter().flat_map(move |domain| {
-            let keyvals = self.metadata_domain(&domain).unwrap_or_default();
-            keyvals.into_iter().filter_map(move |keyval| {
-                keyval
-                    .split_once('=')
-                    .map(|(key, value)| MetadataEntry::new(domain.clone(), key, value))
-            })
-        });
-
-        Box::new(std::iter::from_fn(move || stream.next()))
+        MetadataIter::new(self)
     }
 }
 
@@ -271,6 +262,40 @@ impl MetadataEntry {
     /// Determine if this entry is from the default domain, which is named `""`.
     pub fn is_default_domain(&self) -> bool {
         self.domain.is_empty()
+    }
+}
+
+/// Metadata iterator state
+pub struct MetadataIter<'a> {
+    stream: Box<dyn Iterator<Item = MetadataEntry> + 'a>,
+}
+
+/// Iterator over metadata entries
+impl<'a> MetadataIter<'a> {
+    fn new<P: Metadata>(parent: &'a P) -> Self {
+        let stream = parent
+            .metadata_domains()
+            .into_iter()
+            .flat_map(move |domain| {
+                let keyvals = parent.metadata_domain(&domain).unwrap_or_default();
+                keyvals.into_iter().filter_map(move |keyval| {
+                    keyval
+                        .split_once('=')
+                        .map(|(key, value)| MetadataEntry::new(domain.clone(), key, value))
+                })
+            });
+
+        Self {
+            stream: Box::new(stream),
+        }
+    }
+}
+
+impl<'a> Iterator for MetadataIter<'a> {
+    type Item = MetadataEntry;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.stream.next()
     }
 }
 
