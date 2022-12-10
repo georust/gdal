@@ -291,28 +291,6 @@ mod tests {
     }
 
     #[test]
-    fn unable_to_create() {
-        let file_name = "";
-
-        assert!(matches!(
-            create_mem_file(file_name, vec![1_u8, 2, 3, 4]).unwrap_err(),
-            GdalError::NullPointer {
-                method_name: "VSIGetMemFileBuffer",
-                msg,
-            }
-            if msg.is_empty()
-        ));
-
-        assert!(matches!(
-            unlink_mem_file(file_name).unwrap_err(),
-            GdalError::UnlinkMemFile {
-                file_name,
-            }
-            if file_name.is_empty()
-        ));
-    }
-
-    #[test]
     fn test_vsi_read_dir() {
         use std::path::Path;
         let zip_path = Path::new(file!())
