@@ -57,6 +57,10 @@
 
   - <https://github.com/georust/gdal/pull/318>
 
+- Added `Metadata` iterator.
+
+  - <https://github.com/georust/gdal/pull/344>
+
 ## 0.13
 
 - Add prebuilt bindings for GDAL 3.5

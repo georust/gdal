@@ -368,7 +368,7 @@ impl DriverManager {
 
     /// Returns the driver with the given short name or [`Err`] if not found.
     ///
-    /// See also: [`count`](Self::count), [`get`](Self::get)
+    /// See also: [`count`](Self::count), [`get`](Self::get_driver_by_name)
     ///
     /// # Example
     ///

@@ -123,7 +123,7 @@ pub use dataset::{
     LayerOptions, Transaction,
 };
 pub use driver::{Driver, DriverManager};
-pub use metadata::Metadata;
+pub use metadata::{Metadata, MetadataEntry};
 
 #[cfg(test)]
 fn assert_almost_eq(a: f64, b: f64) {
