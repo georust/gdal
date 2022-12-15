@@ -14,6 +14,8 @@
 
   - <https://github.com/georust/gdal/pull/347>
 
+- Added prebuilt bindings for GDAL 3.6 (released 6 November 2022).
+
 ## 0.14
 
 - Added new content to `README.md` and the root docs.
