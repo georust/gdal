@@ -229,7 +229,7 @@ impl Geometry {
         let mut y: c_double = 0.;
         let mut z: c_double = 0.;
         unsafe { gdal_sys::OGR_G_GetPoint(self.c_geometry(), i, &mut x, &mut y, &mut z) };
-        (x as f64, y as f64, z as f64)
+        (x, y, z)
     }
 
     pub fn get_point_vec(&self) -> Vec<(f64, f64, f64)> {

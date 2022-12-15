@@ -38,7 +38,7 @@ fn run() -> gdal::errors::Result<()> {
         for field in defn.fields() {
             ft.set_field(
                 &field.name(),
-                &match feature_a.field(&field.name())?.unwrap() {
+                &match feature_a.field(field.name())?.unwrap() {
                     // add one day to dates
                     FieldValue::DateValue(value) => {
                         println!("{} = {}", field.name(), value);

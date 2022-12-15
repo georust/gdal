@@ -14,7 +14,7 @@ impl TempFixture {
     pub fn fixture(name: &str) -> Self {
         let staging = Self::empty(name);
         let source = Path::new("fixtures").join(name);
-        std::fs::copy(&source, &staging.temp_path).unwrap();
+        std::fs::copy(source, &staging.temp_path).unwrap();
         staging
     }
 

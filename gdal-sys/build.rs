@@ -80,7 +80,7 @@ fn add_docs_rs_helper(version: Option<&str>) {
         }"#
         .to_string()
     };
-    std::fs::write(&out_path, docs_helper_code.as_bytes()).unwrap();
+    std::fs::write(out_path, docs_helper_code.as_bytes()).unwrap();
 }
 
 fn main() {

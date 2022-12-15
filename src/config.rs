@@ -148,7 +148,7 @@ where
         let callback_raw = CPLGetErrorHandlerUserData();
         let callback: &mut Box<ErrorCallbackType> = &mut *(callback_raw as *mut Box<_>);
 
-        callback(error_type, error_num as i32, &error_msg);
+        callback(error_type, error_num, &error_msg);
     }
 
     // pin memory location of callback for sending its pointer to GDAL

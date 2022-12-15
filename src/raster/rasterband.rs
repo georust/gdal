@@ -248,7 +248,7 @@ impl<'a> RasterBand<'a> {
         buffer: &mut [T],
         e_resample_alg: Option<ResampleAlg>,
     ) -> Result<()> {
-        let pixels = (size.0 * size.1) as usize;
+        let pixels = size.0 * size.1;
         assert_eq!(buffer.len(), pixels);
 
         let resample_alg = e_resample_alg.unwrap_or(ResampleAlg::NearestNeighbour);
@@ -317,7 +317,7 @@ impl<'a> RasterBand<'a> {
         size: (usize, usize),
         e_resample_alg: Option<ResampleAlg>,
     ) -> Result<Buffer<T>> {
-        let pixels = (size.0 * size.1) as usize;
+        let pixels = size.0 * size.1;
         let mut data: Vec<T> = Vec::with_capacity(pixels);
 
         let resample_alg = e_resample_alg.unwrap_or(ResampleAlg::NearestNeighbour);
@@ -395,12 +395,7 @@ impl<'a> RasterBand<'a> {
     /// Read the full band as a 'Buffer<T>', where `T` implements ['GdalType'].
     pub fn read_band_as<T: Copy + GdalType>(&self) -> Result<Buffer<T>> {
         let size = self.size();
-        self.read_as::<T>(
-            (0, 0),
-            (size.0 as usize, size.1 as usize),
-            (size.0 as usize, size.1 as usize),
-            None,
-        )
+        self.read_as::<T>((0, 0), (size.0, size.1), (size.0, size.1), None)
     }
 
     #[cfg(feature = "ndarray")]
@@ -414,7 +409,7 @@ impl<'a> RasterBand<'a> {
     /// The Matrix shape is (rows, cols) and raster shape is (cols in x-axis, rows in y-axis).
     pub fn read_block<T: Copy + GdalType>(&self, block_index: (usize, usize)) -> Result<Array2<T>> {
         let size = self.block_size();
-        let pixels = (size.0 * size.1) as usize;
+        let pixels = size.0 * size.1;
         let mut data: Vec<T> = Vec::with_capacity(pixels);
 
         //let no_data:
@@ -486,7 +481,7 @@ impl<'a> RasterBand<'a> {
         let no_data =
             unsafe { gdal_sys::GDALGetRasterNoDataValue(self.c_rasterband, &mut pb_success) };
         if pb_success == 1 {
-            return Some(no_data as f64);
+            return Some(no_data);
         }
         None
     }
@@ -546,7 +541,7 @@ impl<'a> RasterBand<'a> {
         let mut pb_success = 1;
         let scale = unsafe { gdal_sys::GDALGetRasterScale(self.c_rasterband, &mut pb_success) };
         if pb_success == 1 {
-            return Some(scale as f64);
+            return Some(scale);
         }
         None
     }
@@ -565,7 +560,7 @@ impl<'a> RasterBand<'a> {
         let mut pb_success = 1;
         let offset = unsafe { gdal_sys::GDALGetRasterOffset(self.c_rasterband, &mut pb_success) };
         if pb_success == 1 {
-            return Some(offset as f64);
+            return Some(offset);
         }
         None
     }
