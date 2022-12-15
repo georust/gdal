@@ -111,7 +111,7 @@ impl<'a> Feature<'a> {
             }
             OGRFieldType::OFTReal => {
                 let rv = unsafe { gdal_sys::OGR_F_GetFieldAsDouble(self.c_feature, field_id) };
-                Ok(Some(FieldValue::RealValue(rv as f64)))
+                Ok(Some(FieldValue::RealValue(rv)))
             }
             OGRFieldType::OFTRealList => {
                 let rv = unsafe {
@@ -124,7 +124,7 @@ impl<'a> Feature<'a> {
             }
             OGRFieldType::OFTInteger => {
                 let rv = unsafe { gdal_sys::OGR_F_GetFieldAsInteger(self.c_feature, field_id) };
-                Ok(Some(FieldValue::IntegerValue(rv as i32)))
+                Ok(Some(FieldValue::IntegerValue(rv)))
             }
             OGRFieldType::OFTIntegerList => {
                 let rv = unsafe {
@@ -426,12 +426,12 @@ impl<'a> Feature<'a> {
         let tzoffset_secs = if tzflag == 0 || tzflag == 100 {
             0
         } else {
-            (tzflag as i32 - 100) * 15 * 60
+            (tzflag - 100) * 15 * 60
         };
         let rv = FixedOffset::east_opt(tzoffset_secs)
             .ok_or_else(|| GdalError::DateError(tzoffset_secs.to_string()))?
             .with_ymd_and_hms(
-                year as i32,
+                year,
                 month as u32,
                 day as u32,
                 hour as u32,
