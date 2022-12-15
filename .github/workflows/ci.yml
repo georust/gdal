@@ -12,6 +12,46 @@ env:
   RUST_BACKTRACE: 1
 
 jobs:
+  gdal_36:
+    name: "ci gdal-36"
+    runs-on: ubuntu-latest
+    container:
+      image: osgeo/gdal:ubuntu-full-3.6.0
+
+    strategy:
+      matrix:
+        features: ["", "--all-features"]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Install build deps
+        shell: bash
+        run: |
+          apt-get update -y
+          apt-get install build-essential curl pkg-config libclang-dev -y
+          curl --proto '=https' --tlsv1.2 --retry 10 --retry-connrefused -fsSL "https://sh.rustup.rs" | sh -s -- --profile minimal --default-toolchain none -y
+          echo "${CARGO_HOME:-$HOME/.cargo}/bin" >> $GITHUB_PATH
+
+      - name: Setup building
+        run: |
+          export CC="clang-9"
+          export CXX="clang++-9"
+
+      - name: Install stable
+        run: |
+          rustup install --no-self-update --profile minimal stable
+          rustup component add rustfmt clippy
+
+      - name: Check with Rustfmt
+        run: cargo fmt --all --check
+      - name: Check with Clippy
+        run: cargo clippy --all-targets ${{ matrix.features }} -- -D warnings
+      - name: Build
+        run: cargo build ${{ matrix.features }} --verbose
+      - name: Run tests
+        run: cargo test ${{ matrix.features }} --verbose
+
   gdal_35:
     name: "ci gdal-35"
     runs-on: ubuntu-latest

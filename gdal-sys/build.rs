@@ -22,8 +22,10 @@ pub fn write_bindings(include_paths: Vec<String>, out_path: &Path) {
         .allowlist_function("VSI.*");
 
     for path in include_paths {
-        builder = builder.clang_arg("-I");
-        builder = builder.clang_arg(path);
+        builder = builder
+            .clang_arg("-I")
+            .clang_arg(path)
+            .clang_arg("-fretain-comments-from-system-headers");
     }
 
     builder

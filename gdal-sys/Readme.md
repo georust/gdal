@@ -37,3 +37,12 @@ attempt to use prebuilt bindings corresponding to that version. Alternatively,
 you can generate your own bindings from your libgdal installation by specifying
 the `bindgen` feature.
 
+## Creating prebuilt bindings
+
+If a new version of GDAL is released, you (as a `gdal` contributor) can
+generate new bindings for inclusion in the `gdal-sys` source distribution by
+building with the `bindgen` feature, and then copying the generated file. For
+example (the hash will differ in your build):
+
+    $ cargo build --features bindgen
+    $ cp target/debug/build/gdal-sys-db833e3088b78e57/out/bindings.rs gdal-sys/prebuilt-bindings/gdal_3.6.rs
