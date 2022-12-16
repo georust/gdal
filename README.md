@@ -33,7 +33,7 @@ To do that, it uses [`gdal-sys`](gdal-sys) internally, a low-level interface to 
 Using the `gdal-sys` crate directly is normally not needed, but it can be useful in order to call APIs that have not yet been exposed in `gdal`.
 
 Building this crate assumes a compatible version of GDAL is installed with the corresponding header files and shared libraries.
-This repository includes pre-generated bindings for GDAL 2.4 through 3.5 (see the`gdal-sys/prebuilt-bindings` directory).
+This repository includes pre-generated bindings for GDAL 2.4 through 3.6 (see the`gdal-sys/prebuilt-bindings` directory).
 If you're compiling against a later version of GDAL, you can enable the `bindgen` feature flag to have new bindings generated on the fly. 
 
 ## Community
