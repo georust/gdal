@@ -105,6 +105,7 @@ where
 mod tests {
     use gdal_sys::OGRwkbGeometryType::{wkbLineString, wkbLinearRing, wkbPolygon};
 
+    use crate::test_utils::SuppressGDALErrorLog;
     use crate::{
         errors::{GdalError, Result},
         DriverManager,
@@ -826,14 +827,17 @@ mod tests {
 
             assert_eq!(layer.features().count(), 21);
 
-            // force error
-            assert!(matches!(
-                layer.set_attribute_filter("foo = bar").unwrap_err(),
-                GdalError::OgrError {
-                    err: gdal_sys::OGRErr::OGRERR_CORRUPT_DATA,
-                    method_name: "OGR_L_SetAttributeFilter",
-                }
-            ));
+            {
+                let _nolog = SuppressGDALErrorLog::new();
+                // force error
+                assert!(matches!(
+                    layer.set_attribute_filter("foo = bar").unwrap_err(),
+                    GdalError::OgrError {
+                        err: gdal_sys::OGRErr::OGRERR_CORRUPT_DATA,
+                        method_name: "OGR_L_SetAttributeFilter",
+                    }
+                ));
+            }
         });
     }
 

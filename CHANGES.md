@@ -22,6 +22,10 @@
 
   - <https://github.com/georust/gdal/pull/355>
 
+- Exposed various functions on `Geometry`:  `make_valid`, `geometry_name`, and `point_count`. 
+  
+  - <https://github.com/georust/gdal/pull/356>
+
 ## 0.14
 
 - Added new content to `README.md` and the root docs.
