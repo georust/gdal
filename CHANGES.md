@@ -16,6 +16,12 @@
 
 - Added prebuilt bindings for GDAL 3.6 (released 6 November 2022).
 
+  - <https://github.com/georust/gdal/pull/352>
+
+- **Breaking**: `Layer::spatial_ref` returns `Option` instead of `Result`, thereby better reflecting the semantics documented in the [C++ API](https://gdal.org/doxygen/classOGRLayer.html#a75c06b4993f8eb76b569f37365cd19ab)
+
+  - <https://github.com/georust/gdal/pull/355>
+
 ## 0.14
 
 - Added new content to `README.md` and the root docs.
