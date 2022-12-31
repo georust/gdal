@@ -418,13 +418,16 @@ pub trait LayerAccess: Sized {
 
     /// Fetch the spatial reference system for this layer.
     ///
+    /// Returns `Some(SpatialRef)`, or `None` if one isn't defined.
+    ///
     /// Refer [OGR_L_GetSpatialRef](https://gdal.org/doxygen/classOGRLayer.html#a75c06b4993f8eb76b569f37365cd19ab)
-    fn spatial_ref(&self) -> Result<SpatialRef> {
+    fn spatial_ref(&self) -> Option<SpatialRef> {
         let c_obj = unsafe { gdal_sys::OGR_L_GetSpatialRef(self.c_layer()) };
         if c_obj.is_null() {
-            return Err(_last_null_pointer_err("OGR_L_GetSpatialRef"));
+            None
+        } else {
+            unsafe { SpatialRef::from_c_obj(c_obj) }.ok()
         }
-        unsafe { SpatialRef::from_c_obj(c_obj) }
     }
 
     fn reset_feature_reading(&mut self) {
