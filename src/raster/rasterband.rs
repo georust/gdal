@@ -168,6 +168,14 @@ pub struct RasterBand<'a> {
 }
 
 impl<'a> RasterBand<'a> {
+    /// Returns the wrapped C pointer
+    ///
+    /// # Safety
+    /// This method returns a raw C pointer
+    pub unsafe fn c_rasterband(&self) -> GDALRasterBandH {
+        self.c_rasterband
+    }
+
     /// Create a RasterBand from a wrapped C pointer
     ///
     /// # Safety

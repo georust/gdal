@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added c_rasterband method to Rasterband to obtain the raw C pointer to GDALRasterBandH
+
+  - <https://github.com/georust/gdal/pull/359>
+
 - **Breaking**: `Feature::geometry` returns an `Option<&Geometry>` instead of `&Geometry`. Calls to `Feature::geometry` will no longer panic.
 
   - <https://github.com/georust/gdal/pull/349>
