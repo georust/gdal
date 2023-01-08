@@ -168,13 +168,35 @@ impl Debug for CslStringList {
 
 /// Convenience shorthand for specifying an empty `CslStringList` to functions accepting
 /// `Into<CslStringList>`.
+///
+/// # Example
+///
+/// ```rust, no_run
+/// use gdal::cpl::CslStringList;
+/// fn count_opts<O: Into<CslStringList>>(opts: O) -> usize {
+///     opts.into().len()
+/// }
+///
+/// assert_eq!(count_opts(()), 0);
+/// ```
 impl From<()> for CslStringList {
     fn from(_: ()) -> Self {
         CslStringList::default()
     }
 }
 
-/// Creates a [`CslStringList`] from a slice of _key_/_value_ tuples.
+/// Convenience for creating a [`CslStringList`] from a slice of _key_/_value_ tuples.
+///
+/// # Example
+///
+/// ```rust, no_run
+/// use gdal::cpl::CslStringList;
+/// fn count_opts<O: Into<CslStringList>>(opts: O) -> usize {
+///     opts.into().len()
+/// }
+///
+/// assert_eq!(count_opts(&[("One", "1"), ("Two", "2"), ("Three", "3")]), 3);
+/// ```
 impl<const N: usize> From<&[(&str, &str); N]> for CslStringList {
     fn from(pairs: &[(&str, &str); N]) -> Self {
         let mut result = Self::default();

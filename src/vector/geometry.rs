@@ -433,7 +433,7 @@ impl Geometry {
     ///
     /// Returns `Some(SpatialRef)`, or `None` if one isn't defined.
     ///
-    /// Refer [OGR_G_GetSpatialReference](https://gdal.org/doxygen/ogr__api_8h.html#abc393e40282eec3801fb4a4abc9e25bf)
+    /// Refer: [OGR_G_GetSpatialReference](https://gdal.org/doxygen/ogr__api_8h.html#abc393e40282eec3801fb4a4abc9e25bf)
     pub fn spatial_ref(&self) -> Option<SpatialRef> {
         let c_spatial_ref = unsafe { gdal_sys::OGR_G_GetSpatialReference(self.c_geometry()) };
 
