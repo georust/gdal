@@ -478,7 +478,7 @@ impl Geometry {
     /// ```rust, no_run
     /// use gdal::vector::Geometry;
     /// # fn main() -> gdal::errors::Result<()> {
-    /// let src = Geometry::from_wkt("POLYGON ((0 0,10 10,0 10,10 0,0 0))")?;
+    /// let src = Geometry::from_wkt("POLYGON ((0 0, 10 10, 0 10, 10 0, 0 0))")?;
     /// let dst = src.make_valid(())?;
     /// assert_eq!("MULTIPOLYGON (((10 0,0 0,5 5,10 0)),((10 10,5 5,0 10,10 10)))", dst.wkt()?);
     /// # Ok(())
