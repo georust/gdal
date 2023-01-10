@@ -251,7 +251,8 @@ pub trait LayerAccess: Sized {
     }
 
     /// Set a feature on this layer layer.
-    /// Refer[SetFeature](https://gdal.org/doxygen/classOGRLayer.html#a681139bfd585b74d7218e51a32144283)
+    ///
+    /// See: [SetFeature](https://gdal.org/doxygen/classOGRLayer.html#a681139bfd585b74d7218e51a32144283)
     fn set_feature(&self, feature: Feature) -> Result<()> {
         unsafe { gdal_sys::OGR_L_SetFeature(self.c_layer(), feature.c_feature()) };
         Ok(())
@@ -259,7 +260,7 @@ pub trait LayerAccess: Sized {
 
     /// Set a spatial filter on this layer.
     ///
-    /// Refer [OGR_L_SetSpatialFilter](https://gdal.org/doxygen/classOGRLayer.html#a75c06b4993f8eb76b569f37365cd19ab)
+    /// See: [OGR_L_SetSpatialFilter](https://gdal.org/doxygen/classOGRLayer.html#a75c06b4993f8eb76b569f37365cd19ab)
     fn set_spatial_filter(&mut self, geometry: &Geometry) {
         unsafe { gdal_sys::OGR_L_SetSpatialFilter(self.c_layer(), geometry.c_geometry()) };
     }
@@ -416,11 +417,11 @@ pub trait LayerAccess: Sized {
         }
     }
 
-    /// Fetch the spatial reference system for this layer.
+    /// Get the spatial reference system for this layer.
     ///
     /// Returns `Some(SpatialRef)`, or `None` if one isn't defined.
     ///
-    /// Refer [OGR_L_GetSpatialRef](https://gdal.org/doxygen/classOGRLayer.html#a75c06b4993f8eb76b569f37365cd19ab)
+    /// See: [OGR_L_GetSpatialRef](https://gdal.org/doxygen/classOGRLayer.html#a75c06b4993f8eb76b569f37365cd19ab)
     fn spatial_ref(&self) -> Option<SpatialRef> {
         let c_obj = unsafe { gdal_sys::OGR_L_GetSpatialRef(self.c_layer()) };
         if c_obj.is_null() {

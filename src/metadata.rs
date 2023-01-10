@@ -235,7 +235,7 @@ pub trait Metadata: MajorObject {
     }
 }
 
-/// Standalone metadata entry, as returned by iterator from [`Metadata::metadata_iter`].
+/// Standalone metadata entry, as returned by iterator from [`Metadata::metadata`].
 ///
 /// Defined by it's parent `domain`, and `key`/`value` pair.
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd)]

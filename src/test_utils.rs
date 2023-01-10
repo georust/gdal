@@ -1,3 +1,5 @@
+use std::ffi::c_void;
+use std::marker::PhantomData;
 use std::path::{Path, PathBuf};
 
 /// A struct that contains a temporary directory and a path to a file in that directory.
@@ -48,4 +50,28 @@ pub(crate) fn fixture(filename: &str) -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("fixtures")
         .join(filename)
+}
+
+/// Scoped value for temporarily suppressing thread-local GDAL log messages.
+///
+/// Useful for tests that expect GDAL errors and want to keep the output log clean
+/// of distracting yet expected error messages.
+pub(crate) struct SuppressGDALErrorLog {
+    // Make !Sync and !Send, and force use of `new`.
+    _private: PhantomData<*mut c_void>,
+}
+
+impl SuppressGDALErrorLog {
+    pub(crate) fn new() -> Self {
+        unsafe { gdal_sys::CPLPushErrorHandler(Some(gdal_sys::CPLQuietErrorHandler)) };
+        SuppressGDALErrorLog {
+            _private: PhantomData,
+        }
+    }
+}
+
+impl Drop for SuppressGDALErrorLog {
+    fn drop(&mut self) {
+        unsafe { gdal_sys::CPLPopErrorHandler() };
+    }
 }

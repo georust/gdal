@@ -1,5 +1,6 @@
 use std::collections::HashSet;
 
+use crate::test_utils::SuppressGDALErrorLog;
 use crate::{
     test_utils::fixture,
     vector::{sql, Geometry, LayerAccess},
@@ -117,6 +118,7 @@ fn test_sql_no_result() {
 
 #[test]
 fn test_sql_bad_query() {
+    let _nolog = SuppressGDALErrorLog::new();
     let ds = Dataset::open(fixture("roads.geojson")).unwrap();
 
     let query = "SELECT nope FROM roads";

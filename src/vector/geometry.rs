@@ -7,6 +7,7 @@ use std::ptr::null_mut;
 
 use libc::{c_char, c_double, c_int, c_void};
 
+use crate::cpl::CslStringList;
 use gdal_sys::{self, OGRErr, OGRGeometryH, OGRwkbGeometryType};
 
 use crate::errors::*;
@@ -224,11 +225,16 @@ impl Geometry {
         unsafe { gdal_sys::OGR_G_AddPoint_2D(self.c_geometry(), x as c_double, y as c_double) };
     }
 
-    pub fn get_point(&self, i: i32) -> (f64, f64, f64) {
+    /// Get point coordinates from a line string or a point geometry.
+    ///
+    /// `index` is the line string vertex index, from 0 to `point_count()-1`, or `0` when a point.
+    ///
+    /// See: [`OGR_G_GetPoint`](https://gdal.org/api/vector_c_api.html#_CPPv414OGR_G_GetPoint12OGRGeometryHiPdPdPd)
+    pub fn get_point(&self, index: i32) -> (f64, f64, f64) {
         let mut x: c_double = 0.;
         let mut y: c_double = 0.;
         let mut z: c_double = 0.;
-        unsafe { gdal_sys::OGR_G_GetPoint(self.c_geometry(), i, &mut x, &mut y, &mut z) };
+        unsafe { gdal_sys::OGR_G_GetPoint(self.c_geometry(), index, &mut x, &mut y, &mut z) };
         (x, y, z)
     }
 
@@ -292,12 +298,47 @@ impl Geometry {
         Ok(unsafe { Geometry::with_c_geometry(c_geom, true) })
     }
 
+    /// Get the geometry type ordinal
+    ///
+    /// See: [OGR_G_GetGeometryType](https://gdal.org/api/vector_c_api.html#_CPPv421OGR_G_GetGeometryType12OGRGeometryH)
     pub fn geometry_type(&self) -> OGRwkbGeometryType::Type {
         unsafe { gdal_sys::OGR_G_GetGeometryType(self.c_geometry()) }
     }
 
+    /// Get the WKT name for the type of this geometry.
+    ///
+    /// See: [`OGR_G_GetGeometryName`](https://gdal.org/api/vector_c_api.html#_CPPv421OGR_G_GetGeometryName12OGRGeometryH)
+    pub fn geometry_name(&self) -> String {
+        // Note: C API makes no statements about this possibly returning null.
+        // So we don't have to result wrap this,
+        let c_str = unsafe { gdal_sys::OGR_G_GetGeometryName(self.c_geometry()) };
+        if c_str.is_null() {
+            "".into()
+        } else {
+            _string(c_str)
+        }
+    }
+
+    /// Get the number of elements in a geometry, or number of geometries in container.
+    ///
+    /// Only geometries of type `wkbPolygon`, `wkbMultiPoint`, `wkbMultiLineString`, `wkbMultiPolygon`
+    /// or `wkbGeometryCollection` may return a non-zero value. Other geometry types will return 0.
+    ///
+    /// For a polygon, the returned number is the number of rings (exterior ring + interior rings).
+    ///
+    /// See: [`OGR_G_GetGeometryCount`](https://gdal.org/api/vector_c_api.html#_CPPv422OGR_G_GetGeometryCount12OGRGeometryH)
     pub fn geometry_count(&self) -> usize {
         let cnt = unsafe { gdal_sys::OGR_G_GetGeometryCount(self.c_geometry()) };
+        cnt as usize
+    }
+
+    /// Get the number of points from a Point or a LineString/LinearRing geometry.
+    ///
+    /// Only `wkbPoint` or `wkbLineString` may return a non-zero value. Other geometry types will return 0.
+    ///
+    /// See: [`OGR_G_GetPointCount`](https://gdal.org/api/vector_c_api.html#_CPPv419OGR_G_GetPointCount12OGRGeometryH)
+    pub fn point_count(&self) -> usize {
+        let cnt = unsafe { gdal_sys::OGR_G_GetPointCount(self.c_geometry()) };
         cnt as usize
     }
 
@@ -388,21 +429,18 @@ impl Geometry {
         unsafe { gdal_sys::OGR_G_Area(self.c_geometry()) }
     }
 
-    /// May or may not contain a reference to a SpatialRef: if not, it returns
-    /// an `Ok(None)`; if it does, it tries to build a SpatialRef. If that
-    /// succeeds, it returns an Ok(Some(SpatialRef)), otherwise, you get the
-    /// Err.
+    /// Get the spatial reference system for this geometry.
     ///
+    /// Returns `Some(SpatialRef)`, or `None` if one isn't defined.
+    ///
+    /// Refer: [OGR_G_GetSpatialReference](https://gdal.org/doxygen/ogr__api_8h.html#abc393e40282eec3801fb4a4abc9e25bf)
     pub fn spatial_ref(&self) -> Option<SpatialRef> {
         let c_spatial_ref = unsafe { gdal_sys::OGR_G_GetSpatialReference(self.c_geometry()) };
 
         if c_spatial_ref.is_null() {
             None
         } else {
-            match unsafe { SpatialRef::from_c_obj(c_spatial_ref) } {
-                Ok(sr) => Some(sr),
-                Err(_) => None,
-            }
+            unsafe { SpatialRef::from_c_obj(c_spatial_ref) }.ok()
         }
     }
 
@@ -415,6 +453,61 @@ impl Geometry {
     /// Create a copy of self as a `geo-types` geometry.
     pub fn to_geo(&self) -> Result<geo_types::Geometry<f64>> {
         self.try_into()
+    }
+
+    /// Attempts to make an invalid geometry valid without losing vertices.
+    ///
+    /// Already-valid geometries are cloned without further intervention.
+    ///
+    /// Extended options are available via [`CslStringList`] if GDAL is built with GEOS >= 3.8.
+    /// They are defined as follows:
+    ///
+    /// * `METHOD=LINEWORK`: Combines all rings into a set of node-ed lines and then extracts
+    ///    valid polygons from that "linework".
+    /// * `METHOD=STRUCTURE`: First makes all rings valid, then merges shells and subtracts holes
+    ///    from shells to generate valid result. Assumes holes and shells are correctly categorized.
+    /// * `KEEP_COLLAPSED=YES/NO`. Only for `METHOD=STRUCTURE`.
+    ///   - `NO` (default):  Collapses are converted to empty geometries
+    ///   - `YES`: collapses are converted to a valid geometry of lower dimension
+    ///
+    /// When GEOS < 3.8, this method will return `Ok(self.clone())` if it is valid, or `Err` if not.
+    ///
+    /// See: [OGR_G_MakeValidEx](https://gdal.org/api/vector_c_api.html#_CPPv417OGR_G_MakeValidEx12OGRGeometryH12CSLConstList)
+    ///
+    /// # Example
+    /// ```rust, no_run
+    /// use gdal::vector::Geometry;
+    /// # fn main() -> gdal::errors::Result<()> {
+    /// let src = Geometry::from_wkt("POLYGON ((0 0, 10 10, 0 10, 10 0, 0 0))")?;
+    /// let dst = src.make_valid(())?;
+    /// assert_eq!("MULTIPOLYGON (((10 0, 0 0, 5 5, 10 0)),((10 10, 5 5, 0 10, 10 10)))", dst.wkt()?);
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub fn make_valid<O: Into<CslStringList>>(&self, opts: O) -> Result<Geometry> {
+        let opts = opts.into();
+
+        fn inner(geom: &Geometry, opts: CslStringList) -> Result<Geometry> {
+            #[cfg(all(major_ge_3, minor_ge_4))]
+            let c_geom = unsafe { gdal_sys::OGR_G_MakeValidEx(geom.c_geometry(), opts.as_ptr()) };
+
+            #[cfg(not(all(major_ge_3, minor_ge_4)))]
+            let c_geom = {
+                if !opts.is_empty() {
+                    return Err(GdalError::BadArgument(
+                        "Options to make_valid require GDAL >= 3.4".into(),
+                    ));
+                }
+                unsafe { gdal_sys::OGR_G_MakeValid(geom.c_geometry()) }
+            };
+
+            if c_geom.is_null() {
+                Err(_last_null_pointer_err("OGR_G_MakeValid"))
+            } else {
+                Ok(unsafe { Geometry::with_c_geometry(c_geom, true) })
+            }
+        }
+        inner(self, opts)
     }
 }
 
@@ -482,13 +575,14 @@ impl Debug for GeometryRef<'_> {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use crate::spatial_ref::SpatialRef;
-
-    use super::{geometry_type_to_name, Geometry};
+    use crate::test_utils::SuppressGDALErrorLog;
 
     #[test]
     #[allow(clippy::float_cmp)]
     pub fn test_area() {
+        let _nolog = SuppressGDALErrorLog::new();
         let geom = Geometry::empty(::gdal_sys::OGRwkbGeometryType::wkbMultiPolygon).unwrap();
         assert_eq!(geom.area(), 0.0);
 
@@ -592,5 +686,41 @@ mod tests {
         );
         // We don't care what it returns when passed an invalid value, just that it doesn't crash.
         geometry_type_to_name(4372521);
+    }
+
+    #[test]
+    /// Simple clone case.
+    pub fn test_make_valid_clone() {
+        let src = Geometry::from_wkt("POINT (0 0)").unwrap();
+        let dst = src.make_valid(());
+        assert!(dst.is_ok());
+    }
+
+    #[test]
+    /// Un-repairable geometry case
+    pub fn test_make_valid_invalid() {
+        let _nolog = SuppressGDALErrorLog::new();
+        let src = Geometry::from_wkt("LINESTRING (0 0)").unwrap();
+        let dst = src.make_valid(());
+        assert!(dst.is_err());
+    }
+
+    #[test]
+    /// Repairable case (self-intersecting)
+    pub fn test_make_valid_repairable() {
+        let src = Geometry::from_wkt("POLYGON ((0 0, 10 10, 0 10, 10 0, 0 0))").unwrap();
+        let dst = src.make_valid(());
+        assert!(dst.is_ok());
+    }
+
+    #[cfg(all(major_ge_3, minor_ge_4))]
+    #[test]
+    /// Repairable case, but use extended options
+    pub fn test_make_valid_ex() {
+        let src =
+            Geometry::from_wkt("POLYGON ((0 0, 0 10, 10 10, 10 0, 0 0),(5 5, 15 10, 15 0, 5 5))")
+                .unwrap();
+        let dst = src.make_valid(&[("STRUCTURE", "LINEWORK")]);
+        assert!(dst.is_ok(), "{dst:?}");
     }
 }

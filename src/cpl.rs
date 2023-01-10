@@ -7,13 +7,15 @@ use std::ffi::CString;
 use std::fmt::{Debug, Formatter};
 use std::ptr;
 
-use gdal_sys::{CSLCount, CSLDestroy, CSLFetchNameValue, CSLSetNameValue};
+use gdal_sys::{CSLCount, CSLDestroy, CSLDuplicate, CSLFetchNameValue, CSLSetNameValue};
 use libc::c_char;
 
 use crate::errors::{GdalError, Result};
 use crate::utils::{_string, _string_tuple};
 
-/// Wraps a [`gdal_sys::CSLConstList`]  (a.k.a. `char **papszStrList`)
+/// Wraps a [`gdal_sys::CSLConstList`]  (a.k.a. `char **papszStrList`). This data structure
+/// (a null-terminated array of null-terminated strings) is used throughout GDAL to pass
+/// `KEY=VALUE`-formatted options to various functions.
 ///
 /// See the [`CSL*` GDAL functions](https://gdal.org/api/cpl.html#cpl-string-h) for more details.
 pub struct CslStringList {
@@ -21,6 +23,7 @@ pub struct CslStringList {
 }
 
 impl CslStringList {
+    /// Creates an empty GDAL string list.
     pub fn new() -> Self {
         Self {
             list_ptr: ptr::null_mut(),
@@ -104,6 +107,14 @@ impl Default for CslStringList {
     }
 }
 
+impl Clone for CslStringList {
+    fn clone(&self) -> Self {
+        let list_ptr = unsafe { CSLDuplicate(self.list_ptr) };
+        Self { list_ptr }
+    }
+}
+
+/// State for iterator over [`CslStringList`] entries.
 pub struct CslStringListIterator<'a> {
     list: &'a CslStringList,
     idx: usize,
@@ -152,6 +163,47 @@ impl Debug for CslStringList {
             f.write_fmt(format_args!("{k}={v}\n"))?;
         }
         Ok(())
+    }
+}
+
+/// Convenience shorthand for specifying an empty `CslStringList` to functions accepting
+/// `Into<CslStringList>`.
+///
+/// # Example
+///
+/// ```rust, no_run
+/// use gdal::cpl::CslStringList;
+/// fn count_opts<O: Into<CslStringList>>(opts: O) -> usize {
+///     opts.into().len()
+/// }
+///
+/// assert_eq!(count_opts(()), 0);
+/// ```
+impl From<()> for CslStringList {
+    fn from(_: ()) -> Self {
+        CslStringList::default()
+    }
+}
+
+/// Convenience for creating a [`CslStringList`] from a slice of _key_/_value_ tuples.
+///
+/// # Example
+///
+/// ```rust, no_run
+/// use gdal::cpl::CslStringList;
+/// fn count_opts<O: Into<CslStringList>>(opts: O) -> usize {
+///     opts.into().len()
+/// }
+///
+/// assert_eq!(count_opts(&[("One", "1"), ("Two", "2"), ("Three", "3")]), 3);
+/// ```
+impl<const N: usize> From<&[(&str, &str); N]> for CslStringList {
+    fn from(pairs: &[(&str, &str); N]) -> Self {
+        let mut result = Self::default();
+        for (k, v) in pairs {
+            result.set_name_value(k, v).expect("valid key/value pair");
+        }
+        result
     }
 }
 
