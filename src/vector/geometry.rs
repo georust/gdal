@@ -229,7 +229,7 @@ impl Geometry {
     ///
     /// `index` is the line string vertex index, from 0 to `point_count()-1`, or `0` when a point.
     ///
-    /// Refer: [`OGR_G_GetPoint`](https://gdal.org/api/vector_c_api.html#_CPPv414OGR_G_GetPoint12OGRGeometryHiPdPdPd)
+    /// See: [`OGR_G_GetPoint`](https://gdal.org/api/vector_c_api.html#_CPPv414OGR_G_GetPoint12OGRGeometryHiPdPdPd)
     pub fn get_point(&self, index: i32) -> (f64, f64, f64) {
         let mut x: c_double = 0.;
         let mut y: c_double = 0.;
@@ -300,14 +300,14 @@ impl Geometry {
 
     /// Get the geometry type ordinal
     ///
-    /// Refer: [OGR_G_GetGeometryType](https://gdal.org/api/vector_c_api.html#_CPPv421OGR_G_GetGeometryType12OGRGeometryH)
+    /// See: [OGR_G_GetGeometryType](https://gdal.org/api/vector_c_api.html#_CPPv421OGR_G_GetGeometryType12OGRGeometryH)
     pub fn geometry_type(&self) -> OGRwkbGeometryType::Type {
         unsafe { gdal_sys::OGR_G_GetGeometryType(self.c_geometry()) }
     }
 
     /// Get the WKT name for the type of this geometry.
     ///
-    /// Refer: [`OGR_G_GetGeometryName`](https://gdal.org/api/vector_c_api.html#_CPPv421OGR_G_GetGeometryName12OGRGeometryH)
+    /// See: [`OGR_G_GetGeometryName`](https://gdal.org/api/vector_c_api.html#_CPPv421OGR_G_GetGeometryName12OGRGeometryH)
     pub fn geometry_name(&self) -> String {
         // Note: C API makes no statements about this possibly returning null.
         // So we don't have to result wrap this,
@@ -326,7 +326,7 @@ impl Geometry {
     ///
     /// For a polygon, the returned number is the number of rings (exterior ring + interior rings).
     ///
-    /// Refer: [`OGR_G_GetGeometryCount`](https://gdal.org/api/vector_c_api.html#_CPPv422OGR_G_GetGeometryCount12OGRGeometryH)
+    /// See: [`OGR_G_GetGeometryCount`](https://gdal.org/api/vector_c_api.html#_CPPv422OGR_G_GetGeometryCount12OGRGeometryH)
     pub fn geometry_count(&self) -> usize {
         let cnt = unsafe { gdal_sys::OGR_G_GetGeometryCount(self.c_geometry()) };
         cnt as usize
@@ -336,7 +336,7 @@ impl Geometry {
     ///
     /// Only `wkbPoint` or `wkbLineString` may return a non-zero value. Other geometry types will return 0.
     ///
-    /// Refer: [`OGR_G_GetPointCount`](https://gdal.org/api/vector_c_api.html#_CPPv419OGR_G_GetPointCount12OGRGeometryH)
+    /// See: [`OGR_G_GetPointCount`](https://gdal.org/api/vector_c_api.html#_CPPv419OGR_G_GetPointCount12OGRGeometryH)
     pub fn point_count(&self) -> usize {
         let cnt = unsafe { gdal_sys::OGR_G_GetPointCount(self.c_geometry()) };
         cnt as usize
@@ -472,7 +472,7 @@ impl Geometry {
     ///
     /// When GEOS < 3.8, this method will return `Ok(self.clone())` if it is valid, or `Err` if not.
     ///
-    /// Refer: [OGR_G_MakeValidEx](https://gdal.org/api/vector_c_api.html#_CPPv417OGR_G_MakeValidEx12OGRGeometryH12CSLConstList)
+    /// See: [OGR_G_MakeValidEx](https://gdal.org/api/vector_c_api.html#_CPPv417OGR_G_MakeValidEx12OGRGeometryH12CSLConstList)
     ///
     /// # Example
     /// ```rust, no_run
@@ -480,7 +480,7 @@ impl Geometry {
     /// # fn main() -> gdal::errors::Result<()> {
     /// let src = Geometry::from_wkt("POLYGON ((0 0, 10 10, 0 10, 10 0, 0 0))")?;
     /// let dst = src.make_valid(())?;
-    /// assert_eq!("MULTIPOLYGON (((10 0,0 0,5 5,10 0)),((10 10,5 5,0 10,10 10)))", dst.wkt()?);
+    /// assert_eq!("MULTIPOLYGON (((10 0, 0 0, 5 5, 10 0)),((10 10, 5 5, 0 10, 10 10)))", dst.wkt()?);
     /// # Ok(())
     /// # }
     /// ```
@@ -708,7 +708,7 @@ mod tests {
     #[test]
     /// Repairable case (self-intersecting)
     pub fn test_make_valid_repairable() {
-        let src = Geometry::from_wkt("POLYGON ((0 0,10 10,0 10,10 0,0 0))").unwrap();
+        let src = Geometry::from_wkt("POLYGON ((0 0, 10 10, 0 10, 10 0, 0 0))").unwrap();
         let dst = src.make_valid(());
         assert!(dst.is_ok());
     }
@@ -718,7 +718,8 @@ mod tests {
     /// Repairable case, but use extended options
     pub fn test_make_valid_ex() {
         let src =
-            Geometry::from_wkt("POLYGON ((0 0,0 10,10 10,10 0,0 0),(5 5,15 10,15 0,5 5))").unwrap();
+            Geometry::from_wkt("POLYGON ((0 0, 0 10, 10 10, 10 0, 0 0),(5 5, 15 10, 15 0, 5 5))")
+                .unwrap();
         let dst = src.make_valid(&[("STRUCTURE", "LINEWORK")]);
         assert!(dst.is_ok(), "{dst:?}");
     }
