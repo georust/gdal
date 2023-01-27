@@ -36,9 +36,9 @@ fn run() -> Result<()> {
     let htransform = CoordTransform::new(&spatial_ref2, &spatial_ref1)?;
     let mut xs = [23.43, 23.50];
     let mut ys = [37.58, 37.70];
-    println!("Before transformation :\n{:?} {:?}", xs, ys);
+    println!("Before transformation :\n{xs:?} {ys:?}");
     htransform.transform_coords(&mut xs, &mut ys, &mut [0.0, 0.0])?;
-    println!("After transformation :\n{:?} {:?}\n", xs, ys);
+    println!("After transformation :\n{xs:?} {ys:?}\n");
     let geom = Geometry::from_wkt(
         "POLYGON((23.43 37.58, 23.43 40.0, 25.29 40.0, 25.29 37.58, 23.43 37.58))",
     )?;

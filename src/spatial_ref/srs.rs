@@ -386,7 +386,7 @@ impl SpatialRef {
             return Err(_last_null_pointer_err("OSRGetAuthorityCode"));
         }
         let code = unsafe { CStr::from_ptr(c_ptr) }.to_str()?;
-        Ok(format!("{}:{}", name, code))
+        Ok(format!("{name}:{code}"))
     }
 
     pub fn auto_identify_epsg(&mut self) -> Result<()> {

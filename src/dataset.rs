@@ -657,7 +657,7 @@ impl Dataset {
     ///     ..Default::default()
     /// }).unwrap();
     /// ```
-    pub fn create_layer<'a>(&mut self, options: LayerOptions<'a>) -> Result<Layer> {
+    pub fn create_layer(&mut self, options: LayerOptions<'_>) -> Result<Layer> {
         let c_name = CString::new(options.name)?;
         let c_srs = match options.srs {
             Some(srs) => srs.to_c_hsrs(),

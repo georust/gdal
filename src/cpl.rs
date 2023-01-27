@@ -39,14 +39,12 @@ impl CslStringList {
     pub fn set_name_value(&mut self, name: &str, value: &str) -> Result<()> {
         if !name.chars().all(|c| c.is_ascii_alphanumeric() || c == '_') {
             return Err(GdalError::BadArgument(format!(
-                "Invalid characters in name: '{}'",
-                name
+                "Invalid characters in name: '{name}'"
             )));
         }
         if value.contains(|c| c == '\n' || c == '\r') {
             return Err(GdalError::BadArgument(format!(
-                "Invalid characters in value: '{}'",
-                value
+                "Invalid characters in value: '{value}'"
             )));
         }
         let psz_name = CString::new(name)?;

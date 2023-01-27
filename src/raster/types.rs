@@ -63,8 +63,7 @@ impl GdalDataType {
         let gdal_type = unsafe { GDALGetDataTypeByName(c_name.as_ptr()) };
         match gdal_type {
             GDALDataType::GDT_Unknown => Err(GdalError::BadArgument(format!(
-                "unable to find datatype with name '{}'",
-                name
+                "unable to find datatype with name '{name}'"
             ))),
             _ => gdal_type.try_into(),
         }
@@ -412,9 +411,9 @@ mod tests {
         for t in GdalDataType::iter() {
             // Test converting from GDALDataType:Type
             let t2: GdalDataType = t.gdal_ordinal().try_into().unwrap();
-            assert_eq!(&t, &t2, "{}", t);
+            assert_eq!(&t, &t2, "{t}");
             assert!(t.bits() > 0, "{}", t);
-            assert_eq!(t.bits(), t.bytes() * 8, "{}", t);
+            assert_eq!(t.bits(), t.bytes() * 8, "{t}");
             let name = t.name();
             match t.gdal_ordinal() {
                 GDT_Byte | GDT_UInt16 | GDT_Int16 | GDT_UInt32 | GDT_Int32 => {
@@ -431,7 +430,7 @@ mod tests {
                     assert!(t.is_floating(), "{}", &name);
                 }
 
-                o => panic!("unknown type ordinal '{}'", o),
+                o => panic!("unknown type ordinal '{o}'"),
             }
             match t.gdal_ordinal() {
                 GDT_Byte | GDT_UInt16 | GDT_UInt32 => {
@@ -448,7 +447,7 @@ mod tests {
                 GDT_Int64 => {
                     assert!(t.is_signed(), "{}", &name);
                 }
-                o => panic!("unknown type ordinal '{}'", o),
+                o => panic!("unknown type ordinal '{o}'"),
             }
         }
 

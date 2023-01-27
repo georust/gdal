@@ -12,5 +12,5 @@ fn main() {
     let key = "INTERLEAVE";
     let domain = "IMAGE_STRUCTURE";
     let meta = dataset.metadata_item(key, domain);
-    println!("domain: {:?} key: {:?} -> value: {:?}", domain, key, meta);
+    println!("domain: {domain:?} key: {key:?} -> value: {meta:?}");
 }

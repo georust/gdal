@@ -41,7 +41,7 @@ fn example_1() -> Result<()> {
     ft.set_field_string("Name", "Feature 2")?;
     match ft.set_field_double("Values", 0.789) {
         Ok(v) => v,
-        Err(err) => println!("{}", err),
+        Err(err) => println!("{err}"),
     };
     ft.create(&lyr)?;
 
@@ -89,7 +89,7 @@ fn example_2() -> Result<()> {
         ],
     ) {
         Ok(v) => v,
-        Err(err) => println!("{}", err),
+        Err(err) => println!("{err}"),
     };
 
     Ok(())
