@@ -475,38 +475,34 @@ impl Geometry {
     ///
     /// # Example
     /// ```rust, no_run
+    /// use gdal::cpl::CslStringList;
     /// use gdal::vector::Geometry;
     /// # fn main() -> gdal::errors::Result<()> {
     /// let src = Geometry::from_wkt("POLYGON ((0 0, 10 10, 0 10, 10 0, 0 0))")?;
-    /// let dst = src.make_valid(())?;
+    /// let dst = src.make_valid(&CslStringList::new())?;
     /// assert_eq!("MULTIPOLYGON (((10 0, 0 0, 5 5, 10 0)),((10 10, 5 5, 0 10, 10 10)))", dst.wkt()?);
     /// # Ok(())
     /// # }
     /// ```
-    pub fn make_valid<O: Into<CslStringList>>(&self, opts: O) -> Result<Geometry> {
-        let opts = opts.into();
+    pub fn make_valid(&self, opts: &CslStringList) -> Result<Geometry> {
+        #[cfg(all(major_ge_3, minor_ge_4))]
+        let c_geom = unsafe { gdal_sys::OGR_G_MakeValidEx(self.c_geometry(), opts.as_ptr()) };
 
-        fn inner(geom: &Geometry, opts: CslStringList) -> Result<Geometry> {
-            #[cfg(all(major_ge_3, minor_ge_4))]
-            let c_geom = unsafe { gdal_sys::OGR_G_MakeValidEx(geom.c_geometry(), opts.as_ptr()) };
-
-            #[cfg(not(all(major_ge_3, minor_ge_4)))]
-            let c_geom = {
-                if !opts.is_empty() {
-                    return Err(GdalError::BadArgument(
-                        "Options to make_valid require GDAL >= 3.4".into(),
-                    ));
-                }
-                unsafe { gdal_sys::OGR_G_MakeValid(geom.c_geometry()) }
-            };
-
-            if c_geom.is_null() {
-                Err(_last_null_pointer_err("OGR_G_MakeValid"))
-            } else {
-                Ok(unsafe { Geometry::with_c_geometry(c_geom, true) })
+        #[cfg(not(all(major_ge_3, minor_ge_4)))]
+        let c_geom = {
+            if !opts.is_empty() {
+                return Err(GdalError::BadArgument(
+                    "Options to make_valid require GDAL >= 3.4".into(),
+                ));
             }
+            unsafe { gdal_sys::OGR_G_MakeValid(self.c_geometry()) }
+        };
+
+        if c_geom.is_null() {
+            Err(_last_null_pointer_err("OGR_G_MakeValid"))
+        } else {
+            Ok(unsafe { Geometry::with_c_geometry(c_geom, true) })
         }
-        inner(self, opts)
     }
 }
 
@@ -691,7 +687,7 @@ mod tests {
     /// Simple clone case.
     pub fn test_make_valid_clone() {
         let src = Geometry::from_wkt("POINT (0 0)").unwrap();
-        let dst = src.make_valid(());
+        let dst = src.make_valid(&CslStringList::new());
         assert!(dst.is_ok());
     }
 
@@ -700,7 +696,7 @@ mod tests {
     pub fn test_make_valid_invalid() {
         let _nolog = SuppressGDALErrorLog::new();
         let src = Geometry::from_wkt("LINESTRING (0 0)").unwrap();
-        let dst = src.make_valid(());
+        let dst = src.make_valid(&CslStringList::new());
         assert!(dst.is_err());
     }
 
@@ -708,7 +704,7 @@ mod tests {
     /// Repairable case (self-intersecting)
     pub fn test_make_valid_repairable() {
         let src = Geometry::from_wkt("POLYGON ((0 0, 10 10, 0 10, 10 0, 0 0))").unwrap();
-        let dst = src.make_valid(());
+        let dst = src.make_valid(&CslStringList::new());
         assert!(dst.is_ok());
     }
 
@@ -719,7 +715,8 @@ mod tests {
         let src =
             Geometry::from_wkt("POLYGON ((0 0, 0 10, 10 10, 10 0, 0 0),(5 5, 15 10, 15 0, 5 5))")
                 .unwrap();
-        let dst = src.make_valid(&[("STRUCTURE", "LINEWORK")]);
+        let opts = CslStringList::try_from(&[("STRUCTURE", "LINEWORK")]).unwrap();
+        let dst = src.make_valid(&opts);
         assert!(dst.is_ok(), "{dst:?}");
     }
 }

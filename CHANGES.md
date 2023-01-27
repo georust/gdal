@@ -6,7 +6,11 @@
 
   - <https://github.com/georust/gdal/pull/363>
 
-- Added c_rasterband method to Rasterband to obtain the raw C pointer to GDALRasterBandH
+- Added a `TryFrom` array implementation for `CslStringList`
+
+  - <https://github.com/georust/gdal/pull/362>
+
+- Added `Rasterband::c_rasterband` to obtain the raw C pointer to `GDALRasterBandH`
 
   - <https://github.com/georust/gdal/pull/359>
 
