@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- **Possibly breaking**: Set MSRV to 1.58.
+
+  - <https://github.com/georust/gdal/pull/363>
+
 - Added c_rasterband method to Rasterband to obtain the raw C pointer to GDALRasterBandH
 
   - <https://github.com/georust/gdal/pull/359>
