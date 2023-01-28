@@ -204,7 +204,7 @@ fn main() {
     if let Some(lib_dir) = lib_dir {
         let link_type = if prefer_static { "static" } else { "dylib" };
 
-        println!("cargo:rustc-link-lib={}={}", link_type, lib_name);
+        println!("cargo:rustc-link-lib={link_type}={lib_name}");
         println!("cargo:rustc-link-search={}", lib_dir.to_str().unwrap());
 
         need_metadata = false;

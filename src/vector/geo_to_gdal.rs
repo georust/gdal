@@ -27,7 +27,7 @@ where
 {
     fn to_gdal(&self) -> Result<Geometry> {
         let mut geom = Geometry::empty(OGRwkbGeometryType::wkbMultiPoint)?;
-        let &geo_types::MultiPoint(ref point_list) = self;
+        let geo_types::MultiPoint(point_list) = self;
         for point in point_list.iter() {
             geom.add_geometry(point.to_gdal()?)?;
         }
@@ -43,7 +43,7 @@ where
     T: CoordFloat,
 {
     let mut geom = Geometry::empty(wkb_type)?;
-    let &geo_types::LineString(ref linestring) = points;
+    let geo_types::LineString(linestring) = points;
     for (i, &coordinate) in linestring.iter().enumerate() {
         geom.set_point_2d(
             i,
@@ -95,7 +95,7 @@ where
 {
     fn to_gdal(&self) -> Result<Geometry> {
         let mut geom = Geometry::empty(OGRwkbGeometryType::wkbMultiLineString)?;
-        let &geo_types::MultiLineString(ref point_list) = self;
+        let geo_types::MultiLineString(point_list) = self;
         for point in point_list.iter() {
             geom.add_geometry(point.to_gdal()?)?;
         }
@@ -131,7 +131,7 @@ where
 {
     fn to_gdal(&self) -> Result<Geometry> {
         let mut geom = Geometry::empty(OGRwkbGeometryType::wkbMultiPolygon)?;
-        let &geo_types::MultiPolygon(ref polygon_list) = self;
+        let geo_types::MultiPolygon(polygon_list) = self;
         for polygon in polygon_list.iter() {
             geom.add_geometry(polygon.to_gdal()?)?;
         }
@@ -145,7 +145,7 @@ where
 {
     fn to_gdal(&self) -> Result<Geometry> {
         let mut geom = Geometry::empty(OGRwkbGeometryType::wkbGeometryCollection)?;
-        let &geo_types::GeometryCollection(ref item_list) = self;
+        let geo_types::GeometryCollection(item_list) = self;
         for item in item_list.iter() {
             geom.add_geometry(item.to_gdal()?)?;
         }
