@@ -164,44 +164,25 @@ impl Debug for CslStringList {
     }
 }
 
-/// Convenience shorthand for specifying an empty `CslStringList` to functions accepting
-/// `Into<CslStringList>`.
-///
-/// # Example
-///
-/// ```rust, no_run
-/// use gdal::cpl::CslStringList;
-/// fn count_opts<O: Into<CslStringList>>(opts: O) -> usize {
-///     opts.into().len()
-/// }
-///
-/// assert_eq!(count_opts(()), 0);
-/// ```
-impl From<()> for CslStringList {
-    fn from(_: ()) -> Self {
-        CslStringList::default()
-    }
-}
-
 /// Convenience for creating a [`CslStringList`] from a slice of _key_/_value_ tuples.
 ///
 /// # Example
 ///
 /// ```rust, no_run
 /// use gdal::cpl::CslStringList;
-/// fn count_opts<O: Into<CslStringList>>(opts: O) -> usize {
-///     opts.into().len()
-/// }
 ///
-/// assert_eq!(count_opts(&[("One", "1"), ("Two", "2"), ("Three", "3")]), 3);
+/// let opts = CslStringList::try_from(&[("One", "1"), ("Two", "2"), ("Three", "3")]).expect("known valid");
+/// assert_eq!(opts.len(), 3);
 /// ```
-impl<const N: usize> From<&[(&str, &str); N]> for CslStringList {
-    fn from(pairs: &[(&str, &str); N]) -> Self {
+impl<const N: usize> TryFrom<&[(&str, &str); N]> for CslStringList {
+    type Error = GdalError;
+
+    fn try_from(pairs: &[(&str, &str); N]) -> Result<Self> {
         let mut result = Self::default();
         for (k, v) in pairs {
-            result.set_name_value(k, v).expect("valid key/value pair");
+            result.set_name_value(k, v)?;
         }
-        result
+        Ok(result)
     }
 }
 
@@ -265,6 +246,15 @@ mod tests {
         let mut l = fixture()?;
         assert!(l.set_name_value("l==t", "2").is_err());
         assert!(l.set_name_value("foo", "2\n4\r5").is_err());
+
+        Ok(())
+    }
+
+    #[test]
+    fn try_from_impl() -> Result<()> {
+        let l = CslStringList::try_from(&[("ONE", "1"), ("TWO", "2")])?;
+        assert!(matches!(l.fetch_name_value("ONE"), Ok(Some(s)) if s == *"1"));
+        assert!(matches!(l.fetch_name_value("TWO"), Ok(Some(s)) if s == *"2"));
 
         Ok(())
     }
