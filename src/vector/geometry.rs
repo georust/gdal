@@ -504,6 +504,17 @@ impl Geometry {
             Ok(unsafe { Geometry::with_c_geometry(c_geom, true) })
         }
     }
+
+    /// Test if the geometry is valid.
+    ///
+    /// This function is built on the GEOS library.
+    /// If OGR is built without the GEOS library, this function will always return `false`.
+    ///
+    /// See: [`OGR_G_IsValid`](https://gdal.org/api/vector_c_api.html#_CPPv413OGR_G_IsValid12OGRGeometryH)
+    pub fn is_valid(&self) -> bool {
+        let p = unsafe { gdal_sys::OGR_G_IsValid(self.c_geometry()) };
+        p != 0
+    }
 }
 
 impl Drop for Geometry {
@@ -689,6 +700,7 @@ mod tests {
         let src = Geometry::from_wkt("POINT (0 0)").unwrap();
         let dst = src.make_valid(&CslStringList::new());
         assert!(dst.is_ok());
+        assert!(dst.unwrap().is_valid());
     }
 
     #[test]
@@ -696,6 +708,7 @@ mod tests {
     pub fn test_make_valid_invalid() {
         let _nolog = SuppressGDALErrorLog::new();
         let src = Geometry::from_wkt("LINESTRING (0 0)").unwrap();
+        assert!(!src.is_valid());
         let dst = src.make_valid(&CslStringList::new());
         assert!(dst.is_err());
     }
@@ -704,8 +717,10 @@ mod tests {
     /// Repairable case (self-intersecting)
     pub fn test_make_valid_repairable() {
         let src = Geometry::from_wkt("POLYGON ((0 0, 10 10, 0 10, 10 0, 0 0))").unwrap();
+        assert!(!src.is_valid());
         let dst = src.make_valid(&CslStringList::new());
         assert!(dst.is_ok());
+        assert!(dst.unwrap().is_valid());
     }
 
     #[cfg(all(major_ge_3, minor_ge_4))]
@@ -718,5 +733,6 @@ mod tests {
         let opts = CslStringList::try_from(&[("STRUCTURE", "LINEWORK")]).unwrap();
         let dst = src.make_valid(&opts);
         assert!(dst.is_ok(), "{dst:?}");
+        assert!(dst.unwrap().is_valid());
     }
 }

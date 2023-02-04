@@ -222,7 +222,7 @@ impl<'a> RasterBand<'a> {
         (self.x_size(), self.y_size())
     }
 
-    /// Read data from this band into a slice, where `T` implements ['GdalType']
+    /// Read data from this band into a slice, where `T` implements [`GdalType`]
     ///
     /// # Arguments
     ///
@@ -293,7 +293,7 @@ impl<'a> RasterBand<'a> {
         Ok(())
     }
 
-    /// Read a 'Buffer<T>' from this band, where `T` implements ['GdalType'].
+    /// Read a [`Buffer<T>`] from this band, where `T` implements [`GdalType`].
     ///
     /// # Arguments
     ///
@@ -373,7 +373,7 @@ impl<'a> RasterBand<'a> {
 
     #[cfg(feature = "ndarray")]
     #[cfg_attr(docsrs, doc(cfg(feature = "array")))]
-    /// Read a 'Array2<T>' from this band, where `T` implements ['GdalType'].
+    /// Read a [`Array2<T>`] from this band, where `T` implements [`GdalType`].
     ///
     /// # Arguments
     ///
@@ -400,7 +400,7 @@ impl<'a> RasterBand<'a> {
         )?)
     }
 
-    /// Read the full band as a 'Buffer<T>', where `T` implements ['GdalType'].
+    /// Read the full band as a [`Buffer<T>`], where `T` implements [`GdalType`].
     pub fn read_band_as<T: Copy + GdalType>(&self) -> Result<Buffer<T>> {
         let size = self.size();
         self.read_as::<T>((0, 0), (size.0, size.1), (size.0, size.1), None)
@@ -408,7 +408,7 @@ impl<'a> RasterBand<'a> {
 
     #[cfg(feature = "ndarray")]
     #[cfg_attr(docsrs, doc(cfg(feature = "array")))]
-    /// Read a 'Array2<T>' from a 'Dataset' block, where `T` implements ['GdalType'].
+    /// Read a [`Array2<T>`] from a [`Dataset`] block, where `T` implements [`GdalType`].
     ///
     /// # Arguments
     /// * `block_index` - the block index
@@ -440,7 +440,7 @@ impl<'a> RasterBand<'a> {
         Array2::from_shape_vec((size.1, size.0), data).map_err(Into::into)
     }
 
-    /// Write a 'Buffer<T>' into a 'Dataset'.
+    /// Write a [`Buffer<T>`] into a [`Dataset`].
     ///
     /// # Arguments
     ///
