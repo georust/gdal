@@ -38,6 +38,10 @@
   
   - <https://github.com/georust/gdal/pull/356>
 
+- Exposed spatial predicates over `Geometry`: `intersects`, `contains`, `disjoint`, `touches`, `crosses`, `within`, and `overlaps`.
+
+  - <https://github.com/georust/gdal/pull/366>
+
 ## 0.14
 
 - Added new content to `README.md` and the root docs.
