@@ -27,6 +27,13 @@
 #include "gdalwarper.h"
 
 /**
+ * Include ArrowArrayStream header for recent GDAL versions
+ */
+#if GDAL_VERSION_NUM >= GDAL_COMPUTE_VERSION(3,6,0)
+    #include "ogr_recordbatch.h"
+#endif
+
+/**
  * Type for a OGR error
  *
  * <div rustbindgen replaces="OGRErr"></div>

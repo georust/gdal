@@ -52,6 +52,8 @@ pub enum LayerCaps {
     OLCCurveGeometries,
     /// Layer capability for measured geometries support
     OLCMeasuredGeometries,
+    /// Layer capability for a specialized implementation to ArrowArrayStream
+    OLCFastGetArrowStream,
 }
 
 // Manage conversion to Gdal values
@@ -76,6 +78,7 @@ impl LayerCaps {
             Self::OLCCreateGeomField => "CreateGeomField",
             Self::OLCCurveGeometries => "CurveGeometries",
             Self::OLCMeasuredGeometries => "MeasuredGeometries",
+            Self::OLCFastGetArrowStream => "FastGetArrowStream",
         })
         .unwrap()
     }
@@ -466,6 +469,46 @@ pub trait LayerAccess: Sized {
         unsafe {
             gdal_sys::OGR_L_SetAttributeFilter(self.c_layer(), null_mut());
         }
+    }
+
+    /// Read batches of columnar [Arrow](https://arrow.apache.org/) data from OGR.
+    ///
+    /// Extended options are available via [`CslStringList`]. As defined in the OGR documentation for [`GetArrowStream`](https://gdal.org/api/ogrlayer_cpp.html#_CPPv4N8OGRLayer14GetArrowStreamEP16ArrowArrayStream12CSLConstList), the current options are:
+    ///
+    /// * `INCLUDE_FID=YES/NO`. Whether to include the FID column. Defaults to YES.
+    /// * `MAX_FEATURES_IN_BATCH=integer`. Maximum number of features to retrieve in a ArrowArray batch. Defaults to 65 536.
+    ///
+    /// Additional driver-specific options may exist.
+    ///
+    /// This API is new as of GDAL 3.6.
+    ///
+    /// # Example
+    ///
+    /// Refer to the example provided in `read_ogr_arrow.rs`.
+    ///
+    /// # Safety
+    /// This uses the Arrow C Data Interface to operate on raw pointers provisioned from Rust.
+    /// These pointers must be valid and provisioned according to the ArrowArrayStream spec.
+    #[cfg(any(major_ge_4, all(major_is_3, minor_ge_6)))]
+    unsafe fn read_arrow_stream(
+        &mut self,
+        out_stream: *mut gdal_sys::ArrowArrayStream,
+        options: &crate::cpl::CslStringList,
+    ) -> Result<()> {
+        self.reset_feature_reading();
+
+        unsafe {
+            let success =
+                gdal_sys::OGR_L_GetArrowStream(self.c_layer(), out_stream, options.as_ptr());
+            if !success {
+                return Err(GdalError::OgrError {
+                    err: 1,
+                    method_name: "OGR_L_GetArrowStream",
+                });
+            }
+        }
+
+        Ok(())
     }
 }
 
