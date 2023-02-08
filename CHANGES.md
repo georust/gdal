@@ -34,9 +34,13 @@
 
   - <https://github.com/georust/gdal/pull/355>
 
-- Exposed various functions on `Geometry`:  `make_valid`, `geometry_name`, and `point_count`. 
-  
+- Exposed various functions on `Geometry`:  `make_valid`, `geometry_name`, and `point_count`.
+
   - <https://github.com/georust/gdal/pull/356>
+
+- Exposed `read_arrow_stream` on `Layer` to access OGR's columnar reading API.
+
+  - <https://github.com/georust/gdal/pull/367>
 
 ## 0.14
 
