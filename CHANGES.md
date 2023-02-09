@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added `CslStringList::add_string`
+
+  - <https://github.com/georust/gdal/pull/364>
+
 - **Possibly breaking**: Set MSRV to 1.58.
 
   - <https://github.com/georust/gdal/pull/363>

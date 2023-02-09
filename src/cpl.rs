@@ -7,7 +7,9 @@ use std::ffi::CString;
 use std::fmt::{Debug, Formatter};
 use std::ptr;
 
-use gdal_sys::{CSLCount, CSLDestroy, CSLDuplicate, CSLFetchNameValue, CSLSetNameValue};
+use gdal_sys::{
+    CSLAddString, CSLCount, CSLDestroy, CSLDuplicate, CSLFetchNameValue, CSLSetNameValue,
+};
 use libc::c_char;
 
 use crate::errors::{GdalError, Result};
@@ -54,6 +56,17 @@ impl CslStringList {
             self.list_ptr = CSLSetNameValue(self.list_ptr, psz_name.as_ptr(), psz_value.as_ptr());
         }
 
+        Ok(())
+    }
+
+    /// Adds the string `value` to the list.
+    ///
+    /// Returns `Ok<()>` on success, `Err<GdalError>` if `value` cannot be converted to a C string.
+    ///
+    /// See: [`CSLAddString`](https://gdal.org/api/cpl.html#_CPPv412CSLAddStringPPcPKc)
+    pub fn add_string(&mut self, value: &str) -> Result<()> {
+        let v = CString::new(value)?;
+        self.list_ptr = unsafe { CSLAddString(self.list_ptr, v.as_ptr()) };
         Ok(())
     }
 
@@ -266,6 +279,19 @@ mod tests {
         assert!(s.contains("ONE=1"));
         assert!(s.contains("TWO=2"));
         assert!(s.contains("THREE=3"));
+
+        Ok(())
+    }
+
+    #[test]
+    fn can_add_strings() -> Result<()> {
+        let mut l = CslStringList::new();
+        assert!(l.is_empty());
+        l.add_string("-abc")?;
+        l.add_string("-d_ef")?;
+        l.add_string("A")?;
+        l.add_string("B")?;
+        assert_eq!(l.len(), 4);
 
         Ok(())
     }
