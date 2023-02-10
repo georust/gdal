@@ -25,7 +25,7 @@
 //! ## Usage
 //!
 //! This crate provides high-level, idiomatic Rust bindings for GDAL.
-//! To do that, it uses [`gdal-sys`](gdal-sys) internally, a low-level interface to the GDAL C library,
+//! To do that, it uses [`gdal_sys`] internally, a low-level interface to the GDAL C library,
 //! which is generated using [`bindgen`](https://rust-lang.github.io/rust-bindgen/).
 //! Using the `gdal-sys` crate directly is normally not needed, but it can be useful in order to call APIs that have not yet been exposed in this crate.
 //!

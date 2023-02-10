@@ -375,7 +375,7 @@ impl Geometry {
         Ok(())
     }
 
-    // Transform the geometry inplace (when we own the Geometry)
+    /// Transform the geometry inplace (when we own the Geometry)
     pub fn transform_inplace(&mut self, htransform: &CoordTransform) -> Result<()> {
         let rv = unsafe { gdal_sys::OGR_G_Transform(self.c_geometry(), htransform.to_c_hct()) };
         if rv != OGRErr::OGRERR_NONE {
@@ -387,7 +387,7 @@ impl Geometry {
         Ok(())
     }
 
-    // Return a new transformed geometry (when the Geometry is owned by a Feature)
+    /// Return a new transformed geometry (when the Geometry is owned by a Feature)
     pub fn transform(&self, htransform: &CoordTransform) -> Result<Geometry> {
         let new_c_geom = unsafe { gdal_sys::OGR_G_Clone(self.c_geometry()) };
         let rv = unsafe { gdal_sys::OGR_G_Transform(new_c_geom, htransform.to_c_hct()) };
@@ -411,7 +411,7 @@ impl Geometry {
         Ok(())
     }
 
-    /// Transforms a geometrys coordinates into another SpatialRef
+    /// Transforms a geometry's coordinates into another SpatialRef
     pub fn transform_to(&self, spatial_ref: &SpatialRef) -> Result<Geometry> {
         let new_c_geom = unsafe { gdal_sys::OGR_G_Clone(self.c_geometry()) };
         let rv = unsafe { gdal_sys::OGR_G_TransformTo(new_c_geom, spatial_ref.to_c_hsrs()) };
@@ -432,7 +432,7 @@ impl Geometry {
     ///
     /// Returns `Some(SpatialRef)`, or `None` if one isn't defined.
     ///
-    /// Refer: [OGR_G_GetSpatialReference](https://gdal.org/doxygen/ogr__api_8h.html#abc393e40282eec3801fb4a4abc9e25bf)
+    /// See: [OGR_G_GetSpatialReference](https://gdal.org/doxygen/ogr__api_8h.html#abc393e40282eec3801fb4a4abc9e25bf)
     pub fn spatial_ref(&self) -> Option<SpatialRef> {
         let c_spatial_ref = unsafe { gdal_sys::OGR_G_GetSpatialReference(self.c_geometry()) };
 
@@ -507,10 +507,13 @@ impl Geometry {
 
     /// Test if the geometry is valid.
     ///
-    /// This function is built on the GEOS library.
+    /// This function requires the GEOS library.
     /// If OGR is built without the GEOS library, this function will always return `false`.
+    /// Check with [`VersionInfo::has_geos`][has_geos].
     ///
     /// See: [`OGR_G_IsValid`](https://gdal.org/api/vector_c_api.html#_CPPv413OGR_G_IsValid12OGRGeometryH)
+    ///
+    /// [has_geos]: crate::version::VersionInfo::has_geos
     pub fn is_valid(&self) -> bool {
         let p = unsafe { gdal_sys::OGR_G_IsValid(self.c_geometry()) };
         p != 0
