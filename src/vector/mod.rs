@@ -1,5 +1,7 @@
 //! GDAL Vector Data API
 //!
+//! ## Example
+//!
 //! This example opens a vector [`Dataset`](crate::Dataset) and iterates over the various levels of structure within it.
 //! The GDAL vector data model is quite sophisticated, so please refer to the GDAL
 //! [Vector Data Model](https://gdal.org/user/vector_data_model.html) document for specifics.

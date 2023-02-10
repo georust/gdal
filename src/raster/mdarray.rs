@@ -199,12 +199,12 @@ impl<'a> MDArray<'a> {
         Ok(())
     }
 
-    /// Read a 'Buffer<T>' from this band. T implements 'GdalType'
+    /// Read a [`Vec<T>`] from this band, where `T` implements [`GdalType`].
     ///
     /// # Arguments
-    /// * array_start_index - Values representing the starting index to read in each dimension (in `[0, aoDims[i].GetSize()-1]` range).
+    /// * `array_start_index` - Values representing the starting index to read in each dimension (in `[0, aoDims[i].GetSize()-1]` range).
     ///   Array of `GetDimensionCount()` values. Must not be empty, unless for a zero-dimensional array.
-    /// * count - Values representing the number of values to extract in each dimension. Array of `GetDimensionCount()` values.
+    /// * `count` - Values representing the number of values to extract in each dimension. Array of `GetDimensionCount()` values.
     ///   Must not be empty, unless for a zero-dimensional array.
     ///
     pub fn read_as<T: Copy + GdalType>(

@@ -92,6 +92,12 @@ impl VersionInfo {
             .map(|p| (p.0.to_string(), p.1.to_string()))
             .collect()
     }
+
+    /// Determine if GDAL is compiled with [GEOS](https://libgeos.org/) support.
+    pub fn has_geos() -> bool {
+        version_info("BUILD_INFO").contains("GEOS_ENABLED=YES")
+    }
+
     /// Render all available version and build details in a multiline, debug string
     pub fn version_report() -> String {
         let mut buff: String = "GDALVersionInfo {\n".into();
@@ -152,5 +158,14 @@ mod tests {
 
         let license = VersionInfo::license();
         assert!(!license.is_empty());
+    }
+
+    #[test]
+    fn test_has_geos() {
+        let has_geos = VersionInfo::build_info()
+            .get("GEOS_ENABLED")
+            .unwrap_or(&"NO".into())
+            == "YES";
+        assert_eq!(VersionInfo::has_geos(), has_geos);
     }
 }

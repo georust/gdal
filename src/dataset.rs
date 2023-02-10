@@ -529,7 +529,7 @@ impl Dataset {
     /// * `overviews` - list of overview decimation factors, e.g. `&[2, 4, 8, 16, 32]`
     /// * `bands` - list of bands to build the overviews for, or empty for all bands
     ///
-    /// [`GDALBuildOverviews`]: https://gdal.org/doxygen/gdal_8h.html#a767f4456a6249594ee18ea53f68b7e80
+    /// [`GDALBuildOverviews`]: https://gdal.org/api/raster_c_api.html#_CPPv418GDALBuildOverviews12GDALDatasetHPKciPKiiPKi16GDALProgressFuncPv
     pub fn build_overviews(
         &mut self,
         resampling: &str,
