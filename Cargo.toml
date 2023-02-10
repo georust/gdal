@@ -33,7 +33,7 @@ semver = "1.0"
 [dev-dependencies]
 tempfile = "3.3"
 # Only used in the example
-arrow2 = "0.15"
+arrow2 = "0.16"
 
 [workspace]
 members = ["gdal-sys"]
