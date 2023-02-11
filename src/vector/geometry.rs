@@ -2,6 +2,7 @@ use std::cell::RefCell;
 use std::ffi::CString;
 use std::fmt::{self, Debug, Formatter};
 use std::marker::PhantomData;
+use std::mem::MaybeUninit;
 use std::ops::Deref;
 use std::ptr::null_mut;
 
@@ -13,6 +14,7 @@ use gdal_sys::{self, OGRErr, OGRGeometryH, OGRwkbGeometryType};
 use crate::errors::*;
 use crate::spatial_ref::{CoordTransform, SpatialRef};
 use crate::utils::{_last_null_pointer_err, _string};
+use crate::vector::{Envelope, Envelope3D};
 
 /// OGR Geometry
 pub struct Geometry {
@@ -424,8 +426,36 @@ impl Geometry {
         Ok(unsafe { Geometry::with_c_geometry(new_c_geom, true) })
     }
 
+    /// Compute geometry area in square units of the spatial reference system in use.
+    ///
+    /// Supported for `LinearRing`, `Polygon` or `MultiPolygon`.
+    /// Returns zero for all other geometry types.
+    ///
+    /// See: [`OGR_G_Area`](https://gdal.org/api/vector_c_api.html#_CPPv410OGR_G_Area12OGRGeometryH)
     pub fn area(&self) -> f64 {
         unsafe { gdal_sys::OGR_G_Area(self.c_geometry()) }
+    }
+
+    /// Computes and returns the axis-aligned 2D bounding envelope for this geometry.
+    ///
+    /// See: [`OGR_G_GetEnvelope`](https://gdal.org/api/vector_c_api.html#_CPPv417OGR_G_GetEnvelope12OGRGeometryHP11OGREnvelope)
+    pub fn envelope(&self) -> Envelope {
+        let mut envelope = MaybeUninit::uninit();
+        unsafe {
+            gdal_sys::OGR_G_GetEnvelope(self.c_geometry(), envelope.as_mut_ptr());
+            envelope.assume_init()
+        }
+    }
+
+    /// Computes and returns the axis aligned 3D bounding envelope for this geometry.
+    ///
+    /// See: [`OGR_G_GetEnvelope3D`](https://gdal.org/api/vector_c_api.html#_CPPv419OGR_G_GetEnvelope3D12OGRGeometryHP13OGREnvelope3D)
+    pub fn envelope_3d(&self) -> Envelope3D {
+        let mut envelope = MaybeUninit::uninit();
+        unsafe {
+            gdal_sys::OGR_G_GetEnvelope3D(self.c_geometry(), envelope.as_mut_ptr());
+            envelope.assume_init()
+        }
     }
 
     /// Get the spatial reference system for this geometry.
@@ -585,6 +615,7 @@ impl Debug for GeometryRef<'_> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::assert_almost_eq;
     use crate::spatial_ref::SpatialRef;
     use crate::test_utils::SuppressGDALErrorLog;
 
@@ -737,5 +768,27 @@ mod tests {
         let dst = src.make_valid(&opts);
         assert!(dst.is_ok(), "{dst:?}");
         assert!(dst.unwrap().is_valid());
+    }
+
+    #[test]
+    fn test_envelope() {
+        let geom = Geometry::from_wkt("MULTIPOINT((1.0 2.0), (2.0 4.0))").unwrap();
+        let envelope = geom.envelope();
+        assert_almost_eq(envelope.MinX, 1.0);
+        assert_almost_eq(envelope.MaxX, 2.0);
+        assert_almost_eq(envelope.MinY, 2.0);
+        assert_almost_eq(envelope.MaxY, 4.0);
+    }
+
+    #[test]
+    fn test_envelope3d() {
+        let geom = Geometry::from_wkt("MULTIPOINT((1.0 2.0 3.0), (2.0 4.0 5.0))").unwrap();
+        let envelope = geom.envelope_3d();
+        assert_almost_eq(envelope.MinX, 1.0);
+        assert_almost_eq(envelope.MaxX, 2.0);
+        assert_almost_eq(envelope.MinY, 2.0);
+        assert_almost_eq(envelope.MaxY, 4.0);
+        assert_almost_eq(envelope.MinZ, 3.0);
+        assert_almost_eq(envelope.MaxZ, 5.0);
     }
 }

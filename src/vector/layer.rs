@@ -2,12 +2,11 @@ use crate::metadata::Metadata;
 use crate::spatial_ref::SpatialRef;
 use crate::utils::{_last_null_pointer_err, _string};
 use crate::vector::defn::Defn;
-use crate::vector::{Feature, FieldValue, Geometry};
+use crate::vector::{Envelope, Feature, FieldValue, Geometry};
 use crate::{dataset::Dataset, gdal_major_object::MajorObject};
-use gdal_sys::{
-    self, GDALMajorObjectH, OGREnvelope, OGRErr, OGRFieldDefnH, OGRFieldType, OGRLayerH,
-};
+use gdal_sys::{self, GDALMajorObjectH, OGRErr, OGRFieldDefnH, OGRFieldType, OGRLayerH};
 use libc::c_int;
+use std::mem::MaybeUninit;
 use std::ptr::null_mut;
 use std::{convert::TryInto, ffi::CString, marker::PhantomData};
 
@@ -371,22 +370,17 @@ pub trait LayerAccess: Sized {
     ///
     /// Layers without any geometry may return [`OGRErr::OGRERR_FAILURE`] to indicate that no
     /// meaningful extents could be collected.
-    fn get_extent(&self) -> Result<gdal_sys::OGREnvelope> {
-        let mut envelope = OGREnvelope {
-            MinX: 0.0,
-            MaxX: 0.0,
-            MinY: 0.0,
-            MaxY: 0.0,
-        };
+    fn get_extent(&self) -> Result<Envelope> {
+        let mut envelope = MaybeUninit::uninit();
         let force = 1;
-        let rv = unsafe { gdal_sys::OGR_L_GetExtent(self.c_layer(), &mut envelope, force) };
+        let rv = unsafe { gdal_sys::OGR_L_GetExtent(self.c_layer(), envelope.as_mut_ptr(), force) };
         if rv != OGRErr::OGRERR_NONE {
             return Err(GdalError::OgrError {
                 err: rv,
                 method_name: "OGR_L_GetExtent",
             });
         }
-        Ok(envelope)
+        Ok(unsafe { envelope.assume_init() })
     }
 
     /// Returns the extent of this layer as an axis-aligned bounding box, if it is possible to
@@ -398,15 +392,10 @@ pub trait LayerAccess: Sized {
     /// Depending on the driver, the returned extent may or may not take the [spatial
     /// filter](`Layer::set_spatial_filter`) into account. So it is safer to call `try_get_extent`
     /// without setting a spatial filter.
-    fn try_get_extent(&self) -> Result<Option<gdal_sys::OGREnvelope>> {
-        let mut envelope = OGREnvelope {
-            MinX: 0.0,
-            MaxX: 0.0,
-            MinY: 0.0,
-            MaxY: 0.0,
-        };
+    fn try_get_extent(&self) -> Result<Option<Envelope>> {
+        let mut envelope = MaybeUninit::uninit();
         let force = 0;
-        let rv = unsafe { gdal_sys::OGR_L_GetExtent(self.c_layer(), &mut envelope, force) };
+        let rv = unsafe { gdal_sys::OGR_L_GetExtent(self.c_layer(), envelope.as_mut_ptr(), force) };
         if rv == OGRErr::OGRERR_FAILURE {
             Ok(None)
         } else {
@@ -416,7 +405,7 @@ pub trait LayerAccess: Sized {
                     method_name: "OGR_L_GetExtent",
                 });
             }
-            Ok(Some(envelope))
+            Ok(Some(unsafe { envelope.assume_init() }))
         }
     }
 

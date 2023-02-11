@@ -50,6 +50,10 @@
 
   - <https://github.com/georust/gdal/pull/366>
   
+- Added `Geometry::envelope` and `Geometry::envelope_3d`.
+
+  - <https://github.com/georust/gdal/pull/370>
+
 ## 0.14
 
 - Added new content to `README.md` and the root docs.
