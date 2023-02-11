@@ -1,11 +1,9 @@
 use crate::vector::Geometry;
-use gdal_sys::OGR_G_Intersection;
 
-/// An intersection between Geometry/Geometry returning the same type.
-pub trait Intersection
-where
-    Self: Sized,
-{
+/// # Set Operations
+///
+/// These methods provide set operations over two geometries, producing a new geometry.
+impl Geometry {
     /// Compute intersection.
     ///
     /// Generates a new geometry which is the region of intersection of
@@ -18,24 +16,21 @@ where
     /// # Returns
     /// Some(Geometry) if both Geometries contain pointers
     /// None if either geometry is missing the gdal pointer, or there is an error.
-    fn intersection(&self, other: &Self) -> Option<Self>;
-}
-
-impl Intersection for Geometry {
-    fn intersection(&self, other: &Self) -> Option<Self> {
+    ///
+    /// See: [`OGR_G_Intersection`](https://gdal.org/api/vector_c_api.html#_CPPv418OGR_G_Intersection12OGRGeometryH12OGRGeometryH)
+    pub fn intersection(&self, other: &Self) -> Option<Self> {
         if !self.has_gdal_ptr() {
             return None;
         }
         if !other.has_gdal_ptr() {
             return None;
         }
-        unsafe {
-            let ogr_geom = OGR_G_Intersection(self.c_geometry(), other.c_geometry());
-            if ogr_geom.is_null() {
-                return None;
-            }
-            Some(Geometry::with_c_geometry(ogr_geom, true))
+        let ogr_geom =
+            unsafe { gdal_sys::OGR_G_Intersection(self.c_geometry(), other.c_geometry()) };
+        if ogr_geom.is_null() {
+            return None;
         }
+        Some(unsafe { Geometry::with_c_geometry(ogr_geom, true) })
     }
 }
 

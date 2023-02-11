@@ -225,7 +225,6 @@ impl<'a> RasterBand<'a> {
     /// Read data from this band into a slice, where `T` implements [`GdalType`]
     ///
     /// # Arguments
-    ///
     /// * `window` - the window position from top left
     /// * `window_size` - the window size (GDAL will interpolate data if window_size != buffer_size)
     /// * `size` - the desired size to read
@@ -296,7 +295,6 @@ impl<'a> RasterBand<'a> {
     /// Read a [`Buffer<T>`] from this band, where `T` implements [`GdalType`].
     ///
     /// # Arguments
-    ///
     /// * `window` - the window position from top left
     /// * `window_size` - the window size (GDAL will interpolate data if `window_size` != `buffer_size`)
     /// * `buffer_size` - the desired size of the 'Buffer'
@@ -376,7 +374,6 @@ impl<'a> RasterBand<'a> {
     /// Read a [`Array2<T>`] from this band, where `T` implements [`GdalType`].
     ///
     /// # Arguments
-    ///
     /// * `window` - the window position from top left
     /// * `window_size` - the window size (GDAL will interpolate data if window_size != array_size)
     /// * `array_size` - the desired size of the 'Array'
@@ -413,7 +410,7 @@ impl<'a> RasterBand<'a> {
     /// # Arguments
     /// * `block_index` - the block index
     ///
-    /// # Note
+    /// # Notes
     /// The Matrix shape is (rows, cols) and raster shape is (cols in x-axis, rows in y-axis).
     pub fn read_block<T: Copy + GdalType>(&self, block_index: (usize, usize)) -> Result<Array2<T>> {
         let size = self.block_size();
@@ -443,7 +440,6 @@ impl<'a> RasterBand<'a> {
     /// Write a [`Buffer<T>`] into a [`Dataset`].
     ///
     /// # Arguments
-    ///
     /// * `window` - the window position from top left
     /// * `window_size` - the window size (GDAL will interpolate data if window_size != Buffer.size)
     /// * `buffer` - the data to write into the window

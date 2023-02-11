@@ -37,14 +37,14 @@ impl CoordTransform {
     /// transformations.
     ///
     /// # Arguments
-    /// * bounds - array of [axis0_min, axis1_min, axis0_max, axis1_min],
+    /// * `bounds` - array of [axis0_min, axis1_min, axis0_max, axis1_min],
     ///            interpreted in the axis order of the source SpatialRef,
     ///            typically [xmin, ymin, xmax, ymax]
-    /// * densify_pts - number of points per edge (recommended: 21)
+    /// * `densify_pts` - number of points per edge (recommended: 21)
     ///
     /// # Returns
-    /// Some([f64; 4]) with bounds in axis order of target SpatialRef
-    /// None if there is an error.
+    /// `Ok([f64; 4])` with bounds in axis order of target SpatialRef
+    /// `Err` if there is an error.
     #[cfg(all(major_ge_3, minor_ge_4))]
     pub fn transform_bounds(&self, bounds: &[f64; 4], densify_pts: i32) -> Result<[f64; 4]> {
         let mut out_xmin: f64 = 0.;
@@ -88,9 +88,9 @@ impl CoordTransform {
     /// Transform coordinates in place.
     ///
     /// # Arguments
-    /// * x - slice of x coordinates
-    /// * y - slice of y coordinates (must match x in length)
-    /// * z - slice of z coordinates, or an empty slice to ignore
+    /// * `x` - slice of x coordinates
+    /// * `y` - slice of y coordinates (must match x in length)
+    /// * `z` - slice of z coordinates, or an empty slice to ignore
     pub fn transform_coords(&self, x: &mut [f64], y: &mut [f64], z: &mut [f64]) -> Result<()> {
         let nb_coords = x.len();
         assert_eq!(

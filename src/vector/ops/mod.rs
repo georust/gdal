@@ -1,4 +1,6 @@
-mod geometry;
+mod conversions;
 mod predicates;
+mod set;
+mod transformations;
 
-pub use geometry::intersection::Intersection as GeometryIntersection;
+pub use conversions::ToGdal;

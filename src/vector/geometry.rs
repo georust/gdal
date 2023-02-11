@@ -1,18 +1,15 @@
 use std::cell::RefCell;
-use std::ffi::CString;
 use std::fmt::{self, Debug, Formatter};
 use std::marker::PhantomData;
 use std::mem::MaybeUninit;
 use std::ops::Deref;
-use std::ptr::null_mut;
 
-use libc::{c_char, c_double, c_int, c_void};
+use libc::{c_double, c_int};
 
-use crate::cpl::CslStringList;
 use gdal_sys::{self, OGRErr, OGRGeometryH, OGRwkbGeometryType};
 
 use crate::errors::*;
-use crate::spatial_ref::{CoordTransform, SpatialRef};
+use crate::spatial_ref::SpatialRef;
 use crate::utils::{_last_null_pointer_err, _string};
 use crate::vector::{Envelope, Envelope3D};
 
@@ -78,97 +75,11 @@ impl Geometry {
         unsafe { gdal_sys::OGR_G_IsEmpty(self.c_geometry()) == 1 }
     }
 
-    /// Create a geometry by parsing a
-    /// [WKT](https://en.wikipedia.org/wiki/Well-known_text) string.
-    pub fn from_wkt(wkt: &str) -> Result<Geometry> {
-        let c_wkt = CString::new(wkt)?;
-        // OGR_G_CreateFromWkt does not write to the pointed-to memory, but this is not reflected
-        // in its signature (`char**` instead of `char const**`), so we need a scary looking cast.
-        let mut c_wkt_ptr = c_wkt.as_ptr() as *mut c_char;
-        let mut c_geom = null_mut();
-        let rv = unsafe { gdal_sys::OGR_G_CreateFromWkt(&mut c_wkt_ptr, null_mut(), &mut c_geom) };
-        if rv != OGRErr::OGRERR_NONE {
-            return Err(GdalError::OgrError {
-                err: rv,
-                method_name: "OGR_G_CreateFromWkt",
-            });
-        }
-        Ok(unsafe { Geometry::with_c_geometry(c_geom, true) })
-    }
-
-    /// Creates a geometry by parsing a slice of bytes in
-    /// [WKB](https://en.wikipedia.org/wiki/Well-known_text_representation_of_geometry#Well-known_binary)
-    /// (Well-Known Binary) format.
-    pub fn from_wkb(wkb: &[u8]) -> Result<Geometry> {
-        let mut c_geom = null_mut();
-        let rv = unsafe {
-            gdal_sys::OGR_G_CreateFromWkb(
-                wkb.as_ptr() as *const std::ffi::c_void,
-                null_mut(),
-                &mut c_geom,
-                wkb.len() as i32,
-            )
-        };
-        if rv != gdal_sys::OGRErr::OGRERR_NONE {
-            return Err(GdalError::OgrError {
-                err: rv,
-                method_name: "OGR_G_CreateFromWkb",
-            });
-        }
-        Ok(unsafe { Geometry::with_c_geometry(c_geom, true) })
-    }
-
     /// Create a rectangular geometry from West, South, East and North values.
     pub fn bbox(w: f64, s: f64, e: f64, n: f64) -> Result<Geometry> {
         Geometry::from_wkt(&format!(
             "POLYGON (({w} {n}, {e} {n}, {e} {s}, {w} {s}, {w} {n}))",
         ))
-    }
-
-    /// Serialize the geometry as JSON.
-    pub fn json(&self) -> Result<String> {
-        let c_json = unsafe { gdal_sys::OGR_G_ExportToJson(self.c_geometry()) };
-        if c_json.is_null() {
-            return Err(_last_null_pointer_err("OGR_G_ExportToJson"));
-        };
-        let rv = _string(c_json);
-        unsafe { gdal_sys::VSIFree(c_json as *mut c_void) };
-        Ok(rv)
-    }
-
-    /// Serialize the geometry as WKT.
-    pub fn wkt(&self) -> Result<String> {
-        let mut c_wkt = null_mut();
-        let rv = unsafe { gdal_sys::OGR_G_ExportToWkt(self.c_geometry(), &mut c_wkt) };
-        if rv != OGRErr::OGRERR_NONE {
-            return Err(GdalError::OgrError {
-                err: rv,
-                method_name: "OGR_G_ExportToWkt",
-            });
-        }
-        let wkt = _string(c_wkt);
-        unsafe { gdal_sys::OGRFree(c_wkt as *mut c_void) };
-        Ok(wkt)
-    }
-
-    /// Serializes the geometry to
-    /// [WKB](https://en.wikipedia.org/wiki/Well-known_text_representation_of_geometry#Well-known_binary)
-    /// (Well-Known Binary) format.
-    pub fn wkb(&self) -> Result<Vec<u8>> {
-        let wkb_size = unsafe { gdal_sys::OGR_G_WkbSize(self.c_geometry()) as usize };
-        // We default to little-endian for now. A WKB string explicitly indicates the byte
-        // order, so this is not a problem for interoperability.
-        let byte_order = gdal_sys::OGRwkbByteOrder::wkbNDR;
-        let mut wkb = vec![0; wkb_size];
-        let rv =
-            unsafe { gdal_sys::OGR_G_ExportToWkb(self.c_geometry(), byte_order, wkb.as_mut_ptr()) };
-        if rv != gdal_sys::OGRErr::OGRERR_NONE {
-            return Err(GdalError::OgrError {
-                err: rv,
-                method_name: "OGR_G_ExportToWkb",
-            });
-        }
-        Ok(wkb)
     }
 
     /// Returns a C pointer to the wrapped Geometry
@@ -242,61 +153,6 @@ impl Geometry {
     pub fn get_point_vec(&self) -> Vec<(f64, f64, f64)> {
         let length = unsafe { gdal_sys::OGR_G_GetPointCount(self.c_geometry()) };
         (0..length).map(|i| self.get_point(i)).collect()
-    }
-
-    /// Compute the convex hull of this geometry.
-    pub fn convex_hull(&self) -> Result<Geometry> {
-        let c_geom = unsafe { gdal_sys::OGR_G_ConvexHull(self.c_geometry()) };
-        if c_geom.is_null() {
-            return Err(_last_null_pointer_err("OGR_G_ConvexHull"));
-        };
-        Ok(unsafe { Geometry::with_c_geometry(c_geom, true) })
-    }
-
-    #[cfg(any(all(major_is_2, minor_ge_1), major_ge_3))]
-    pub fn delaunay_triangulation(&self, tolerance: Option<f64>) -> Result<Self> {
-        let c_geom = unsafe {
-            gdal_sys::OGR_G_DelaunayTriangulation(self.c_geometry(), tolerance.unwrap_or(0.0), 0)
-        };
-        if c_geom.is_null() {
-            return Err(_last_null_pointer_err("OGR_G_DelaunayTriangulation"));
-        };
-
-        Ok(unsafe { Geometry::with_c_geometry(c_geom, true) })
-    }
-
-    pub fn simplify(&self, tolerance: f64) -> Result<Self> {
-        let c_geom = unsafe { gdal_sys::OGR_G_Simplify(self.c_geometry(), tolerance) };
-        if c_geom.is_null() {
-            return Err(_last_null_pointer_err("OGR_G_Simplify"));
-        };
-
-        Ok(unsafe { Geometry::with_c_geometry(c_geom, true) })
-    }
-
-    /// Compute buffer of geometry
-    ///
-    /// The `distance` parameter the buffer distance to be applied. Should be expressed into
-    /// the same unit as the coordinates of the geometry. `n_quad_segs` specifies the number
-    /// of segments used to approximate a 90 degree (quadrant) of curvature.
-    pub fn buffer(&self, distance: f64, n_quad_segs: u32) -> Result<Self> {
-        let c_geom =
-            unsafe { gdal_sys::OGR_G_Buffer(self.c_geometry(), distance, n_quad_segs as i32) };
-        if c_geom.is_null() {
-            return Err(_last_null_pointer_err("OGR_G_Buffer"));
-        };
-
-        Ok(unsafe { Geometry::with_c_geometry(c_geom, true) })
-    }
-
-    pub fn simplify_preserve_topology(&self, tolerance: f64) -> Result<Self> {
-        let c_geom =
-            unsafe { gdal_sys::OGR_G_SimplifyPreserveTopology(self.c_geometry(), tolerance) };
-        if c_geom.is_null() {
-            return Err(_last_null_pointer_err("OGR_G_SimplifyPreserveTopology"));
-        };
-
-        Ok(unsafe { Geometry::with_c_geometry(c_geom, true) })
     }
 
     /// Get the geometry type ordinal
@@ -377,55 +233,6 @@ impl Geometry {
         Ok(())
     }
 
-    /// Transform the geometry inplace (when we own the Geometry)
-    pub fn transform_inplace(&mut self, htransform: &CoordTransform) -> Result<()> {
-        let rv = unsafe { gdal_sys::OGR_G_Transform(self.c_geometry(), htransform.to_c_hct()) };
-        if rv != OGRErr::OGRERR_NONE {
-            return Err(GdalError::OgrError {
-                err: rv,
-                method_name: "OGR_G_Transform",
-            });
-        }
-        Ok(())
-    }
-
-    /// Return a new transformed geometry (when the Geometry is owned by a Feature)
-    pub fn transform(&self, htransform: &CoordTransform) -> Result<Geometry> {
-        let new_c_geom = unsafe { gdal_sys::OGR_G_Clone(self.c_geometry()) };
-        let rv = unsafe { gdal_sys::OGR_G_Transform(new_c_geom, htransform.to_c_hct()) };
-        if rv != OGRErr::OGRERR_NONE {
-            return Err(GdalError::OgrError {
-                err: rv,
-                method_name: "OGR_G_Transform",
-            });
-        }
-        Ok(unsafe { Geometry::with_c_geometry(new_c_geom, true) })
-    }
-
-    pub fn transform_to_inplace(&mut self, spatial_ref: &SpatialRef) -> Result<()> {
-        let rv = unsafe { gdal_sys::OGR_G_TransformTo(self.c_geometry(), spatial_ref.to_c_hsrs()) };
-        if rv != OGRErr::OGRERR_NONE {
-            return Err(GdalError::OgrError {
-                err: rv,
-                method_name: "OGR_G_TransformTo",
-            });
-        }
-        Ok(())
-    }
-
-    /// Transforms a geometry's coordinates into another SpatialRef
-    pub fn transform_to(&self, spatial_ref: &SpatialRef) -> Result<Geometry> {
-        let new_c_geom = unsafe { gdal_sys::OGR_G_Clone(self.c_geometry()) };
-        let rv = unsafe { gdal_sys::OGR_G_TransformTo(new_c_geom, spatial_ref.to_c_hsrs()) };
-        if rv != OGRErr::OGRERR_NONE {
-            return Err(GdalError::OgrError {
-                err: rv,
-                method_name: "OGR_G_TransformTo",
-            });
-        }
-        Ok(unsafe { Geometry::with_c_geometry(new_c_geom, true) })
-    }
-
     /// Compute geometry area in square units of the spatial reference system in use.
     ///
     /// Supported for `LinearRing`, `Polygon` or `MultiPolygon`.
@@ -479,68 +286,14 @@ impl Geometry {
         };
     }
 
-    /// Create a copy of self as a `geo-types` geometry.
-    pub fn to_geo(&self) -> Result<geo_types::Geometry<f64>> {
-        self.try_into()
-    }
-
-    /// Attempts to make an invalid geometry valid without losing vertices.
-    ///
-    /// Already-valid geometries are cloned without further intervention.
-    ///
-    /// Extended options are available via [`CslStringList`] if GDAL is built with GEOS >= 3.8.
-    /// They are defined as follows:
-    ///
-    /// * `METHOD=LINEWORK`: Combines all rings into a set of node-ed lines and then extracts
-    ///    valid polygons from that "linework".
-    /// * `METHOD=STRUCTURE`: First makes all rings valid, then merges shells and subtracts holes
-    ///    from shells to generate valid result. Assumes holes and shells are correctly categorized.
-    /// * `KEEP_COLLAPSED=YES/NO`. Only for `METHOD=STRUCTURE`.
-    ///   - `NO` (default):  Collapses are converted to empty geometries
-    ///   - `YES`: collapses are converted to a valid geometry of lower dimension
-    ///
-    /// When GEOS < 3.8, this method will return `Ok(self.clone())` if it is valid, or `Err` if not.
-    ///
-    /// See: [OGR_G_MakeValidEx](https://gdal.org/api/vector_c_api.html#_CPPv417OGR_G_MakeValidEx12OGRGeometryH12CSLConstList)
-    ///
-    /// # Example
-    /// ```rust, no_run
-    /// use gdal::cpl::CslStringList;
-    /// use gdal::vector::Geometry;
-    /// # fn main() -> gdal::errors::Result<()> {
-    /// let src = Geometry::from_wkt("POLYGON ((0 0, 10 10, 0 10, 10 0, 0 0))")?;
-    /// let dst = src.make_valid(&CslStringList::new())?;
-    /// assert_eq!("MULTIPOLYGON (((10 0, 0 0, 5 5, 10 0)),((10 10, 5 5, 0 10, 10 10)))", dst.wkt()?);
-    /// # Ok(())
-    /// # }
-    /// ```
-    pub fn make_valid(&self, opts: &CslStringList) -> Result<Geometry> {
-        #[cfg(all(major_ge_3, minor_ge_4))]
-        let c_geom = unsafe { gdal_sys::OGR_G_MakeValidEx(self.c_geometry(), opts.as_ptr()) };
-
-        #[cfg(not(all(major_ge_3, minor_ge_4)))]
-        let c_geom = {
-            if !opts.is_empty() {
-                return Err(GdalError::BadArgument(
-                    "Options to make_valid require GDAL >= 3.4".into(),
-                ));
-            }
-            unsafe { gdal_sys::OGR_G_MakeValid(self.c_geometry()) }
-        };
-
-        if c_geom.is_null() {
-            Err(_last_null_pointer_err("OGR_G_MakeValid"))
-        } else {
-            Ok(unsafe { Geometry::with_c_geometry(c_geom, true) })
-        }
-    }
-
     /// Test if the geometry is valid.
     ///
+    /// # Notes
     /// This function requires the GEOS library.
     /// If OGR is built without the GEOS library, this function will always return `false`.
     /// Check with [`VersionInfo::has_geos`][has_geos].
     ///
+    /// See: [`Self::make_valid`]
     /// See: [`OGR_G_IsValid`](https://gdal.org/api/vector_c_api.html#_CPPv413OGR_G_IsValid12OGRGeometryH)
     ///
     /// [has_geos]: crate::version::VersionInfo::has_geos
@@ -615,9 +368,15 @@ impl Debug for GeometryRef<'_> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::assert_almost_eq;
     use crate::spatial_ref::SpatialRef;
     use crate::test_utils::SuppressGDALErrorLog;
+    use gdal_sys::OGRwkbGeometryType::{wkbLineString, wkbLinearRing, wkbPolygon};
+
+    #[test]
+    fn test_create_bbox() {
+        let bbox = Geometry::bbox(-27., 33., 52., 85.).unwrap();
+        assert_eq!(bbox.json().unwrap(), "{ \"type\": \"Polygon\", \"coordinates\": [ [ [ -27.0, 85.0 ], [ 52.0, 85.0 ], [ 52.0, 33.0 ], [ -27.0, 33.0 ], [ -27.0, 85.0 ] ] ] }");
+    }
 
     #[test]
     #[allow(clippy::float_cmp)]
@@ -699,23 +458,40 @@ mod tests {
     }
 
     #[test]
-    pub fn test_wkb() {
-        let wkt = "POLYGON ((45.0 45.0, 45.0 50.0, 50.0 50.0, 50.0 45.0, 45.0 45.0))";
-        let orig_geom = Geometry::from_wkt(wkt).unwrap();
-        let wkb = orig_geom.wkb().unwrap();
-        let new_geom = Geometry::from_wkb(&wkb).unwrap();
-        assert_eq!(new_geom, orig_geom);
+    fn test_ring_points() {
+        let mut ring = Geometry::empty(wkbLinearRing).unwrap();
+        ring.add_point_2d((1179091.1646903288, 712782.8838459781));
+        ring.add_point_2d((1161053.0218226474, 667456.2684348812));
+        ring.add_point_2d((1214704.933941905, 641092.8288590391));
+        ring.add_point_2d((1228580.428455506, 682719.3123998424));
+        ring.add_point_2d((1218405.0658121984, 721108.1805541387));
+        ring.add_point_2d((1179091.1646903288, 712782.8838459781));
+        assert!(!ring.is_empty());
+        assert_eq!(ring.get_point_vec().len(), 6);
+        let mut poly = Geometry::empty(wkbPolygon).unwrap();
+        poly.add_geometry(ring.to_owned()).unwrap();
+        // Points are in ring, not containing geometry.
+        // NB: In Python SWIG bindings, `GetPoints` is fallible.
+        assert!(poly.get_point_vec().is_empty());
+        assert_eq!(poly.geometry_count(), 1);
+        let ring_out = poly.get_geometry(0);
+        // NB: `wkb()` shows it to be a `LINEARRING`, but returned type is LineString
+        assert_eq!(ring_out.geometry_type(), wkbLineString);
+        assert!(!&ring_out.is_empty());
+        assert_eq!(ring.get_point_vec(), ring_out.get_point_vec());
     }
 
     #[test]
-    pub fn test_buffer() {
-        let geom = Geometry::from_wkt("POINT(0 0)").unwrap();
-        let buffered = geom.buffer(10.0, 2).unwrap();
-        assert_eq!(
-            buffered.geometry_type(),
-            ::gdal_sys::OGRwkbGeometryType::wkbPolygon
-        );
-        assert!(buffered.area() > 10.0);
+    fn test_get_inner_points() {
+        let geom = Geometry::bbox(0., 0., 1., 1.).unwrap();
+        assert!(!geom.is_empty());
+        assert_eq!(geom.geometry_count(), 1);
+        assert!(geom.area() > 0.);
+        assert_eq!(geom.geometry_type(), OGRwkbGeometryType::wkbPolygon);
+        assert!(geom.json().unwrap().contains("Polygon"));
+        let inner = geom.get_geometry(0);
+        let points = inner.get_point_vec();
+        assert!(!points.is_empty());
     }
 
     #[test]
@@ -726,69 +502,5 @@ mod tests {
         );
         // We don't care what it returns when passed an invalid value, just that it doesn't crash.
         geometry_type_to_name(4372521);
-    }
-
-    #[test]
-    /// Simple clone case.
-    pub fn test_make_valid_clone() {
-        let src = Geometry::from_wkt("POINT (0 0)").unwrap();
-        let dst = src.make_valid(&CslStringList::new());
-        assert!(dst.is_ok());
-        assert!(dst.unwrap().is_valid());
-    }
-
-    #[test]
-    /// Un-repairable geometry case
-    pub fn test_make_valid_invalid() {
-        let _nolog = SuppressGDALErrorLog::new();
-        let src = Geometry::from_wkt("LINESTRING (0 0)").unwrap();
-        assert!(!src.is_valid());
-        let dst = src.make_valid(&CslStringList::new());
-        assert!(dst.is_err());
-    }
-
-    #[test]
-    /// Repairable case (self-intersecting)
-    pub fn test_make_valid_repairable() {
-        let src = Geometry::from_wkt("POLYGON ((0 0, 10 10, 0 10, 10 0, 0 0))").unwrap();
-        assert!(!src.is_valid());
-        let dst = src.make_valid(&CslStringList::new());
-        assert!(dst.is_ok());
-        assert!(dst.unwrap().is_valid());
-    }
-
-    #[cfg(all(major_ge_3, minor_ge_4))]
-    #[test]
-    /// Repairable case, but use extended options
-    pub fn test_make_valid_ex() {
-        let src =
-            Geometry::from_wkt("POLYGON ((0 0, 0 10, 10 10, 10 0, 0 0),(5 5, 15 10, 15 0, 5 5))")
-                .unwrap();
-        let opts = CslStringList::try_from(&[("STRUCTURE", "LINEWORK")]).unwrap();
-        let dst = src.make_valid(&opts);
-        assert!(dst.is_ok(), "{dst:?}");
-        assert!(dst.unwrap().is_valid());
-    }
-
-    #[test]
-    fn test_envelope() {
-        let geom = Geometry::from_wkt("MULTIPOINT((1.0 2.0), (2.0 4.0))").unwrap();
-        let envelope = geom.envelope();
-        assert_almost_eq(envelope.MinX, 1.0);
-        assert_almost_eq(envelope.MaxX, 2.0);
-        assert_almost_eq(envelope.MinY, 2.0);
-        assert_almost_eq(envelope.MaxY, 4.0);
-    }
-
-    #[test]
-    fn test_envelope3d() {
-        let geom = Geometry::from_wkt("MULTIPOINT((1.0 2.0 3.0), (2.0 4.0 5.0))").unwrap();
-        let envelope = geom.envelope_3d();
-        assert_almost_eq(envelope.MinX, 1.0);
-        assert_almost_eq(envelope.MaxX, 2.0);
-        assert_almost_eq(envelope.MinY, 2.0);
-        assert_almost_eq(envelope.MaxY, 4.0);
-        assert_almost_eq(envelope.MinZ, 3.0);
-        assert_almost_eq(envelope.MaxZ, 5.0);
     }
 }

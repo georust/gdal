@@ -66,8 +66,6 @@
 
 mod defn;
 mod feature;
-mod gdal_to_geo;
-mod geo_to_gdal;
 mod geometry;
 mod layer;
 mod ops;
@@ -80,14 +78,6 @@ pub use geometry::{geometry_type_to_name, Geometry};
 pub use layer::{
     FeatureIterator, FieldDefn, Layer, LayerAccess, LayerCaps, OwnedFeatureIterator, OwnedLayer,
 };
-pub use ops::GeometryIntersection;
-
-use crate::errors::Result;
-
-/// Convert object to a GDAL geometry.
-pub trait ToGdal {
-    fn to_gdal(&self) -> Result<Geometry>;
-}
 
 /// Axis aligned 2D bounding box.
 pub type Envelope = gdal_sys::OGREnvelope;
@@ -95,5 +85,4 @@ pub type Envelope = gdal_sys::OGREnvelope;
 /// Axis aligned 3D bounding box.
 pub type Envelope3D = gdal_sys::OGREnvelope3D;
 
-#[cfg(test)]
-mod vector_tests;
+pub use ops::ToGdal;
