@@ -46,7 +46,7 @@ impl CoordTransform {
     /// Some([f64; 4]) with bounds in axis order of target SpatialRef
     /// None if there is an error.
     #[cfg(all(major_ge_3, minor_ge_4))]
-    pub fn transform_bounds(&self, bounds: &[f64; 4], densify_pts: i32) -> Result<([f64; 4])> {
+    pub fn transform_bounds(&self, bounds: &[f64; 4], densify_pts: i32) -> Result<[f64; 4]> {
         let mut out_xmin: f64 = 0.;
         let mut out_ymin: f64 = 0.;
         let mut out_xmax: f64 = 0.;

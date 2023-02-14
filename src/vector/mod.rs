@@ -89,5 +89,11 @@ pub trait ToGdal {
     fn to_gdal(&self) -> Result<Geometry>;
 }
 
+/// Axis aligned 2D bounding box.
+pub type Envelope = gdal_sys::OGREnvelope;
+
+/// Axis aligned 3D bounding box.
+pub type Envelope3D = gdal_sys::OGREnvelope3D;
+
 #[cfg(test)]
 mod vector_tests;
