@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added `CoordTransform::new_with_options` and `CoordTransformOptions`
+
+  - <https://github.com/georust/gdal/pull/372>
+
 - Set the link flag of gdal-sys to "libgdal". Emit the libgdal version via cargo:version_number. Remove wrong build-dependency on gdal-sys and remove docs_rs workaround.
 
   - <https://github.com/georust/gdal/pull/377>

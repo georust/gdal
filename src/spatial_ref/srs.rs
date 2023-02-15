@@ -7,6 +7,145 @@ use std::str::FromStr;
 
 use crate::errors::*;
 
+/// Options for [`CoordTransform::new_with_options`].
+#[derive(Debug)]
+pub struct CoordTransformOptions {
+    inner: gdal_sys::OGRCoordinateTransformationOptionsH,
+}
+
+impl Drop for CoordTransformOptions {
+    fn drop(&mut self) {
+        unsafe { gdal_sys::OCTDestroyCoordinateTransformationOptions(self.inner) };
+    }
+}
+
+impl CoordTransformOptions {
+    /// Creation options for [`CoordTransform`].
+    pub fn new() -> Result<CoordTransformOptions> {
+        let c_obj = unsafe { gdal_sys::OCTNewCoordinateTransformationOptions() };
+        if c_obj.is_null() {
+            return Err(_last_null_pointer_err(
+                "OCTNewCoordinateTransformationOptions",
+            ));
+        }
+        Ok(CoordTransformOptions { inner: c_obj })
+    }
+
+    /// Sets an area of interest.
+    ///
+    /// The west longitude is generally lower than the east longitude, except for areas of interest
+    /// that go across the anti-meridian.
+    ///
+    /// For more information, see:
+    /// <https://gdal.org/tutorials/osr_api_tut.html#advanced-coordinate-transformation>
+    ///
+    /// # Arguments
+    ///
+    /// - `west_longitude_deg` – West longitude (in degree). Must be in [-180,180]
+    /// - `south_latitude_deg` – South latitude (in degree). Must be in [-90,90]
+    /// - `east_longitude_deg` – East longitude (in degree). Must be in [-180,180]
+    /// - `north_latitude_deg` – North latitude (in degree). Must be in [-90,90]
+    pub fn set_area_of_interest(
+        &mut self,
+        west_longitude_deg: f64,
+        south_latitude_deg: f64,
+        east_longitude_deg: f64,
+        north_latitude_deg: f64,
+    ) -> Result<()> {
+        let ret_val = unsafe {
+            gdal_sys::OCTCoordinateTransformationOptionsSetAreaOfInterest(
+                self.inner,
+                west_longitude_deg,
+                south_latitude_deg,
+                east_longitude_deg,
+                north_latitude_deg,
+            )
+        };
+        if ret_val == 0 {
+            return Err(_last_cpl_err(CPLErr::CE_Failure));
+        }
+        Ok(())
+    }
+
+    /// Sets the desired accuracy for coordinate operations.
+    ///
+    /// Only coordinate operations that offer an accuracy of at least the one specified will be
+    /// considered.
+    ///
+    /// An accuracy of 0 is valid and means a coordinate operation made only of one or several
+    /// conversions (map projections, unit conversion, etc.) Operations involving ballpark
+    /// transformations have a unknown accuracy, and will be filtered out by any dfAccuracy >= 0
+    /// value.
+    ///
+    /// If this option is specified with PROJ < 8, the `OGR_CT_OP_SELECTION` configuration option
+    /// will default to `BEST_ACCURACY`.
+    #[cfg(any(major_ge_4, all(major_ge_3, minor_ge_3)))]
+    pub fn desired_accuracy(&mut self, accuracy: f64) -> Result<()> {
+        let ret_val = unsafe {
+            gdal_sys::OCTCoordinateTransformationOptionsSetDesiredAccuracy(self.inner, accuracy)
+        };
+        if ret_val == 0 {
+            return Err(_last_cpl_err(CPLErr::CE_Failure));
+        }
+        Ok(())
+    }
+
+    /// Sets whether ballpark transformations are allowed.
+    ///
+    /// By default, PROJ may generate "ballpark transformations" (see
+    /// <https://proj.org/glossary.html>) when precise datum transformations are missing. For high
+    /// accuracy use cases, such transformations might not be allowed.
+    ///
+    /// If this option is specified with PROJ < 8, the `OGR_CT_OP_SELECTION` configuration option
+    /// will default to `BEST_ACCURACY`.
+    #[cfg(any(major_ge_4, all(major_ge_3, minor_ge_3)))]
+    pub fn set_ballpark_allowed(&mut self, ballpark_allowed: bool) -> Result<()> {
+        let ret_val = unsafe {
+            gdal_sys::OCTCoordinateTransformationOptionsSetBallparkAllowed(
+                self.inner,
+                ballpark_allowed as libc::c_int,
+            )
+        };
+        if ret_val == 0 {
+            return Err(_last_cpl_err(CPLErr::CE_Failure));
+        }
+        Ok(())
+    }
+
+    /// Sets a coordinate operation.
+    ///
+    /// This is a user override to be used instead of the normally computed pipeline.
+    ///
+    /// The pipeline must take into account the axis order of the source and target SRS.
+    ///
+    /// The pipeline may be provided as a PROJ string (single step operation or multiple step
+    /// string starting with `+proj=pipeline`), a WKT2 string describing a `CoordinateOperation`,
+    /// or a `"urn:ogc:def:coordinateOperation:EPSG::XXXX"` URN.
+    ///
+    /// For more information, see:
+    /// <https://gdal.org/tutorials/osr_api_tut.html#advanced-coordinate-transformation>
+    ///
+    /// # Arguments
+    ///
+    /// - `co`: PROJ or WKT string describing a coordinate operation
+    /// - `reverse`: Whether the PROJ or WKT string should be evaluated in the reverse path
+    pub fn set_coordinate_operation(&mut self, co: &str, reverse: bool) -> Result<()> {
+        let c_co = CString::new(co)?;
+        let ret_val = unsafe {
+            gdal_sys::OCTCoordinateTransformationOptionsSetOperation(
+                self.inner,
+                c_co.as_ptr(),
+                reverse as libc::c_int,
+            )
+        };
+        if ret_val == 0 {
+            return Err(_last_cpl_err(CPLErr::CE_Failure));
+        }
+        Ok(())
+    }
+}
+
+#[derive(Debug)]
 pub struct CoordTransform {
     inner: OGRCoordinateTransformationH,
     from: String,
@@ -16,20 +155,37 @@ pub struct CoordTransform {
 impl Drop for CoordTransform {
     fn drop(&mut self) {
         unsafe { gdal_sys::OCTDestroyCoordinateTransformation(self.inner) };
-        self.inner = ptr::null_mut();
     }
 }
 
 impl CoordTransform {
-    pub fn new(sp_ref1: &SpatialRef, sp_ref2: &SpatialRef) -> Result<CoordTransform> {
-        let c_obj = unsafe { gdal_sys::OCTNewCoordinateTransformation(sp_ref1.0, sp_ref2.0) };
+    pub fn new(source: &SpatialRef, target: &SpatialRef) -> Result<CoordTransform> {
+        let c_obj = unsafe { gdal_sys::OCTNewCoordinateTransformation(source.0, target.0) };
         if c_obj.is_null() {
             return Err(_last_null_pointer_err("OCTNewCoordinateTransformation"));
         }
         Ok(CoordTransform {
             inner: c_obj,
-            from: sp_ref1.authority().or_else(|_| sp_ref1.to_proj4())?,
-            to: sp_ref2.authority().or_else(|_| sp_ref2.to_proj4())?,
+            from: source.authority().or_else(|_| source.to_proj4())?,
+            to: target.authority().or_else(|_| target.to_proj4())?,
+        })
+    }
+
+    pub fn new_with_options(
+        source: &SpatialRef,
+        target: &SpatialRef,
+        options: &CoordTransformOptions,
+    ) -> Result<CoordTransform> {
+        let c_obj = unsafe {
+            gdal_sys::OCTNewCoordinateTransformationEx(source.0, target.0, options.inner)
+        };
+        if c_obj.is_null() {
+            return Err(_last_null_pointer_err("OCTNewCoordinateTransformation"));
+        }
+        Ok(CoordTransform {
+            inner: c_obj,
+            from: source.authority().or_else(|_| source.to_proj4())?,
+            to: target.authority().or_else(|_| target.to_proj4())?,
         })
     }
 

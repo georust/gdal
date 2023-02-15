@@ -246,6 +246,41 @@ fn failing_transformation() {
 }
 
 #[test]
+#[cfg(any(major_ge_4, all(major_ge_3, minor_ge_3)))]
+fn invalid_transformation() {
+    use super::srs::CoordTransformOptions;
+
+    // This transformation can be constructed only if we allow ballpark transformations (enabled by
+    // default).
+    let ma = SpatialRef::from_epsg(6491).unwrap(); // Massachusetts
+    let nl = SpatialRef::from_epsg(28992).unwrap(); // Netherlands
+    let trafo = CoordTransform::new(&ma, &nl);
+    assert!(trafo.is_ok());
+
+    let mut options = CoordTransformOptions::new().unwrap();
+    options.set_ballpark_allowed(false).unwrap();
+    let trafo = CoordTransform::new_with_options(&ma, &nl, &options);
+    let err = trafo.unwrap_err();
+    assert!(matches!(err, GdalError::NullPointer { .. }), "{:?}", err);
+}
+
+#[test]
+fn set_coordinate_operation() {
+    use super::srs::CoordTransformOptions;
+
+    // Test case taken from:
+    // https://gdal.org/tutorials/osr_api_tut.html#advanced-coordinate-transformation
+    let mut options = CoordTransformOptions::new().unwrap();
+    options
+        .set_coordinate_operation("urn:ogc:def:coordinateOperation:EPSG::8599", false)
+        .unwrap();
+    let nad27 = SpatialRef::from_epsg(4267).unwrap();
+    let wgs84 = SpatialRef::from_epsg(4326).unwrap();
+    let trafo = CoordTransform::new_with_options(&nad27, &wgs84, &options);
+    assert!(trafo.is_ok());
+}
+
+#[test]
 fn auto_identify() {
     // retreived from https://epsg.io/32632, but deleted the `AUTHORITY["EPSG","32632"]`
     let mut spatial_ref = SpatialRef::from_wkt(
