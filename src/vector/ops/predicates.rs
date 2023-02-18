@@ -1,6 +1,8 @@
 use crate::vector::Geometry;
 
-/// These methods define common [spatial relations](https://en.wikipedia.org/wiki/DE-9IM#Spatial_predicates) between
+/// # Geometric Predicates
+///
+/// These methods provide common [spatial relations](https://en.wikipedia.org/wiki/DE-9IM#Spatial_predicates) between
 /// two geometries.
 impl Geometry {
     /// Tests if two geometries [_intersect_][DE-9IM];

@@ -702,19 +702,19 @@ impl Dataset {
         Ok(self.child_layer(c_layer))
     }
 
-    /// Affine transformation called geotransformation.
+    /// Set the [`Dataset`]'s affine transformation; also called a _geo-transformation_.
     ///
     /// This is like a linear transformation preserves points, straight lines and planes.
     /// Also, sets of parallel lines remain parallel after an affine transformation.
-    /// # Arguments
-    /// * transformation - coeficients of transformations
     ///
-    /// x-coordinate of the top-left corner pixel (x-offset)
-    /// width of a pixel (x-resolution)
-    /// row rotation (typically zero)
-    /// y-coordinate of the top-left corner pixel
-    /// column rotation (typically zero)
-    /// height of a pixel (y-resolution, typically negative)
+    /// # Arguments
+    /// * `transformation` - coefficients of the transformation, which are:
+    ///    - x-coordinate of the top-left corner pixel (x-offset)
+    ///    - width of a pixel (x-resolution)
+    ///    - row rotation (typically zero)
+    ///    - y-coordinate of the top-left corner pixel
+    ///    - column rotation (typically zero)
+    ///    - height of a pixel (y-resolution, typically negative)
     pub fn set_geo_transform(&mut self, transformation: &GeoTransform) -> Result<()> {
         assert_eq!(transformation.len(), 6);
         let rv = unsafe {
@@ -726,14 +726,15 @@ impl Dataset {
         Ok(())
     }
 
-    /// Get affine transformation coefficients.
+    /// Get the coefficients of the [`Dataset`]'s affine transformation.
     ///
-    /// x-coordinate of the top-left corner pixel (x-offset)
-    /// width of a pixel (x-resolution)
-    /// row rotation (typically zero)
-    /// y-coordinate of the top-left corner pixel
-    /// column rotation (typically zero)
-    /// height of a pixel (y-resolution, typically negative)
+    /// # Returns
+    /// - x-coordinate of the top-left corner pixel (x-offset)
+    /// - width of a pixel (x-resolution)
+    /// - row rotation (typically zero)
+    /// - y-coordinate of the top-left corner pixel
+    /// - column rotation (typically zero)
+    /// - height of a pixel (y-resolution, typically negative)
     pub fn geo_transform(&self) -> Result<GeoTransform> {
         let mut transformation = GeoTransform::default();
         let rv =
@@ -833,7 +834,6 @@ impl Dataset {
     /// `None`, which is distinct from an empty [`sql::ResultSet`].
     ///
     /// # Arguments
-    ///
     /// * `query`: The SQL query
     /// * `spatial_filter`: Limit results of the query to features that intersect the given
     ///   [`Geometry`]

@@ -100,8 +100,7 @@ pub trait Metadata: MajorObject {
     /// Entries in the returned `Vec<String>` are formatted as "Name=value" pairs
     ///
     /// # Arguments
-    ///
-    /// * domain – the domain of interest. Use `""` for the default domain.
+    /// * `domain` – the domain of interest. Use `""` for the default domain.
     ///
     /// # Example
     ///

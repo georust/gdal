@@ -233,11 +233,12 @@ impl<'a> MDArray<'a> {
     /// Read a 'Array2<T>' from this band. T implements 'GdalType'.
     ///
     /// # Arguments
-    /// * window - the window position from top left
-    /// * window_size - the window size (GDAL will interpolate data if window_size != array_size)
-    /// * array_size - the desired size of the 'Array'
-    /// * e_resample_alg - the resample algorithm used for the interpolation
-    /// # Docs
+    /// * `window` - the window position from top left
+    /// * `window_size` - the window size (GDAL will interpolate data if window_size != array_size)
+    /// * `array_size` - the desired size of the 'Array'
+    /// * `e_resample_alg` - the resample algorithm used for the interpolation
+    ///
+    /// # Notes
     /// The Matrix shape is (rows, cols) and raster shape is (cols in x-axis, rows in y-axis).
     pub fn read_as_array<T: Copy + GdalType + Debug>(
         &self,
