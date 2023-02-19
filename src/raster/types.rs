@@ -458,6 +458,19 @@ impl ResampleAlg {
     }
 }
 
+pub struct Buffer<T: GdalType> {
+    pub size: (usize, usize),
+    pub data: Vec<T>,
+}
+
+impl<T: GdalType> Buffer<T> {
+    pub fn new(size: (usize, usize), data: Vec<T>) -> Buffer<T> {
+        Buffer { size, data }
+    }
+}
+
+pub type ByteBuffer = Buffer<u8>;
+
 #[cfg(test)]
 mod tests {
     use super::*;

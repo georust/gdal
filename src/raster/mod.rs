@@ -86,12 +86,11 @@ pub use mdarray::{
     Attribute, Dimension, ExtendedDataType, ExtendedDataTypeClass, Group, MDArray, MdStatisticsAll,
 };
 pub use rasterband::{
-    Buffer, ByteBuffer, CmykEntry, ColorEntry, ColorInterpretation, ColorTable, GrayEntry,
-    HlsEntry, PaletteInterpretation, RasterBand, RgbaEntry, StatisticsAll,
-    StatisticsMinMax,
+    CmykEntry, ColorEntry, ColorInterpretation, ColorTable, GrayEntry, HlsEntry,
+    PaletteInterpretation, RasterBand, RgbaEntry, StatisticsAll, StatisticsMinMax,
 };
 pub use rasterize::{rasterize, BurnSource, MergeAlgorithm, OptimizeMode, RasterizeOptions};
-pub use types::{AdjustedValue, GdalDataType, GdalType, ResampleAlg};
+pub use types::{AdjustedValue, Buffer, ByteBuffer, GdalDataType, GdalType, ResampleAlg};
 pub use warp::reproject;
 
 /// Key/value pair for passing driver-specific creation options to

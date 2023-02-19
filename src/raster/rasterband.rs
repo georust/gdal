@@ -1,7 +1,7 @@
 use crate::dataset::Dataset;
 use crate::gdal_major_object::MajorObject;
 use crate::metadata::Metadata;
-use crate::raster::{GdalDataType, GdalType, ResampleAlg};
+use crate::raster::{Buffer, GdalDataType, GdalType, ResampleAlg};
 use crate::utils::{_last_cpl_err, _last_null_pointer_err, _string};
 use gdal_sys::{
     self, CPLErr, GDALColorEntry, GDALColorInterp, GDALColorTableH, GDALComputeRasterMinMax,
@@ -706,19 +706,6 @@ impl<'a> MajorObject for RasterBand<'a> {
 }
 
 impl<'a> Metadata for RasterBand<'a> {}
-
-pub struct Buffer<T: GdalType> {
-    pub size: (usize, usize),
-    pub data: Vec<T>,
-}
-
-impl<T: GdalType> Buffer<T> {
-    pub fn new(size: (usize, usize), data: Vec<T>) -> Buffer<T> {
-        Buffer { size, data }
-    }
-}
-
-pub type ByteBuffer = Buffer<u8>;
 
 /// Represents a color interpretation of a RasterBand
 #[derive(Debug, PartialEq, Eq)]
