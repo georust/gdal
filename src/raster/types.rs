@@ -4,6 +4,7 @@ use gdal_sys::{
     GDALAdjustValueToDataType, GDALDataType, GDALDataTypeIsConversionLossy, GDALDataTypeIsFloating,
     GDALDataTypeIsInteger, GDALDataTypeIsSigned, GDALDataTypeUnion, GDALFindDataTypeForValue,
     GDALGetDataTypeByName, GDALGetDataTypeName, GDALGetDataTypeSizeBits, GDALGetDataTypeSizeBytes,
+    GDALRIOResampleAlg,
 };
 use std::ffi::CString;
 use std::fmt::{Debug, Display, Formatter};
@@ -408,6 +409,52 @@ impl GdalType for f32 {
 impl GdalType for f64 {
     fn gdal_ordinal() -> GDALDataType::Type {
         GDALDataType::GDT_Float64
+    }
+}
+
+/// Resampling algorithms used throughout various GDAL raster I/O operations.
+///
+/// # Example
+///
+/// ```rust
+/// use gdal::Dataset;
+/// # fn main() -> gdal::errors::Result<()> {
+/// use gdal::raster::ResampleAlg;
+/// let ds = Dataset::open("fixtures/tinymarble.tif")?;
+/// let band1 = ds.rasterband(1)?;
+/// let stats = band1.get_statistics(true, false)?.unwrap();
+/// // Down-sample a image using cubic-spline interpolation
+/// let buf = band1.read_as::<f64>((0, 0), ds.raster_size(), (2, 2), Some(ResampleAlg::CubicSpline))?;
+/// // In this particular image, resulting data should be close to the overall average.
+/// assert!(buf.data.iter().all(|c| (c - stats.mean).abs() < stats.std_dev / 2.0));
+/// # Ok(())
+/// # }
+/// ```
+#[derive(Debug, Copy, Clone)]
+#[repr(u32)]
+pub enum ResampleAlg {
+    /// Nearest neighbour
+    NearestNeighbour = GDALRIOResampleAlg::GRIORA_NearestNeighbour,
+    /// Bilinear (2x2 kernel)
+    Bilinear = GDALRIOResampleAlg::GRIORA_Bilinear,
+    /// Cubic Convolution Approximation (4x4 kernel)
+    Cubic = GDALRIOResampleAlg::GRIORA_Cubic,
+    /// Cubic B-Spline Approximation (4x4 kernel)
+    CubicSpline = GDALRIOResampleAlg::GRIORA_CubicSpline,
+    /// Lanczos windowed sinc interpolation (6x6 kernel)
+    Lanczos = GDALRIOResampleAlg::GRIORA_Lanczos,
+    /// Average
+    Average = GDALRIOResampleAlg::GRIORA_Average,
+    /// Mode (selects the value which appears most often of all the sampled points)
+    Mode = GDALRIOResampleAlg::GRIORA_Mode,
+    /// Gauss blurring
+    Gauss = GDALRIOResampleAlg::GRIORA_Gauss,
+}
+
+impl ResampleAlg {
+    /// Convert Rust enum discriminant to value expected by [`GDALRasterIOExtraArg`].
+    pub fn to_gdal(&self) -> GDALRIOResampleAlg::Type {
+        *self as GDALRIOResampleAlg::Type
     }
 }
 
