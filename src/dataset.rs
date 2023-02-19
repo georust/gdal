@@ -1,6 +1,6 @@
 use ptr::null_mut;
 use std::convert::TryInto;
-use std::mem::MaybeUninit;
+use std::mem::{size_of, MaybeUninit};
 use std::{
     ffi::NulError,
     ffi::{CStr, CString},
@@ -12,6 +12,7 @@ use std::{
 use crate::cpl::CslStringList;
 use crate::errors::*;
 use crate::raster::RasterCreationOption;
+use crate::raster::{Buffer3D, GdalType, RasterIOExtraArg, ResampleAlg};
 use crate::utils::{_last_cpl_err, _last_null_pointer_err, _path_to_c_string, _string};
 use crate::vector::{sql, Geometry, OwnedLayer};
 use crate::{
@@ -20,10 +21,10 @@ use crate::{
 };
 
 use gdal_sys::{
-    self, CPLErr, GDALAccess, GDALDatasetH, GDALMajorObjectH, OGRErr, OGRGeometryH, OGRLayerH,
-    OGRwkbGeometryType,
+    self, CPLErr, GDALAccess, GDALDatasetH, GDALMajorObjectH, GDALRWFlag, GDALRasterIOExtraArg,
+    OGRErr, OGRGeometryH, OGRLayerH, OGRwkbGeometryType,
 };
-use libc::{c_double, c_int, c_uint};
+use libc::{c_double, c_int, c_uint, c_void};
 
 #[cfg(all(major_ge_3, minor_ge_1))]
 use crate::raster::Group;
@@ -280,6 +281,23 @@ impl<'a> Default for LayerOptions<'a> {
             options: None,
         }
     }
+}
+
+// This defines multiple ways to layout an image in memory, based on GDAL Python bindings
+// which have either 'band' or 'pixel' interleave:
+// https://github.com/OSGeo/gdal/blob/301f31b9b74cd67edcdc555f7e7a58db87cbadb2/swig/include/gdal_array.i#L2300
+pub enum ImageInterleaving {
+    /// This means the image is stored in memory with first the first band,
+    /// then second band and so on
+    Band,
+    /// This means the image is stored in memory with first the value of all bands
+    /// for the first pixel, then the same for second pixel and so on
+    Pixel,
+}
+
+pub enum BandSelection {
+    Subset(Vec<i32>),
+    All,
 }
 
 // GDAL Docs state: The returned dataset should only be accessed by one thread at a time.
@@ -739,6 +757,115 @@ impl Dataset {
             return Err(_last_null_pointer_err("OGR_DS_CreateLayer"));
         };
         Ok(self.child_layer(c_layer))
+    }
+
+    /// Read a [`Buffer<T>`] from this dataset, where `T` implements [`GdalType`].
+    ///
+    /// # Arguments
+    /// * `window` - the window position from top left
+    /// * `window_size` - the window size (width, height). GDAL will interpolate data if `window_size` != `buffer_size`
+    /// * `buffer_size` - the desired size of the 'Buffer' (width, height)
+    /// * `e_resample_alg` - the resample algorithm used for the interpolation. Default: `NearestNeighbor`.
+    /// * `interleaving`- The output buffer image layout (see `ImageInterleaving`)
+    /// * `bands` - A subset of bands to select or BandSelection::All to read all bands
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// # fn main() -> gdal::errors::Result<()> {
+    /// use gdal::{Dataset, ImageInterleaving, BandSelection};
+    /// use gdal::raster::ResampleAlg;
+    /// let dataset = Dataset::open("fixtures/m_3607824_se_17_1_20160620_sub.tif")?;
+    /// let size = 2;
+    /// let buf = dataset.read_as::<u8>((0, 0), dataset.raster_size(), (size, size), Some(ResampleAlg::Bilinear), ImageInterleaving::Pixel, BandSelection::All)?;
+    /// assert_eq!(buf.size, (size, size, dataset.raster_count() as usize));
+    /// assert_eq!(buf.data, [103, 116, 101, 169, 92, 108, 94, 163, 92, 112, 93, 179, 89, 109, 91, 181]);
+    /// let buf = dataset.read_as::<u8>((0, 0), dataset.raster_size(), (size, size), Some(ResampleAlg::Bilinear), ImageInterleaving::Band, BandSelection::All)?;
+    /// assert_eq!(buf.data, [103, 92, 92, 89, 116, 108, 112, 109, 101, 94, 93, 91, 169, 163, 179, 181]);
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub fn read_as<T: Copy + GdalType>(
+        &self,
+        window: (isize, isize),
+        window_size: (usize, usize),
+        buffer_size: (usize, usize),
+        e_resample_alg: Option<ResampleAlg>,
+        interleaving: ImageInterleaving,
+        bands: BandSelection,
+    ) -> Result<Buffer3D<T>> {
+        let resample_alg = e_resample_alg.unwrap_or(ResampleAlg::NearestNeighbour);
+
+        let mut options: GDALRasterIOExtraArg = RasterIOExtraArg {
+            e_resample_alg: resample_alg,
+            ..Default::default()
+        }
+        .into();
+
+        let options_ptr: *mut GDALRasterIOExtraArg = &mut options;
+
+        let (mut bands, band_count) = match bands {
+            BandSelection::Subset(bands) => {
+                let band_count = bands.len();
+                (bands, band_count)
+            }
+            BandSelection::All => {
+                let band_count = self.raster_count() as usize;
+                let bands = (1_i32..band_count as i32 + 1_i32).collect();
+                (bands, band_count)
+            }
+        };
+
+        let pixels = buffer_size.0 * buffer_size.1 * band_count;
+        let mut data: Vec<T> = Vec::with_capacity(pixels);
+        let size_t = size_of::<T>() as i64;
+
+        let (pixel_space, line_space, band_space) = match interleaving {
+            ImageInterleaving::Band => (0, 0, 0),
+            ImageInterleaving::Pixel => (
+                size_t * band_count as i64,
+                buffer_size.0 as i64 * size_t * band_count as i64,
+                size_t,
+            ),
+        };
+
+        // Safety: the GDALRasterIOEx writes
+        // exactly pixel elements into the slice, before we
+        // read from this slice. This paradigm is suggested
+        // in the rust std docs
+        // (https://doc.rust-lang.org/std/vec/struct.Vec.html#examples-18)
+        let rv = unsafe {
+            gdal_sys::GDALDatasetRasterIOEx(
+                self.c_dataset,
+                GDALRWFlag::GF_Read,
+                window.0 as c_int,
+                window.1 as c_int,
+                window_size.0 as c_int,
+                window_size.1 as c_int,
+                data.as_mut_ptr() as *mut c_void,
+                buffer_size.0 as c_int,
+                buffer_size.1 as c_int,
+                T::gdal_ordinal(),
+                band_count as i32,
+                bands.as_mut_ptr() as *mut c_int,
+                pixel_space,
+                line_space,
+                band_space,
+                options_ptr,
+            )
+        };
+        if rv != CPLErr::CE_None {
+            return Err(_last_cpl_err(rv));
+        }
+
+        unsafe {
+            data.set_len(pixels);
+        };
+
+        Ok(Buffer3D {
+            size: (buffer_size.0, buffer_size.1, band_count),
+            data,
+        })
     }
 
     /// Set the [`Dataset`]'s affine transformation; also called a _geo-transformation_.
@@ -1326,5 +1453,132 @@ mod tests {
     fn test_start_transaction_unsupported() {
         let mut ds = Dataset::open(fixture("roads.geojson")).unwrap();
         assert!(ds.start_transaction().is_err());
+    }
+
+    #[test]
+    fn test_dataset_read_as_pixel_interleaving() {
+        let ds = Dataset::open(fixture("m_3607824_se_17_1_20160620_sub.tif")).unwrap();
+        print!("{:?}", ds.raster_size());
+        let (width, height) = (4, 7);
+        let band_count = ds.raster_count() as usize;
+
+        // We compare a single dataset.read_as() to reading band-by-band using
+        // band.read_as()
+        let ds_buf = ds
+            .read_as::<u8>(
+                (0, 0),
+                (width, height),
+                (width, height),
+                Some(ResampleAlg::Bilinear),
+                ImageInterleaving::Pixel,
+                BandSelection::All,
+            )
+            .unwrap();
+        assert_eq!(ds_buf.size, (width, height, band_count));
+
+        for band_index in 0..band_count {
+            let band = ds.rasterband(band_index as isize + 1).unwrap();
+            let band_buf = band
+                .read_as::<u8>(
+                    (0, 0),
+                    (width, height),
+                    (width, height),
+                    Some(ResampleAlg::Bilinear),
+                )
+                .unwrap();
+            assert_eq!(band_buf.size, (width, height));
+            for i in 0..height {
+                for j in 0..width {
+                    assert_eq!(
+                        band_buf.data[i * width + j],
+                        ds_buf.data[i * width * band_count + j * band_count + band_index],
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_dataset_read_as_band_interleaving() {
+        let ds = Dataset::open(fixture("m_3607824_se_17_1_20160620_sub.tif")).unwrap();
+        let size: (usize, usize) = (4, 7);
+        let band_count = ds.raster_count() as usize;
+        // We compare a single dataset.read_as() to reading band-by-band using
+        // band.read_as()
+        let ds_buf = ds
+            .read_as::<u8>(
+                (0, 0),
+                size,
+                size,
+                Some(ResampleAlg::Bilinear),
+                ImageInterleaving::Band,
+                BandSelection::All,
+            )
+            .unwrap();
+        assert_eq!(ds_buf.size, (size.0, size.1, band_count));
+
+        for band_index in 0..band_count {
+            let band = ds.rasterband(band_index as isize + 1).unwrap();
+            let band_buf = band
+                .read_as::<u8>((0, 0), size, size, Some(ResampleAlg::Bilinear))
+                .unwrap();
+            assert_eq!(band_buf.size, size);
+            assert_eq!(
+                band_buf.data,
+                ds_buf.data[band_index * size.0 * size.1..(band_index + 1) * size.0 * size.1]
+            );
+        }
+    }
+
+    #[test]
+    fn test_dataset_read_as_band_selection() {
+        let ds = Dataset::open(fixture("m_3607824_se_17_1_20160620_sub.tif")).unwrap();
+        let size: (usize, usize) = (4, 7);
+        // We compare a single dataset.read_as() to reading band-by-band using
+        // band.read_as()
+        let ds_buf = ds
+            .read_as::<u8>(
+                (0, 0),
+                size,
+                size,
+                Some(ResampleAlg::Bilinear),
+                ImageInterleaving::Band,
+                BandSelection::Subset(vec![1, 3]),
+            )
+            .unwrap();
+        assert_eq!(ds_buf.size, (size.0, size.1, 2));
+
+        for (i, band_index) in vec![1, 3].iter().enumerate() {
+            let band = ds.rasterband(*band_index as isize).unwrap();
+            let band_buf = band
+                .read_as::<u8>((0, 0), size, size, Some(ResampleAlg::Bilinear))
+                .unwrap();
+            assert_eq!(band_buf.size, size);
+            assert_eq!(
+                band_buf.data,
+                ds_buf.data[i * size.0 * size.1..(i + 1) * size.0 * size.1]
+            );
+        }
+    }
+
+    #[test]
+    fn test_dataset_read_as_buffer_size() {
+        let ds = Dataset::open(fixture("m_3607824_se_17_1_20160620_sub.tif")).unwrap();
+        let size: (usize, usize) = (4, 7);
+        let buffer_size: (usize, usize) = (8, 14);
+        let band_count = ds.raster_count() as usize;
+        let ds_buf = ds
+            .read_as::<u8>(
+                (0, 0),
+                size,
+                buffer_size,
+                Some(ResampleAlg::Bilinear),
+                ImageInterleaving::Band,
+                BandSelection::All,
+            )
+            .unwrap();
+        // We only assert that we get the right buffer size back because checking for explicit
+        // values is convoluted since GDAL handles the decimation by doing some interpolation
+        assert_eq!(ds_buf.size, (buffer_size.0, buffer_size.1, band_count));
     }
 }

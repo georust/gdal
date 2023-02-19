@@ -472,6 +472,18 @@ impl<T: GdalType> Buffer<T> {
 
 pub type ByteBuffer = Buffer<u8>;
 
+#[derive(Debug)]
+pub struct Buffer3D<T: GdalType> {
+    pub size: (usize, usize, usize),
+    pub data: Vec<T>,
+}
+
+impl<T: GdalType> Buffer3D<T> {
+    pub fn new(size: (usize, usize, usize), data: Vec<T>) -> Buffer3D<T> {
+        Buffer3D { size, data }
+    }
+}
+
 /// Extra options used to read a raster.
 ///
 /// For documentation, see `gdal_sys::GDALRasterIOExtraArg`.
