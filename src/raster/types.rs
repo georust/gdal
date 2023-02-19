@@ -4,8 +4,9 @@ use gdal_sys::{
     GDALAdjustValueToDataType, GDALDataType, GDALDataTypeIsConversionLossy, GDALDataTypeIsFloating,
     GDALDataTypeIsInteger, GDALDataTypeIsSigned, GDALDataTypeUnion, GDALFindDataTypeForValue,
     GDALGetDataTypeByName, GDALGetDataTypeName, GDALGetDataTypeSizeBits, GDALGetDataTypeSizeBytes,
-    GDALRIOResampleAlg,
+    GDALRIOResampleAlg, GDALRasterIOExtraArg,
 };
+use libc::c_int;
 use std::ffi::CString;
 use std::fmt::{Debug, Display, Formatter};
 
@@ -470,6 +471,67 @@ impl<T: GdalType> Buffer<T> {
 }
 
 pub type ByteBuffer = Buffer<u8>;
+
+/// Extra options used to read a raster.
+///
+/// For documentation, see `gdal_sys::GDALRasterIOExtraArg`.
+#[derive(Debug)]
+#[allow(clippy::upper_case_acronyms)]
+pub struct RasterIOExtraArg {
+    pub n_version: usize,
+    pub e_resample_alg: ResampleAlg,
+    pub pfn_progress: gdal_sys::GDALProgressFunc,
+    pub p_progress_data: *mut libc::c_void,
+    pub b_floating_point_window_validity: usize,
+    pub df_x_off: f64,
+    pub df_y_off: f64,
+    pub df_x_size: f64,
+    pub df_y_size: f64,
+}
+
+impl Default for RasterIOExtraArg {
+    fn default() -> Self {
+        Self {
+            n_version: 1,
+            pfn_progress: None,
+            p_progress_data: std::ptr::null_mut(),
+            e_resample_alg: ResampleAlg::NearestNeighbour,
+            b_floating_point_window_validity: 0,
+            df_x_off: 0.0,
+            df_y_off: 0.0,
+            df_x_size: 0.0,
+            df_y_size: 0.0,
+        }
+    }
+}
+
+impl From<RasterIOExtraArg> for GDALRasterIOExtraArg {
+    fn from(arg: RasterIOExtraArg) -> Self {
+        let RasterIOExtraArg {
+            n_version,
+            e_resample_alg,
+            pfn_progress,
+            p_progress_data,
+            b_floating_point_window_validity,
+            df_x_off,
+            df_y_off,
+            df_x_size,
+            df_y_size,
+        } = arg;
+
+        GDALRasterIOExtraArg {
+            nVersion: n_version as c_int,
+            eResampleAlg: e_resample_alg.to_gdal(),
+            pfnProgress: pfn_progress,
+            pProgressData: p_progress_data,
+            bFloatingPointWindowValidity: b_floating_point_window_validity as c_int,
+            dfXOff: df_x_off,
+            dfYOff: df_y_off,
+            dfXSize: df_x_size,
+            dfYSize: df_y_size,
+        }
+    }
+}
 
 #[cfg(test)]
 mod tests {

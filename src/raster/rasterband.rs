@@ -1,6 +1,7 @@
 use crate::dataset::Dataset;
 use crate::gdal_major_object::MajorObject;
 use crate::metadata::Metadata;
+use crate::raster::types::RasterIOExtraArg;
 use crate::raster::{Buffer, GdalDataType, GdalType, ResampleAlg};
 use crate::utils::{_last_cpl_err, _last_null_pointer_err, _string};
 use gdal_sys::{
@@ -47,67 +48,6 @@ impl GdalMaskFlags {
 
     pub fn is_nodata(&self) -> bool {
         self.0 & Self::GMF_NODATA != 0
-    }
-}
-
-/// Extra options used to read a raster.
-///
-/// For documentation, see `gdal_sys::GDALRasterIOExtraArg`.
-#[derive(Debug)]
-#[allow(clippy::upper_case_acronyms)]
-pub struct RasterIOExtraArg {
-    pub n_version: usize,
-    pub e_resample_alg: ResampleAlg,
-    pub pfn_progress: gdal_sys::GDALProgressFunc,
-    p_progress_data: *mut libc::c_void,
-    pub b_floating_point_window_validity: usize,
-    pub df_x_off: f64,
-    pub df_y_off: f64,
-    pub df_x_size: f64,
-    pub df_y_size: f64,
-}
-
-impl Default for RasterIOExtraArg {
-    fn default() -> Self {
-        Self {
-            n_version: 1,
-            pfn_progress: None,
-            p_progress_data: std::ptr::null_mut(),
-            e_resample_alg: ResampleAlg::NearestNeighbour,
-            b_floating_point_window_validity: 0,
-            df_x_off: 0.0,
-            df_y_off: 0.0,
-            df_x_size: 0.0,
-            df_y_size: 0.0,
-        }
-    }
-}
-
-impl From<RasterIOExtraArg> for GDALRasterIOExtraArg {
-    fn from(arg: RasterIOExtraArg) -> Self {
-        let RasterIOExtraArg {
-            n_version,
-            e_resample_alg,
-            pfn_progress,
-            p_progress_data,
-            b_floating_point_window_validity,
-            df_x_off,
-            df_y_off,
-            df_x_size,
-            df_y_size,
-        } = arg;
-
-        GDALRasterIOExtraArg {
-            nVersion: n_version as c_int,
-            eResampleAlg: e_resample_alg.to_gdal(),
-            pfnProgress: pfn_progress,
-            pProgressData: p_progress_data,
-            bFloatingPointWindowValidity: b_floating_point_window_validity as c_int,
-            dfXOff: df_x_off,
-            dfYOff: df_y_off,
-            dfXSize: df_x_size,
-            dfYSize: df_y_size,
-        }
     }
 }
 
