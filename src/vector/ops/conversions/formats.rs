@@ -57,6 +57,17 @@ impl Geometry {
         Ok(unsafe { Geometry::with_c_geometry(c_geom, true) })
     }
 
+    /// Create a geometry by parsing a
+    /// [GeoJSON](https://en.wikipedia.org/wiki/GeoJSON) string.
+    pub fn from_geojson(json: &str) -> Result<Geometry> {
+        let c_geojson = CString::new(json)?;
+        let c_geom = unsafe { gdal_sys::OGR_G_CreateGeometryFromJson(c_geojson.as_ptr()) };
+        if c_geom.is_null() {
+            return Err(_last_null_pointer_err("OGR_G_ExportToJson"));
+        }
+        Ok(unsafe { Geometry::with_c_geometry(c_geom, true) })
+    }
+
     /// Serialize the geometry as WKT.
     pub fn wkt(&self) -> Result<String> {
         let mut c_wkt = null_mut();
@@ -117,5 +128,18 @@ mod tests {
         let wkb = orig_geom.wkb().unwrap();
         let new_geom = Geometry::from_wkb(&wkb).unwrap();
         assert_eq!(new_geom, orig_geom);
+    }
+
+    #[test]
+    pub fn test_geojson() {
+        let json = r#"{ "type": "Point", "coordinates": [10, 20] }"#;
+        let geom = Geometry::from_geojson(json).unwrap();
+        let (x, y, _) = geom.get_point(0);
+        assert_eq!(x, 10.0);
+        assert_eq!(y, 20.0);
+
+        let json = r#"{ "type": "Point", "coordinates": [10, 20 }"#;
+        let res = Geometry::from_geojson(json);
+        assert!(res.is_err());
     }
 }
