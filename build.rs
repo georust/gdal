@@ -1,11 +1,7 @@
-use std::str::FromStr;
-
-fn gdal_version_info() -> String {
-    gdal_sys::gdal_version_docs_rs_wrapper()
-}
+use std::{env, str::FromStr};
 
 fn main() {
-    let gdal_version_string = gdal_version_info();
+    let gdal_version_string = env::var("DEP_GDAL_VERSION_NUMBER").unwrap();
     println!("GDAL version string: \"{gdal_version_string}\"");
 
     // this version string is the result of:
