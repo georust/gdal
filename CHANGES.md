@@ -6,6 +6,10 @@
 
   - <https://github.com/georust/gdal/pull/377>
 
+- Added `Geometry::from_geojson`
+
+  - <https://github.com/georust/gdal/pull/375>
+
 - Added `CslStringList::add_string`
 
   - <https://github.com/georust/gdal/pull/364>
