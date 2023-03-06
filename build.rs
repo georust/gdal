@@ -1,7 +1,8 @@
 use std::{env, str::FromStr};
 
 fn main() {
-    let gdal_version_string = env::var("DEP_GDAL_VERSION_NUMBER").unwrap();
+    let gdal_version_string = env::var("DEP_GDAL_VERSION_NUMBER")
+        .expect("The GDAL-SYS crate must emit the version of libgdal via cargo:version_number");
     println!("GDAL version string: \"{gdal_version_string}\"");
 
     // this version string is the result of:
