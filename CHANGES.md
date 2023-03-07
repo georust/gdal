@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added `Geometry::from_gml`
+
+  - <https://github.com/georust/gdal/pull/378>
+
 - Added `CoordTransform::new_with_options` and `CoordTransformOptions`
 
   - <https://github.com/georust/gdal/pull/372>
