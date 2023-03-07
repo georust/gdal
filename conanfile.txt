@@ -1,0 +1,5 @@
+[requires]
+gdal/3.5.2
+
+[generators]
+pkg_config

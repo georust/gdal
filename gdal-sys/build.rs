@@ -2,9 +2,7 @@ use semver::Version;
 
 use pkg_config::Config;
 use std::env;
-use std::fs;
-use std::io;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 #[cfg(feature = "bindgen")]
 pub fn write_bindings(include_paths: Vec<String>, out_path: &Path) {
@@ -45,18 +43,6 @@ fn env_dir(var: &str) -> Option<PathBuf> {
     }
 
     dir
-}
-
-fn find_gdal_dll(lib_dir: &Path) -> io::Result<Option<String>> {
-    for e in fs::read_dir(lib_dir)? {
-        let e = e?;
-        let name = e.file_name();
-        let name = name.to_str().unwrap();
-        if name.starts_with("gdal") && name.ends_with(".dll") {
-            return Ok(Some(String::from(name)));
-        }
-    }
-    Ok(None)
 }
 
 fn add_docs_rs_helper(version: Option<&str>) {
@@ -121,9 +107,9 @@ fn main() {
     println!("cargo:rerun-if-env-changed=GDAL_VERSION");
 
     let mut need_metadata = true;
-    let mut lib_name = String::from("gdal");
+    let lib_name = String::from("gdal");
 
-    let mut prefer_static =
+    let prefer_static =
         env::var_os("GDAL_STATIC").is_some() && env::var_os("GDAL_DYNAMIC").is_none();
 
     let mut include_dir = env_dir("GDAL_INCLUDE_DIR");
@@ -132,50 +118,6 @@ fn main() {
     let mut version = env::var_os("GDAL_VERSION")
         .map(|vs| vs.to_string_lossy().to_string())
         .and_then(|vs| Version::parse(vs.trim()).ok());
-
-    let mut found = false;
-    if cfg!(windows) {
-        // first, look for a static library in $GDAL_LIB_DIR or $GDAL_HOME/lib
-        // works in windows-msvc and windows-gnu
-        if let Some(ref lib_dir) = lib_dir {
-            let lib_path = lib_dir.join("gdal_i.lib");
-            if lib_path.exists() {
-                prefer_static = true;
-                lib_name = String::from("gdal_i");
-                found = true;
-            }
-        }
-        if !found {
-            if let Some(ref home_dir) = home_dir {
-                let home_lib_dir = home_dir.join("lib");
-                let lib_path = home_lib_dir.join("gdal_i.lib");
-                if lib_path.exists() {
-                    prefer_static = true;
-                    lib_name = String::from("gdal_i");
-                    lib_dir = Some(home_lib_dir);
-                    found = true;
-                }
-            }
-        }
-        if !found {
-            if cfg!(target_env = "msvc") {
-                panic!("windows-msvc requires gdal_i.lib to be present in either $GDAL_LIB_DIR or $GDAL_HOME\\lib.");
-            }
-
-            // otherwise, look for a gdalxxx.dll in $GDAL_HOME/bin
-            // works in windows-gnu
-            if let Some(ref home_dir) = home_dir {
-                let bin_dir = home_dir.join("bin");
-                if bin_dir.exists() {
-                    if let Some(name) = find_gdal_dll(&bin_dir).unwrap() {
-                        prefer_static = false;
-                        lib_dir = Some(bin_dir);
-                        lib_name = name;
-                    }
-                }
-            }
-        }
-    }
 
     if let Some(ref home_dir) = home_dir {
         if include_dir.is_none() {
