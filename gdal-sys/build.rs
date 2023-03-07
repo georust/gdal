@@ -59,32 +59,6 @@ fn find_gdal_dll(lib_dir: &Path) -> io::Result<Option<String>> {
     Ok(None)
 }
 
-fn add_docs_rs_helper(version: Option<&str>) {
-    let out_path = PathBuf::from(env::var("OUT_DIR").unwrap()).join("docs_rs_helper.rs");
-    let docs_helper_code = if let Some(version) = version {
-        format!(
-            r#"
-        pub fn gdal_version_docs_rs_wrapper() -> String {{
-            "{version}".to_string()
-        }}"#
-        )
-    } else {
-        r#"
-        pub fn gdal_version_docs_rs_wrapper() -> String {
-            let key = "VERSION_NUM";
-            let c_key = std::ffi::CString::new(key.as_bytes()).unwrap();
-
-            unsafe {
-                let res_ptr = crate::GDALVersionInfo(c_key.as_ptr());
-                let c_res = std::ffi::CStr::from_ptr(res_ptr);
-                c_res.to_string_lossy().into_owned()
-            }
-        }"#
-        .to_string()
-    };
-    std::fs::write(out_path, docs_helper_code.as_bytes()).unwrap();
-}
-
 fn main() {
     let out_path = PathBuf::from(env::var("OUT_DIR").unwrap()).join("bindings.rs");
 
@@ -92,11 +66,16 @@ fn main() {
     // Otherwise docs.rs will explode due to not actually having libgdal installed.
     if std::env::var("DOCS_RS").is_ok() {
         let version = Version::parse("3.5.0").expect("invalid version for docs.rs");
-        add_docs_rs_helper(Some("3050000"));
         println!(
             "cargo:rustc-cfg=gdal_sys_{}_{}_{}",
             version.major, version.minor, version.patch
         );
+
+        // this version string is the result of:
+        // #define GDAL_COMPUTE_VERSION(maj,min,rev) ((maj)*1000000+(min)*10000+(rev)*100)
+        let gdal_version_number_string =
+            version.major * 1_000_000 + version.minor * 10_000 + version.patch * 100;
+        println!("cargo:version_number={}", gdal_version_number_string);
 
         let binding_path = PathBuf::from(format!(
             "prebuilt-bindings/gdal_{}.{}.rs",
@@ -112,7 +91,6 @@ fn main() {
         return;
     }
 
-    add_docs_rs_helper(None);
     println!("cargo:rerun-if-env-changed=GDAL_STATIC");
     println!("cargo:rerun-if-env-changed=GDAL_DYNAMIC");
     println!("cargo:rerun-if-env-changed=GDAL_INCLUDE_DIR");
@@ -229,6 +207,14 @@ fn main() {
                 version.replace(pkg_version);
             }
         }
+    }
+
+    if let Some(gdal_version) = &version {
+        // this version string is the result of:
+        // #define GDAL_COMPUTE_VERSION(maj,min,rev) ((maj)*1000000+(min)*10000+(rev)*100)
+        let gdal_version_number_string =
+            gdal_version.major * 1_000_000 + gdal_version.minor * 10_000 + gdal_version.patch * 100;
+        println!("cargo:version_number={}", gdal_version_number_string);
     }
 
     #[cfg(feature = "bindgen")]

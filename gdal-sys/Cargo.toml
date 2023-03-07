@@ -7,6 +7,7 @@ repository = "https://github.com/georust/gdal"
 authors = ["Johannes Drönner <droenner@informatik.uni-marburg.de>"]
 edition = "2018"
 rust-version = "1.58"
+links="gdal"
 
 [dependencies]
 libc = "0.2"

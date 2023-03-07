@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Set the link flag of gdal-sys to "libgdal". Emit the libgdal version via cargo:version_number. Remove wrong build-dependency on gdal-sys and remove docs_rs workaround.
+
+  - <https://github.com/georust/gdal/pull/377>
+
 - Added `Geometry::from_geojson`
 
   - <https://github.com/georust/gdal/pull/375>
@@ -42,7 +46,7 @@
 
   - <https://github.com/georust/gdal/pull/355>
 
-- Exposed various functions on `Geometry`:  `make_valid`, `geometry_name`, and `point_count`.
+- Exposed various functions on `Geometry`: `make_valid`, `geometry_name`, and `point_count`.
 
   - <https://github.com/georust/gdal/pull/356>
 
@@ -53,7 +57,7 @@
 - Exposed spatial predicates over `Geometry`: `intersects`, `contains`, `disjoint`, `touches`, `crosses`, `within`, and `overlaps`.
 
   - <https://github.com/georust/gdal/pull/366>
-  
+
 - Added `Geometry::envelope` and `Geometry::envelope_3d`.
 
   - <https://github.com/georust/gdal/pull/370>
