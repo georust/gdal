@@ -63,7 +63,18 @@ impl Geometry {
         let c_geojson = CString::new(json)?;
         let c_geom = unsafe { gdal_sys::OGR_G_CreateGeometryFromJson(c_geojson.as_ptr()) };
         if c_geom.is_null() {
-            return Err(_last_null_pointer_err("OGR_G_ExportToJson"));
+            return Err(_last_null_pointer_err("OGR_G_CreateGeometryFromJson"));
+        }
+        Ok(unsafe { Geometry::with_c_geometry(c_geom, true) })
+    }
+
+    /// Create a geometry by parsing a
+    /// [GML](https://en.wikipedia.org/wiki/Geography_Markup_Language) string.
+    pub fn from_gml(json: &str) -> Result<Geometry> {
+        let c_gml = CString::new(json)?;
+        let c_geom = unsafe { gdal_sys::OGR_G_CreateFromGML(c_gml.as_ptr()) };
+        if c_geom.is_null() {
+            return Err(_last_null_pointer_err("OGR_G_CreateFromGML"));
         }
         Ok(unsafe { Geometry::with_c_geometry(c_geom, true) })
     }
@@ -140,6 +151,19 @@ mod tests {
 
         let json = r#"{ "type": "Point", "coordinates": [10, 20 }"#;
         let res = Geometry::from_geojson(json);
+        assert!(res.is_err());
+    }
+
+    #[test]
+    pub fn test_gml() {
+        let json = r#"<gml:Point xmlns:gml="http://www.opengis.net/gml"><gml:coordinates>10,20</gml:coordinates></gml:Point>"#;
+        let geom = Geometry::from_gml(json).unwrap();
+        let (x, y, _) = geom.get_point(0);
+        assert_eq!(x, 10.0);
+        assert_eq!(y, 20.0);
+
+        let json = r#"<gml:Point xmlns:gml="http://www.opengis.net/gml"><gml:coordinates>10</gml:coordinates></gml:Point>"#;
+        let res = Geometry::from_gml(json);
         assert!(res.is_err());
     }
 }
