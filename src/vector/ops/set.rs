@@ -32,6 +32,22 @@ impl Geometry {
         }
         Some(unsafe { Geometry::with_c_geometry(ogr_geom, true) })
     }
+
+    pub fn union(&self, other: &Self) -> Option<Self> {
+        if !self.has_gdal_ptr() {
+            return None;
+        }
+        if !other.has_gdal_ptr() {
+            return None;
+        }
+        unsafe {
+            let ogr_geom = gdal_sys::OGR_G_Union(self.c_geometry(), other.c_geometry());
+            if ogr_geom.is_null() {
+                return None;
+            }
+            Some(Geometry::with_c_geometry(ogr_geom, true))
+        }
+    }
 }
 
 #[cfg(test)]
@@ -83,5 +99,53 @@ mod tests {
         assert!(inter.is_some());
 
         assert_eq!(inter.unwrap().area(), 0.0);
+    }
+
+
+    #[test]
+    #[allow(clippy::float_cmp)]
+    fn test_union_success() {
+        let geom =
+           Geometry::from_wkt("POLYGON ((0.0 10.0, 0.0 0.0, 10.0 0.0, 10.0 10.0, 0.0 10.0))")
+              .unwrap();
+        let other =
+           Geometry::from_wkt("POLYGON ((1 -5, 1 1, -5 1, -5 -5, 1 -5))").unwrap();
+
+        let inter = geom.union(&other);
+
+        assert!(inter.is_some());
+
+        let inter = inter.unwrap();
+
+        assert_eq!(inter.area(), 135.0);
+    }
+
+    #[test]
+    fn test_union_no_gdal_ptr() {
+        let geom =
+           Geometry::from_wkt("POLYGON ((0.0 10.0, 0.0 0.0, 10.0 0.0, 10.0 10.0, 0.0 10.0))")
+              .unwrap();
+        let other = unsafe { Geometry::lazy_feature_geometry() };
+
+        let inter = geom.union(&other);
+
+        assert!(inter.is_none());
+    }
+
+    #[test]
+    #[allow(clippy::float_cmp)]
+    fn test_union_no_intersects() {
+        let geom =
+           Geometry::from_wkt("POLYGON ((0.0 5.0, 0.0 0.0, 5.0 0.0, 5.0 5.0, 0.0 5.0))").unwrap();
+
+        let other =
+           Geometry::from_wkt("POLYGON ((15.0 15.0, 15.0 20.0, 20.0 20.0, 20.0 15.0, 15.0 15.0))")
+              .unwrap();
+
+        let inter = geom.union(&other);
+
+        assert!(inter.is_some());
+
+        assert_eq!(inter.unwrap().area(), 50.0);
     }
 }
