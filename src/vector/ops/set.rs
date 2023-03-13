@@ -26,7 +26,7 @@ impl Geometry {
             return None;
         }
         let ogr_geom =
-           unsafe { gdal_sys::OGR_G_Intersection(self.c_geometry(), other.c_geometry()) };
+            unsafe { gdal_sys::OGR_G_Intersection(self.c_geometry(), other.c_geometry()) };
         if ogr_geom.is_null() {
             return None;
         }
@@ -58,10 +58,10 @@ mod tests {
     #[allow(clippy::float_cmp)]
     fn test_intersection_success() {
         let geom =
-           Geometry::from_wkt("POLYGON ((0.0 10.0, 0.0 0.0, 10.0 0.0, 10.0 10.0, 0.0 10.0))")
-              .unwrap();
+            Geometry::from_wkt("POLYGON ((0.0 10.0, 0.0 0.0, 10.0 0.0, 10.0 10.0, 0.0 10.0))")
+                .unwrap();
         let other =
-           Geometry::from_wkt("POLYGON ((0.0 5.0, 0.0 0.0, 5.0 0.0, 5.0 5.0, 0.0 5.0))").unwrap();
+            Geometry::from_wkt("POLYGON ((0.0 5.0, 0.0 0.0, 5.0 0.0, 5.0 5.0, 0.0 5.0))").unwrap();
 
         let inter = geom.intersection(&other);
 
@@ -75,8 +75,8 @@ mod tests {
     #[test]
     fn test_intersection_no_gdal_ptr() {
         let geom =
-           Geometry::from_wkt("POLYGON ((0.0 10.0, 0.0 0.0, 10.0 0.0, 10.0 10.0, 0.0 10.0))")
-              .unwrap();
+            Geometry::from_wkt("POLYGON ((0.0 10.0, 0.0 0.0, 10.0 0.0, 10.0 10.0, 0.0 10.0))")
+                .unwrap();
         let other = unsafe { Geometry::lazy_feature_geometry() };
 
         let inter = geom.intersection(&other);
@@ -88,11 +88,11 @@ mod tests {
     #[allow(clippy::float_cmp)]
     fn test_intersection_no_intersects() {
         let geom =
-           Geometry::from_wkt("POLYGON ((0.0 5.0, 0.0 0.0, 5.0 0.0, 5.0 5.0, 0.0 5.0))").unwrap();
+            Geometry::from_wkt("POLYGON ((0.0 5.0, 0.0 0.0, 5.0 0.0, 5.0 5.0, 0.0 5.0))").unwrap();
 
         let other =
-           Geometry::from_wkt("POLYGON ((15.0 15.0, 15.0 20.0, 20.0 20.0, 20.0 15.0, 15.0 15.0))")
-              .unwrap();
+            Geometry::from_wkt("POLYGON ((15.0 15.0, 15.0 20.0, 20.0 20.0, 20.0 15.0, 15.0 15.0))")
+                .unwrap();
 
         let inter = geom.intersection(&other);
 
@@ -101,15 +101,13 @@ mod tests {
         assert_eq!(inter.unwrap().area(), 0.0);
     }
 
-
     #[test]
     #[allow(clippy::float_cmp)]
     fn test_union_success() {
         let geom =
-           Geometry::from_wkt("POLYGON ((0.0 10.0, 0.0 0.0, 10.0 0.0, 10.0 10.0, 0.0 10.0))")
-              .unwrap();
-        let other =
-           Geometry::from_wkt("POLYGON ((1 -5, 1 1, -5 1, -5 -5, 1 -5))").unwrap();
+            Geometry::from_wkt("POLYGON ((0.0 10.0, 0.0 0.0, 10.0 0.0, 10.0 10.0, 0.0 10.0))")
+                .unwrap();
+        let other = Geometry::from_wkt("POLYGON ((1 -5, 1 1, -5 1, -5 -5, 1 -5))").unwrap();
 
         let inter = geom.union(&other);
 
@@ -123,8 +121,8 @@ mod tests {
     #[test]
     fn test_union_no_gdal_ptr() {
         let geom =
-           Geometry::from_wkt("POLYGON ((0.0 10.0, 0.0 0.0, 10.0 0.0, 10.0 10.0, 0.0 10.0))")
-              .unwrap();
+            Geometry::from_wkt("POLYGON ((0.0 10.0, 0.0 0.0, 10.0 0.0, 10.0 10.0, 0.0 10.0))")
+                .unwrap();
         let other = unsafe { Geometry::lazy_feature_geometry() };
 
         let inter = geom.union(&other);
@@ -136,11 +134,11 @@ mod tests {
     #[allow(clippy::float_cmp)]
     fn test_union_no_intersects() {
         let geom =
-           Geometry::from_wkt("POLYGON ((0.0 5.0, 0.0 0.0, 5.0 0.0, 5.0 5.0, 0.0 5.0))").unwrap();
+            Geometry::from_wkt("POLYGON ((0.0 5.0, 0.0 0.0, 5.0 0.0, 5.0 5.0, 0.0 5.0))").unwrap();
 
         let other =
-           Geometry::from_wkt("POLYGON ((15.0 15.0, 15.0 20.0, 20.0 20.0, 20.0 15.0, 15.0 15.0))")
-              .unwrap();
+            Geometry::from_wkt("POLYGON ((15.0 15.0, 15.0 20.0, 20.0 20.0, 20.0 15.0, 15.0 15.0))")
+                .unwrap();
 
         let inter = geom.union(&other);
 
