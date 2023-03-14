@@ -33,6 +33,19 @@ impl Geometry {
         Some(unsafe { Geometry::with_c_geometry(ogr_geom, true) })
     }
 
+    /// Compute union.
+    ///
+    /// Generates a new geometry which is the region of union of
+    /// the two geometries operated on.
+    /// Geometry validity is not checked. In case you are unsure of the
+    /// validity of the input geometries, call IsValid() before,
+    /// otherwise the result might be wrong.
+    ///
+    /// # Returns
+    /// Some(Geometry) if both Geometries contain pointers
+    /// None if either geometry is missing the gdal pointer, or there is an error.
+    ///
+    /// See: [`OGR_G_Intersection`](https://gdal.org/api/vector_c_api.html#_OGRGeometryH OGR_G_Union(OGRGeometryH, OGRGeometryH))
     pub fn union(&self, other: &Self) -> Option<Self> {
         if !self.has_gdal_ptr() {
             return None;
@@ -109,13 +122,13 @@ mod tests {
                 .unwrap();
         let other = Geometry::from_wkt("POLYGON ((1 -5, 1 1, -5 1, -5 -5, 1 -5))").unwrap();
 
-        let inter = geom.union(&other);
+        let res = geom.union(&other);
 
-        assert!(inter.is_some());
+        assert!(res.is_some());
 
-        let inter = inter.unwrap();
+        let res = res.unwrap();
 
-        assert_eq!(inter.area(), 135.0);
+        assert_eq!(res.area(), 135.0);
     }
 
     #[test]
@@ -125,9 +138,9 @@ mod tests {
                 .unwrap();
         let other = unsafe { Geometry::lazy_feature_geometry() };
 
-        let inter = geom.union(&other);
+        let res = geom.union(&other);
 
-        assert!(inter.is_none());
+        assert!(res.is_none());
     }
 
     #[test]
@@ -140,10 +153,10 @@ mod tests {
             Geometry::from_wkt("POLYGON ((15.0 15.0, 15.0 20.0, 20.0 20.0, 20.0 15.0, 15.0 15.0))")
                 .unwrap();
 
-        let inter = geom.union(&other);
+        let res = geom.union(&other);
 
-        assert!(inter.is_some());
+        assert!(res.is_some());
 
-        assert_eq!(inter.unwrap().area(), 50.0);
+        assert_eq!(res.unwrap().area(), 50.0);
     }
 }

@@ -1,6 +1,9 @@
 # Changes
 
 ## Unreleased
+- Added `Geometry::union`
+
+  - <https://github.com/georust/gdal/pull/379>
 
 - Added `Geometry::from_gml`
 
