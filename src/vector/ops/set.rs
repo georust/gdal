@@ -14,8 +14,8 @@ impl Geometry {
     /// otherwise the result might be wrong.
     ///
     /// # Returns
-    /// Some(Geometry) if both Geometries contain pointers
-    /// None if either geometry is missing the gdal pointer, or there is an error.
+    /// `Some(geometry)` if both Geometries contain pointers
+    /// `None` if either geometry is missing the GDAL pointer, or there is an error.
     ///
     /// See: [`OGR_G_Intersection`](https://gdal.org/api/vector_c_api.html#_CPPv418OGR_G_Intersection12OGRGeometryH12OGRGeometryH)
     pub fn intersection(&self, other: &Self) -> Option<Self> {
@@ -42,10 +42,10 @@ impl Geometry {
     /// otherwise the result might be wrong.
     ///
     /// # Returns
-    /// Some(Geometry) if both Geometries contain pointers
-    /// None if either geometry is missing the gdal pointer, or there is an error.
+    /// `Some(geometry)` if both Geometries contain pointers.
+    /// `None` if either geometry is missing the GDAL pointer, or there is an error.
     ///
-    /// See: [`OGR_G_Intersection`](https://gdal.org/api/vector_c_api.html#_OGRGeometryH OGR_G_Union(OGRGeometryH, OGRGeometryH))
+    /// See: [`OGR_G_Union`](https://gdal.org/api/vector_c_api.html#_CPPv419OGR_G_UnionCascaded12OGRGeometryH)
     pub fn union(&self, other: &Self) -> Option<Self> {
         if !self.has_gdal_ptr() {
             return None;
