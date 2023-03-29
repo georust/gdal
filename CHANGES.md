@@ -1,6 +1,10 @@
 # Changes
 
 ## Unreleased
+- Added `Geometry::length`
+
+  - <https://github.com/georust/gdal/pull/384>
+
 - Added `Geometry::union`
 
   - <https://github.com/georust/gdal/pull/379>

@@ -233,9 +233,19 @@ impl Geometry {
         Ok(())
     }
 
+    /// Compute geometry area in units of the spatial reference system in use.
+    ///
+    /// Supported for `Curve` (including `LineString` and `CircularString`) and `MultiCurve`.
+    /// Returns zero for all other geometry types.
+    ///
+    /// See: [`OGR_G_Length`](https://gdal.org/api/vector_c_api.html#_CPPv412OGR_G_Length12OGRGeometryH)
+    pub fn length(&self) -> f64 {
+        unsafe { gdal_sys::OGR_G_Length(self.c_geometry()) }
+    }
+
     /// Compute geometry area in square units of the spatial reference system in use.
     ///
-    /// Supported for `LinearRing`, `Polygon` or `MultiPolygon`.
+    /// Supported for `LinearRing`, `Polygon` and `MultiPolygon`.
     /// Returns zero for all other geometry types.
     ///
     /// See: [`OGR_G_Area`](https://gdal.org/api/vector_c_api.html#_CPPv410OGR_G_Area12OGRGeometryH)
@@ -370,7 +380,9 @@ mod tests {
     use super::*;
     use crate::spatial_ref::SpatialRef;
     use crate::test_utils::SuppressGDALErrorLog;
-    use gdal_sys::OGRwkbGeometryType::{wkbLineString, wkbLinearRing, wkbPolygon};
+    use gdal_sys::OGRwkbGeometryType::{
+        wkbLineString, wkbLinearRing, wkbMultiPoint, wkbMultiPolygon, wkbPoint, wkbPolygon,
+    };
 
     #[test]
     fn test_create_bbox() {
@@ -380,9 +392,24 @@ mod tests {
 
     #[test]
     #[allow(clippy::float_cmp)]
+    pub fn test_length() {
+        let _nolog = SuppressGDALErrorLog::new();
+        let geom = Geometry::empty(wkbPoint).unwrap();
+        assert_eq!(geom.area(), 0.0);
+
+        let geom = Geometry::from_wkt("POINT(0 0)").unwrap();
+        assert_eq!(geom.area(), 0.0);
+
+        let wkt = "LINESTRING (0 10, 10 10, 10 15)";
+        let geom = Geometry::from_wkt(wkt).unwrap();
+        assert_eq!(geom.length() as i32, 15);
+    }
+
+    #[test]
+    #[allow(clippy::float_cmp)]
     pub fn test_area() {
         let _nolog = SuppressGDALErrorLog::new();
-        let geom = Geometry::empty(::gdal_sys::OGRwkbGeometryType::wkbMultiPolygon).unwrap();
+        let geom = Geometry::empty(wkbMultiPolygon).unwrap();
         assert_eq!(geom.area(), 0.0);
 
         let geom = Geometry::from_wkt("POINT(0 0)").unwrap();
@@ -395,7 +422,7 @@ mod tests {
 
     #[test]
     pub fn test_is_empty() {
-        let geom = Geometry::empty(::gdal_sys::OGRwkbGeometryType::wkbMultiPolygon).unwrap();
+        let geom = Geometry::empty(wkbMultiPolygon).unwrap();
         assert!(geom.is_empty());
 
         let geom = Geometry::from_wkt("POINT(0 0)").unwrap();
@@ -408,11 +435,11 @@ mod tests {
 
     #[test]
     pub fn test_create_multipoint_2d() {
-        let mut geom = Geometry::empty(::gdal_sys::OGRwkbGeometryType::wkbMultiPoint).unwrap();
-        let mut point = Geometry::empty(::gdal_sys::OGRwkbGeometryType::wkbPoint).unwrap();
+        let mut geom = Geometry::empty(wkbMultiPoint).unwrap();
+        let mut point = Geometry::empty(wkbPoint).unwrap();
         point.add_point_2d((1.0, 2.0));
         geom.add_geometry(point).unwrap();
-        let mut point = Geometry::empty(::gdal_sys::OGRwkbGeometryType::wkbPoint).unwrap();
+        let mut point = Geometry::empty(wkbPoint).unwrap();
         point.add_point_2d((2.0, 3.0));
         assert!(!point.is_empty());
         point.set_point_2d(0, (2.0, 4.0));
@@ -425,11 +452,11 @@ mod tests {
 
     #[test]
     pub fn test_create_multipoint_3d() {
-        let mut geom = Geometry::empty(::gdal_sys::OGRwkbGeometryType::wkbMultiPoint).unwrap();
-        let mut point = Geometry::empty(::gdal_sys::OGRwkbGeometryType::wkbPoint).unwrap();
+        let mut geom = Geometry::empty(wkbMultiPoint).unwrap();
+        let mut point = Geometry::empty(wkbPoint).unwrap();
         point.add_point((1.0, 2.0, 3.0));
         geom.add_geometry(point).unwrap();
-        let mut point = Geometry::empty(::gdal_sys::OGRwkbGeometryType::wkbPoint).unwrap();
+        let mut point = Geometry::empty(wkbPoint).unwrap();
         point.add_point((3.0, 2.0, 1.0));
         assert!(!point.is_empty());
         point.set_point(0, (4.0, 2.0, 1.0));
@@ -442,7 +469,7 @@ mod tests {
 
     #[test]
     pub fn test_spatial_ref() {
-        let geom = Geometry::empty(::gdal_sys::OGRwkbGeometryType::wkbMultiPolygon).unwrap();
+        let geom = Geometry::empty(wkbMultiPolygon).unwrap();
         assert!(geom.spatial_ref().is_none());
 
         let geom = Geometry::from_wkt("POINT(0 0)").unwrap();
@@ -496,10 +523,7 @@ mod tests {
 
     #[test]
     pub fn test_geometry_type_to_name() {
-        assert_eq!(
-            geometry_type_to_name(::gdal_sys::OGRwkbGeometryType::wkbLineString),
-            "Line String"
-        );
+        assert_eq!(geometry_type_to_name(wkbLineString), "Line String");
         // We don't care what it returns when passed an invalid value, just that it doesn't crash.
         geometry_type_to_name(4372521);
     }
