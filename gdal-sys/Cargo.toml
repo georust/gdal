@@ -13,6 +13,6 @@ links="gdal"
 libc = "0.2"
 
 [build-dependencies]
-bindgen = { version = "0.64", optional = true }
+bindgen = { version = "0.65", optional = true }
 pkg-config = "0.3"
 semver = "1.0"
