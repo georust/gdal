@@ -506,6 +506,23 @@ impl SpatialRef {
         res
     }
 
+    #[cfg(any(major_ge_4, all(major_ge_3, minor_ge_1)))]
+    pub fn to_projjson(&self) -> Result<String> {
+        let mut c_projjsonstr = ptr::null_mut();
+        let options = ptr::null();
+        let rv = unsafe { gdal_sys::OSRExportToPROJJSON(self.0, &mut c_projjsonstr, options) };
+        let res = if rv != OGRErr::OGRERR_NONE {
+            Err(GdalError::OgrError {
+                err: rv,
+                method_name: "OSRExportToPROJJSON",
+            })
+        } else {
+            Ok(_string(c_projjsonstr))
+        };
+        unsafe { gdal_sys::VSIFree(c_projjsonstr.cast::<std::ffi::c_void>()) };
+        res
+    }
+
     pub fn auth_name(&self) -> Result<String> {
         let c_ptr = unsafe { gdal_sys::OSRGetAuthorityName(self.0, ptr::null()) };
         if c_ptr.is_null() {
