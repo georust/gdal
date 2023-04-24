@@ -43,6 +43,22 @@ fn from_epsg_to_wkt_proj4() {
     assert_eq!("+proj=longlat +datum=WGS84 +no_defs", proj4string.trim());
 }
 
+#[cfg(any(major_ge_4, all(major_ge_3, minor_ge_1)))]
+#[test]
+fn from_epsg_to_projjson() {
+    let spatial_ref = SpatialRef::from_epsg(4326).unwrap();
+    let projjson = spatial_ref.to_projjson().unwrap();
+    // Testing for exact string equality would be too strict, since the order of keys in JSON is
+    // unspecified. Ideally, we'd parse the JSON and then compare the values, but adding a JSON
+    // parser as a dependency just for this one test would be overkill. Thus, we do only a quick
+    // sanity check.
+    assert!(
+        projjson.contains("World Geodetic System 1984"),
+        "{:?} does not contain expected CRS name",
+        projjson
+    );
+}
+
 #[test]
 fn from_esri_to_proj4() {
     let spatial_ref = SpatialRef::from_esri("GEOGCS[\"GCS_WGS_1984\",DATUM[\"D_WGS_1984\",SPHEROID[\"WGS_1984\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.017453292519943295]]").unwrap();

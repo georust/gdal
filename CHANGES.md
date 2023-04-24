@@ -1,6 +1,10 @@
 # Changes
 
 ## Unreleased
+- Added `SpatialRef::to_projjson`
+
+  - <https://github.com/georust/gdal/pull/389>
+
 - Added `Geometry::length`
 
   - <https://github.com/georust/gdal/pull/384>
