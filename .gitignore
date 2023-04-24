@@ -3,6 +3,7 @@
 /.vscode
 /gdal-sys/target
 /.idea
+/fixtures/tinymarble.tif.aux.xml
 
 # gtags
 GPATH
