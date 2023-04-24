@@ -111,10 +111,11 @@ mod tests {
 
     #[test]
     fn test_that_gdal_error_is_send() {
-        fn is_send<T: Send>() -> bool {
-            true
+        fn is_send<T: Send>() {
+            // https://github.com/rust-lang/rust-clippy/issues/10318
+            let _: [T; 0] = [];
         }
 
-        assert!(is_send::<GdalError>());
+        is_send::<GdalError>();
     }
 }
