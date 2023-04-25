@@ -190,6 +190,7 @@ bitflags! {
     /// https://github.com/georust/gdal/issues/154.
     ///
     /// [`GDALOpenEx`]: https://gdal.org/doxygen/gdal_8h.html#a9cb8585d0b3c16726b08e25bcc94274a
+    #[derive(Debug)]
     pub struct GdalOpenFlags: c_uint {
         /// Open in read-only mode (default).
         const GDAL_OF_READONLY = 0x00;
@@ -314,7 +315,7 @@ impl Dataset {
         crate::driver::_register_drivers();
 
         let c_filename = _path_to_c_string(path)?;
-        let c_open_flags = options.open_flags.bits;
+        let c_open_flags = options.open_flags.bits();
 
         // handle driver params:
         // we need to keep the CStrings and the pointers around
