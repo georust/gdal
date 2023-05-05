@@ -9,7 +9,7 @@ use crate::cpl::CslStringList;
 use crate::dataset::Dataset;
 use crate::gdal_major_object::MajorObject;
 use crate::metadata::Metadata;
-use crate::raster::{GdalType, RasterCreationOption};
+use crate::raster::{GdalDataType, GdalType, RasterCreationOption};
 use crate::utils::{_last_cpl_err, _last_null_pointer_err, _path_to_c_string, _string};
 
 use crate::errors::*;
@@ -181,22 +181,24 @@ impl Driver {
         bands: isize,
         options: &[RasterCreationOption],
     ) -> Result<Dataset> {
-        Self::_create_with_band_type_with_options::<T>(
+        Self::_create_with_band_type_with_options(
             self,
             filename.as_ref(),
             size_x,
             size_y,
             bands,
+            T::datatype(),
             options,
         )
     }
 
-    fn _create_with_band_type_with_options<T: GdalType>(
+    fn _create_with_band_type_with_options(
         &self,
         filename: &Path,
         size_x: isize,
         size_y: isize,
         bands: isize,
+        data_type: GdalDataType,
         options: &[RasterCreationOption],
     ) -> Result<Dataset> {
         let mut options_c = CslStringList::new();
@@ -212,7 +214,7 @@ impl Driver {
                 size_x as c_int,
                 size_y as c_int,
                 bands as c_int,
-                T::gdal_ordinal(),
+                data_type as u32,
                 options_c.as_ptr(),
             )
         };
@@ -227,7 +229,15 @@ impl Driver {
     /// Convenience for creating a vector-only dataset from a compatible driver.
     /// [Details](https://gdal.org/api/gdaldriver_cpp.html#_CPPv4N10GDALDriver6CreateEPKciii12GDALDataType12CSLConstList)
     pub fn create_vector_only<P: AsRef<Path>>(&self, filename: P) -> Result<Dataset> {
-        self.create_with_band_type::<u8, _>(filename, 0, 0, 0)
+        let options = [];
+        self._create_with_band_type_with_options(
+            filename.as_ref(),
+            0,
+            0,
+            0,
+            GdalDataType::Unknown,
+            &options,
+        )
     }
 
     /// Delete named dataset.
