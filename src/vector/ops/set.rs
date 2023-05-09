@@ -48,7 +48,7 @@ impl Geometry {
     /// * Geometry validity is not checked, and invalid geometry will generate unpredictable results.
     /// Use [`Geometry::is_valid`] if validity might be in question.
     /// * If GEOS is *not* enabled, this function will always return `None`.
-    /// You  may check for GEOS support with [`VersionInfo::has_geos`][has_geos].
+    /// You may check for GEOS support with [`VersionInfo::has_geos`][has_geos].
     ///
     /// # Returns
     /// * `Some(geometry)`: a new `Geometry` representing the computed union
