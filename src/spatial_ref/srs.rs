@@ -1,23 +1,19 @@
 use crate::utils::{_last_null_pointer_err, _string};
 use gdal_sys::{self, OGRErr};
-use libc::{c_char, c_int};
 use std::ffi::{CStr, CString};
 use std::ptr::{self};
 use std::str::FromStr;
 
 use crate::errors::*;
 
-#[derive(Debug, Clone)]
-pub struct AreaOfUse {
-    pub west_lon_degree: f64,
-    pub south_lat_degree: f64,
-    pub east_lon_degree: f64,
-    pub north_lat_degree: f64,
-    pub name: String,
-}
-
-pub type AxisOrientationType = gdal_sys::OGRAxisOrientation::Type;
-
+/// A OpenGIS Spatial Reference System definition.
+///
+/// Used in geo-referencing raster and vector data, and in coordinate transformations.
+///
+/// # Notes
+/// * See also: [OGR Coordinate Reference Systems and Coordinate Transformation Tutorial](https://gdal.org/tutorials/osr_api_tut.html)
+/// * Consult the [OGC WKT Coordinate System Issues](https://gdal.org/tutorials/wktproblems.html)
+/// page for implementation details of WKT in OGR.
 #[derive(Debug)]
 pub struct SpatialRef(gdal_sys::OGRSpatialReferenceH);
 
@@ -63,11 +59,18 @@ impl SpatialRef {
         }
     }
 
-    /// Get the handle to underlying C API data
-    pub(crate) unsafe fn c_handle(&self) -> gdal_sys::OGRSpatialReferenceH {
+    /// Returns a C pointer to the allocated [`gdal_sys::OGRSpatialReferenceH`] memory.
+    pub fn to_c_hsrs(&self) -> gdal_sys::OGRSpatialReferenceH {
         self.0
     }
 
+    /// Set spatial reference from various text formats.
+    ///
+    /// This method will examine the provided input, and try to deduce the format,
+    /// and then use it to initialize the spatial reference system. See the [C++ API docs][CPP]
+    /// for details on these forms.
+    ///
+    /// [CPP]: https://gdal.org/api/ogrspatialref.html#_CPPv4N19OGRSpatialReference16SetFromUserInputEPKc
     pub fn from_definition(definition: &str) -> Result<SpatialRef> {
         let c_obj = unsafe { gdal_sys::OSRNewSpatialReference(ptr::null()) };
         if c_obj.is_null() {
@@ -96,7 +99,7 @@ impl SpatialRef {
     pub fn from_epsg(epsg_code: u32) -> Result<SpatialRef> {
         let null_ptr = ptr::null_mut();
         let c_obj = unsafe { gdal_sys::OSRNewSpatialReference(null_ptr) };
-        let rv = unsafe { gdal_sys::OSRImportFromEPSG(c_obj, epsg_code as c_int) };
+        let rv = unsafe { gdal_sys::OSRImportFromEPSG(c_obj, epsg_code as libc::c_int) };
         if rv != OGRErr::OGRERR_NONE {
             Err(GdalError::OgrError {
                 err: rv,
@@ -124,7 +127,7 @@ impl SpatialRef {
 
     pub fn from_esri(esri_wkt: &str) -> Result<SpatialRef> {
         let c_str = CString::new(esri_wkt)?;
-        let mut ptrs = vec![c_str.as_ptr() as *mut c_char, ptr::null_mut()];
+        let mut ptrs = vec![c_str.as_ptr() as *mut libc::c_char, ptr::null_mut()];
         let null_ptr = ptr::null_mut();
         let c_obj = unsafe { gdal_sys::OSRNewSpatialReference(null_ptr) };
         let rv = unsafe { gdal_sys::OSRImportFromESRI(c_obj, ptrs.as_mut_ptr()) };
@@ -166,7 +169,8 @@ impl SpatialRef {
 
     pub fn to_pretty_wkt(&self) -> Result<String> {
         let mut c_wkt = ptr::null_mut();
-        let rv = unsafe { gdal_sys::OSRExportToPrettyWkt(self.0, &mut c_wkt, false as c_int) };
+        let rv =
+            unsafe { gdal_sys::OSRExportToPrettyWkt(self.0, &mut c_wkt, false as libc::c_int) };
         let res = if rv != OGRErr::OGRERR_NONE {
             Err(GdalError::OgrError {
                 err: rv,
@@ -348,13 +352,17 @@ impl SpatialRef {
         unsafe { gdal_sys::OSRIsVertical(self.0) == 1 }
     }
 
-    pub fn axis_orientation(&self, target_key: &str, axis: i32) -> Result<AxisOrientationType> {
+    pub fn axis_orientation(
+        &self,
+        target_key: &str,
+        axis: i32,
+    ) -> Result<super::AxisOrientationType> {
         let mut orientation = gdal_sys::OGRAxisOrientation::OAO_Other;
         let c_ptr = unsafe {
             gdal_sys::OSRGetAxis(
                 self.0,
                 CString::new(target_key)?.as_ptr(),
-                axis as c_int,
+                axis as libc::c_int,
                 &mut orientation,
             )
         };
@@ -375,7 +383,7 @@ impl SpatialRef {
             gdal_sys::OSRGetAxis(
                 self.0,
                 CString::new(target_key)?.as_ptr(),
-                axis as c_int,
+                axis as libc::c_int,
                 ptr::null_mut(),
             )
         };
@@ -413,6 +421,9 @@ impl SpatialRef {
     }
 
     #[cfg(major_ge_3)]
+    /// Get the valid use bounding area for this `SpatialRef`.
+    ///
+    /// See: [`OSRGetAreaOfUse`](https://gdal.org/api/ogr_srs_api.html#_CPPv415OSRGetAreaOfUse20OGRSpatialReferenceHPdPdPdPdPPKc)
     pub fn area_of_use(&self) -> Option<AreaOfUse> {
         let mut c_area_name: *const libc::c_char = ptr::null_mut();
         let (mut w_long, mut s_lat, mut e_long, mut n_lat): (f64, f64, f64, f64) =
@@ -440,6 +451,18 @@ impl SpatialRef {
             None
         }
     }
+}
+
+#[derive(Debug, Clone)]
+/// Defines the bounding area of valid use for a [`SpatialRef`].
+///
+/// See [`area_of_use`][SpatialRef::area_of_use].
+pub struct AreaOfUse {
+    pub west_lon_degree: f64,
+    pub south_lat_degree: f64,
+    pub east_lon_degree: f64,
+    pub north_lat_degree: f64,
+    pub name: String,
 }
 
 #[cfg(test)]

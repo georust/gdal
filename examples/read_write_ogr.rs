@@ -1,10 +1,9 @@
 use gdal::errors::Result;
-use gdal::spatial_ref::SpatialRef;
+use gdal::spatial_ref::{CoordTransform, SpatialRef};
 use gdal::Dataset;
-use gdal::{DriverManager, vector::*};
+use gdal::{vector::*, DriverManager};
 use std::fs;
 use std::path::Path;
-use gdal::spatial_ref::CoordTransform;
 
 fn run() -> Result<()> {
     let dataset_a = Dataset::open(Path::new("fixtures/roads.geojson"))?;

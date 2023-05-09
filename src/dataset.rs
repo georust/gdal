@@ -438,7 +438,7 @@ impl Dataset {
     #[cfg(major_ge_3)]
     /// Set the spatial reference system for this dataset.
     pub fn set_spatial_ref(&mut self, spatial_ref: &SpatialRef) -> Result<()> {
-        let rv = unsafe { gdal_sys::GDALSetSpatialRef(self.c_dataset, spatial_ref.c_handle()) };
+        let rv = unsafe { gdal_sys::GDALSetSpatialRef(self.c_dataset, spatial_ref.to_c_hsrs()) };
         if rv != CPLErr::CE_None {
             return Err(_last_cpl_err(rv));
         }
@@ -660,6 +660,10 @@ impl Dataset {
     /// ```
     pub fn create_layer(&mut self, options: LayerOptions<'_>) -> Result<Layer> {
         let c_name = CString::new(options.name)?;
+        let c_srs = match options.srs {
+            Some(srs) => srs.to_c_hsrs(),
+            None => null_mut(),
+        };
 
         // Handle string options: we need to keep the CStrings and the pointers around.
         let c_options = options.options.map(|d| {
@@ -682,10 +686,6 @@ impl Dataset {
         };
 
         let c_layer = unsafe {
-            let c_srs = match options.srs {
-                Some(srs) => srs.c_handle(),
-                None => null_mut(),
-            };
             // The C function takes `char **papszOptions` without mention of `const`, and this is
             // propagated to the gdal_sys wrapper. The lack of `const` seems like a mistake in the
             // GDAL API, so we just do a cast here.

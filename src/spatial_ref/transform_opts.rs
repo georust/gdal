@@ -45,8 +45,8 @@ impl CoordTransformOptions {
     /// The west longitude is generally lower than the east longitude, except for areas of interest
     /// that go across the anti-meridian.
     ///
-    /// For more information, see:
-    /// <https://gdal.org/tutorials/osr_api_tut.html#advanced-coordinate-transformation>
+    /// For more information, see
+    /// [Advanced Coordinate Transformation Tutorial](https://gdal.org/tutorials/osr_api_tut.html#advanced-coordinate-transformation).
     ///
     /// # Arguments
     ///
@@ -101,8 +101,9 @@ impl CoordTransformOptions {
 
     /// Sets whether ballpark transformations are allowed.
     ///
-    /// By default, PROJ may generate "ballpark transformations" (see
-    /// <https://proj.org/glossary.html>) when precise datum transformations are missing. For high
+    /// By default, PROJ may generate "ballpark transformations"
+    /// (see [Glossary](https://proj.org/glossary.html))
+    /// when precise datum transformations are missing. For high
     /// accuracy use cases, such transformations might not be allowed.
     ///
     /// If this option is specified with PROJ < 8, the `OGR_CT_OP_SELECTION` configuration option
@@ -131,8 +132,8 @@ impl CoordTransformOptions {
     /// string starting with `+proj=pipeline`), a WKT2 string describing a `CoordinateOperation`,
     /// or a `"urn:ogc:def:coordinateOperation:EPSG::XXXX"` URN.
     ///
-    /// For more information, see:
-    /// <https://gdal.org/tutorials/osr_api_tut.html#advanced-coordinate-transformation>
+    /// For more information, see
+    /// [Advanced Coordinate Transformation Tutorial](https://gdal.org/tutorials/osr_api_tut.html#advanced-coordinate-transformation).
     ///
     /// # Arguments
     ///
@@ -173,7 +174,7 @@ mod tests {
         options.set_ballpark_allowed(false).unwrap();
         let trafo = CoordTransform::new_with_options(&ma, &nl, &options);
         let err = trafo.unwrap_err();
-        assert!(matches!(err, GdalError::NullPointer { .. }), "{:?}", err);
+        assert!(matches!(err, GdalError::NullPointer { .. }), "{err:?}");
     }
 
     #[test]

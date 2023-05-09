@@ -1,13 +1,13 @@
-use gdal_sys::{CPLErr, OGRCoordinateTransformationH};
-use libc::c_int;
-use std::ptr::null_mut;
 use crate::errors;
 use crate::errors::GdalError;
 use crate::spatial_ref::{CoordTransformOptions, SpatialRef};
 use crate::utils::{_last_cpl_err, _last_null_pointer_err};
+use gdal_sys::{CPLErr, OGRCoordinateTransformationH};
+use libc::c_int;
+use std::ptr::null_mut;
 
 #[derive(Debug)]
-/// Defines a coordinate transformation from one SRS to another.
+/// Defines a coordinate transformation from one [`SpatialRef`] to another.
 pub struct CoordTransform {
     inner: OGRCoordinateTransformationH,
     from: String,
@@ -21,8 +21,13 @@ impl Drop for CoordTransform {
 }
 
 impl CoordTransform {
+    /// Constructs a new transformation from `source` to `target`.
+    ///
+    /// See: [OCTNewCoordinateTransformation](https://gdal.org/api/ogr_srs_api.html#_CPPv430OCTNewCoordinateTransformation20OGRSpatialReferenceH20OGRSpatialReferenceH)
     pub fn new(source: &SpatialRef, target: &SpatialRef) -> errors::Result<CoordTransform> {
-        let c_obj = unsafe { gdal_sys::OCTNewCoordinateTransformation(source.c_handle(), target.c_handle()) };
+        let c_obj = unsafe {
+            gdal_sys::OCTNewCoordinateTransformation(source.to_c_hsrs(), target.to_c_hsrs())
+        };
         if c_obj.is_null() {
             return Err(_last_null_pointer_err("OCTNewCoordinateTransformation"));
         }
@@ -33,13 +38,21 @@ impl CoordTransform {
         })
     }
 
+    /// Constructs a new transformation from `source` to `target` with additional extended options
+    /// defined by `options`: [`CoordTransformOptions`].
+    ///
+    /// See: [OCTNewCoordinateTransformation](https://gdal.org/api/ogr_srs_api.html#_CPPv432OCTNewCoordinateTransformationEx20OGRSpatialReferenceH20OGRSpatialReferenceH35OGRCoordinateTransformationOptionsH)
     pub fn new_with_options(
         source: &SpatialRef,
         target: &SpatialRef,
         options: &CoordTransformOptions,
     ) -> errors::Result<CoordTransform> {
         let c_obj = unsafe {
-            gdal_sys::OCTNewCoordinateTransformationEx(source.c_handle(), target.c_handle(), options.c_options())
+            gdal_sys::OCTNewCoordinateTransformationEx(
+                source.to_c_hsrs(),
+                target.to_c_hsrs(),
+                options.c_options(),
+            )
         };
         if c_obj.is_null() {
             return Err(_last_null_pointer_err("OCTNewCoordinateTransformation"));
@@ -56,15 +69,21 @@ impl CoordTransform {
     ///
     /// # Arguments
     /// * `bounds` - array of [axis0_min, axis1_min, axis0_max, axis1_max],
-    ///            interpreted in the axis order of the source SpatialRef,
-    ///            typically [xmin, ymin, xmax, ymax]
+    ///              interpreted in the axis order of the source SpatialRef,
+    ///              typically [xmin, ymin, xmax, ymax]
     /// * `densify_pts` - number of points per edge (recommended: 21)
     ///
     /// # Returns
     /// `Ok([f64; 4])` with bounds in axis order of target SpatialRef
     /// `Err` if there is an error.
+    ///
+    /// See: [OCTTransformBounds](https://gdal.org/api/ogr_srs_api.html#_CPPv418OCTTransformBounds28OGRCoordinateTransformationHKdKdKdKdPdPdPdPdKi)
     #[cfg(all(major_ge_3, minor_ge_4))]
-    pub fn transform_bounds(&self, bounds: &[f64; 4], densify_pts: i32) -> errors::Result<[f64; 4]> {
+    pub fn transform_bounds(
+        &self,
+        bounds: &[f64; 4],
+        densify_pts: i32,
+    ) -> errors::Result<[f64; 4]> {
         let mut out_xmin: f64 = 0.;
         let mut out_ymin: f64 = 0.;
         let mut out_xmax: f64 = 0.;
@@ -109,7 +128,14 @@ impl CoordTransform {
     /// * `x` - slice of x coordinates
     /// * `y` - slice of y coordinates (must match x in length)
     /// * `z` - slice of z coordinates, or an empty slice to ignore
-    pub fn transform_coords(&self, x: &mut [f64], y: &mut [f64], z: &mut [f64]) -> errors::Result<()> {
+    ///
+    /// See: [OCTTransform](https://gdal.org/api/ogr_srs_api.html#_CPPv412OCTTransform28OGRCoordinateTransformationHiPdPdPd)
+    pub fn transform_coords(
+        &self,
+        x: &mut [f64],
+        y: &mut [f64],
+        z: &mut [f64],
+    ) -> errors::Result<()> {
         let nb_coords = x.len();
         assert_eq!(
             nb_coords,
@@ -166,16 +192,20 @@ impl CoordTransform {
             .expect("Coordinate transform failed")
     }
 
-    pub fn to_c_hct(&self) -> OGRCoordinateTransformationH {
+    /// Returns a C pointer to the allocated [`gdal_sys::OGRCoordinateTransformationH`] memory.
+    ///
+    /// # Safety
+    /// This method returns a raw C pointer
+    pub unsafe fn to_c_hct(&self) -> OGRCoordinateTransformationH {
         self.inner
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use crate::assert_almost_eq;
     use crate::vector::Geometry;
-    use super::*;
 
     #[cfg(all(major_ge_3, minor_ge_4))]
     #[test]
