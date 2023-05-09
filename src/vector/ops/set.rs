@@ -52,7 +52,7 @@ impl Geometry {
     ///
     /// # Returns
     /// * `Some(geometry)`: a new `Geometry` representing the computed union
-    /// * `None`: when the union was not able to be computed
+    /// * `None`: when the union could not be computed
     ///
     /// See: [`OGR_G_Union`][OGR_G_Union]
     ///
