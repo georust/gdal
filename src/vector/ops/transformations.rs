@@ -2,7 +2,8 @@ use gdal_sys::OGRErr;
 
 use crate::cpl::CslStringList;
 use crate::errors::{GdalError, Result};
-use crate::spatial_ref::{CoordTransform, SpatialRef};
+use crate::spatial_ref::SpatialRef;
+use crate::spatial_ref::CoordTransform;
 use crate::utils::_last_null_pointer_err;
 use crate::vector::Geometry;
 
@@ -43,7 +44,7 @@ impl Geometry {
     ///
     /// See: [`OGR_G_TransformTo`](https://gdal.org/api/vector_c_api.html#_CPPv417OGR_G_TransformTo12OGRGeometryH20OGRSpatialReferenceH)
     pub fn transform_to_inplace(&mut self, spatial_ref: &SpatialRef) -> Result<()> {
-        let rv = unsafe { gdal_sys::OGR_G_TransformTo(self.c_geometry(), spatial_ref.to_c_hsrs()) };
+        let rv = unsafe { gdal_sys::OGR_G_TransformTo(self.c_geometry(), spatial_ref.c_handle()) };
         if rv != OGRErr::OGRERR_NONE {
             return Err(GdalError::OgrError {
                 err: rv,
@@ -58,7 +59,7 @@ impl Geometry {
     /// See: [`OGR_G_TransformTo`](https://gdal.org/api/vector_c_api.html#_CPPv417OGR_G_TransformTo12OGRGeometryH20OGRSpatialReferenceH)
     pub fn transform_to(&self, spatial_ref: &SpatialRef) -> Result<Geometry> {
         let new_c_geom = unsafe { gdal_sys::OGR_G_Clone(self.c_geometry()) };
-        let rv = unsafe { gdal_sys::OGR_G_TransformTo(new_c_geom, spatial_ref.to_c_hsrs()) };
+        let rv = unsafe { gdal_sys::OGR_G_TransformTo(new_c_geom, spatial_ref.c_handle()) };
         if rv != OGRErr::OGRERR_NONE {
             return Err(GdalError::OgrError {
                 err: rv,

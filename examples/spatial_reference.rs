@@ -1,5 +1,6 @@
 use gdal::errors::Result;
-use gdal::spatial_ref::{CoordTransform, SpatialRef};
+use gdal::spatial_ref::SpatialRef;
+use gdal::spatial_ref::CoordTransform;
 use gdal::vector::Geometry;
 
 fn run() -> Result<()> {

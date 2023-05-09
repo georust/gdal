@@ -5,7 +5,7 @@ use gdal_sys::{self, CPLErr};
 use crate::errors;
 use crate::errors::*;
 #[allow(unused)] // Referenced in doc comments.
-use crate::spatial_ref::CoordTransform;
+use crate::spatial_ref::transform::CoordTransform;
 use crate::utils::{_last_cpl_err, _last_null_pointer_err};
 
 /// Options for [`CoordTransform::new_with_options`].

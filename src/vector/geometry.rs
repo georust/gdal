@@ -292,7 +292,7 @@ impl Geometry {
 
     pub fn set_spatial_ref(&mut self, spatial_ref: SpatialRef) {
         unsafe {
-            gdal_sys::OGR_G_AssignSpatialReference(self.c_geometry(), spatial_ref.to_c_hsrs())
+            gdal_sys::OGR_G_AssignSpatialReference(self.c_geometry(), spatial_ref.c_handle())
         };
     }
 
