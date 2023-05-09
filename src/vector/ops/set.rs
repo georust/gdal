@@ -4,20 +4,27 @@ use crate::vector::Geometry;
 ///
 /// These methods provide set operations over two geometries, producing a new geometry.
 impl Geometry {
-    /// Compute intersection.
+    /// Computes the [geometric intersection][intersection] of `self` and `other`.
     ///
-    /// Generates a new geometry which is the region of intersection of
-    /// the two geometries operated on. Call intersects (Not yet implemented)
-    /// to check if there is a region of intersection.
-    /// Geometry validity is not checked. In case you are unsure of the
-    /// validity of the input geometries, call IsValid() before,
-    /// otherwise the result might be wrong.
+    /// Generates a new geometry which is the region of intersection of the two geometries operated on.
+    ///
+    /// # Notes
+    /// * If you only need to determine if two geometries intersect and don't require
+    /// the resultant region, use [`Geometry::intersects`].
+    /// * Geometry validity is not checked, and invalid geometry will generate unpredictable results.
+    /// Use [`Geometry::is_valid`] if validity might be in question.
+    /// * If GEOS is *not* enabled, this function will always return `None`.
+    /// You may check for GEOS support with [`VersionInfo::has_geos`][has_geos].
     ///
     /// # Returns
-    /// `Some(geometry)` if both Geometries contain pointers
-    /// `None` if either geometry is missing the GDAL pointer, or there is an error.
+    /// * `Some(geometry)`: a new `Geometry` representing the computed intersection
+    /// * `None`: when the geometries do not intersect or result could not be computed
     ///
-    /// See: [`OGR_G_Intersection`](https://gdal.org/api/vector_c_api.html#_CPPv418OGR_G_Intersection12OGRGeometryH12OGRGeometryH)
+    /// See: [`OGR_G_Intersection`][OGR_G_Intersection]
+    ///
+    /// [OGR_G_Intersection]: https://gdal.org/api/vector_c_api.html#_CPPv418OGR_G_Intersection12OGRGeometryH12OGRGeometryH
+    /// [intersection]: https://en.wikipedia.org/wiki/Intersection_(geometry)
+    /// [has_geos]: crate::version::VersionInfo::has_geos
     pub fn intersection(&self, other: &Self) -> Option<Self> {
         if !self.has_gdal_ptr() {
             return None;
@@ -33,19 +40,25 @@ impl Geometry {
         Some(unsafe { Geometry::with_c_geometry(ogr_geom, true) })
     }
 
-    /// Compute union.
+    /// Computes the [geometric union][union] of `self` and `other`.
     ///
-    /// Generates a new geometry which is the region of union of
-    /// the two geometries operated on.
-    /// Geometry validity is not checked. In case you are unsure of the
-    /// validity of the input geometries, call IsValid() before,
-    /// otherwise the result might be wrong.
+    /// Generates a new geometry which is the union of the two geometries operated on.
+    ///
+    /// # Notes
+    /// * Geometry validity is not checked, and invalid geometry will generate unpredictable results.
+    /// Use [`Geometry::is_valid`] if validity might be in question.
+    /// * If GEOS is *not* enabled, this function will always return `None`.
+    /// You may check for GEOS support with [`VersionInfo::has_geos`][has_geos].
     ///
     /// # Returns
-    /// `Some(geometry)` if both Geometries contain pointers.
-    /// `None` if either geometry is missing the GDAL pointer, or there is an error.
+    /// * `Some(geometry)`: a new `Geometry` representing the computed union
+    /// * `None`: when the union could not be computed
     ///
-    /// See: [`OGR_G_Union`](https://gdal.org/api/vector_c_api.html#_CPPv419OGR_G_UnionCascaded12OGRGeometryH)
+    /// See: [`OGR_G_Union`][OGR_G_Union]
+    ///
+    /// [OGR_G_Union]: https://gdal.org/api/vector_c_api.html#_CPPv411OGR_G_Union12OGRGeometryH12OGRGeometryH
+    /// [union]: https://en.wikipedia.org/wiki/Constructive_solid_geometry#Workings
+    /// [has_geos]: crate::version::VersionInfo::has_geos
     pub fn union(&self, other: &Self) -> Option<Self> {
         if !self.has_gdal_ptr() {
             return None;
