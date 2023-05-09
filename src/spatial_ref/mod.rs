@@ -3,9 +3,7 @@
 //! <https://gdal.org/api/ogr_srs_api.html>
 
 mod srs;
+mod transform_opts;
 
-pub use gdal_sys::OGRAxisOrientation;
 pub use srs::{AxisOrientationType, CoordTransform, SpatialRef};
-
-#[cfg(test)]
-mod tests;
+pub use transform_opts::CoordTransformOptions;
