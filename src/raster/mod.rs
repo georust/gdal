@@ -74,6 +74,7 @@
 //!     ...
 //! ```
 
+mod gcp;
 #[cfg(all(major_ge_3, minor_ge_1))]
 mod mdarray;
 mod rasterband;

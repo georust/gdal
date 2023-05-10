@@ -5,7 +5,7 @@ use crate::raster::{
     ByteBuffer, ColorEntry, ColorInterpretation, ColorTable, GdalDataType, RasterCreationOption,
     StatisticsAll, StatisticsMinMax,
 };
-use crate::test_utils::TempFixture;
+use crate::test_utils::{fixture, TempFixture};
 use crate::vsi::unlink_mem_file;
 use crate::DriverManager;
 use std::path::Path;
@@ -13,34 +13,18 @@ use std::path::Path;
 #[cfg(feature = "ndarray")]
 use ndarray::arr2;
 
-macro_rules! fixture {
-    ($name:expr) => {
-        Path::new(file!())
-            .parent()
-            .unwrap()
-            .parent()
-            .unwrap()
-            .parent()
-            .unwrap()
-            .join("fixtures")
-            .as_path()
-            .join($name)
-            .as_path()
-    };
-}
-
 #[test]
 fn test_open() {
-    let dataset = Dataset::open(fixture!("tinymarble.png"));
+    let dataset = Dataset::open(fixture("tinymarble.png"));
     assert!(dataset.is_ok());
 
-    let missing_dataset = Dataset::open(fixture!("no_such_file.png"));
+    let missing_dataset = Dataset::open(fixture("no_such_file.png"));
     assert!(missing_dataset.is_err());
 }
 
 #[test]
 fn test_get_raster_size() {
-    let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
+    let dataset = Dataset::open(fixture("tinymarble.png")).unwrap();
     let (size_x, size_y) = dataset.raster_size();
     assert_eq!(size_x, 100);
     assert_eq!(size_y, 50);
@@ -49,7 +33,7 @@ fn test_get_raster_size() {
 #[test]
 fn test_get_raster_block_size() {
     let band_index = 1;
-    let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
+    let dataset = Dataset::open(fixture("tinymarble.png")).unwrap();
     let rasterband = dataset.rasterband(band_index).unwrap();
     let (size_x, size_y) = rasterband.block_size();
     assert_eq!(size_x, 100);
@@ -58,14 +42,14 @@ fn test_get_raster_block_size() {
 
 #[test]
 fn test_get_raster_count() {
-    let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
+    let dataset = Dataset::open(fixture("tinymarble.png")).unwrap();
     let count = dataset.raster_count();
     assert_eq!(count, 3);
 }
 
 #[test]
 fn test_get_projection() {
-    let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
+    let dataset = Dataset::open(fixture("tinymarble.png")).unwrap();
     //dataset.set_projection("WGS84");
     let projection = dataset.projection();
     assert_eq!(
@@ -76,7 +60,7 @@ fn test_get_projection() {
 
 #[test]
 fn test_read_raster() {
-    let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
+    let dataset = Dataset::open(fixture("tinymarble.png")).unwrap();
     let rb = dataset.rasterband(1).unwrap();
     let rv = rb.read_as::<u8>((20, 30), (2, 3), (2, 3), None).unwrap();
     assert_eq!(rv.size.0, 2);
@@ -91,7 +75,7 @@ fn test_read_raster() {
 
 #[test]
 fn test_read_raster_with_default_resample() {
-    let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
+    let dataset = Dataset::open(fixture("tinymarble.png")).unwrap();
     let rb = dataset.rasterband(1).unwrap();
     let rv = rb.read_as::<u8>((20, 30), (4, 4), (2, 2), None).unwrap();
     assert_eq!(rv.size.0, 2);
@@ -106,7 +90,7 @@ fn test_read_raster_with_default_resample() {
 
 #[test]
 fn test_read_raster_with_average_resample() {
-    let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
+    let dataset = Dataset::open(fixture("tinymarble.png")).unwrap();
     let rb = dataset.rasterband(1).unwrap();
     let resample_alg = ResampleAlg::Average;
     let rv = rb
@@ -151,7 +135,7 @@ fn test_write_raster() {
 
 #[test]
 fn test_rename_remove_raster() {
-    let dataset = Dataset::open(fixture!("tinymarble.tif")).unwrap();
+    let dataset = Dataset::open(fixture("tinymarble.tif")).unwrap();
 
     let mem_file_path_a = Path::new("/vsimem/030bd1d1-8955-4604-8e37-177dade13863");
     let mem_file_path_b = Path::new("/vsimem/c7bfce32-2474-48fa-a907-2af95f83c824");
@@ -244,7 +228,7 @@ fn test_create_with_band_type_with_options() {
 #[test]
 fn test_create_copy() {
     let driver = DriverManager::get_driver_by_name("MEM").unwrap();
-    let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
+    let dataset = Dataset::open(fixture("tinymarble.png")).unwrap();
     let copy = dataset.create_copy(&driver, "", &[]).unwrap();
     assert_eq!(copy.raster_size(), (100, 50));
     assert_eq!(copy.raster_count(), 3);
@@ -252,7 +236,7 @@ fn test_create_copy() {
 
 #[test]
 fn test_create_copy_with_options() {
-    let dataset = Dataset::open(fixture!("tinymarble.tif")).unwrap();
+    let dataset = Dataset::open(fixture("tinymarble.tif")).unwrap();
 
     assert_eq!(
         dataset.metadata_domain("IMAGE_STRUCTURE").unwrap(),
@@ -313,7 +297,7 @@ fn test_get_driver_by_name() {
 
 #[test]
 fn test_read_raster_as() {
-    let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
+    let dataset = Dataset::open(fixture("tinymarble.png")).unwrap();
     let rb = dataset.rasterband(1).unwrap();
     let rv = rb.read_as::<u8>((20, 30), (2, 3), (2, 3), None).unwrap();
     assert_eq!(rv.data, vec!(7, 7, 7, 10, 8, 12));
@@ -324,7 +308,7 @@ fn test_read_raster_as() {
 
 #[test]
 fn mask_flags() {
-    let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
+    let dataset = Dataset::open(fixture("tinymarble.png")).unwrap();
     let rb = dataset.rasterband(1).unwrap();
     let mask_flags = rb.mask_flags().unwrap();
     assert!(!mask_flags.is_nodata());
@@ -335,7 +319,7 @@ fn mask_flags() {
 
 #[test]
 fn open_mask_band() {
-    let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
+    let dataset = Dataset::open(fixture("tinymarble.png")).unwrap();
     let rb = dataset.rasterband(1).unwrap();
     let mb = rb.open_mask_band().unwrap();
     let mask_values = mb.read_as::<u8>((20, 30), (2, 3), (2, 3), None).unwrap();
@@ -361,7 +345,7 @@ fn test_read_raster_as_array() {
     let (left, top) = (19, 5);
     let (window_size_x, window_size_y) = (3, 4);
     let (array_size_x, array_size_y) = (3, 4);
-    let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
+    let dataset = Dataset::open(fixture("tinymarble.png")).unwrap();
     let rb = dataset.rasterband(band_index).unwrap();
     let values = rb
         .read_as_array::<u8>(
@@ -388,7 +372,7 @@ fn test_read_raster_as_array() {
 fn test_read_block_as_array() {
     let band_index = 1;
     let block_index = (0, 0);
-    let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
+    let dataset = Dataset::open(fixture("tinymarble.png")).unwrap();
     let rasterband = dataset.rasterband(band_index).unwrap();
     let result = rasterband.read_block::<u8>(block_index);
     assert!(result.is_ok());
@@ -399,7 +383,7 @@ fn test_read_block_as_array() {
 fn test_read_block_dimension() {
     let band_index = 1;
     let block = (0, 0);
-    let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
+    let dataset = Dataset::open(fixture("tinymarble.png")).unwrap();
     let rasterband = dataset.rasterband(band_index).unwrap();
     let array = rasterband.read_block::<u8>(block).unwrap();
     let dimension = (1, 100);
@@ -411,7 +395,7 @@ fn test_read_block_dimension() {
 fn test_read_block_last_dimension() {
     let band_index = 1;
     let block = (0, 49);
-    let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
+    let dataset = Dataset::open(fixture("tinymarble.png")).unwrap();
     let rasterband = dataset.rasterband(band_index).unwrap();
     let array = rasterband.read_block::<u8>(block).unwrap();
     let dimension = (1, 100);
@@ -423,7 +407,7 @@ fn test_read_block_last_dimension() {
 fn test_read_block_data() {
     let band_index = 1;
     let block = (0, 0);
-    let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
+    let dataset = Dataset::open(fixture("tinymarble.png")).unwrap();
     let rasterband = dataset.rasterband(band_index).unwrap();
     let array = rasterband.read_block::<u8>(block).unwrap();
     assert_eq!(array[[0, 0]], 0);
@@ -452,7 +436,7 @@ fn test_get_rasterband() {
 
 #[test]
 fn test_get_no_data_value() {
-    let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
+    let dataset = Dataset::open(fixture("tinymarble.png")).unwrap();
     let rasterband = dataset.rasterband(1).unwrap();
     let no_data_value = rasterband.no_data_value();
     assert!(no_data_value.is_none());
@@ -478,7 +462,7 @@ fn test_set_no_data_value() {
 
 #[test]
 fn test_get_scale() {
-    let dataset = Dataset::open(fixture!("offset_scaled_tinymarble.tif")).unwrap();
+    let dataset = Dataset::open(fixture("offset_scaled_tinymarble.tif")).unwrap();
     let rasterband = dataset.rasterband(1).unwrap();
     let scale = rasterband.scale();
     assert_eq!(scale, Some(1.2));
@@ -486,7 +470,7 @@ fn test_get_scale() {
 
 #[test]
 fn test_get_offset() {
-    let dataset = Dataset::open(fixture!("offset_scaled_tinymarble.tif")).unwrap();
+    let dataset = Dataset::open(fixture("offset_scaled_tinymarble.tif")).unwrap();
     let rasterband = dataset.rasterband(1).unwrap();
     let offset = rasterband.offset();
     assert_eq!(offset, Some(12.0));
@@ -494,7 +478,7 @@ fn test_get_offset() {
 
 #[test]
 fn test_get_default_scale() {
-    let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
+    let dataset = Dataset::open(fixture("tinymarble.png")).unwrap();
     let rasterband = dataset.rasterband(1).unwrap();
     let scale = rasterband.scale();
 
@@ -512,7 +496,7 @@ fn test_get_default_scale() {
 
 #[test]
 fn test_get_default_offset() {
-    let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
+    let dataset = Dataset::open(fixture("tinymarble.png")).unwrap();
     let rasterband = dataset.rasterband(1).unwrap();
     let offset = rasterband.offset();
     if cfg!(all(major_ge_3, minor_ge_1)) {
@@ -529,7 +513,7 @@ fn test_get_default_offset() {
 
 #[test]
 fn test_get_rasterband_size() {
-    let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
+    let dataset = Dataset::open(fixture("tinymarble.png")).unwrap();
     let rasterband = dataset.rasterband(1).unwrap();
     let size = rasterband.size();
     assert_eq!(size, (100, 50));
@@ -537,7 +521,7 @@ fn test_get_rasterband_size() {
 
 #[test]
 fn test_get_rasterband_block_size() {
-    let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
+    let dataset = Dataset::open(fixture("tinymarble.png")).unwrap();
     let rasterband = dataset.rasterband(1).unwrap();
     let size = rasterband.block_size();
     assert_eq!(size, (100, 1));
@@ -546,7 +530,7 @@ fn test_get_rasterband_block_size() {
 #[test]
 #[cfg(any(all(major_ge_2, minor_ge_2), major_ge_3))] // GDAL 2.2 .. 2.x or >= 3
 fn test_get_rasterband_actual_block_size() {
-    let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
+    let dataset = Dataset::open(fixture("tinymarble.png")).unwrap();
     let rasterband = dataset.rasterband(1).unwrap();
     let size = rasterband.actual_block_size((0, 40));
     assert_eq!(size.unwrap(), (100, 1));
@@ -554,7 +538,7 @@ fn test_get_rasterband_actual_block_size() {
 
 #[test]
 fn test_read_overviews() {
-    let dataset = Dataset::open(fixture!("tinymarble.tif")).unwrap();
+    let dataset = Dataset::open(fixture("tinymarble.tif")).unwrap();
     let rasterband = dataset.rasterband(1).unwrap();
     let overview_count = rasterband.overview_count().unwrap();
     assert_eq!(overview_count, 2);
@@ -569,7 +553,7 @@ fn test_read_overviews() {
 
 #[test]
 fn test_fail_read_overviews() {
-    let dataset = Dataset::open(fixture!("offset_scaled_tinymarble.tif")).unwrap();
+    let dataset = Dataset::open(fixture("offset_scaled_tinymarble.tif")).unwrap();
     let rasterband = dataset.rasterband(1).unwrap();
     let overview_count = rasterband.overview_count().unwrap();
     assert_eq!(overview_count, 0);
@@ -580,7 +564,7 @@ fn test_fail_read_overviews() {
 
 #[test]
 fn test_rasterband_lifetime() {
-    let dataset: Dataset = Dataset::open(fixture!("tinymarble.tif")).unwrap();
+    let dataset: Dataset = Dataset::open(fixture("tinymarble.tif")).unwrap();
 
     let overview = {
         let rasterband = dataset.rasterband(1).unwrap();
@@ -593,7 +577,7 @@ fn test_rasterband_lifetime() {
 
 #[test]
 fn test_get_rasterband_color_interp() {
-    let dataset = Dataset::open(fixture!("tinymarble.png")).unwrap();
+    let dataset = Dataset::open(fixture("tinymarble.png")).unwrap();
     let rasterband = dataset.rasterband(1).unwrap();
     let band_interp = rasterband.color_interpretation();
     assert_eq!(band_interp, ColorInterpretation::RedBand);
@@ -669,12 +653,12 @@ fn test_rasterize() {
 
 #[test]
 fn test_rasterband_unit() {
-    let dataset = Dataset::open(fixture!("tinymarble.tif")).unwrap();
+    let dataset = Dataset::open(fixture("tinymarble.tif")).unwrap();
     let rasterband = dataset.rasterband(1).unwrap();
 
     assert!(rasterband.unit().is_empty());
 
-    let dataset = Dataset::open(fixture!("114p01_0100_deme_truncated.dem")).unwrap();
+    let dataset = Dataset::open(fixture("114p01_0100_deme_truncated.dem")).unwrap();
     let rasterband = dataset.rasterband(1).unwrap();
 
     assert_eq!(rasterband.unit(), "m".to_string());
@@ -685,7 +669,7 @@ fn test_color_table() {
     use crate::raster::rasterband::{ColorEntry, PaletteInterpretation};
 
     // Raster containing one band.
-    let dataset = Dataset::open(fixture!("test_color_table.tif")).expect("open failure");
+    let dataset = Dataset::open(fixture("test_color_table.tif")).expect("open failure");
     assert_eq!(dataset.raster_count(), 1);
 
     // Band is PaletteIndex.
@@ -725,7 +709,7 @@ fn test_create_color_table() {
     let outfile = TempFixture::empty("color_labels.tif");
     // Open, modify, then close the base file.
     {
-        let dataset = Dataset::open(fixture!("labels.tif")).unwrap();
+        let dataset = Dataset::open(fixture("labels.tif")).unwrap();
         // Confirm we have a band without a color table.
         assert_eq!(dataset.raster_count(), 1);
         let band = dataset.rasterband(1).unwrap();
