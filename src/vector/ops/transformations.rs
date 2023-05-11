@@ -2,7 +2,8 @@ use gdal_sys::OGRErr;
 
 use crate::cpl::CslStringList;
 use crate::errors::{GdalError, Result};
-use crate::spatial_ref::{CoordTransform, SpatialRef};
+use crate::spatial_ref::CoordTransform;
+use crate::spatial_ref::SpatialRef;
 use crate::utils::_last_null_pointer_err;
 use crate::vector::Geometry;
 

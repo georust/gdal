@@ -1,327 +1,21 @@
-use crate::utils::{_last_cpl_err, _last_null_pointer_err, _string};
-use gdal_sys::{self, CPLErr, OGRCoordinateTransformationH, OGRErr, OGRSpatialReferenceH};
-use libc::{c_char, c_int};
+use crate::utils::{_last_null_pointer_err, _string};
+use gdal_sys::{self, OGRErr};
 use std::ffi::{CStr, CString};
-use std::ptr::{self, null_mut};
+use std::ptr::{self};
 use std::str::FromStr;
 
 use crate::errors::*;
 
-/// Options for [`CoordTransform::new_with_options`].
+/// A OpenGIS Spatial Reference System definition.
+///
+/// Used in geo-referencing raster and vector data, and in coordinate transformations.
+///
+/// # Notes
+/// * See also: [OGR Coordinate Reference Systems and Coordinate Transformation Tutorial](https://gdal.org/tutorials/osr_api_tut.html)
+/// * Consult the [OGC WKT Coordinate System Issues](https://gdal.org/tutorials/wktproblems.html)
+/// page for implementation details of WKT in OGR.
 #[derive(Debug)]
-pub struct CoordTransformOptions {
-    inner: gdal_sys::OGRCoordinateTransformationOptionsH,
-}
-
-impl Drop for CoordTransformOptions {
-    fn drop(&mut self) {
-        unsafe { gdal_sys::OCTDestroyCoordinateTransformationOptions(self.inner) };
-    }
-}
-
-impl CoordTransformOptions {
-    /// Creation options for [`CoordTransform`].
-    pub fn new() -> Result<CoordTransformOptions> {
-        let c_obj = unsafe { gdal_sys::OCTNewCoordinateTransformationOptions() };
-        if c_obj.is_null() {
-            return Err(_last_null_pointer_err(
-                "OCTNewCoordinateTransformationOptions",
-            ));
-        }
-        Ok(CoordTransformOptions { inner: c_obj })
-    }
-
-    /// Sets an area of interest.
-    ///
-    /// The west longitude is generally lower than the east longitude, except for areas of interest
-    /// that go across the anti-meridian.
-    ///
-    /// For more information, see:
-    /// <https://gdal.org/tutorials/osr_api_tut.html#advanced-coordinate-transformation>
-    ///
-    /// # Arguments
-    ///
-    /// - `west_longitude_deg` – West longitude (in degree). Must be in [-180,180]
-    /// - `south_latitude_deg` – South latitude (in degree). Must be in [-90,90]
-    /// - `east_longitude_deg` – East longitude (in degree). Must be in [-180,180]
-    /// - `north_latitude_deg` – North latitude (in degree). Must be in [-90,90]
-    pub fn set_area_of_interest(
-        &mut self,
-        west_longitude_deg: f64,
-        south_latitude_deg: f64,
-        east_longitude_deg: f64,
-        north_latitude_deg: f64,
-    ) -> Result<()> {
-        let ret_val = unsafe {
-            gdal_sys::OCTCoordinateTransformationOptionsSetAreaOfInterest(
-                self.inner,
-                west_longitude_deg,
-                south_latitude_deg,
-                east_longitude_deg,
-                north_latitude_deg,
-            )
-        };
-        if ret_val == 0 {
-            return Err(_last_cpl_err(CPLErr::CE_Failure));
-        }
-        Ok(())
-    }
-
-    /// Sets the desired accuracy for coordinate operations.
-    ///
-    /// Only coordinate operations that offer an accuracy of at least the one specified will be
-    /// considered.
-    ///
-    /// An accuracy of 0 is valid and means a coordinate operation made only of one or several
-    /// conversions (map projections, unit conversion, etc.) Operations involving ballpark
-    /// transformations have a unknown accuracy, and will be filtered out by any dfAccuracy >= 0
-    /// value.
-    ///
-    /// If this option is specified with PROJ < 8, the `OGR_CT_OP_SELECTION` configuration option
-    /// will default to `BEST_ACCURACY`.
-    #[cfg(any(major_ge_4, all(major_ge_3, minor_ge_3)))]
-    pub fn desired_accuracy(&mut self, accuracy: f64) -> Result<()> {
-        let ret_val = unsafe {
-            gdal_sys::OCTCoordinateTransformationOptionsSetDesiredAccuracy(self.inner, accuracy)
-        };
-        if ret_val == 0 {
-            return Err(_last_cpl_err(CPLErr::CE_Failure));
-        }
-        Ok(())
-    }
-
-    /// Sets whether ballpark transformations are allowed.
-    ///
-    /// By default, PROJ may generate "ballpark transformations" (see
-    /// <https://proj.org/glossary.html>) when precise datum transformations are missing. For high
-    /// accuracy use cases, such transformations might not be allowed.
-    ///
-    /// If this option is specified with PROJ < 8, the `OGR_CT_OP_SELECTION` configuration option
-    /// will default to `BEST_ACCURACY`.
-    #[cfg(any(major_ge_4, all(major_ge_3, minor_ge_3)))]
-    pub fn set_ballpark_allowed(&mut self, ballpark_allowed: bool) -> Result<()> {
-        let ret_val = unsafe {
-            gdal_sys::OCTCoordinateTransformationOptionsSetBallparkAllowed(
-                self.inner,
-                ballpark_allowed as libc::c_int,
-            )
-        };
-        if ret_val == 0 {
-            return Err(_last_cpl_err(CPLErr::CE_Failure));
-        }
-        Ok(())
-    }
-
-    /// Sets a coordinate operation.
-    ///
-    /// This is a user override to be used instead of the normally computed pipeline.
-    ///
-    /// The pipeline must take into account the axis order of the source and target SRS.
-    ///
-    /// The pipeline may be provided as a PROJ string (single step operation or multiple step
-    /// string starting with `+proj=pipeline`), a WKT2 string describing a `CoordinateOperation`,
-    /// or a `"urn:ogc:def:coordinateOperation:EPSG::XXXX"` URN.
-    ///
-    /// For more information, see:
-    /// <https://gdal.org/tutorials/osr_api_tut.html#advanced-coordinate-transformation>
-    ///
-    /// # Arguments
-    ///
-    /// - `co`: PROJ or WKT string describing a coordinate operation
-    /// - `reverse`: Whether the PROJ or WKT string should be evaluated in the reverse path
-    pub fn set_coordinate_operation(&mut self, co: &str, reverse: bool) -> Result<()> {
-        let c_co = CString::new(co)?;
-        let ret_val = unsafe {
-            gdal_sys::OCTCoordinateTransformationOptionsSetOperation(
-                self.inner,
-                c_co.as_ptr(),
-                reverse as libc::c_int,
-            )
-        };
-        if ret_val == 0 {
-            return Err(_last_cpl_err(CPLErr::CE_Failure));
-        }
-        Ok(())
-    }
-}
-
-#[derive(Debug)]
-pub struct CoordTransform {
-    inner: OGRCoordinateTransformationH,
-    from: String,
-    to: String,
-}
-
-impl Drop for CoordTransform {
-    fn drop(&mut self) {
-        unsafe { gdal_sys::OCTDestroyCoordinateTransformation(self.inner) };
-    }
-}
-
-impl CoordTransform {
-    pub fn new(source: &SpatialRef, target: &SpatialRef) -> Result<CoordTransform> {
-        let c_obj = unsafe { gdal_sys::OCTNewCoordinateTransformation(source.0, target.0) };
-        if c_obj.is_null() {
-            return Err(_last_null_pointer_err("OCTNewCoordinateTransformation"));
-        }
-        Ok(CoordTransform {
-            inner: c_obj,
-            from: source.authority().or_else(|_| source.to_proj4())?,
-            to: target.authority().or_else(|_| target.to_proj4())?,
-        })
-    }
-
-    pub fn new_with_options(
-        source: &SpatialRef,
-        target: &SpatialRef,
-        options: &CoordTransformOptions,
-    ) -> Result<CoordTransform> {
-        let c_obj = unsafe {
-            gdal_sys::OCTNewCoordinateTransformationEx(source.0, target.0, options.inner)
-        };
-        if c_obj.is_null() {
-            return Err(_last_null_pointer_err("OCTNewCoordinateTransformation"));
-        }
-        Ok(CoordTransform {
-            inner: c_obj,
-            from: source.authority().or_else(|_| source.to_proj4())?,
-            to: target.authority().or_else(|_| target.to_proj4())?,
-        })
-    }
-
-    /// Transform bounding box, densifying the edges to account for nonlinear
-    /// transformations.
-    ///
-    /// # Arguments
-    /// * `bounds` - array of [axis0_min, axis1_min, axis0_max, axis1_max],
-    ///            interpreted in the axis order of the source SpatialRef,
-    ///            typically [xmin, ymin, xmax, ymax]
-    /// * `densify_pts` - number of points per edge (recommended: 21)
-    ///
-    /// # Returns
-    /// `Ok([f64; 4])` with bounds in axis order of target SpatialRef
-    /// `Err` if there is an error.
-    #[cfg(all(major_ge_3, minor_ge_4))]
-    pub fn transform_bounds(&self, bounds: &[f64; 4], densify_pts: i32) -> Result<[f64; 4]> {
-        let mut out_xmin: f64 = 0.;
-        let mut out_ymin: f64 = 0.;
-        let mut out_xmax: f64 = 0.;
-        let mut out_ymax: f64 = 0.;
-
-        let ret_val = unsafe {
-            gdal_sys::OCTTransformBounds(
-                self.inner,
-                bounds[0],
-                bounds[1],
-                bounds[2],
-                bounds[3],
-                &mut out_xmin,
-                &mut out_ymin,
-                &mut out_xmax,
-                &mut out_ymax,
-                densify_pts as c_int,
-            ) == 1
-        };
-
-        if !ret_val {
-            let msg = match _last_cpl_err(CPLErr::CE_Failure) {
-                GdalError::CplError { msg, .. } => match msg.is_empty() {
-                    false => Some(msg),
-                    _ => None,
-                },
-                err => return Err(err),
-            };
-            return Err(GdalError::InvalidCoordinateRange {
-                from: self.from.clone(),
-                to: self.to.clone(),
-                msg,
-            });
-        }
-
-        Ok([out_xmin, out_ymin, out_xmax, out_ymax])
-    }
-
-    /// Transform coordinates in place.
-    ///
-    /// # Arguments
-    /// * `x` - slice of x coordinates
-    /// * `y` - slice of y coordinates (must match x in length)
-    /// * `z` - slice of z coordinates, or an empty slice to ignore
-    pub fn transform_coords(&self, x: &mut [f64], y: &mut [f64], z: &mut [f64]) -> Result<()> {
-        let nb_coords = x.len();
-        assert_eq!(
-            nb_coords,
-            y.len(),
-            "transform coordinate slices have different lengths: {} != {}",
-            nb_coords,
-            y.len()
-        );
-        let ret_val = unsafe {
-            gdal_sys::OCTTransform(
-                self.inner,
-                nb_coords as c_int,
-                x.as_mut_ptr(),
-                y.as_mut_ptr(),
-                if z.is_empty() {
-                    null_mut()
-                } else {
-                    assert_eq!(
-                        nb_coords,
-                        z.len(),
-                        "transform coordinate slices have different lengths: {} != {}",
-                        nb_coords,
-                        z.len()
-                    );
-                    z.as_mut_ptr()
-                },
-            ) == 1
-        };
-
-        if ret_val {
-            Ok(())
-        } else {
-            let err = _last_cpl_err(CPLErr::CE_Failure);
-            let msg = if let GdalError::CplError { msg, .. } = err {
-                if msg.trim().is_empty() {
-                    None
-                } else {
-                    Some(msg)
-                }
-            } else {
-                return Err(err);
-            };
-            Err(GdalError::InvalidCoordinateRange {
-                from: self.from.clone(),
-                to: self.to.clone(),
-                msg,
-            })
-        }
-    }
-
-    #[deprecated(since = "0.3.1", note = "use `transform_coords` instead")]
-    pub fn transform_coord(&self, x: &mut [f64], y: &mut [f64], z: &mut [f64]) {
-        self.transform_coords(x, y, z)
-            .expect("Coordinate transform failed")
-    }
-
-    pub fn to_c_hct(&self) -> OGRCoordinateTransformationH {
-        self.inner
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct AreaOfUse {
-    pub west_lon_degree: f64,
-    pub south_lat_degree: f64,
-    pub east_lon_degree: f64,
-    pub north_lat_degree: f64,
-    pub name: String,
-}
-
-pub type AxisOrientationType = gdal_sys::OGRAxisOrientation::Type;
-
-#[derive(Debug)]
-pub struct SpatialRef(OGRSpatialReferenceH);
+pub struct SpatialRef(gdal_sys::OGRSpatialReferenceH);
 
 impl Drop for SpatialRef {
     fn drop(&mut self) {
@@ -352,6 +46,31 @@ impl SpatialRef {
         Ok(SpatialRef(c_obj))
     }
 
+    /// Returns a wrapped `SpatialRef` from a raw C API handle.
+    ///
+    /// # Safety
+    /// The handle passed to this function must be valid.
+    pub unsafe fn from_c_obj(c_obj: gdal_sys::OGRSpatialReferenceH) -> Result<SpatialRef> {
+        let mut_c_obj = gdal_sys::OSRClone(c_obj);
+        if mut_c_obj.is_null() {
+            Err(_last_null_pointer_err("OSRClone"))
+        } else {
+            Ok(SpatialRef(mut_c_obj))
+        }
+    }
+
+    /// Returns a C pointer to the allocated [`gdal_sys::OGRSpatialReferenceH`] memory.
+    pub fn to_c_hsrs(&self) -> gdal_sys::OGRSpatialReferenceH {
+        self.0
+    }
+
+    /// Set spatial reference from various text formats.
+    ///
+    /// This method will examine the provided input, and try to deduce the format,
+    /// and then use it to initialize the spatial reference system. See the [C++ API docs][CPP]
+    /// for details on these forms.
+    ///
+    /// [CPP]: https://gdal.org/api/ogrspatialref.html#_CPPv4N19OGRSpatialReference16SetFromUserInputEPKc
     pub fn from_definition(definition: &str) -> Result<SpatialRef> {
         let c_obj = unsafe { gdal_sys::OSRNewSpatialReference(ptr::null()) };
         if c_obj.is_null() {
@@ -380,7 +99,7 @@ impl SpatialRef {
     pub fn from_epsg(epsg_code: u32) -> Result<SpatialRef> {
         let null_ptr = ptr::null_mut();
         let c_obj = unsafe { gdal_sys::OSRNewSpatialReference(null_ptr) };
-        let rv = unsafe { gdal_sys::OSRImportFromEPSG(c_obj, epsg_code as c_int) };
+        let rv = unsafe { gdal_sys::OSRImportFromEPSG(c_obj, epsg_code as libc::c_int) };
         if rv != OGRErr::OGRERR_NONE {
             Err(GdalError::OgrError {
                 err: rv,
@@ -408,7 +127,7 @@ impl SpatialRef {
 
     pub fn from_esri(esri_wkt: &str) -> Result<SpatialRef> {
         let c_str = CString::new(esri_wkt)?;
-        let mut ptrs = vec![c_str.as_ptr() as *mut c_char, ptr::null_mut()];
+        let mut ptrs = vec![c_str.as_ptr() as *mut libc::c_char, ptr::null_mut()];
         let null_ptr = ptr::null_mut();
         let c_obj = unsafe { gdal_sys::OSRNewSpatialReference(null_ptr) };
         let rv = unsafe { gdal_sys::OSRImportFromESRI(c_obj, ptrs.as_mut_ptr()) };
@@ -419,19 +138,6 @@ impl SpatialRef {
             })
         } else {
             Ok(SpatialRef(c_obj))
-        }
-    }
-
-    /// Returns a wrapped `SpatialRef` from a raw C API handle.
-    ///
-    /// # Safety
-    /// The handle passed to this function must be valid.
-    pub unsafe fn from_c_obj(c_obj: OGRSpatialReferenceH) -> Result<SpatialRef> {
-        let mut_c_obj = gdal_sys::OSRClone(c_obj);
-        if mut_c_obj.is_null() {
-            Err(_last_null_pointer_err("OSRClone"))
-        } else {
-            Ok(SpatialRef(mut_c_obj))
         }
     }
 
@@ -463,7 +169,8 @@ impl SpatialRef {
 
     pub fn to_pretty_wkt(&self) -> Result<String> {
         let mut c_wkt = ptr::null_mut();
-        let rv = unsafe { gdal_sys::OSRExportToPrettyWkt(self.0, &mut c_wkt, false as c_int) };
+        let rv =
+            unsafe { gdal_sys::OSRExportToPrettyWkt(self.0, &mut c_wkt, false as libc::c_int) };
         let res = if rv != OGRErr::OGRERR_NONE {
             Err(GdalError::OgrError {
                 err: rv,
@@ -645,13 +352,17 @@ impl SpatialRef {
         unsafe { gdal_sys::OSRIsVertical(self.0) == 1 }
     }
 
-    pub fn axis_orientation(&self, target_key: &str, axis: i32) -> Result<AxisOrientationType> {
+    pub fn axis_orientation(
+        &self,
+        target_key: &str,
+        axis: i32,
+    ) -> Result<super::AxisOrientationType> {
         let mut orientation = gdal_sys::OGRAxisOrientation::OAO_Other;
         let c_ptr = unsafe {
             gdal_sys::OSRGetAxis(
                 self.0,
                 CString::new(target_key)?.as_ptr(),
-                axis as c_int,
+                axis as libc::c_int,
                 &mut orientation,
             )
         };
@@ -672,7 +383,7 @@ impl SpatialRef {
             gdal_sys::OSRGetAxis(
                 self.0,
                 CString::new(target_key)?.as_ptr(),
-                axis as c_int,
+                axis as libc::c_int,
                 ptr::null_mut(),
             )
         };
@@ -710,6 +421,9 @@ impl SpatialRef {
     }
 
     #[cfg(major_ge_3)]
+    /// Get the valid use bounding area for this `SpatialRef`.
+    ///
+    /// See: [`OSRGetAreaOfUse`](https://gdal.org/api/ogr_srs_api.html#_CPPv415OSRGetAreaOfUse20OGRSpatialReferenceHPdPdPdPdPPKc)
     pub fn area_of_use(&self) -> Option<AreaOfUse> {
         let mut c_area_name: *const libc::c_char = ptr::null_mut();
         let (mut w_long, mut s_lat, mut e_long, mut n_lat): (f64, f64, f64, f64) =
@@ -737,9 +451,253 @@ impl SpatialRef {
             None
         }
     }
+}
 
-    // TODO: should this take self instead of &self?
-    pub fn to_c_hsrs(&self) -> OGRSpatialReferenceH {
-        self.0
+#[derive(Debug, Clone)]
+/// Defines the bounding area of valid use for a [`SpatialRef`].
+///
+/// See [`area_of_use`][SpatialRef::area_of_use].
+pub struct AreaOfUse {
+    pub west_lon_degree: f64,
+    pub south_lat_degree: f64,
+    pub east_lon_degree: f64,
+    pub north_lat_degree: f64,
+    pub name: String,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::assert_almost_eq;
+
+    #[test]
+    fn from_wkt_to_proj4() {
+        let spatial_ref = SpatialRef::from_wkt("GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",7030]],TOWGS84[0,0,0,0,0,0,0],AUTHORITY[\"EPSG\",6326]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",8901]],UNIT[\"DMSH\",0.0174532925199433,AUTHORITY[\"EPSG\",9108]],AXIS[\"Lat\",NORTH],AXIS[\"Long\",EAST],AUTHORITY[\"EPSG\",4326]]").unwrap();
+        assert_eq!(
+            "+proj=longlat +ellps=WGS84 +towgs84=0,0,0,0,0,0,0 +no_defs",
+            spatial_ref.to_proj4().unwrap().trim()
+        );
+        let spatial_ref = SpatialRef::from_definition("GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",7030]],TOWGS84[0,0,0,0,0,0,0],AUTHORITY[\"EPSG\",6326]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",8901]],UNIT[\"DMSH\",0.0174532925199433,AUTHORITY[\"EPSG\",9108]],AXIS[\"Lat\",NORTH],AXIS[\"Long\",EAST],AUTHORITY[\"EPSG\",4326]]").unwrap();
+        assert_eq!(
+            "+proj=longlat +ellps=WGS84 +towgs84=0,0,0,0,0,0,0 +no_defs",
+            spatial_ref.to_proj4().unwrap().trim()
+        );
+    }
+
+    #[test]
+    fn from_proj4_to_wkt() {
+        let spatial_ref = SpatialRef::from_proj4(
+        "+proj=laea +lat_0=52 +lon_0=10 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +units=m +no_defs",
+    )
+    .unwrap();
+        // TODO: handle proj changes on lib level
+        #[cfg(not(major_ge_3))]
+        assert_eq!(spatial_ref.to_wkt().unwrap(), "PROJCS[\"unnamed\",GEOGCS[\"GRS 1980(IUGG, 1980)\",DATUM[\"unknown\",SPHEROID[\"GRS80\",6378137,298.257222101]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433]],PROJECTION[\"Lambert_Azimuthal_Equal_Area\"],PARAMETER[\"latitude_of_center\",52],PARAMETER[\"longitude_of_center\",10],PARAMETER[\"false_easting\",4321000],PARAMETER[\"false_northing\",3210000],UNIT[\"Meter\",1]]");
+        #[cfg(major_ge_3)]
+        assert_eq!(spatial_ref.to_wkt().unwrap(), "PROJCS[\"unknown\",GEOGCS[\"unknown\",DATUM[\"Unknown based on GRS80 ellipsoid\",SPHEROID[\"GRS 1980\",6378137,298.257222101,AUTHORITY[\"EPSG\",\"7019\"]]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Lambert_Azimuthal_Equal_Area\"],PARAMETER[\"latitude_of_center\",52],PARAMETER[\"longitude_of_center\",10],PARAMETER[\"false_easting\",4321000],PARAMETER[\"false_northing\",3210000],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH]]");
+    }
+
+    #[test]
+    fn from_epsg_to_wkt_proj4() {
+        let spatial_ref = SpatialRef::from_epsg(4326).unwrap();
+        let wkt = spatial_ref.to_wkt().unwrap();
+        // TODO: handle proj changes on lib level
+        #[cfg(not(major_ge_3))]
+        assert_eq!("GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",\"7030\"]],AUTHORITY[\"EPSG\",\"6326\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]", wkt);
+        #[cfg(major_ge_3)]
+        assert_eq!("GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",\"7030\"]],AUTHORITY[\"EPSG\",\"6326\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AXIS[\"Latitude\",NORTH],AXIS[\"Longitude\",EAST],AUTHORITY[\"EPSG\",\"4326\"]]", wkt);
+        let proj4string = spatial_ref.to_proj4().unwrap();
+        assert_eq!("+proj=longlat +datum=WGS84 +no_defs", proj4string.trim());
+    }
+
+    #[cfg(any(major_ge_4, all(major_ge_3, minor_ge_1)))]
+    #[test]
+    fn from_epsg_to_projjson() {
+        let spatial_ref = SpatialRef::from_epsg(4326).unwrap();
+        let projjson = spatial_ref.to_projjson().unwrap();
+        // Testing for exact string equality would be too strict, since the order of keys in JSON is
+        // unspecified. Ideally, we'd parse the JSON and then compare the values, but adding a JSON
+        // parser as a dependency just for this one test would be overkill. Thus, we do only a quick
+        // sanity check.
+        assert!(
+            projjson.contains("World Geodetic System 1984"),
+            "{projjson:?} does not contain expected CRS name",
+        );
+    }
+
+    #[test]
+    fn from_esri_to_proj4() {
+        let spatial_ref = SpatialRef::from_esri("GEOGCS[\"GCS_WGS_1984\",DATUM[\"D_WGS_1984\",SPHEROID[\"WGS_1984\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.017453292519943295]]").unwrap();
+        let proj4string = spatial_ref.to_proj4().unwrap();
+        assert_eq!("+proj=longlat +datum=WGS84 +no_defs", proj4string.trim());
+    }
+
+    #[test]
+    fn comparison() {
+        let spatial_ref1 = SpatialRef::from_wkt("GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",7030]],TOWGS84[0,0,0,0,0,0,0],AUTHORITY[\"EPSG\",6326]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",8901]],UNIT[\"DMSH\",0.0174532925199433,AUTHORITY[\"EPSG\",9108]],AXIS[\"Lat\",NORTH],AXIS[\"Long\",EAST],AUTHORITY[\"EPSG\",4326]]").unwrap();
+        let spatial_ref2 = SpatialRef::from_epsg(4326).unwrap();
+        let spatial_ref3 = SpatialRef::from_epsg(3025).unwrap();
+        let spatial_ref4 = SpatialRef::from_proj4("+proj=longlat +datum=WGS84 +no_defs ").unwrap();
+        let spatial_ref5 = SpatialRef::from_esri("GEOGCS[\"GCS_WGS_1984\",DATUM[\"D_WGS_1984\",SPHEROID[\"WGS_1984\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.017453292519943295]]").unwrap();
+
+        assert_eq!(spatial_ref1, spatial_ref2);
+        assert_ne!(spatial_ref2, spatial_ref3);
+        assert_eq!(spatial_ref4, spatial_ref2);
+        assert_eq!(spatial_ref5, spatial_ref4);
+    }
+
+    #[test]
+    fn authority() {
+        let spatial_ref = SpatialRef::from_epsg(4326).unwrap();
+        assert_eq!(spatial_ref.auth_name().unwrap(), "EPSG".to_string());
+        assert_eq!(spatial_ref.auth_code().unwrap(), 4326);
+        assert_eq!(spatial_ref.authority().unwrap(), "EPSG:4326".to_string());
+        let spatial_ref = SpatialRef::from_wkt("GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",7030]],TOWGS84[0,0,0,0,0,0,0],AUTHORITY[\"EPSG\",6326]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",8901]],UNIT[\"DMSH\",0.0174532925199433,AUTHORITY[\"EPSG\",9108]],AXIS[\"Lat\",NORTH],AXIS[\"Long\",EAST],AUTHORITY[\"EPSG\",4326]]").unwrap();
+        assert_eq!(spatial_ref.auth_name().unwrap(), "EPSG".to_string());
+        assert_eq!(spatial_ref.auth_code().unwrap(), 4326);
+        assert_eq!(spatial_ref.authority().unwrap(), "EPSG:4326".to_string());
+        let spatial_ref = SpatialRef::from_wkt("GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",7030]],TOWGS84[0,0,0,0,0,0,0],AUTHORITY[\"EPSG\",6326]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",8901]],UNIT[\"DMSH\",0.0174532925199433,AUTHORITY[\"EPSG\",9108]],AXIS[\"Lat\",NORTH],AXIS[\"Long\",EAST]]").unwrap();
+        assert!(spatial_ref.auth_name().is_err());
+        assert!(spatial_ref.auth_code().is_err());
+        assert!(spatial_ref.authority().is_err());
+        let spatial_ref = SpatialRef::from_proj4(
+        "+proj=laea +lat_0=52 +lon_0=10 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +units=m +no_defs",
+    )
+    .unwrap();
+        assert!(spatial_ref.auth_name().is_err());
+        assert!(spatial_ref.auth_code().is_err());
+        assert!(spatial_ref.authority().is_err());
+    }
+
+    #[test]
+    fn auto_identify() {
+        // retreived from https://epsg.io/32632, but deleted the `AUTHORITY["EPSG","32632"]`
+        let mut spatial_ref = SpatialRef::from_wkt(
+            r#"
+        PROJCS["WGS 84 / UTM zone 32N",
+            GEOGCS["WGS 84",
+                DATUM["WGS_1984",
+                    SPHEROID["WGS 84",6378137,298.257223563,
+                        AUTHORITY["EPSG","7030"]],
+                    AUTHORITY["EPSG","6326"]],
+                PRIMEM["Greenwich",0,
+                    AUTHORITY["EPSG","8901"]],
+                UNIT["degree",0.0174532925199433,
+                    AUTHORITY["EPSG","9122"]],
+                AUTHORITY["EPSG","4326"]],
+            PROJECTION["Transverse_Mercator"],
+            PARAMETER["latitude_of_origin",0],
+            PARAMETER["central_meridian",9],
+            PARAMETER["scale_factor",0.9996],
+            PARAMETER["false_easting",500000],
+            PARAMETER["false_northing",0],
+            UNIT["metre",1,
+                AUTHORITY["EPSG","9001"]],
+            AXIS["Easting",EAST],
+            AXIS["Northing",NORTH]]
+    "#,
+        )
+        .unwrap();
+        assert!(spatial_ref.auth_code().is_err());
+        spatial_ref.auto_identify_epsg().unwrap();
+        assert_eq!(spatial_ref.auth_code().unwrap(), 32632);
+    }
+
+    #[cfg(major_ge_3)]
+    #[test]
+    fn axis_mapping_strategy() {
+        let spatial_ref = SpatialRef::from_epsg(4326).unwrap();
+        assert_eq!(
+            spatial_ref.axis_mapping_strategy(),
+            gdal_sys::OSRAxisMappingStrategy::OAMS_AUTHORITY_COMPLIANT
+        );
+        spatial_ref.set_axis_mapping_strategy(
+            gdal_sys::OSRAxisMappingStrategy::OAMS_TRADITIONAL_GIS_ORDER,
+        );
+        assert_eq!(
+            spatial_ref.axis_mapping_strategy(),
+            gdal_sys::OSRAxisMappingStrategy::OAMS_TRADITIONAL_GIS_ORDER
+        );
+    }
+
+    #[cfg(major_ge_3)]
+    #[test]
+    fn area_of_use() {
+        let spatial_ref = SpatialRef::from_epsg(4326).unwrap();
+        let area_of_use = spatial_ref.area_of_use().unwrap();
+        assert_almost_eq(area_of_use.west_lon_degree, -180.0);
+        assert_almost_eq(area_of_use.south_lat_degree, -90.0);
+        assert_almost_eq(area_of_use.east_lon_degree, 180.0);
+        assert_almost_eq(area_of_use.north_lat_degree, 90.0);
+    }
+
+    #[cfg(major_ge_3)]
+    #[test]
+    fn get_name() {
+        let spatial_ref = SpatialRef::from_epsg(4326).unwrap();
+        let name = spatial_ref.name().unwrap();
+        assert_eq!(name, "WGS 84");
+    }
+
+    #[test]
+    fn get_units_epsg4326() {
+        let spatial_ref = SpatialRef::from_epsg(4326).unwrap();
+
+        let angular_units_name = spatial_ref.angular_units_name().unwrap();
+        assert_eq!(angular_units_name.to_lowercase(), "degree");
+        let to_radians = spatial_ref.angular_units();
+        assert_almost_eq(to_radians, 0.01745329);
+    }
+
+    #[test]
+    fn get_units_epsg2154() {
+        let spatial_ref = SpatialRef::from_epsg(2154).unwrap();
+        let linear_units_name = spatial_ref.linear_units_name().unwrap();
+        assert_eq!(linear_units_name.to_lowercase(), "metre");
+        let to_meters = spatial_ref.linear_units();
+        assert_almost_eq(to_meters, 1.0);
+    }
+
+    #[test]
+    fn predicats_epsg4326() {
+        let spatial_ref_4326 = SpatialRef::from_epsg(4326).unwrap();
+        assert!(spatial_ref_4326.is_geographic());
+        assert!(!spatial_ref_4326.is_local());
+        assert!(!spatial_ref_4326.is_projected());
+        assert!(!spatial_ref_4326.is_compound());
+        assert!(!spatial_ref_4326.is_geocentric());
+        assert!(!spatial_ref_4326.is_vertical());
+
+        #[cfg(all(major_ge_3, minor_ge_1))]
+        assert!(!spatial_ref_4326.is_derived_geographic());
+    }
+
+    #[test]
+    fn predicats_epsg2154() {
+        let spatial_ref_2154 = SpatialRef::from_epsg(2154).unwrap();
+        assert!(!spatial_ref_2154.is_geographic());
+        assert!(!spatial_ref_2154.is_local());
+        assert!(spatial_ref_2154.is_projected());
+        assert!(!spatial_ref_2154.is_compound());
+        assert!(!spatial_ref_2154.is_geocentric());
+
+        #[cfg(all(major_ge_3, minor_ge_1))]
+        assert!(!spatial_ref_2154.is_derived_geographic());
+    }
+
+    //XXX Gdal 2 implementation is partial
+    #[cfg(major_ge_3)]
+    #[test]
+    fn crs_axis() {
+        let spatial_ref = SpatialRef::from_epsg(4326).unwrap();
+
+        #[cfg(all(major_ge_3, minor_ge_1))]
+        assert_eq!(spatial_ref.axes_count(), 2);
+
+        let orientation = spatial_ref.axis_orientation("GEOGCS", 0).unwrap();
+        assert_eq!(orientation, gdal_sys::OGRAxisOrientation::OAO_North);
+        assert!(spatial_ref.axis_name("GEOGCS", 0).is_ok());
+        assert!(spatial_ref.axis_name("DO_NO_EXISTS", 0).is_err());
+        assert!(spatial_ref.axis_orientation("DO_NO_EXISTS", 0).is_err());
     }
 }

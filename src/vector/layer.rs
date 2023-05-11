@@ -462,7 +462,9 @@ pub trait LayerAccess: Sized {
 
     /// Read batches of columnar [Arrow](https://arrow.apache.org/) data from OGR.
     ///
-    /// Extended options are available via [`CslStringList`]. As defined in the OGR documentation for [`GetArrowStream`](https://gdal.org/api/ogrlayer_cpp.html#_CPPv4N8OGRLayer14GetArrowStreamEP16ArrowArrayStream12CSLConstList), the current options are:
+    /// Extended options are available via [`crate::cpl::CslStringList`].
+    /// As defined in the OGR documentation for [`GetArrowStream`](https://gdal.org/api/ogrlayer_cpp.html#_CPPv4N8OGRLayer14GetArrowStreamEP16ArrowArrayStream12CSLConstList),
+    /// the current options are:
     ///
     /// * `INCLUDE_FID=YES/NO`. Whether to include the FID column. Defaults to YES.
     /// * `MAX_FEATURES_IN_BATCH=integer`. Maximum number of features to retrieve in a ArrowArray batch. Defaults to 65 536.
