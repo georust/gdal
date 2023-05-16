@@ -7,6 +7,7 @@ authors = [
     "Alex Morega <alex@grep.ro>",
     "Johannes Drönner <droenner@informatik.uni-marburg.de>",
 ]
+categories = ["science::geo", "api-bindings"]
 repository = "https://github.com/georust/gdal"
 edition = "2021"
 rust-version = "1.58"

@@ -5,6 +5,7 @@ license = "MIT"
 version = "0.8.0"
 repository = "https://github.com/georust/gdal"
 authors = ["Johannes Drönner <droenner@informatik.uni-marburg.de>"]
+categories = ["science::geo", "api-bindings"]
 edition = "2018"
 rust-version = "1.58"
 links="gdal"
