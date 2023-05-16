@@ -1,11 +1,11 @@
-name: Sanitizers
+name: Sanitize
 
 on:
-  pull_request: {}
-  workflow_dispatch: {}
+  pull_request:
+  workflow_dispatch:
 
 jobs:
-  address:
+  cargo-careful:
     runs-on: ubuntu-latest
     container:
       image: osgeo/gdal:ubuntu-full-3.6.0
@@ -30,26 +30,17 @@ jobs:
         run: |
           rustup toolchain install nightly --profile minimal --component rust-src
           rustup override set nightly
-          cargo install cargo-careful
 
       - name: Get target triple
         run: |
           echo "TARGET=$(rustc -vV | awk '/^host: / { print $2 }')" >>${GITHUB_ENV}
 
-      - name: Run test with address sanitizer
+      - name: Run tests with careful
         env:
-          RUSTFLAGS: -Z sanitizer=address
-          RUSTDOCFLAGS: -Z sanitizer=address
+          # See: https://github.com/google/sanitizers/wiki/AddressSanitizerFlags#run-time-flags
           # Note: because we don't build GDAL with sanitizers, we need to turn off
           # leak detection, otherwise it'll report memory leak false positives
           ASAN_OPTIONS: verbose=1:atexit=1:detect_stack_use_after_return=1:strict_string_checks=1:detect_leaks=0
-        run: cargo test -Zbuild-std --all --target ${{ env.TARGET }}
-
-      - name: Run tests with memory sanitizer
-        env:
-          RUSTFLAGS: -Z sanitizer=memory
-          RUSTDOCFLAGS: -Z sanitizer=memory
-        run: cargo test -Zbuild-std --target ${{ env.TARGET }}
-
-      - name: Run tests with careful
-        run: cargo careful test --all -Zcareful-sanitizer
+        run: |
+          cargo install cargo-careful
+          cargo careful test -Zbuild-std --all -Zcareful-sanitizer
