@@ -81,6 +81,10 @@
 
   - <https://github.com/georust/gdal/pull/370>
 
+- Added support for getting the `SpatialRef` of embedded ground control points (GCPs) via `Dataset::gcp_spatial_ref`.
+
+  - <https://github.com/georust/gdal/pull/397>
+
 ## 0.14
 
 - Added new content to `README.md` and the root docs.

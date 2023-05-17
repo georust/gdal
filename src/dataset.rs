@@ -191,6 +191,7 @@ bitflags! {
     ///
     /// [`GDALOpenEx`]: https://gdal.org/doxygen/gdal_8h.html#a9cb8585d0b3c16726b08e25bcc94274a
     #[derive(Debug)]
+    #[allow(clippy::assign_op_pattern)]
     pub struct GdalOpenFlags: c_uint {
         /// Open in read-only mode (default).
         const GDAL_OF_READONLY = 0x00;
