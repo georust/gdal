@@ -1,0 +1,51 @@
+name: Sanitize
+
+on: workflow_dispatch
+
+env:
+  CAREFUL_VER: v0.3.4
+
+jobs:
+  cargo-careful:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/osgeo/gdal:ubuntu-full-3.6.4
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install build deps
+        shell: bash
+        # Note: clang, etc. are needed so cargo-careful can build std with extra checks enabled
+        run: |
+          apt-get update -y
+          apt-get install build-essential pkg-config libclang-dev curl -y
+          curl --proto '=https' --tlsv1.2 --retry 10 --retry-connrefused -fsSL "https://sh.rustup.rs" | sh -s -- --profile minimal --default-toolchain none -y
+          echo "${HOME}/.cargo/bin" >> $GITHUB_PATH
+
+      - name: Setup building
+        run: |
+          export CC="clang-9"
+          export CXX="clang++-9"
+
+      - name: Install Rust nightly
+        run: |
+          rustup toolchain install nightly --profile minimal --component rust-src
+          rustup override set nightly
+
+      - name: Install cargo-careful
+        run: |
+          CAREFUL=${HOME}/.cargo/bin/cargo-careful
+          curl -Lo "${CAREFUL}" https://github.com/RalfJung/cargo-careful/releases/download/${CAREFUL_VER}/cargo-careful.x86_64-unknown-linux-musl
+          chmod +x "${CAREFUL}"
+          cargo careful setup
+
+      - name: Run tests with careful
+        env:
+          # See: https://github.com/google/sanitizers/wiki/AddressSanitizerFlags#run-time-flags
+          # Note: because we don't build GDAL with sanitizers, we need to turn off
+          # leak detection, otherwise it'll report memory leak false positives
+          ASAN_OPTIONS: verbose=0:atexit=1:detect_stack_use_after_return=1:strict_string_checks=1:detect_leaks=0
+        run: |
+          cargo careful test -Zbuild-std --all -Zcareful-sanitizer
