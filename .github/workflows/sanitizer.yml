@@ -1,8 +1,6 @@
 name: Sanitize
 
-on:
-#  pull_request:
-  workflow_dispatch:
+on: workflow_dispatch
 
 jobs:
   cargo-careful:
@@ -21,7 +19,7 @@ jobs:
           apt-get update -y
           apt-get install build-essential pkg-config libclang-dev curl -y
           curl --proto '=https' --tlsv1.2 --retry 10 --retry-connrefused -fsSL "https://sh.rustup.rs" | sh -s -- --profile minimal --default-toolchain none -y
-          echo "${CARGO_HOME:-$HOME/.cargo}/bin" >> $GITHUB_PATH
+          echo "${HOME}/.cargo/bin" >> $GITHUB_PATH
 
       - name: Setup building
         run: |
@@ -35,8 +33,8 @@ jobs:
 
       - name: Install cargo-careful
         run: |
-          export CAREFUL=${CARGO_HOME:-$HOME/.cargo}/bin/cargo-careful
-          curl -Lo ~/.cargo/bin/cargo-careful https://github.com/RalfJung/cargo-careful/releases/download/v0.3.4/cargo-careful.x86_64-unknown-linux-musl
+          CAREFUL=${HOME}/.cargo/bin/cargo-careful
+          curl -Lo "${CAREFUL}" https://github.com/RalfJung/cargo-careful/releases/download/v0.3.4/cargo-careful.x86_64-unknown-linux-musl
           chmod +x "${CAREFUL}"
           cargo careful setup
 
