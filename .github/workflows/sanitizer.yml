@@ -36,7 +36,7 @@ jobs:
       - name: Install cargo-careful
         run: |
           export CAREFUL=${CARGO_HOME:-$HOME/.cargo}/bin/cargo-careful
-          curl -L https://github.com/RalfJung/cargo-careful/releases/download/v0.3.4/cargo-careful.x86_64-unknown-linux-musl > "${CAREFUL}"
+          curl -Lo ~/.cargo/bin/cargo-careful https://github.com/RalfJung/cargo-careful/releases/download/v0.3.4/cargo-careful.x86_64-unknown-linux-musl
           chmod +x "${CAREFUL}"
           cargo careful setup
 
