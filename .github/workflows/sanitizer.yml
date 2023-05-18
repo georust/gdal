@@ -8,7 +8,7 @@ jobs:
   cargo-careful:
     runs-on: ubuntu-latest
     container:
-      image: osgeo/gdal:ubuntu-full-3.6.0
+      image: ghcr.io/osgeo/gdal:ubuntu-full-3.6.4
 
     steps:
       - name: Checkout code
