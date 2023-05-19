@@ -8,6 +8,9 @@ use std::path::{Path, PathBuf};
 
 #[cfg(feature = "bindgen")]
 pub fn write_bindings(include_paths: Vec<String>, out_path: &Path) {
+    // To generate the bindings manually, use
+    // bindgen --constified-enum-module ".*" --ctypes-prefix libc --allowlist-function "(CPL|CSL|GDAL|OGR|OSR|OCT|VSI).*" wrapper.h -- $(pkg-config --cflags-only-I gdal) -fretain-comments-from-system-headers
+
     let mut builder = bindgen::Builder::default()
         .size_t_is_usize(true)
         .header("wrapper.h")
