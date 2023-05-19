@@ -85,6 +85,10 @@
 
   - <https://github.com/georust/gdal/pull/397>
 
+- Additional GCP support: `Dataset::gcp_projection`.
+
+  - <https://github.com/georust/gdal/pull/402>
+
 ## 0.14
 
 - Added new content to `README.md` and the root docs.
