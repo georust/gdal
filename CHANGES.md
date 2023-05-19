@@ -1,6 +1,10 @@
 # Changes
 
 ## Unreleased
+- Added pre-built bindings for GDAL 3.7
+
+  - <https://github.com/georust/gdal/pull/401>
+
 - Added `SpatialRef::to_projjson`
 
   - <https://github.com/georust/gdal/pull/389>

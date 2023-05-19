@@ -8,6 +8,10 @@ use std::path::{Path, PathBuf};
 
 #[cfg(feature = "bindgen")]
 pub fn write_bindings(include_paths: Vec<String>, out_path: &Path) {
+    // To generate the bindings manually, use
+    // bindgen --constified-enum-module ".*" --ctypes-prefix libc --allowlist-function "(CPL|CSL|GDAL|OGR|OSR|OCT|VSI).*" wrapper.h -- $(pkg-config --cflags-only-I gdal) -fretain-comments-from-system-headers
+    // If you add a new pre-built version, make sure to bump the docs.rs version in main.
+
     let mut builder = bindgen::Builder::default()
         .size_t_is_usize(true)
         .header("wrapper.h")
@@ -65,7 +69,7 @@ fn main() {
     // Hardcode a prebuilt binding version while generating docs.
     // Otherwise docs.rs will explode due to not actually having libgdal installed.
     if std::env::var("DOCS_RS").is_ok() {
-        let version = Version::parse("3.5.0").expect("invalid version for docs.rs");
+        let version = Version::parse("3.7.0").expect("invalid version for docs.rs");
         println!(
             "cargo:rustc-cfg=gdal_sys_{}_{}_{}",
             version.major, version.minor, version.patch
