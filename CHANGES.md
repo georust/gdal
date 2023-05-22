@@ -1,6 +1,11 @@
 # Changes
 
 ## Unreleased
+
+- Added `SpatialRef::semi_major`, `semi_minor`, `set_proj_param`, `get_proj_param`, `get_proj_param_or_default`, `set_attr_value`, `get_attr_value` and `geog_cs`.
+
+  - <https://github.com/georust/gdal/pull/406>
+
 - Added pre-built bindings for GDAL 3.7
 
   - <https://github.com/georust/gdal/pull/401>
