@@ -451,6 +451,96 @@ impl SpatialRef {
             None
         }
     }
+
+
+    pub fn semi_major(&self) -> Result<f64> {
+        let mut rv = OGRErr::OGRERR_NONE;
+        let a = unsafe  { gdal_sys::OSRGetSemiMajor(self.0, &mut rv as *mut u32) };
+        if rv != OGRErr::OGRERR_NONE {
+            return Err(GdalError::OgrError {
+                err: rv,
+                method_name: "OSRGetSemiMajor",
+            });
+        }
+        Ok(a)
+    }
+
+    pub fn semi_minor(&self) -> Result<f64> {
+        let mut rv = OGRErr::OGRERR_NONE;
+        let b = unsafe  { gdal_sys::OSRGetSemiMinor(self.0, &mut rv as *mut u32) };
+        if rv != OGRErr::OGRERR_NONE {
+            return Err(GdalError::OgrError {
+                err: rv,
+                method_name: "OSRGetSemiMinor",
+            });
+        }
+        Ok(b)
+    }
+
+    pub fn set_proj_param(&mut self, name: &str, value: f64) -> Result<()> {
+        let c_name = CString::new(name)?;
+        let rv =  unsafe { gdal_sys::OSRSetProjParm(self.0, c_name.as_ptr(), value) };
+        if rv != OGRErr::OGRERR_NONE {
+            return Err(GdalError::OgrError {
+                err: rv,
+                method_name: "OSRSetProjParm",
+            });
+        }
+        Ok(())
+    }
+
+    pub fn get_proj_param(&self, name: &str) -> Result<f64> {
+        let c_name = CString::new(name)?;
+        let mut rv = OGRErr::OGRERR_NONE;
+        let p = unsafe { gdal_sys::OSRGetProjParm(self.0, c_name.as_ptr(), 0.0, &mut rv as *mut u32) };
+        if rv != OGRErr::OGRERR_NONE {
+            return Err(GdalError::OgrError {
+                err: rv,
+                method_name: "OSRGetProjParm",
+            });
+        }
+        Ok(p)
+    }
+
+    pub fn get_proj_param_or_default(&self, name: &str, default: f64) -> f64 {
+        match CString::new(name) {
+            Ok(c_name) => unsafe { gdal_sys::OSRGetProjParm(self.0, c_name.as_ptr(), default, ptr::null_mut()) },
+            Err(_) => default
+        }
+    }
+
+    pub fn set_attr_value(&self, node_path: &str, new_value: &str) -> Result<()> {
+        let c_node_path = CString::new(node_path)?;
+        let c_new_value = CString::new(new_value)?;
+        let rv = unsafe { gdal_sys::OSRSetAttrValue(self.0, c_node_path.as_ptr(), c_new_value.as_ptr()) };
+        if rv != OGRErr::OGRERR_NONE {
+            return Err(GdalError::OgrError {
+                err: rv,
+                method_name: "OSRSetAttrValue",
+            });
+        }
+        Ok(())
+    }
+
+    pub fn get_attr_value(&self, node_path: &str, child: u32) -> Result<String> {
+        let c_node_path = CString::new(node_path)?;
+        let c_ptr_value = unsafe { gdal_sys::OSRGetAttrValue(self.0, c_node_path.as_ptr(), child as libc::c_int)  };
+        if c_ptr_value.is_null() {
+            return Err(_last_null_pointer_err("OSRGetAttrValue"));
+        }
+        Ok(_string(c_ptr_value))
+    }
+
+
+    pub fn geog_cs(&self) -> Result<SpatialRef> {
+        let raw_ret = unsafe {gdal_sys::OSRCloneGeogCS(self.0)};
+        if raw_ret.is_null() {
+            return Err(_last_null_pointer_err("OSRCloneGeogCS"));
+        }
+
+        Ok(SpatialRef(raw_ret))
+    }
+
 }
 
 #[derive(Debug, Clone)]
@@ -700,4 +790,94 @@ mod tests {
         assert!(spatial_ref.axis_name("DO_NO_EXISTS", 0).is_err());
         assert!(spatial_ref.axis_orientation("DO_NO_EXISTS", 0).is_err());
     }
+
+    #[test]
+    fn semi_major_and_semi_minor() {
+        let spatial_ref = SpatialRef::from_epsg(4326).unwrap();
+
+        let semi_major = spatial_ref.semi_major().unwrap();
+        assert_almost_eq(semi_major, 6_378_137.0);
+
+        let semi_minor = spatial_ref.semi_minor().unwrap();
+        assert_almost_eq(semi_minor, 6_356_752.31);
+    }
+
+
+    #[test]
+    fn proj_params() {
+        let spatial_ref = SpatialRef::from_proj4("+proj=geos +lon_0=42 +h=35785831 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs").unwrap();
+
+        let central_meridian = spatial_ref.get_proj_param("central_meridian").unwrap();
+        assert_almost_eq(central_meridian, 42.0);
+
+        let satellite_height = spatial_ref.get_proj_param("satellite_height").unwrap();
+        assert_almost_eq(satellite_height, 35_785_831.0);
+
+        let satellite_height = spatial_ref.get_proj_param_or_default("satellite_height", 0.0);
+        assert_almost_eq(satellite_height, 35_785_831.0);
+    }
+
+    #[test]
+    fn setting_proj_param() {
+        let mut spatial_ref = SpatialRef::from_proj4("+proj=geos +lon_0=42 +h=35785831 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs").unwrap();
+
+        spatial_ref.set_proj_param("central_meridian", -15.0).unwrap();
+
+        let central_meridian = spatial_ref.get_proj_param("central_meridian").unwrap();
+
+        assert_almost_eq(central_meridian, -15.0);
+
+    }
+
+    #[test]
+    #[should_panic = "OgrError { err: 6, method_name: \"OSRGetProjParm\" }"]
+    fn non_existing_proj_param() {
+        let spatial_ref = SpatialRef::from_epsg(4326).unwrap();
+
+        spatial_ref.get_proj_param("spam").unwrap();
+    }
+
+    #[test]
+    fn non_existing_proj_param_using_default() {
+        let spatial_ref = SpatialRef::from_epsg(4326).unwrap();
+
+        let spam = spatial_ref.get_proj_param_or_default("spam", 15.0);
+
+        assert_almost_eq(spam, 15.0);
+    }
+
+    #[test]
+    fn attr_values() {
+        let spatial_ref = SpatialRef::from_epsg(4326).unwrap();
+
+        let geog_cs = spatial_ref.get_attr_value("GEOGCS", 0).unwrap();
+
+        assert_eq!(geog_cs, "WGS 84");
+    }
+
+    #[test]
+    fn geog_cs() {
+        let spatial_ref = SpatialRef::from_proj4("+proj=geos +lon_0=42 +h=35785831 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs").unwrap();
+        let expected_geog_cs = SpatialRef::from_wkt(
+            r#"
+                GEOGCS["unknown",
+                    DATUM["WGS_1984",
+                        SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],
+                        AUTHORITY["EPSG","6326"]],
+                    PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],
+                    UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],
+                    AXIS["Longitude",EAST],
+                    AXIS["Latitude",NORTH]
+                ]
+            "#
+        ).unwrap();
+        
+        let geog_cs = spatial_ref.geog_cs().unwrap();
+
+        assert_eq!(
+            geog_cs, expected_geog_cs,
+            "GEOGCS of geos spatial reference: \"{:?}\"\n does not equal to expected one: {:?}", geog_cs.to_wkt(),  expected_geog_cs.to_wkt()
+        );
+    }
+
 }
