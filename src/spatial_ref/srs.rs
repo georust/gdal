@@ -452,7 +452,9 @@ impl SpatialRef {
         }
     }
 
-
+    /// Get spheroid semi major axis. It returns [`Err`] variant in case of non [`OGRERR_NONE`](https://gdal.org/api/vector_c_api.html#c.OGRERR_NONE) error result from orginal method.
+    /// 
+    /// See: [`OSRGetSemiMajor`](https://gdal.org/api/ogr_srs_api.html#_CPPv415OSRGetSemiMajor20OGRSpatialReferenceHP6OGRErr)
     pub fn semi_major(&self) -> Result<f64> {
         let mut rv = OGRErr::OGRERR_NONE;
         let a = unsafe  { gdal_sys::OSRGetSemiMajor(self.0, &mut rv as *mut u32) };
@@ -465,6 +467,9 @@ impl SpatialRef {
         Ok(a)
     }
 
+    /// Get spheroid semi minor axis. It returns [`Err`] variant in case of non [`OGRERR_NONE`](https://gdal.org/api/vector_c_api.html#c.OGRERR_NONE) error result from orginal method.
+    /// 
+    /// See: [`OSRGetSemiMinor`](https://gdal.org/api/ogr_srs_api.html#_CPPv415OSRGetSemiMinor20OGRSpatialReferenceHP6OGRErr)
     pub fn semi_minor(&self) -> Result<f64> {
         let mut rv = OGRErr::OGRERR_NONE;
         let b = unsafe  { gdal_sys::OSRGetSemiMinor(self.0, &mut rv as *mut u32) };
@@ -477,6 +482,9 @@ impl SpatialRef {
         Ok(b)
     }
 
+    /// Set a projection parameter value. It returns [`Err`] variant in case of non [`OGRERR_NONE`](https://gdal.org/api/vector_c_api.html#c.OGRERR_NONE) result from orginal method.
+    /// 
+    /// See: [`OSRSetProjParm`](https://gdal.org/api/ogr_srs_api.html#_CPPv414OSRSetProjParm20OGRSpatialReferenceHPKcd)
     pub fn set_proj_param(&mut self, name: &str, value: f64) -> Result<()> {
         let c_name = CString::new(name)?;
         let rv =  unsafe { gdal_sys::OSRSetProjParm(self.0, c_name.as_ptr(), value) };
@@ -489,6 +497,9 @@ impl SpatialRef {
         Ok(())
     }
 
+    /// Fetch a projection parameter value. It returns [`Err`] variant in case of non [`OGRERR_NONE`](https://gdal.org/api/vector_c_api.html#c.OGRERR_NONE) error result from orginal method.
+    /// 
+    /// See: [`OSRGetProjParm`](https://gdal.org/api/ogr_srs_api.html#_CPPv414OSRGetProjParm20OGRSpatialReferenceHPKcdP6OGRErr)
     pub fn get_proj_param(&self, name: &str) -> Result<f64> {
         let c_name = CString::new(name)?;
         let mut rv = OGRErr::OGRERR_NONE;
@@ -502,6 +513,10 @@ impl SpatialRef {
         Ok(p)
     }
 
+    /// Fetch a projection parameter value. In case of any error returns defualt value.
+    /// This associated function is variant of [`SpatialRef::get_proj_param`] which incorporates default fallback mechanism from orginal library.
+    /// 
+    /// See: [`OSRGetProjParm`](https://gdal.org/api/ogr_srs_api.html#_CPPv414OSRGetProjParm20OGRSpatialReferenceHPKcdP6OGRErr)
     pub fn get_proj_param_or_default(&self, name: &str, default: f64) -> f64 {
         match CString::new(name) {
             Ok(c_name) => unsafe { gdal_sys::OSRGetProjParm(self.0, c_name.as_ptr(), default, ptr::null_mut()) },
@@ -509,6 +524,9 @@ impl SpatialRef {
         }
     }
 
+    /// Set attribute value in spatial reference. It returns [`Err`] variant in case of non [`OGRERR_NONE`](https://gdal.org/api/vector_c_api.html#c.OGRERR_NONE) result from orginal method.
+    /// 
+    /// See: [`OSRSetAttrValue`](https://gdal.org/api/ogr_srs_api.html#_CPPv415OSRSetAttrValue20OGRSpatialReferenceHPKcPKc)
     pub fn set_attr_value(&self, node_path: &str, new_value: &str) -> Result<()> {
         let c_node_path = CString::new(node_path)?;
         let c_new_value = CString::new(new_value)?;
@@ -522,6 +540,9 @@ impl SpatialRef {
         Ok(())
     }
 
+    /// Fetch indicated attribute of named node. It returns [`Err`] variant if orginal method returns `nullptr`.
+    /// 
+    /// See: [`OSRGetProjParm`](https://gdal.org/api/ogr_srs_api.html#_CPPv415OSRGetAttrValue20OGRSpatialReferenceHPKci)
     pub fn get_attr_value(&self, node_path: &str, child: u32) -> Result<String> {
         let c_node_path = CString::new(node_path)?;
         let c_ptr_value = unsafe { gdal_sys::OSRGetAttrValue(self.0, c_node_path.as_ptr(), child as libc::c_int)  };
@@ -532,6 +553,9 @@ impl SpatialRef {
     }
 
 
+    /// Make a duplicate of the GEOGCS node of this [`SpatialRef`]. It returns [`Err`] variant if orginal method returns `nullptr`.
+    /// 
+    /// Seff: [OSRCloneGeogCS](https://gdal.org/api/ogr_srs_api.html#_CPPv414OSRCloneGeogCS20OGRSpatialReferenceH)
     pub fn geog_cs(&self) -> Result<SpatialRef> {
         let raw_ret = unsafe {gdal_sys::OSRCloneGeogCS(self.0)};
         if raw_ret.is_null() {
