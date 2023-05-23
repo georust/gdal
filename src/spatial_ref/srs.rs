@@ -452,14 +452,14 @@ impl SpatialRef {
         }
     }
 
-    /// Get spheroid semi major axis. 
+    /// Get spheroid semi major axis.
     ///
     /// Returns [`Err`] variant in case of non [`OGRERR_NONE`](https://gdal.org/api/vector_c_api.html#c.OGRERR_NONE) error result from the C library.
-    /// 
+    ///
     /// See: [`OSRGetSemiMajor`](https://gdal.org/api/ogr_srs_api.html#_CPPv415OSRGetSemiMajor20OGRSpatialReferenceHP6OGRErr)
     pub fn semi_major(&self) -> Result<f64> {
         let mut rv = OGRErr::OGRERR_NONE;
-        let a = unsafe  { gdal_sys::OSRGetSemiMajor(self.0, &mut rv as *mut u32) };
+        let a = unsafe { gdal_sys::OSRGetSemiMajor(self.0, &mut rv as *mut u32) };
         if rv != OGRErr::OGRERR_NONE {
             return Err(GdalError::OgrError {
                 err: rv,
@@ -469,14 +469,14 @@ impl SpatialRef {
         Ok(a)
     }
 
-    /// Get spheroid semi minor axis. 
+    /// Get spheroid semi minor axis.
     ///
     /// Returns [`Err`] variant in case of non [`OGRERR_NONE`](https://gdal.org/api/vector_c_api.html#c.OGRERR_NONE) error result from the C library.
-    /// 
+    ///
     /// See: [`OSRGetSemiMinor`](https://gdal.org/api/ogr_srs_api.html#_CPPv415OSRGetSemiMinor20OGRSpatialReferenceHP6OGRErr)
     pub fn semi_minor(&self) -> Result<f64> {
         let mut rv = OGRErr::OGRERR_NONE;
-        let b = unsafe  { gdal_sys::OSRGetSemiMinor(self.0, &mut rv as *mut u32) };
+        let b = unsafe { gdal_sys::OSRGetSemiMinor(self.0, &mut rv as *mut u32) };
         if rv != OGRErr::OGRERR_NONE {
             return Err(GdalError::OgrError {
                 err: rv,
@@ -486,14 +486,14 @@ impl SpatialRef {
         Ok(b)
     }
 
-    /// Set a projection parameter value. 
+    /// Set a projection parameter value.
     ///
     /// Returns [`Err`] variant in case of non [`OGRERR_NONE`](https://gdal.org/api/vector_c_api.html#c.OGRERR_NONE) result from the C library.
-    /// 
+    ///
     /// See: [`OSRSetProjParm`](https://gdal.org/api/ogr_srs_api.html#_CPPv414OSRSetProjParm20OGRSpatialReferenceHPKcd)
     pub fn set_proj_param(&mut self, name: &str, value: f64) -> Result<()> {
         let c_name = CString::new(name)?;
-        let rv =  unsafe { gdal_sys::OSRSetProjParm(self.0, c_name.as_ptr(), value) };
+        let rv = unsafe { gdal_sys::OSRSetProjParm(self.0, c_name.as_ptr(), value) };
         if rv != OGRErr::OGRERR_NONE {
             return Err(GdalError::OgrError {
                 err: rv,
@@ -503,15 +503,16 @@ impl SpatialRef {
         Ok(())
     }
 
-    /// Fetch a projection parameter value. 
+    /// Fetch a projection parameter value.
     ///
     /// Returns [`Err`] variant in case of non [`OGRERR_NONE`](https://gdal.org/api/vector_c_api.html#c.OGRERR_NONE) error result from the C library.
-    /// 
+    ///
     /// See: [`OSRGetProjParm`](https://gdal.org/api/ogr_srs_api.html#_CPPv414OSRGetProjParm20OGRSpatialReferenceHPKcdP6OGRErr)
     pub fn get_proj_param(&self, name: &str) -> Result<f64> {
         let c_name = CString::new(name)?;
         let mut rv = OGRErr::OGRERR_NONE;
-        let p = unsafe { gdal_sys::OSRGetProjParm(self.0, c_name.as_ptr(), 0.0, &mut rv as *mut u32) };
+        let p =
+            unsafe { gdal_sys::OSRGetProjParm(self.0, c_name.as_ptr(), 0.0, &mut rv as *mut u32) };
         if rv != OGRErr::OGRERR_NONE {
             return Err(GdalError::OgrError {
                 err: rv,
@@ -521,28 +522,32 @@ impl SpatialRef {
         Ok(p)
     }
 
-    /// Fetch a projection parameter value. 
+    /// Fetch a projection parameter value.
     ///
     /// In case of any error returns default value.
     /// This associated function is variant of [`SpatialRef::get_proj_param`] which incorporates default fallback mechanism from the C library.
-    /// 
+    ///
     /// See: [`OSRGetProjParm`](https://gdal.org/api/ogr_srs_api.html#_CPPv414OSRGetProjParm20OGRSpatialReferenceHPKcdP6OGRErr)
     pub fn get_proj_param_or_default(&self, name: &str, default: f64) -> f64 {
         match CString::new(name) {
-            Ok(c_name) => unsafe { gdal_sys::OSRGetProjParm(self.0, c_name.as_ptr(), default, ptr::null_mut()) },
-            Err(_) => default
+            Ok(c_name) => unsafe {
+                gdal_sys::OSRGetProjParm(self.0, c_name.as_ptr(), default, ptr::null_mut())
+            },
+            Err(_) => default,
         }
     }
 
-    /// Set attribute value in spatial reference. 
+    /// Set attribute value in spatial reference.
     ///
     /// It returns [`Err`] variant in case of non [`OGRERR_NONE`](https://gdal.org/api/vector_c_api.html#c.OGRERR_NONE) result from the C library.
-    /// 
+    ///
     /// See: [`OSRSetAttrValue`](https://gdal.org/api/ogr_srs_api.html#_CPPv415OSRSetAttrValue20OGRSpatialReferenceHPKcPKc)
     pub fn set_attr_value(&self, node_path: &str, new_value: &str) -> Result<()> {
         let c_node_path = CString::new(node_path)?;
         let c_new_value = CString::new(new_value)?;
-        let rv = unsafe { gdal_sys::OSRSetAttrValue(self.0, c_node_path.as_ptr(), c_new_value.as_ptr()) };
+        let rv = unsafe {
+            gdal_sys::OSRSetAttrValue(self.0, c_node_path.as_ptr(), c_new_value.as_ptr())
+        };
         if rv != OGRErr::OGRERR_NONE {
             return Err(GdalError::OgrError {
                 err: rv,
@@ -552,35 +557,35 @@ impl SpatialRef {
         Ok(())
     }
 
-    /// Fetch indicated attribute of named node. 
+    /// Fetch indicated attribute of named node.
     ///
     /// Returns [`Err`] variant if the C library return `nullptr`.
-    /// 
+    ///
     /// See: [`OSRGetProjParm`](https://gdal.org/api/ogr_srs_api.html#_CPPv415OSRGetAttrValue20OGRSpatialReferenceHPKci)
     pub fn get_attr_value(&self, node_path: &str, child: u32) -> Result<String> {
         let c_node_path = CString::new(node_path)?;
-        let c_ptr_value = unsafe { gdal_sys::OSRGetAttrValue(self.0, c_node_path.as_ptr(), child as libc::c_int)  };
+        let c_ptr_value = unsafe {
+            gdal_sys::OSRGetAttrValue(self.0, c_node_path.as_ptr(), child as libc::c_int)
+        };
         if c_ptr_value.is_null() {
             return Err(_last_null_pointer_err("OSRGetAttrValue"));
         }
         Ok(_string(c_ptr_value))
     }
 
-
-    /// Make a duplicate of the GEOGCS node of this [`SpatialRef`]. 
+    /// Make a duplicate of the GEOGCS node of this [`SpatialRef`].
     ///
     /// Returns [`Err`] variant if the C library returns `nullptr`.
-    /// 
+    ///
     /// Seff: [OSRCloneGeogCS](https://gdal.org/api/ogr_srs_api.html#_CPPv414OSRCloneGeogCS20OGRSpatialReferenceH)
     pub fn geog_cs(&self) -> Result<SpatialRef> {
-        let raw_ret = unsafe {gdal_sys::OSRCloneGeogCS(self.0)};
+        let raw_ret = unsafe { gdal_sys::OSRCloneGeogCS(self.0) };
         if raw_ret.is_null() {
             return Err(_last_null_pointer_err("OSRCloneGeogCS"));
         }
 
         Ok(SpatialRef(raw_ret))
     }
-
 }
 
 #[derive(Debug, Clone)]
@@ -842,10 +847,12 @@ mod tests {
         assert_almost_eq(semi_minor, 6_356_752.31);
     }
 
-
     #[test]
     fn proj_params() {
-        let spatial_ref = SpatialRef::from_proj4("+proj=geos +lon_0=42 +h=35785831 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs").unwrap();
+        let spatial_ref = SpatialRef::from_proj4(
+            "+proj=geos +lon_0=42 +h=35785831 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs",
+        )
+        .unwrap();
 
         let central_meridian = spatial_ref.get_proj_param("central_meridian").unwrap();
         assert_almost_eq(central_meridian, 42.0);
@@ -859,14 +866,18 @@ mod tests {
 
     #[test]
     fn setting_proj_param() {
-        let mut spatial_ref = SpatialRef::from_proj4("+proj=geos +lon_0=42 +h=35785831 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs").unwrap();
+        let mut spatial_ref = SpatialRef::from_proj4(
+            "+proj=geos +lon_0=42 +h=35785831 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs",
+        )
+        .unwrap();
 
-        spatial_ref.set_proj_param("central_meridian", -15.0).unwrap();
+        spatial_ref
+            .set_proj_param("central_meridian", -15.0)
+            .unwrap();
 
         let central_meridian = spatial_ref.get_proj_param("central_meridian").unwrap();
 
         assert_almost_eq(central_meridian, -15.0);
-
     }
 
     #[test]
@@ -897,7 +908,10 @@ mod tests {
 
     #[test]
     fn geog_cs() {
-        let spatial_ref = SpatialRef::from_proj4("+proj=geos +lon_0=42 +h=35785831 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs").unwrap();
+        let spatial_ref = SpatialRef::from_proj4(
+            "+proj=geos +lon_0=42 +h=35785831 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs",
+        )
+        .unwrap();
         let expected_geog_cs = SpatialRef::from_wkt(
             r#"
                 GEOGCS["unknown",
@@ -909,15 +923,18 @@ mod tests {
                     AXIS["Longitude",EAST],
                     AXIS["Latitude",NORTH]
                 ]
-            "#
-        ).unwrap();
-        
+            "#,
+        )
+        .unwrap();
+
         let geog_cs = spatial_ref.geog_cs().unwrap();
 
         assert_eq!(
-            geog_cs, expected_geog_cs,
-            "GEOGCS of geos spatial reference: \"{:?}\"\n does not equal to expected one: {:?}", geog_cs.to_wkt(),  expected_geog_cs.to_wkt()
+            geog_cs,
+            expected_geog_cs,
+            "GEOGCS of geos spatial reference: \"{:?}\"\n does not equal to expected one: {:?}",
+            geog_cs.to_wkt(),
+            expected_geog_cs.to_wkt()
         );
     }
-
 }
