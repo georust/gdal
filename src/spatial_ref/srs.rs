@@ -452,9 +452,9 @@ impl SpatialRef {
         }
     }
 
-    /// Get spheroid semi major axis.
+    /// Get spheroid semi-major axis.
     ///
-    /// Returns [`Err`] variant in case of non [`OGRERR_NONE`](https://gdal.org/api/vector_c_api.html#c.OGRERR_NONE) error result from the C library.
+    /// Returns [`Err`] variant in case the C library returns an error code different from [`OGRERR_NONE`](https://gdal.org/api/vector_c_api.html#c.OGRERR_NONE).
     ///
     /// See: [`OSRGetSemiMajor`](https://gdal.org/api/ogr_srs_api.html#_CPPv415OSRGetSemiMajor20OGRSpatialReferenceHP6OGRErr)
     pub fn semi_major(&self) -> Result<f64> {
@@ -469,9 +469,9 @@ impl SpatialRef {
         Ok(a)
     }
 
-    /// Get spheroid semi minor axis.
+    /// Get spheroid semi-minor axis.
     ///
-    /// Returns [`Err`] variant in case of non [`OGRERR_NONE`](https://gdal.org/api/vector_c_api.html#c.OGRERR_NONE) error result from the C library.
+    /// Returns [`Err`] variant in case the C library returns an error code different from [`OGRERR_NONE`](https://gdal.org/api/vector_c_api.html#c.OGRERR_NONE).
     ///
     /// See: [`OSRGetSemiMinor`](https://gdal.org/api/ogr_srs_api.html#_CPPv415OSRGetSemiMinor20OGRSpatialReferenceHP6OGRErr)
     pub fn semi_minor(&self) -> Result<f64> {
@@ -488,7 +488,7 @@ impl SpatialRef {
 
     /// Set a projection parameter value.
     ///
-    /// Returns [`Err`] variant in case of non [`OGRERR_NONE`](https://gdal.org/api/vector_c_api.html#c.OGRERR_NONE) result from the C library.
+    /// Returns [`Err`] variant in case the C library returns an error code different from [`OGRERR_NONE`](https://gdal.org/api/vector_c_api.html#c.OGRERR_NONE).
     ///
     /// See: [`OSRSetProjParm`](https://gdal.org/api/ogr_srs_api.html#_CPPv414OSRSetProjParm20OGRSpatialReferenceHPKcd)
     pub fn set_proj_param(&mut self, name: &str, value: f64) -> Result<()> {
@@ -505,7 +505,7 @@ impl SpatialRef {
 
     /// Fetch a projection parameter value.
     ///
-    /// Returns [`Err`] variant in case of non [`OGRERR_NONE`](https://gdal.org/api/vector_c_api.html#c.OGRERR_NONE) error result from the C library.
+    /// Returns [`Err`] variant in case the C library returns an error code different from [`OGRERR_NONE`](https://gdal.org/api/vector_c_api.html#c.OGRERR_NONE).
     ///
     /// See: [`OSRGetProjParm`](https://gdal.org/api/ogr_srs_api.html#_CPPv414OSRGetProjParm20OGRSpatialReferenceHPKcdP6OGRErr)
     pub fn get_proj_param(&self, name: &str) -> Result<f64> {
@@ -539,7 +539,7 @@ impl SpatialRef {
 
     /// Set attribute value in spatial reference.
     ///
-    /// It returns [`Err`] variant in case of non [`OGRERR_NONE`](https://gdal.org/api/vector_c_api.html#c.OGRERR_NONE) result from the C library.
+    /// Returns [`Err`] variant in case the C library returns an error code different from [`OGRERR_NONE`](https://gdal.org/api/vector_c_api.html#c.OGRERR_NONE).
     ///
     /// See: [`OSRSetAttrValue`](https://gdal.org/api/ogr_srs_api.html#_CPPv415OSRSetAttrValue20OGRSpatialReferenceHPKcPKc)
     pub fn set_attr_value(&self, node_path: &str, new_value: &str) -> Result<()> {
