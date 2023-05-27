@@ -562,7 +562,7 @@ impl SpatialRef {
     /// Returns [`Err`] variant if the C library return `nullptr`.
     ///
     /// See: [`OSRGetProjParm`](https://gdal.org/api/ogr_srs_api.html#_CPPv415OSRGetAttrValue20OGRSpatialReferenceHPKci)
-    pub fn get_attr_value(&self, node_path: &str, child: u32) -> Result<String> {
+    pub fn get_attr_value(&self, node_path: &str, child: usize) -> Result<String> {
         let c_node_path = CString::new(node_path)?;
         let c_ptr_value = unsafe {
             gdal_sys::OSRGetAttrValue(self.0, c_node_path.as_ptr(), child as libc::c_int)
