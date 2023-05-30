@@ -541,7 +541,10 @@ impl SpatialRef {
             Some(value) => Some(CString::new(value)?),
             None => None,
         };
-        let value_ptr = c_new_value.map(|s| s.as_ptr()).unwrap_or(ptr::null());
+        let value_ptr = c_new_value
+            .as_ref()
+            .map(|s| s.as_ptr())
+            .unwrap_or(ptr::null());
         let rv = unsafe { gdal_sys::OSRSetAttrValue(self.0, c_node_path.as_ptr(), value_ptr) };
         if rv != OGRErr::OGRERR_NONE {
             return Err(GdalError::OgrError {
@@ -896,11 +899,28 @@ mod tests {
 
     #[test]
     fn attr_values() {
-        let spatial_ref = SpatialRef::from_epsg(4326).unwrap();
-        let geog_cs = spatial_ref.get_attr_value("GEOGCS", 0).unwrap().unwrap();
-        assert_eq!(geog_cs, "WGS 84");
-
-        //TODO: write some meaningful test for "set_attr_value".
+        let mut spatial_ref = SpatialRef::from_epsg(4326).unwrap();
+        assert_eq!(
+            spatial_ref.get_attr_value("GEOGCS", 0).unwrap().unwrap(),
+            "WGS 84"
+        );
+        assert_eq!(
+            spatial_ref
+                .get_attr_value("GEOGCS|UNIT", 0)
+                .unwrap()
+                .unwrap(),
+            "degree"
+        );
+        spatial_ref
+            .set_attr_value("GEOGCS|UNIT", Some("meter"))
+            .unwrap();
+        assert_eq!(
+            spatial_ref
+                .get_attr_value("GEOGCS|UNIT", 0)
+                .unwrap()
+                .unwrap(),
+            "meter"
+        );
     }
 
     #[test]
