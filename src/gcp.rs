@@ -155,6 +155,11 @@ impl Dataset {
     ///
     /// See: [`GDALDataset::SetGCPs(int, const GDAL_GCP *, const OGRSpatialReference *)`](https://gdal.org/api/gdaldataset_cpp.html#_CPPv4N11GDALDataset7SetGCPsEiPK8GDAL_GCPPK19OGRSpatialReference)
     pub fn set_gcps(&self, gcps: Vec<Gcp>, spatial_ref: &SpatialRef) -> Result<()> {
+        assert!(
+            gcps.len() <= libc::c_int::MAX as usize,
+            "only up to `INT_MAX` GCPs are supported"
+        );
+
         struct CGcp {
             id: CString,
             info: CString,
@@ -196,7 +201,7 @@ impl Dataset {
         let rv = unsafe {
             gdal_sys::GDALSetGCPs2(
                 self.c_dataset(),
-                gdal_gcps.len() as i32,
+                gdal_gcps.len() as libc::c_int,
                 gdal_gcps.as_ptr(),
                 spatial_ref.to_c_hsrs() as *mut _,
             )
