@@ -897,7 +897,6 @@ mod tests {
     #[test]
     fn attr_values() {
         let spatial_ref = SpatialRef::from_epsg(4326).unwrap();
-        println!("{}", spatial_ref.to_wkt().unwrap());
         let geog_cs = spatial_ref.get_attr_value("GEOGCS", 0).unwrap().unwrap();
         assert_eq!(geog_cs, "WGS 84");
 
