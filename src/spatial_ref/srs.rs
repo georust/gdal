@@ -564,6 +564,11 @@ impl SpatialRef {
     ///
     /// See: [`OSRGetProjParm`](https://gdal.org/api/ogr_srs_api.html#_CPPv415OSRGetAttrValue20OGRSpatialReferenceHPKci)
     pub fn get_attr_value(&self, node_path: &str, child: usize) -> Result<Option<String>> {
+        assert!(
+            child <= libc::c_int::MAX as usize,
+            "`child` must fit in `int`"
+        );
+
         let c_node_path = CString::new(node_path)?;
         let c_ptr_value = unsafe {
             gdal_sys::OSRGetAttrValue(self.0, c_node_path.as_ptr(), child as libc::c_int)
