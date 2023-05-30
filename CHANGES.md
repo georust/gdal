@@ -1,6 +1,11 @@
 # Changes
 
 ## Unreleased
+- Added `Dataset::gcp_projection`, `Dataset::gcps`, `Dataset::set_gcps` APIs
+
+  - <https://github.com/georust/gdal/pull/404>
+
+
 - Added pre-built bindings for GDAL 3.7
 
   - <https://github.com/georust/gdal/pull/401>
