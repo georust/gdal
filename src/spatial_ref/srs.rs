@@ -454,7 +454,7 @@ impl SpatialRef {
 
     /// Get spheroid semi-major axis.
     ///
-    /// Returns [`Err`] variant in case the C library returns an error code different from [`OGRERR_NONE`](https://gdal.org/api/vector_c_api.html#c.OGRERR_NONE).
+    /// Returns an error if the semi-major axis can't be found
     ///
     /// See: [`OSRGetSemiMajor`](https://gdal.org/api/ogr_srs_api.html#_CPPv415OSRGetSemiMajor20OGRSpatialReferenceHP6OGRErr)
     pub fn semi_major(&self) -> Result<f64> {
@@ -471,7 +471,7 @@ impl SpatialRef {
 
     /// Get spheroid semi-minor axis.
     ///
-    /// Returns [`Err`] variant in case the C library returns an error code different from [`OGRERR_NONE`](https://gdal.org/api/vector_c_api.html#c.OGRERR_NONE).
+    /// Returns an error if the semi-minor axis can't be found
     ///
     /// See: [`OSRGetSemiMinor`](https://gdal.org/api/ogr_srs_api.html#_CPPv415OSRGetSemiMinor20OGRSpatialReferenceHP6OGRErr)
     pub fn semi_minor(&self) -> Result<f64> {
@@ -488,7 +488,7 @@ impl SpatialRef {
 
     /// Set a projection parameter value.
     ///
-    /// Returns [`Err`] variant in case the C library returns an error code different from [`OGRERR_NONE`](https://gdal.org/api/vector_c_api.html#c.OGRERR_NONE).
+    /// Returns an error if there the `PROJCS` node is missing.
     ///
     /// See: [`OSRSetProjParm`](https://gdal.org/api/ogr_srs_api.html#_CPPv414OSRSetProjParm20OGRSpatialReferenceHPKcd)
     pub fn set_proj_param(&mut self, name: &str, value: f64) -> Result<()> {
@@ -559,7 +559,7 @@ impl SpatialRef {
 
     /// Fetch indicated attribute of named node.
     ///
-    /// Returns [`Err`] variant if the C library return `nullptr`.
+    /// Returns an error if a specified node is missing.
     ///
     /// See: [`OSRGetProjParm`](https://gdal.org/api/ogr_srs_api.html#_CPPv415OSRGetAttrValue20OGRSpatialReferenceHPKci)
     pub fn get_attr_value(&self, node_path: &str, child: usize) -> Result<String> {
@@ -573,11 +573,11 @@ impl SpatialRef {
         Ok(_string(c_ptr_value))
     }
 
-    /// Make a duplicate of the GEOGCS node of this [`SpatialRef`].
+    /// Make a duplicate of the `GEOGCS` node of this [`SpatialRef`].
     ///
-    /// Returns [`Err`] variant if the C library returns `nullptr`.
+    /// Returns an error if the `GEOGCS` node is missing.
     ///
-    /// Seff: [OSRCloneGeogCS](https://gdal.org/api/ogr_srs_api.html#_CPPv414OSRCloneGeogCS20OGRSpatialReferenceH)
+    /// See: [OSRCloneGeogCS](https://gdal.org/api/ogr_srs_api.html#_CPPv414OSRCloneGeogCS20OGRSpatialReferenceH)
     pub fn geog_cs(&self) -> Result<SpatialRef> {
         let raw_ret = unsafe { gdal_sys::OSRCloneGeogCS(self.0) };
         if raw_ret.is_null() {
