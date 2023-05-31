@@ -1,14 +1,17 @@
 # Changes
 
 ## Unreleased
+- Added `Dataset::close`, `Dataset::flush_cache` is now fallible
+
+  - <https://github.com/georust/gdal/pull/410>
+
 - Added `Dataset::gcp_projection`, `Dataset::gcps`, `Dataset::set_gcps` APIs
 
   - <https://github.com/georust/gdal/pull/404>
 
-
 - Added pre-built bindings for GDAL 3.7
 
-  - <https://github.com/georust/gdal/pull/401>
+  - <https://github.com/georust/gdal/pull/410>
 
 - Added `SpatialRef::to_projjson`
 
