@@ -562,6 +562,8 @@ impl SpatialRef {
     /// * `Ok(None)` - if node or attribute are not found (C library will return `nullptr`) or attribute contains no value,
     /// * `Err(_)` - if there is a string conversion error.
     ///
+    /// **Note:** this fuction panics when child > [libc::c_int::MAX].
+    ///
     /// See: [`OSRGetProjParm`](https://gdal.org/api/ogr_srs_api.html#_CPPv415OSRGetAttrValue20OGRSpatialReferenceHPKci)
     pub fn get_attr_value(&self, node_path: &str, child: usize) -> Result<Option<String>> {
         assert!(
