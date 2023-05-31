@@ -1,7 +1,7 @@
 # Changes
 
 ## Unreleased
-- `Dataset::flush_cache` is now fallible
+- Added `Dataset::close`, `Dataset::flush_cache` is now fallible
 
   - <https://github.com/georust/gdal/pull/410>
 
