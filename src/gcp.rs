@@ -154,6 +154,10 @@ impl Dataset {
     /// setting their coordinate system.
     ///
     /// See: [`GDALDataset::SetGCPs(int, const GDAL_GCP *, const OGRSpatialReference *)`](https://gdal.org/api/gdaldataset_cpp.html#_CPPv4N11GDALDataset7SetGCPsEiPK8GDAL_GCPPK19OGRSpatialReference)
+    ///
+    /// # Panics
+    ///
+    /// Panics if `gcps` has more than [`libc::c_int::MAX`] elements.
     pub fn set_gcps(&self, gcps: Vec<Gcp>, spatial_ref: &SpatialRef) -> Result<()> {
         assert!(
             gcps.len() <= libc::c_int::MAX as usize,
