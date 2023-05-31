@@ -405,8 +405,23 @@ impl Dataset {
     /// Flush all write cached data to disk.
     ///
     /// See [`GDALFlushCache`].
-    pub fn flush_cache(&mut self) {
-        unsafe { GDALFlushCache(self.c_dataset) }
+    ///
+    /// Note: on GDAL versions older than 3.7, this function always succeeds.
+    pub fn flush_cache(&mut self) -> Result<()> {
+        #[cfg(any(all(major_ge_3, minor_ge_7)))]
+        {
+            let rv = unsafe { GDALFlushCache(self.c_dataset) };
+            if rv != CPLErr::CE_None {
+                return Err(_last_cpl_err(rv));
+            }
+        }
+        #[cfg(not(any(all(major_ge_3, minor_ge_7))))]
+        {
+            unsafe {
+                GDALFlushCache(self.c_dataset);
+            }
+        }
+        Ok(())
     }
 
     /// Creates a new Dataset by wrapping a C pointer
