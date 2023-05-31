@@ -20,9 +20,9 @@ use crate::{
 };
 
 use gdal_sys::{
-    self, CPLErr, GDALAccess, GDALDatasetH, GDALMajorObjectH, OGRErr, OGRLayerH, OGRwkbGeometryType,
+    self, CPLErr, GDALAccess, GDALDatasetH, GDALMajorObjectH, OGRErr, OGRGeometryH, OGRLayerH,
+    OGRwkbGeometryType,
 };
-use gdal_sys::{GDALFlushCache, OGRGeometryH};
 use libc::{c_double, c_int, c_uint};
 
 #[cfg(all(major_ge_3, minor_ge_1))]
@@ -405,8 +405,45 @@ impl Dataset {
     /// Flush all write cached data to disk.
     ///
     /// See [`GDALFlushCache`].
-    pub fn flush_cache(&mut self) {
-        unsafe { GDALFlushCache(self.c_dataset) }
+    ///
+    /// Note: on GDAL versions older than 3.7, this function always succeeds.
+    pub fn flush_cache(&mut self) -> Result<()> {
+        #[cfg(any(all(major_ge_3, minor_ge_7), major_ge_4))]
+        {
+            let rv = unsafe { gdal_sys::GDALFlushCache(self.c_dataset) };
+            if rv != CPLErr::CE_None {
+                return Err(_last_cpl_err(rv));
+            }
+        }
+        #[cfg(not(any(all(major_is_3, minor_ge_7), major_ge_4)))]
+        {
+            unsafe {
+                gdal_sys::GDALFlushCache(self.c_dataset);
+            }
+        }
+        Ok(())
+    }
+
+    /// Close the dataset.
+    ///
+    /// See [`GDALClose`].
+    ///
+    /// Note: on GDAL versions older than 3.7, this function always succeeds.
+    pub fn close(&mut self) -> Result<()> {
+        #[cfg(any(all(major_ge_3, minor_ge_7), major_ge_4))]
+        {
+            let rv = unsafe { gdal_sys::GDALClose(self.c_dataset) };
+            if rv != CPLErr::CE_None {
+                return Err(_last_cpl_err(rv));
+            }
+        }
+        #[cfg(not(any(all(major_is_3, minor_ge_7), major_ge_4)))]
+        {
+            unsafe {
+                gdal_sys::GDALClose(self.c_dataset);
+            }
+        }
+        Ok(())
     }
 
     /// Creates a new Dataset by wrapping a C pointer

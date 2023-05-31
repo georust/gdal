@@ -106,6 +106,7 @@ pub mod cpl;
 mod dataset;
 mod driver;
 pub mod errors;
+mod gcp;
 mod gdal_major_object;
 mod metadata;
 pub mod programs;
