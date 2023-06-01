@@ -369,7 +369,7 @@ impl Deref for GeometryRef<'_> {
     }
 }
 
-impl DerefMut for GeometryRef<'_>{
+impl DerefMut for GeometryRef<'_> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.geom
     }
@@ -535,7 +535,7 @@ mod tests {
     }
 
     #[test]
-    pub fn test_geometry_modify(){
+    pub fn test_geometry_modify() {
         let polygon = Geometry::from_wkt("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))").unwrap();
         for i in 0..polygon.geometry_count() {
             let mut ring = polygon.get_geometry(i);
@@ -544,6 +544,9 @@ mod tests {
                 ring.set_point_2d(j, (x * 10.0, y * 10.0));
             }
         }
-        assert_eq!("POLYGON ((300 100,400 400,200 400,100 200,300 100))", polygon.wkt().unwrap());
+        assert_eq!(
+            "POLYGON ((300 100,400 400,200 400,100 200,300 100))",
+            polygon.wkt().unwrap()
+        );
     }
 }
