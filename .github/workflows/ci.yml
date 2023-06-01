@@ -57,13 +57,13 @@ jobs:
       - name: Check with Clippy (--all-features)
         run: cargo clippy --all-targets --all-features -- -D warnings
       - name: Build
-        run: cargo build --verbose
+        run: cargo build
       - name: Run tests
-        run: cargo test --verbose
+        run: cargo test
       - name: Build
-        run: cargo build --all-features --verbose
+        run: cargo build --all-features
       - name: Run tests
-        run: cargo test --all-features --verbose
+        run: cargo test --all-features
 
   ubuntu_lts:
     name: "ci ubuntu-lts"
@@ -100,10 +100,10 @@ jobs:
       - name: Check with Clippy (--all-features)
         run: cargo clippy --all-targets --all-features -- -D warnings
       - name: Build
-        run: cargo build --verbose
+        run: cargo build
       - name: Run tests
-        run: cargo test --verbose
+        run: cargo test
       - name: Build
-        run: cargo build --all-features --verbose
+        run: cargo build --all-features
       - name: Run tests
-        run: cargo test --all-features --verbose
+        run: cargo test --all-features
