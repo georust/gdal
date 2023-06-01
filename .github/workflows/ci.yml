@@ -16,7 +16,7 @@ jobs:
     name: "ci gdal-36"
     runs-on: ubuntu-latest
     container:
-      image: osgeo/gdal:ubuntu-full-3.6.0
+      image: ghcr.io/osgeo/gdal:ubuntu-full-3.6.0
 
     strategy:
       matrix:
@@ -56,7 +56,7 @@ jobs:
     name: "ci gdal-35"
     runs-on: ubuntu-latest
     container:
-      image: osgeo/gdal:ubuntu-full-3.5.0
+      image: ghcr.io/osgeo/gdal:ubuntu-full-3.5.0
 
     strategy:
       matrix:
@@ -96,7 +96,7 @@ jobs:
     name: "ci gdal-34"
     runs-on: ubuntu-latest
     container:
-      image: osgeo/gdal:ubuntu-full-3.4.0
+      image: ghcr.io/osgeo/gdal:ubuntu-full-3.4.0
 
     strategy:
       matrix:
@@ -136,7 +136,7 @@ jobs:
     name: "ci gdal-33"
     runs-on: ubuntu-latest
     container:
-      image: osgeo/gdal:ubuntu-full-3.3.0
+      image: ghcr.io/osgeo/gdal:ubuntu-full-3.3.0
 
     strategy:
       matrix:
@@ -176,7 +176,7 @@ jobs:
     name: "ci gdal-32"
     runs-on: ubuntu-latest
     container:
-      image: osgeo/gdal:ubuntu-full-3.2.0
+      image: ghcr.io/osgeo/gdal:ubuntu-full-3.2.0
 
     strategy:
       matrix:
