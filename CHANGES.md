@@ -5,6 +5,10 @@
 
   - <https://github.com/georust/gdal/pull/410>
 
+- Added `SpatialRef::semi_major`, `semi_minor`, `set_proj_param`, `get_proj_param`, `get_proj_param_or_default`, `set_attr_value`, `get_attr_value` and `geog_cs`.
+
+  - <https://github.com/georust/gdal/pull/406>
+
 - Added `Dataset::gcp_projection`, `Dataset::gcps`, `Dataset::set_gcps` APIs
 
   - <https://github.com/georust/gdal/pull/404>
