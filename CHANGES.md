@@ -1,7 +1,11 @@
 # Changes
 
 ## Unreleased
-- Added `Dataset::close`, `Dataset::flush_cache` is now fallible
+- Added `GDT_Int8` support
+
+  - <https://github.com/georust/gdal/pull/412>
+
+- Added `Dataset::close`, changed `Dataset::flush_cache` to be fallible
 
   - <https://github.com/georust/gdal/pull/410>
 

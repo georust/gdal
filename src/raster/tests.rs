@@ -31,16 +31,6 @@ fn test_get_raster_size() {
 }
 
 #[test]
-fn test_get_raster_block_size() {
-    let band_index = 1;
-    let dataset = Dataset::open(fixture("tinymarble.png")).unwrap();
-    let rasterband = dataset.rasterband(band_index).unwrap();
-    let (size_x, size_y) = rasterband.block_size();
-    assert_eq!(size_x, 100);
-    assert_eq!(size_y, 1);
-}
-
-#[test]
 fn test_get_raster_count() {
     let dataset = Dataset::open(fixture("tinymarble.png")).unwrap();
     let count = dataset.raster_count();
@@ -386,20 +376,10 @@ fn test_read_block_dimension() {
     let dataset = Dataset::open(fixture("tinymarble.png")).unwrap();
     let rasterband = dataset.rasterband(band_index).unwrap();
     let array = rasterband.read_block::<u8>(block).unwrap();
-    let dimension = (1, 100);
-    assert_eq!(array.dim(), dimension);
-}
-
-#[test]
-#[cfg(feature = "ndarray")]
-fn test_read_block_last_dimension() {
-    let band_index = 1;
-    let block = (0, 49);
-    let dataset = Dataset::open(fixture("tinymarble.png")).unwrap();
-    let rasterband = dataset.rasterband(band_index).unwrap();
-    let array = rasterband.read_block::<u8>(block).unwrap();
-    let dimension = (1, 100);
-    assert_eq!(array.dim(), dimension);
+    #[cfg(any(all(major_is_3, minor_ge_7), major_ge_4))]
+    assert_eq!(array.dim(), (50, 100));
+    #[cfg(not(any(all(major_is_3, minor_ge_7), major_ge_4)))]
+    assert_eq!(array.dim(), (1, 100));
 }
 
 #[test]
@@ -524,6 +504,9 @@ fn test_get_rasterband_block_size() {
     let dataset = Dataset::open(fixture("tinymarble.png")).unwrap();
     let rasterband = dataset.rasterband(1).unwrap();
     let size = rasterband.block_size();
+    #[cfg(any(all(major_ge_3, minor_ge_7), major_ge_4))]
+    assert_eq!(size, (100, 50));
+    #[cfg(not(any(all(major_is_3, minor_ge_7), major_ge_4)))]
     assert_eq!(size, (100, 1));
 }
 
@@ -532,8 +515,11 @@ fn test_get_rasterband_block_size() {
 fn test_get_rasterband_actual_block_size() {
     let dataset = Dataset::open(fixture("tinymarble.png")).unwrap();
     let rasterband = dataset.rasterband(1).unwrap();
-    let size = rasterband.actual_block_size((0, 40));
-    assert_eq!(size.unwrap(), (100, 1));
+    let size = rasterband.actual_block_size((0, 0)).unwrap();
+    #[cfg(any(all(major_ge_3, minor_ge_7), major_ge_4))]
+    assert_eq!(size, (100, 50));
+    #[cfg(not(any(all(major_is_3, minor_ge_7), major_ge_4)))]
+    assert_eq!(size, (100, 1));
 }
 
 #[test]
