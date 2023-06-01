@@ -12,15 +12,22 @@ env:
   RUST_BACKTRACE: 1
 
 jobs:
-  gdal_36:
-    name: "ci gdal-36"
-    runs-on: ubuntu-latest
-    container:
-      image: osgeo/gdal:ubuntu-full-3.6.0
-
+  gdal:
     strategy:
       matrix:
-        features: ["", "--all-features"]
+        version:
+          - 3.7
+          - 3.6
+          - 3.5
+          - 3.4
+          - 3.3
+          - 3.2
+
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/osgeo/gdal:ubuntu-full-${{ matrix.version }}.0
+
+    name: "ci gdal-${{ matrix.version }}"
 
     steps:
       - name: Checkout code
@@ -46,179 +53,21 @@ jobs:
       - name: Check with Rustfmt
         run: cargo fmt --all --check
       - name: Check with Clippy
-        run: cargo clippy --all-targets ${{ matrix.features }} -- -D warnings
+        run: cargo clippy --all-targets -- -D warnings
+      - name: Check with Clippy (--all-features)
+        run: cargo clippy --all-targets --all-features -- -D warnings
       - name: Build
-        run: cargo build ${{ matrix.features }} --verbose
+        run: cargo build
       - name: Run tests
-        run: cargo test ${{ matrix.features }} --verbose
-
-  gdal_35:
-    name: "ci gdal-35"
-    runs-on: ubuntu-latest
-    container:
-      image: osgeo/gdal:ubuntu-full-3.5.0
-
-    strategy:
-      matrix:
-        features: ["", "--all-features"]
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-      - name: Install build deps
-        shell: bash
-        run: |
-          apt-get update -y
-          apt-get install build-essential curl pkg-config libclang-dev -y
-          curl --proto '=https' --tlsv1.2 --retry 10 --retry-connrefused -fsSL "https://sh.rustup.rs" | sh -s -- --profile minimal --default-toolchain none -y
-          echo "${CARGO_HOME:-$HOME/.cargo}/bin" >> $GITHUB_PATH
-
-      - name: Setup building
-        run: |
-          export CC="clang-9"
-          export CXX="clang++-9"
-
-      - name: Install stable
-        run: |
-          rustup install --no-self-update --profile minimal stable
-          rustup component add rustfmt clippy
-
-      - name: Check with Rustfmt
-        run: cargo fmt --all --check
-      - name: Check with Clippy
-        run: cargo clippy --all-targets ${{ matrix.features }} -- -D warnings
+        run: cargo test
       - name: Build
-        run: cargo build ${{ matrix.features }} --verbose
+        run: cargo build --all-features
       - name: Run tests
-        run: cargo test ${{ matrix.features }} --verbose
-
-  gdal_34:
-    name: "ci gdal-34"
-    runs-on: ubuntu-latest
-    container:
-      image: osgeo/gdal:ubuntu-full-3.4.0
-
-    strategy:
-      matrix:
-        features: ["", "--all-features"]
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-      - name: Install build deps
-        shell: bash
-        run: |
-          apt-get update -y
-          apt-get install build-essential curl pkg-config libclang-dev -y
-          curl --proto '=https' --tlsv1.2 --retry 10 --retry-connrefused -fsSL "https://sh.rustup.rs" | sh -s -- --profile minimal --default-toolchain none -y
-          echo "${CARGO_HOME:-$HOME/.cargo}/bin" >> $GITHUB_PATH
-
-      - name: Setup building
-        run: |
-          export CC="clang-9"
-          export CXX="clang++-9"
-
-      - name: Install stable
-        run: |
-          rustup install --no-self-update --profile minimal stable
-          rustup component add rustfmt clippy
-
-      - name: Check with Rustfmt
-        run: cargo fmt --all --check
-      - name: Check with Clippy
-        run: cargo clippy --all-targets ${{ matrix.features }} -- -D warnings
-      - name: Build
-        run: cargo build ${{ matrix.features }} --verbose
-      - name: Run tests
-        run: cargo test ${{ matrix.features }} --verbose
-
-  gdal_33:
-    name: "ci gdal-33"
-    runs-on: ubuntu-latest
-    container:
-      image: osgeo/gdal:ubuntu-full-3.3.0
-
-    strategy:
-      matrix:
-        features: ["", "--all-features"]
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-      - name: Install build deps
-        shell: bash
-        run: |
-          apt-get update -y
-          apt-get install build-essential curl pkg-config libclang-dev -y
-          curl --proto '=https' --tlsv1.2 --retry 10 --retry-connrefused -fsSL "https://sh.rustup.rs" | sh -s -- --profile minimal --default-toolchain none -y
-          echo "${CARGO_HOME:-$HOME/.cargo}/bin" >> $GITHUB_PATH
-
-      - name: Setup building
-        run: |
-          export CC="clang-9"
-          export CXX="clang++-9"
-
-      - name: Install stable
-        run: |
-          rustup install --no-self-update --profile minimal stable
-          rustup component add rustfmt clippy
-
-      - name: Check with Rustfmt
-        run: cargo fmt --all --check
-      - name: Check with Clippy
-        run: cargo clippy --all-targets ${{ matrix.features }} -- -D warnings
-      - name: Build
-        run: cargo build ${{ matrix.features }} --verbose
-      - name: Run tests
-        run: cargo test ${{ matrix.features }} --verbose
-
-  gdal_32:
-    name: "ci gdal-32"
-    runs-on: ubuntu-latest
-    container:
-      image: osgeo/gdal:ubuntu-full-3.2.0
-
-    strategy:
-      matrix:
-        features: ["", "--all-features"]
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-      - name: Install build deps
-        shell: bash
-        run: |
-          apt-get update -y
-          apt-get install build-essential curl pkg-config libclang-dev -y
-          curl --proto '=https' --tlsv1.2 --retry 10 --retry-connrefused -fsSL "https://sh.rustup.rs" | sh -s -- --profile minimal --default-toolchain none -y
-          echo "${CARGO_HOME:-$HOME/.cargo}/bin" >> $GITHUB_PATH
-
-      - name: Setup building
-        run: |
-          export CC="clang-9"
-          export CXX="clang++-9"
-
-      - name: Install stable
-        run: |
-          rustup install --no-self-update --profile minimal stable
-          rustup component add rustfmt clippy
-
-      - name: Check with Rustfmt
-        run: cargo fmt --all --check
-      - name: Check with Clippy
-        run: cargo clippy --all-targets ${{ matrix.features }} -- -D warnings
-      - name: Build
-        run: cargo build ${{ matrix.features }} --verbose
-      - name: Run tests
-        run: cargo test ${{ matrix.features }} --verbose
+        run: cargo test --all-features
 
   ubuntu_lts:
     name: "ci ubuntu-lts"
     runs-on: "ubuntu-20.04"
-
-    strategy:
-      matrix:
-        features: ["", "--all-features"]
 
     steps:
       - name: Checkout code
@@ -247,8 +96,14 @@ jobs:
       - name: Check with Rustfmt
         run: cargo fmt --all --check
       - name: Check with Clippy
-        run: cargo clippy --all-targets ${{ matrix.features }} -- -D warnings
+        run: cargo clippy --all-targets -- -D warnings
+      - name: Check with Clippy (--all-features)
+        run: cargo clippy --all-targets --all-features -- -D warnings
       - name: Build
-        run: cargo build ${{ matrix.features }} --verbose
+        run: cargo build
       - name: Run tests
-        run: cargo test ${{ matrix.features }} --verbose
+        run: cargo test
+      - name: Build
+        run: cargo build --all-features
+      - name: Run tests
+        run: cargo test --all-features

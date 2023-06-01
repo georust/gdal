@@ -1,12 +1,9 @@
 status = [
-    "ci gdal-35",
-    "ci gdal-35 (--all-features)",
-    "ci gdal-34",
-    "ci gdal-34 (--all-features)",
-    "ci gdal-33",
-    "ci gdal-33 (--all-features)",
-    "ci gdal-32",
-    "ci gdal-32 (--all-features)",
+    "ci gdal-3.7",
+    "ci gdal-3.6",
+    "ci gdal-3.5",
+    "ci gdal-3.4",
+    "ci gdal-3.3",
+    "ci gdal-3.2",
     "ci ubuntu-lts",
-    "ci ubuntu-lts (--all-features)"
 ]
