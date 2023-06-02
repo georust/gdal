@@ -1,6 +1,10 @@
 # Changes
 
 ## Unreleased
+- **Breaking**: `RasterBand::actual_block_size` now takes two `usize` offsets instead of `(isize, isize)`
+
+ - <https://github.com/georust/gdal/pull/413>
+
 - Added `GDT_Int8` support
 
   - <https://github.com/georust/gdal/pull/412>

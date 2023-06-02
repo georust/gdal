@@ -568,19 +568,14 @@ impl SpatialRef {
     ///
     /// Panics if `child` is greater than [`libc::c_int::MAX`].
     pub fn get_attr_value(&self, node_path: &str, child: usize) -> Result<Option<String>> {
-        assert!(
-            child <= libc::c_int::MAX as usize,
-            "`child` must fit in `int`"
-        );
+        let child = child.try_into().expect("`child` must fit in `c_int`");
 
         let c_node_path = CString::new(node_path)?;
-        let c_ptr_value = unsafe {
-            gdal_sys::OSRGetAttrValue(self.0, c_node_path.as_ptr(), child as libc::c_int)
-        };
-        if c_ptr_value.is_null() {
+        let rv = unsafe { gdal_sys::OSRGetAttrValue(self.0, c_node_path.as_ptr(), child) };
+        if rv.is_null() {
             Ok(None)
         } else {
-            Ok(Some(_string(c_ptr_value)))
+            Ok(Some(_string(rv)))
         }
     }
 
