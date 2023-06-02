@@ -515,7 +515,7 @@ fn test_get_rasterband_block_size() {
 fn test_get_rasterband_actual_block_size() {
     let dataset = Dataset::open(fixture("tinymarble.png")).unwrap();
     let rasterband = dataset.rasterband(1).unwrap();
-    let size = rasterband.actual_block_size((0, 0)).unwrap();
+    let size = rasterband.actual_block_size(0, 0).unwrap();
     #[cfg(any(all(major_ge_3, minor_ge_7), major_ge_4))]
     assert_eq!(size, (100, 50));
     #[cfg(not(any(all(major_is_3, minor_ge_7), major_ge_4)))]

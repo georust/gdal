@@ -159,10 +159,10 @@ impl Dataset {
     ///
     /// Panics if `gcps` has more than [`libc::c_int::MAX`] elements.
     pub fn set_gcps(&self, gcps: Vec<Gcp>, spatial_ref: &SpatialRef) -> Result<()> {
-        assert!(
-            gcps.len() <= libc::c_int::MAX as usize,
-            "only up to `INT_MAX` GCPs are supported"
-        );
+        let len = gcps
+            .len()
+            .try_into()
+            .expect("only up to `INT_MAX` GCPs are supported");
 
         struct CGcp {
             id: CString,
@@ -205,7 +205,7 @@ impl Dataset {
         let rv = unsafe {
             gdal_sys::GDALSetGCPs2(
                 self.c_dataset(),
-                gdal_gcps.len() as libc::c_int,
+                len,
                 gdal_gcps.as_ptr(),
                 spatial_ref.to_c_hsrs() as *mut _,
             )
