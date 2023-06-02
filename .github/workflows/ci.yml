@@ -60,9 +60,9 @@ jobs:
         run: cargo build
       - name: Run tests
         run: cargo test
-      - name: Build
+      - name: Build (--all-features)
         run: cargo build --all-features
-      - name: Run tests
+      - name: Run tests (--all-features)
         run: cargo test --all-features
 
   ubuntu_lts:
@@ -103,7 +103,7 @@ jobs:
         run: cargo build
       - name: Run tests
         run: cargo test
-      - name: Build
+      - name: Build (--all-features)
         run: cargo build --all-features
-      - name: Run tests
+      - name: Run tests (--all-features)
         run: cargo test --all-features
