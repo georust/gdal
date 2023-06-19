@@ -4,6 +4,7 @@
 /gdal-sys/target
 /.idea
 /fixtures/tinymarble.tif.aux.xml
+/3rd
 
 # gtags
 GPATH

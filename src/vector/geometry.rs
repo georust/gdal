@@ -2,7 +2,7 @@ use std::cell::RefCell;
 use std::fmt::{self, Debug, Formatter};
 use std::marker::PhantomData;
 use std::mem::MaybeUninit;
-use std::ops::Deref;
+use std::ops::{Deref, DerefMut};
 
 use libc::{c_double, c_int};
 
@@ -369,6 +369,12 @@ impl Deref for GeometryRef<'_> {
     }
 }
 
+impl DerefMut for GeometryRef<'_> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.geom
+    }
+}
+
 impl Debug for GeometryRef<'_> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         Debug::fmt(&self.geom, f)
@@ -526,5 +532,21 @@ mod tests {
         assert_eq!(geometry_type_to_name(wkbLineString), "Line String");
         // We don't care what it returns when passed an invalid value, just that it doesn't crash.
         geometry_type_to_name(4372521);
+    }
+
+    #[test]
+    pub fn test_geometry_modify() {
+        let polygon = Geometry::from_wkt("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))").unwrap();
+        for i in 0..polygon.geometry_count() {
+            let mut ring = polygon.get_geometry(i);
+            for j in 0..ring.point_count() {
+                let (x, y, _) = ring.get_point(j as i32);
+                ring.set_point_2d(j, (x * 10.0, y * 10.0));
+            }
+        }
+        assert_eq!(
+            "POLYGON ((300 100,400 400,200 400,100 200,300 100))",
+            polygon.wkt().unwrap()
+        );
     }
 }
