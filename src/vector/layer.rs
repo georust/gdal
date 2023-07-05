@@ -137,6 +137,8 @@ impl<'a> Layer<'a> {
     }
 }
 
+unsafe impl Send for Layer<'_> {}
+
 /// Layer in a vector dataset
 ///
 /// ```

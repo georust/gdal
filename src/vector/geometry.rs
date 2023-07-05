@@ -381,6 +381,8 @@ impl Debug for GeometryRef<'_> {
     }
 }
 
+unsafe impl Send for GeometryRef<'_> {}
+
 #[cfg(test)]
 mod tests {
     use super::*;

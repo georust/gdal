@@ -594,6 +594,8 @@ impl SpatialRef {
     }
 }
 
+unsafe impl Send for SpatialRef {}
+
 #[derive(Debug, Clone)]
 /// Defines the bounding area of valid use for a [`SpatialRef`].
 ///
