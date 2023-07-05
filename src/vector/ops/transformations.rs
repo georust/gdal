@@ -255,7 +255,7 @@ mod tests {
         let triangles = Geometry::from_wkt(
             "POLYGON ((20 35,10 10,30 5,45 20,20 35),(30 20,20 15,20 25,30 20))",
         )?;
-        assert_eq!(donut.simplify_preserve_topology(100.0)?, triangles);
+        assert_eq!(donut.simplify_preserve_topology(20.0)?, triangles);
         Ok(())
     }
 
