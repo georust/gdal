@@ -429,7 +429,7 @@ impl Dataset {
     /// See [`GDALClose`].
     ///
     /// Note: on GDAL versions older than 3.7, this function always succeeds.
-    pub fn close(&mut self) -> Result<()> {
+    pub fn close(self) -> Result<()> {
         #[cfg(any(all(major_ge_3, minor_ge_7), major_ge_4))]
         {
             let rv = unsafe { gdal_sys::GDALClose(self.c_dataset) };
