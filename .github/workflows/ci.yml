@@ -16,17 +16,17 @@ jobs:
     strategy:
       matrix:
         version:
-          - 3.7
-          - 3.6
-          - 3.5
-          - 3.4
-          - 3.3
-          - 3.2
-          - 3.1
+          - 3.7.0
+          - 3.6.4
+          - 3.5.3
+          - 3.4.3
+          - 3.3.3
+          - 3.2.3
+          - 3.1.3 # latest is 3.1.4, but there's no published image
 
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/osgeo/gdal:ubuntu-full-${{ matrix.version }}.0
+      image: ghcr.io/osgeo/gdal:ubuntu-full-${{ matrix.version }}
 
     name: "ci gdal-${{ matrix.version }}"
 
@@ -36,6 +36,10 @@ jobs:
       - name: Install build deps
         shell: bash
         run: |
+          curl -LO https://apache.jfrog.io/artifactory/arrow/ubuntu/apache-arrow-apt-source-latest-$(grep -F VERSION_CODENAME /etc/os-release | cut -d= -f2).deb
+          apt-get update -y || true
+          apt-get install gnupg -y
+          dpkg -i apache-arrow-apt-source-latest-$(grep -F VERSION_CODENAME /etc/os-release | cut -d= -f2).deb
           apt-get update -y
           apt-get install build-essential curl pkg-config libclang-dev -y
           curl --proto '=https' --tlsv1.2 --retry 10 --retry-connrefused -fsSL "https://sh.rustup.rs" | sh -s -- --profile minimal --default-toolchain none -y
