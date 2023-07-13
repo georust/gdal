@@ -124,6 +124,7 @@ pub use dataset::{
     LayerOptions, Transaction,
 };
 pub use driver::{Driver, DriverManager};
+pub use gcp::{Gcp, GcpRef};
 #[cfg(any(major_ge_4, all(major_is_3, minor_ge_6)))]
 pub use gdal_sys::ArrowArrayStream;
 pub use metadata::{Metadata, MetadataEntry};

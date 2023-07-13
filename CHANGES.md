@@ -1,6 +1,10 @@
 # Changes
 
 ## Unreleased
+- `Gcp` and `GcpRef` are now public
+
+ - <https://github.com/georust/gdal/pull/421>
+
 - Fixed build error with GDAL 3.1
 
  - <https://github.com/georust/gdal/pull/416>
