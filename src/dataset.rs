@@ -174,6 +174,7 @@ impl GeoTransformEx for GeoTransform {
 #[derive(Debug)]
 pub struct Dataset {
     c_dataset: GDALDatasetH,
+    closed: bool,
 }
 
 // These are skipped by bindgen and manually updated.
@@ -399,7 +400,10 @@ impl Dataset {
         if c_dataset.is_null() {
             return Err(_last_null_pointer_err("GDALOpenEx"));
         }
-        Ok(Dataset { c_dataset })
+        Ok(Dataset {
+            c_dataset,
+            closed: false,
+        })
     }
 
     /// Flush all write cached data to disk.
@@ -428,8 +432,10 @@ impl Dataset {
     ///
     /// See [`GDALClose`].
     ///
-    /// Note: on GDAL versions older than 3.7, this function always succeeds.
-    pub fn close(self) -> Result<()> {
+    /// Note: on GDAL versions older than 3.7.0, this function always succeeds.
+    pub fn close(mut self) -> Result<()> {
+        self.closed = true;
+
         #[cfg(any(all(major_ge_3, minor_ge_7), major_ge_4))]
         {
             let rv = unsafe { gdal_sys::GDALClose(self.c_dataset) };
@@ -450,8 +456,12 @@ impl Dataset {
     ///
     /// # Safety
     /// This method operates on a raw C pointer
+    /// The dataset must not have been closed (using [`GDALClose`]) before.
     pub unsafe fn from_c_dataset(c_dataset: GDALDatasetH) -> Dataset {
-        Dataset { c_dataset }
+        Dataset {
+            c_dataset,
+            closed: false,
+        }
     }
 
     /// Fetch the projection definition string for this dataset.
@@ -1019,8 +1029,10 @@ impl Metadata for Dataset {}
 
 impl Drop for Dataset {
     fn drop(&mut self) {
-        unsafe {
-            gdal_sys::GDALClose(self.c_dataset);
+        if !self.closed {
+            unsafe {
+                gdal_sys::GDALClose(self.c_dataset);
+            }
         }
     }
 }
@@ -1161,7 +1173,8 @@ mod tests {
 
     #[test]
     fn test_open_vector() {
-        Dataset::open(fixture("roads.geojson")).unwrap();
+        let dataset = Dataset::open(fixture("roads.geojson")).unwrap();
+        dataset.close().unwrap();
     }
 
     #[test]
