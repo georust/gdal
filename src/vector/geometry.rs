@@ -215,7 +215,7 @@ impl Geometry {
         let geom = unsafe { self.get_unowned_geometry(index) };
         GeometryRef {
             geom,
-            _lifetime: PhantomData::default(),
+            _lifetime: PhantomData,
         }
     }
 
