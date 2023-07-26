@@ -81,7 +81,7 @@ impl<'d> MemFileRef<'d> {
     pub fn new(file_name: &Path) -> MemFileRef<'d> {
         Self {
             file_name: file_name.into(),
-            data_ref: PhantomData::default(),
+            data_ref: PhantomData,
         }
     }
 }
