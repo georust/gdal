@@ -275,6 +275,13 @@ impl Geometry {
         }
     }
 
+    /// Converts geometry to 2D.
+    ///
+    /// See: [`OGR_G_FlattenTo2D`](https://gdal.org/api/vector_c_api.html#_CPPv417OGR_G_FlattenTo2D12OGRGeometryH)
+    pub fn flatten_to_2d(&mut self) {
+        unsafe { gdal_sys::OGR_G_FlattenTo2D(self.c_geometry()) };
+    }
+
     /// Get the spatial reference system for this geometry.
     ///
     /// Returns `Some(SpatialRef)`, or `None` if one isn't defined.
@@ -437,6 +444,13 @@ mod tests {
         let wkt = "POLYGON ((45.0 45.0, 45.0 50.0, 50.0 50.0, 50.0 45.0, 45.0 45.0))";
         let geom = Geometry::from_wkt(wkt).unwrap();
         assert!(!geom.is_empty());
+    }
+
+    #[test]
+    pub fn test_flatten_to_2d() {
+        let mut geom = Geometry::from_wkt("POINT (0 1 2)").unwrap();
+        geom.flatten_to_2d();
+        assert_eq!(geom.wkt().unwrap(), "POINT (0 1)");
     }
 
     #[test]
