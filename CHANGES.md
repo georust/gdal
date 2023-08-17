@@ -1,6 +1,10 @@
 # Changes
 
 ## Unreleased
+- **Breaking**: `Dataset::close` now consumes `self`
+
+ - <https://github.com/georust/gdal/pull/420>
+
 - `Gcp` and `GcpRef` are now public
 
  - <https://github.com/georust/gdal/pull/421>
