@@ -1,22 +1,26 @@
 # Changes
 
 ## Unreleased
+
+## 0.16
+
 - **Breaking**: `Dataset::close` now consumes `self`
 
- - <https://github.com/georust/gdal/pull/420>
+- <https://github.com/georust/gdal/pull/420>
 
 - `Gcp` and `GcpRef` are now public
 
- - <https://github.com/georust/gdal/pull/421>
+- <https://github.com/georust/gdal/pull/421>
 
 - Fixed build error with GDAL 3.1
 
- - <https://github.com/georust/gdal/pull/416>
+- <https://github.com/georust/gdal/pull/416>
 
 ## 0.15
+
 - **Breaking**: `RasterBand::actual_block_size` now takes two `usize` offsets instead of `(isize, isize)`
 
- - <https://github.com/georust/gdal/pull/413>
+- <https://github.com/georust/gdal/pull/413>
 
 - Added `GDT_Int8` support
 
