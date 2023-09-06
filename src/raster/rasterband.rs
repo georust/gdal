@@ -23,9 +23,16 @@ use crate::errors::*;
 impl Dataset {
     /// Fetch a band object for a dataset.
     ///
-    /// Applies to raster datasets, and fetches the
-    /// rasterband at the given _1-based_ index.
-    pub fn rasterband(&self, band_index: isize) -> Result<RasterBand> {
+    /// Applies to raster datasets, and fetches the band at the given _1-based_ index.
+    ///
+    /// # Errors
+    /// Returns an error if the band cannot be read, including in the case the index is 0.
+    ///
+    /// # Panics
+    /// Panics if the band index is greater than `c_int::MAX`.
+    pub fn rasterband(&self, band_index: usize) -> Result<RasterBand> {
+        assert!(band_index <= c_int::MAX as usize);
+
         unsafe {
             let c_band = gdal_sys::GDALGetRasterBand(self.c_dataset(), band_index as c_int);
             if c_band.is_null() {
@@ -69,8 +76,8 @@ impl Dataset {
     }
 
     /// Fetch the number of raster bands on this dataset.
-    pub fn raster_count(&self) -> isize {
-        (unsafe { gdal_sys::GDALGetRasterCount(self.c_dataset()) }) as isize
+    pub fn raster_count(&self) -> usize {
+        (unsafe { gdal_sys::GDALGetRasterCount(self.c_dataset()) }) as usize
     }
 
     /// Returns the raster dimensions: (width, height).

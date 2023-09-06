@@ -161,7 +161,7 @@ mod tests {
 /// may be of any GDAL supported datatype.
 pub fn rasterize(
     dataset: &mut Dataset,
-    bands: &[isize],
+    bands: &[usize],
     geometries: &[Geometry],
     burn_values: &[f64],
     options: Option<RasterizeOptions>,
@@ -178,8 +178,9 @@ pub fn rasterize(
             geometries.len()
         )));
     }
+    let raster_count = dataset.raster_count();
     for band in bands {
-        let is_good = *band > 0 && *band <= dataset.raster_count();
+        let is_good = *band > 0 && *band <= raster_count;
         if !is_good {
             return Err(GdalError::BadArgument(format!(
                 "Band index {} is out of bounds",

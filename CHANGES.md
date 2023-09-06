@@ -2,25 +2,29 @@
 
 ## Unreleased
 
+- **Breaking**: `Dataset::raster_count` now returns an `usize` and `Dataset::rasterband` now takes `usize` instead of `isize`
+
+  - <https://github.com/georust/gdal/pull/434>
+
  - **Breaking**: `CslStringListIterator` returns a `CslStringListEntry` instead of `(String, String)` in order to differentiate between `key=value` entries vs `flag` entries.
  - **Breaking**: `CslStringList::fetch_name_value` returns `Option<String>` instead of `Result<Option<String>>`, better reflecting the semantics of GDAL C API.
  - Added `CslStringList::get_field`, `CslStringList::find_string`, `CslStringList::partial_find_string`, `CslStringList::find_string_case_sensitive`, `CslStringList::into_ptr`, `CslStringList::add_name_value`.
- 
+
    - <https://github.com/georust/gdal/pull/455>
 
- - **Breaking**: `ExtendedDataType` no longer implements `Clone`, `PartialEq` and `Eq`
+- **Breaking**: `ExtendedDataType` no longer implements `Clone`, `PartialEq` and `Eq`
 
-   - <https://github.com/georust/gdal/pull/451>
+  - <https://github.com/georust/gdal/pull/451>
 
- - **Breaking**: Moved `LayerIterator`, `LayerOptions` and `Transaction` to `crate::vector`
+- **Breaking**: Moved `LayerIterator`, `LayerOptions` and `Transaction` to `crate::vector`
+
+  - <https://github.com/georust/gdal/pull/447>
+
+- Accessors `MajorObject::gdal_object_ptr` and `Dataset::c_dataset()` are no longer marked as `unsafe` (only using these is unsafe in idiomatic Rust)
 
    - <https://github.com/georust/gdal/pull/447>
 
- - Accessors `MajorObject::gdal_object_ptr` and `Dataset::c_dataset()` are no longer marked as `unsafe` (only using these is unsafe in idiomatic Rust)
-
-   - <https://github.com/georust/gdal/pull/447>
-
- - Fixed build script error with development GDAL versions
+- Fixed build script error with development GDAL versions
 
   - <https://github.com/georust/gdal/pull/439>
 
@@ -40,7 +44,7 @@
 
 - Added `Geometry::flatten_to_2d`
 
- - <https://github.com/georust/gdal/pull/428/>
+  - <https://github.com/georust/gdal/pull/428/>
 
 ## 0.15
 
