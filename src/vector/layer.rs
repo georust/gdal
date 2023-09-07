@@ -1335,7 +1335,7 @@ mod tests {
             .fields()
             .map(|f| (f.name(), f.field_type()))
             .collect::<Vec<_>>();
-        let ok_names_types = vec![
+        let ok_names_types = [
             ("kind", OGRFieldType::OFTString),
             ("sort_key", OGRFieldType::OFTReal),
             ("is_link", OGRFieldType::OFTString),
@@ -1344,7 +1344,7 @@ mod tests {
             ("railway", OGRFieldType::OFTString),
             ("highway", OGRFieldType::OFTString),
         ]
-        .iter()
+        .into_iter()
         .map(|s| (s.0.to_string(), s.1))
         .collect::<Vec<_>>();
         assert_eq!(name_list, ok_names_types);
@@ -1359,8 +1359,8 @@ mod tests {
             .geom_fields()
             .map(|f| (f.name(), f.field_type()))
             .collect::<Vec<_>>();
-        let ok_names_types = vec![("", OGRwkbGeometryType::wkbLineString)]
-            .iter()
+        let ok_names_types = [("", OGRwkbGeometryType::wkbLineString)]
+            .into_iter()
             .map(|s| (s.0.to_string(), s.1))
             .collect::<Vec<_>>();
         assert_eq!(name_list, ok_names_types);
