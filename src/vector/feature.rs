@@ -637,7 +637,7 @@ impl<'a> Feature<'a> {
                 let dv = value
                     .and_hms_opt(0, 0, 0)
                     .ok_or_else(|| GdalError::DateError("offset to midnight".into()))?;
-                let dt = DateTime::from_utc(
+                let dt = DateTime::from_naive_utc_and_offset(
                     dv,
                     FixedOffset::east_opt(0)
                         .ok_or_else(|| GdalError::DateError("utc offset".into()))?,
