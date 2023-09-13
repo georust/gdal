@@ -1,13 +1,14 @@
 use crate::dataset::Dataset;
 use crate::gdal_major_object::MajorObject;
 use crate::metadata::Metadata;
-use crate::raster::{GdalDataType, GdalType};
+use crate::raster::types::RasterIOExtraArg;
+use crate::raster::{Buffer, GdalDataType, GdalType, ResampleAlg};
 use crate::utils::{_last_cpl_err, _last_null_pointer_err, _string};
 use gdal_sys::{
     self, CPLErr, GDALColorEntry, GDALColorInterp, GDALColorTableH, GDALComputeRasterMinMax,
     GDALCreateColorRamp, GDALCreateColorTable, GDALDestroyColorTable, GDALGetPaletteInterpretation,
-    GDALGetRasterStatistics, GDALMajorObjectH, GDALPaletteInterp, GDALRIOResampleAlg, GDALRWFlag,
-    GDALRasterBandH, GDALRasterIOExtraArg, GDALSetColorEntry, GDALSetRasterColorTable,
+    GDALGetRasterStatistics, GDALMajorObjectH, GDALPaletteInterp, GDALRWFlag, GDALRasterBandH,
+    GDALRasterIOExtraArg, GDALSetColorEntry, GDALSetRasterColorTable,
 };
 use libc::c_int;
 use std::ffi::CString;
@@ -18,52 +19,6 @@ use std::marker::PhantomData;
 use ndarray::Array2;
 
 use crate::errors::*;
-
-/// Resampling algorithms used throughout various GDAL raster I/O operations.
-///
-/// # Example
-///
-/// ```rust
-/// use gdal::Dataset;
-/// # fn main() -> gdal::errors::Result<()> {
-/// use gdal::raster::ResampleAlg;
-/// let ds = Dataset::open("fixtures/tinymarble.tif")?;
-/// let band1 = ds.rasterband(1)?;
-/// let stats = band1.get_statistics(true, false)?.unwrap();
-/// // Down-sample a image using cubic-spline interpolation
-/// let buf = band1.read_as::<f64>((0, 0), ds.raster_size(), (2, 2), Some(ResampleAlg::CubicSpline))?;
-/// // In this particular image, resulting data should be close to the overall average.
-/// assert!(buf.data.iter().all(|c| (c - stats.mean).abs() < stats.std_dev / 2.0));
-/// # Ok(())
-/// # }
-/// ```
-#[derive(Debug, Copy, Clone)]
-#[repr(u32)]
-pub enum ResampleAlg {
-    /// Nearest neighbour
-    NearestNeighbour = GDALRIOResampleAlg::GRIORA_NearestNeighbour,
-    /// Bilinear (2x2 kernel)
-    Bilinear = GDALRIOResampleAlg::GRIORA_Bilinear,
-    /// Cubic Convolution Approximation (4x4 kernel)
-    Cubic = GDALRIOResampleAlg::GRIORA_Cubic,
-    /// Cubic B-Spline Approximation (4x4 kernel)
-    CubicSpline = GDALRIOResampleAlg::GRIORA_CubicSpline,
-    /// Lanczos windowed sinc interpolation (6x6 kernel)
-    Lanczos = GDALRIOResampleAlg::GRIORA_Lanczos,
-    /// Average
-    Average = GDALRIOResampleAlg::GRIORA_Average,
-    /// Mode (selects the value which appears most often of all the sampled points)
-    Mode = GDALRIOResampleAlg::GRIORA_Mode,
-    /// Gauss blurring
-    Gauss = GDALRIOResampleAlg::GRIORA_Gauss,
-}
-
-impl ResampleAlg {
-    /// Convert Rust enum discriminant to value expected by [`GDALRasterIOExtraArg`].
-    pub fn to_gdal(&self) -> GDALRIOResampleAlg::Type {
-        *self as GDALRIOResampleAlg::Type
-    }
-}
 
 /// Wrapper type for gdal mask flags.
 /// From the GDAL docs:
@@ -93,67 +48,6 @@ impl GdalMaskFlags {
 
     pub fn is_nodata(&self) -> bool {
         self.0 & Self::GMF_NODATA != 0
-    }
-}
-
-/// Extra options used to read a raster.
-///
-/// For documentation, see `gdal_sys::GDALRasterIOExtraArg`.
-#[derive(Debug)]
-#[allow(clippy::upper_case_acronyms)]
-pub struct RasterIOExtraArg {
-    pub n_version: usize,
-    pub e_resample_alg: ResampleAlg,
-    pub pfn_progress: gdal_sys::GDALProgressFunc,
-    p_progress_data: *mut libc::c_void,
-    pub b_floating_point_window_validity: usize,
-    pub df_x_off: f64,
-    pub df_y_off: f64,
-    pub df_x_size: f64,
-    pub df_y_size: f64,
-}
-
-impl Default for RasterIOExtraArg {
-    fn default() -> Self {
-        Self {
-            n_version: 1,
-            pfn_progress: None,
-            p_progress_data: std::ptr::null_mut(),
-            e_resample_alg: ResampleAlg::NearestNeighbour,
-            b_floating_point_window_validity: 0,
-            df_x_off: 0.0,
-            df_y_off: 0.0,
-            df_x_size: 0.0,
-            df_y_size: 0.0,
-        }
-    }
-}
-
-impl From<RasterIOExtraArg> for GDALRasterIOExtraArg {
-    fn from(arg: RasterIOExtraArg) -> Self {
-        let RasterIOExtraArg {
-            n_version,
-            e_resample_alg,
-            pfn_progress,
-            p_progress_data,
-            b_floating_point_window_validity,
-            df_x_off,
-            df_y_off,
-            df_x_size,
-            df_y_size,
-        } = arg;
-
-        GDALRasterIOExtraArg {
-            nVersion: n_version as c_int,
-            eResampleAlg: e_resample_alg.to_gdal(),
-            pfnProgress: pfn_progress,
-            pProgressData: p_progress_data,
-            bFloatingPointWindowValidity: b_floating_point_window_validity as c_int,
-            dfXOff: df_x_off,
-            dfYOff: df_y_off,
-            dfXSize: df_x_size,
-            dfYSize: df_y_size,
-        }
     }
 }
 
@@ -752,19 +646,6 @@ impl<'a> MajorObject for RasterBand<'a> {
 }
 
 impl<'a> Metadata for RasterBand<'a> {}
-
-pub struct Buffer<T: GdalType> {
-    pub size: (usize, usize),
-    pub data: Vec<T>,
-}
-
-impl<T: GdalType> Buffer<T> {
-    pub fn new(size: (usize, usize), data: Vec<T>) -> Buffer<T> {
-        Buffer { size, data }
-    }
-}
-
-pub type ByteBuffer = Buffer<u8>;
 
 /// Represents a color interpretation of a RasterBand
 #[derive(Debug, PartialEq, Eq)]

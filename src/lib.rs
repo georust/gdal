@@ -120,8 +120,8 @@ pub mod version;
 pub mod vsi;
 
 pub use dataset::{
-    Dataset, DatasetOptions, GdalOpenFlags, GeoTransform, GeoTransformEx, LayerIterator,
-    LayerOptions, Transaction,
+    BandSelection, Dataset, DatasetOptions, GdalOpenFlags, GeoTransform, GeoTransformEx,
+    ImageInterleaving, LayerIterator, LayerOptions, Transaction,
 };
 pub use driver::{Driver, DriverManager};
 pub use gcp::{Gcp, GcpRef};

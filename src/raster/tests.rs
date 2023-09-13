@@ -1,6 +1,6 @@
 use crate::dataset::Dataset;
 use crate::metadata::Metadata;
-use crate::raster::rasterband::ResampleAlg;
+use crate::raster::ResampleAlg;
 use crate::raster::{
     ByteBuffer, ColorEntry, ColorInterpretation, ColorTable, GdalDataType, RasterCreationOption,
     StatisticsAll, StatisticsMinMax,
