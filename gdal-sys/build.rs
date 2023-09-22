@@ -207,7 +207,15 @@ fn main() {
             include_paths.push(dir.to_str().unwrap().to_string());
         }
         if version.is_none() {
-            if let Ok(pkg_version) = Version::parse(gdal.version.trim()) {
+            // development GDAL versions look like 3.7.2dev, which is not valid semver
+            let mut version_string = gdal.version.trim().to_string();
+            if let Some(idx) = version_string.rfind(|c: char| c.is_ascii_digit()) {
+                if idx + 1 < version_string.len() && !version_string[idx + 1..].starts_with('-') {
+                    version_string.insert(idx + 1, '-');
+                }
+            }
+
+            if let Ok(pkg_version) = Version::parse(&version_string) {
                 version.replace(pkg_version);
             }
         }

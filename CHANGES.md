@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+ - Fixed build script error with development GDAL versions
+
+
+  - <https://github.com/georust/gdal/pull/439>
+
 ## 0.16
 
 - **Breaking**: `Dataset::close` now consumes `self`
