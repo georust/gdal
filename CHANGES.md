@@ -16,6 +16,10 @@
 
   - <https://github.com/georust/gdal/pull/416>
 
+- Added `Geometry::flatten_to_2d`
+
+ - <https://github.com/georust/gdal/pull/428/>
+
 ## 0.15
 
 - **Breaking**: `RasterBand::actual_block_size` now takes two `usize` offsets instead of `(isize, isize)`
