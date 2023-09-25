@@ -61,6 +61,8 @@ impl Defn {
     }
 }
 
+unsafe impl Send for Defn {}
+
 pub struct FieldIterator<'a> {
     defn: &'a Defn,
     c_feature_defn: OGRFeatureDefnH,

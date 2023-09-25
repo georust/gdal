@@ -283,6 +283,8 @@ impl<'a> Default for LayerOptions<'a> {
     }
 }
 
+unsafe impl Send for LayerOptions<'_> {}
+
 // GDAL Docs state: The returned dataset should only be accessed by one thread at a time.
 // See: https://gdal.org/api/raster_c_api.html#_CPPv48GDALOpenPKc10GDALAccess
 // Additionally, VRT Datasets are not safe before GDAL 2.3.

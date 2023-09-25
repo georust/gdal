@@ -668,6 +668,8 @@ impl<'a> Feature<'a> {
     }
 }
 
+unsafe impl Send for Feature<'_> {}
+
 pub struct FieldValueIterator<'a> {
     feature: &'a Feature<'a>,
     idx: i32,
