@@ -306,10 +306,10 @@ mod tests {
 
     #[test]
     fn test_get_dataset_driver() {
-        let dataset = Dataset::open(fixture("tinymarble.png")).unwrap();
+        let dataset = Dataset::open(fixture("tinymarble.tif")).unwrap();
         let driver = dataset.driver();
-        assert_eq!(driver.short_name(), "PNG");
-        assert_eq!(driver.long_name(), "Portable Network Graphics");
+        assert_eq!(driver.short_name(), "GTiff");
+        assert_eq!(driver.long_name(), "GeoTIFF");
     }
 
     #[test]
@@ -320,26 +320,26 @@ mod tests {
 
     #[test]
     fn test_get_metadata_domains() {
-        let dataset = Dataset::open(fixture("tinymarble.png")).unwrap();
+        let dataset = Dataset::open(fixture("tinymarble.tif")).unwrap();
         let mut domains = dataset.metadata_domains();
-        if domains[0].is_empty() {
-            domains.remove(0);
-        }
+        domains.retain(|d| !d.is_empty());
+        domains.sort();
+        domains.dedup();
 
         assert_eq!(
             domains,
-            vec!(
+            vec![
+                "COLOR_PROFILE",
+                "DERIVED_SUBDATASETS",
                 "IMAGE_STRUCTURE",
                 "xml:XMP",
-                "DERIVED_SUBDATASETS",
-                "COLOR_PROFILE"
-            )
+            ]
         );
     }
 
     #[test]
     fn test_get_metadata_domain() {
-        let dataset = Dataset::open(fixture("tinymarble.png")).unwrap();
+        let dataset = Dataset::open(fixture("tinymarble.tif")).unwrap();
         let domain = "None";
         let meta = dataset.metadata_domain(domain);
         assert_eq!(meta, None);
@@ -351,7 +351,7 @@ mod tests {
 
     #[test]
     fn test_get_metadata_item() {
-        let dataset = Dataset::open(fixture("tinymarble.png")).unwrap();
+        let dataset = Dataset::open(fixture("tinymarble.tif")).unwrap();
         let key = "None";
         let domain = "None";
         let meta = dataset.metadata_item(key, domain);

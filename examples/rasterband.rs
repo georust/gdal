@@ -3,7 +3,7 @@ use gdal::{Dataset, Metadata};
 use std::path::Path;
 
 fn main() {
-    let path = Path::new("./fixtures/tinymarble.png");
+    let path = Path::new("./fixtures/tinymarble.tif");
     let dataset = Dataset::open(path).unwrap();
     println!("dataset description: {:?}", dataset.description());
 

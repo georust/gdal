@@ -5,7 +5,7 @@ fn main() {
     let driver = gdal::DriverManager::get_driver_by_name("mem").unwrap();
     println!("driver description: {:?}", driver.description());
 
-    let path = Path::new("./fixtures/tinymarble.png");
+    let path = Path::new("./fixtures/tinymarble.tif");
     let dataset = Dataset::open(path).unwrap();
     println!("dataset description: {:?}", dataset.description());
 
