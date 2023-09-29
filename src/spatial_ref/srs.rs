@@ -631,8 +631,11 @@ mod tests {
         "+proj=laea +lat_0=52 +lon_0=10 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +units=m +no_defs",
     )
     .unwrap();
-
-        let round_trip = SpatialRef::from_wkt(&spatial_ref.to_wkt().unwrap()).unwrap();
+        let wkt = spatial_ref.to_wkt().unwrap();
+        // Test we the DATUM description has expected tokens
+        assert!(wkt.contains("GRS") && wkt.contains("80"));
+        // Test parsing back in gets us functionally the same SRS
+        let round_trip = SpatialRef::from_wkt(&wkt).unwrap();
         assert_eq!(spatial_ref, round_trip);
     }
 
