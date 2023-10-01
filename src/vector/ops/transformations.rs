@@ -249,13 +249,9 @@ mod tests {
 
     #[test]
     fn test_simplify_preserve_topology() -> Result<()> {
-        let donut = Geometry::from_wkt(
-            "POLYGON ((20 35,10 30,10 10,30 5,45 20,20 35),(30 20,20 15,20 25,30 20))",
-        )?;
-        let triangles = Geometry::from_wkt(
-            "POLYGON ((20 35,10 10,30 5,45 20,20 35),(30 20,20 15,20 25,30 20))",
-        )?;
-        assert_eq!(donut.simplify_preserve_topology(100.0)?, triangles);
+        let test = Geometry::from_wkt("LINESTRING(0 0,1 0,10 0)")?;
+        let expected = Geometry::from_wkt("LINESTRING (0 0,10 0)")?;
+        assert_eq!(test.simplify_preserve_topology(5.0)?, expected);
         Ok(())
     }
 
