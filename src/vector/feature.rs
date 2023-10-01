@@ -1,7 +1,7 @@
 use crate::utils::{_last_null_pointer_err, _string, _string_array};
 use crate::vector::geometry::Geometry;
-use crate::vector::{Defn, LayerAccess};
-use gdal_sys::{self, OGRErr, OGRFeatureH, OGRFieldType};
+use crate::vector::{Defn, LayerAccess, OwnedLayer};
+use gdal_sys::{self, OGRErr, OGRFeatureH, OGRFieldType, OGRLayerH};
 use libc::{c_char, c_double, c_int, c_longlong};
 use std::convert::TryInto;
 use std::ffi::{CString, NulError};
@@ -724,6 +724,103 @@ impl<'a> Drop for Feature<'a> {
         unsafe {
             gdal_sys::OGR_F_Destroy(self.c_feature);
         }
+    }
+}
+
+pub struct FeatureIterator<'a> {
+    defn: &'a Defn,
+    c_layer: OGRLayerH,
+    size_hint: Option<usize>,
+}
+
+impl<'a> Iterator for FeatureIterator<'a> {
+    type Item = Feature<'a>;
+
+    #[inline]
+    fn next(&mut self) -> Option<Feature<'a>> {
+        let c_feature = unsafe { gdal_sys::OGR_L_GetNextFeature(self.c_layer) };
+        if c_feature.is_null() {
+            None
+        } else {
+            Some(unsafe { Feature::from_c_feature(self.defn, c_feature) })
+        }
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        match self.size_hint {
+            Some(size) => (size, Some(size)),
+            None => (0, None),
+        }
+    }
+}
+
+impl<'a> FeatureIterator<'a> {
+    pub(crate) fn _with_layer<L: LayerAccess>(layer: &'a L) -> Self {
+        let defn = layer.defn();
+        let size_hint = layer.try_feature_count().and_then(|s| s.try_into().ok());
+        Self {
+            c_layer: unsafe { layer.c_layer() },
+            size_hint,
+            defn,
+        }
+    }
+}
+
+pub struct OwnedFeatureIterator {
+    pub(crate) layer: OwnedLayer,
+    size_hint: Option<usize>,
+}
+
+impl<'a> Iterator for &'a mut OwnedFeatureIterator
+where
+    Self: 'a,
+{
+    type Item = Feature<'a>;
+
+    #[inline]
+    fn next(&mut self) -> Option<Feature<'a>> {
+        let c_feature = unsafe { gdal_sys::OGR_L_GetNextFeature(self.layer.c_layer()) };
+
+        if c_feature.is_null() {
+            return None;
+        }
+
+        Some(unsafe {
+            // We have to convince the compiler that our `Defn` adheres to our iterator lifetime `<'a>`
+            let defn: &'a Defn = std::mem::transmute::<&'_ _, &'a _>(self.layer.defn());
+
+            Feature::from_c_feature(defn, c_feature)
+        })
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        match self.size_hint {
+            Some(size) => (size, Some(size)),
+            None => (0, None),
+        }
+    }
+}
+
+impl OwnedFeatureIterator {
+    pub(crate) fn _with_layer(layer: OwnedLayer) -> Self {
+        let size_hint = layer.try_feature_count().and_then(|s| s.try_into().ok());
+        Self { layer, size_hint }
+    }
+
+    pub fn into_layer(self) -> OwnedLayer {
+        self.layer
+    }
+}
+
+impl AsMut<OwnedFeatureIterator> for OwnedFeatureIterator {
+    fn as_mut(&mut self) -> &mut Self {
+        self
+    }
+}
+
+impl From<OwnedFeatureIterator> for OwnedLayer {
+    fn from(feature_iterator: OwnedFeatureIterator) -> Self {
+        feature_iterator.into_layer()
     }
 }
 

@@ -69,15 +69,20 @@ mod feature;
 mod geometry;
 mod layer;
 mod ops;
+mod options;
 pub mod sql;
+mod transaction;
 
 pub use defn::{Defn, Field, FieldIterator};
-pub use feature::{field_type_to_name, Feature, FieldValue, FieldValueIterator};
+pub use feature::{
+    field_type_to_name, Feature, FeatureIterator, FieldValue, FieldValueIterator,
+    OwnedFeatureIterator,
+};
 pub use gdal_sys::{OGRFieldType, OGRwkbGeometryType};
 pub use geometry::{geometry_type_to_name, Geometry};
-pub use layer::{
-    FeatureIterator, FieldDefn, Layer, LayerAccess, LayerCaps, OwnedFeatureIterator, OwnedLayer,
-};
+pub use layer::{FieldDefn, Layer, LayerAccess, LayerCaps, LayerIterator, OwnedLayer};
+pub use options::LayerOptions;
+pub use transaction::Transaction;
 
 /// Axis aligned 2D bounding box.
 pub type Envelope = gdal_sys::OGREnvelope;

@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+ - Refactored `dataset.rs` to focus on core `Dataset` operations, moving ancillary types and operations to other files.
+ - **Breaking**: Moved `LayerIterator`, `LayerOptions` and `Transaction` to `crate::vector`.
+ - Accessors `MajorObject::gdal_object_ptr` and `Dataset::c_dataset()` are no longer marked as `unsafe` (it's not idiomatic Rust to do so).
+  
+   - <> 
+ 
  - Fixed build script error with development GDAL versions
 
 

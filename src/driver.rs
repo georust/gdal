@@ -313,7 +313,7 @@ impl Driver {
 }
 
 impl MajorObject for Driver {
-    unsafe fn gdal_object_ptr(&self) -> GDALMajorObjectH {
+    fn gdal_object_ptr(&self) -> GDALMajorObjectH {
         self.c_driver
     }
 }
