@@ -19,6 +19,68 @@ use ndarray::Array2;
 
 use crate::errors::*;
 
+/// [Dataset] methods for raster datasets.
+impl Dataset {
+    /// Fetch a band object for a dataset.
+    ///
+    /// Applies to raster datasets, and fetches the
+    /// rasterband at the given _1-based_ index.
+    pub fn rasterband(&self, band_index: isize) -> Result<RasterBand> {
+        unsafe {
+            let c_band = gdal_sys::GDALGetRasterBand(self.c_dataset(), band_index as c_int);
+            if c_band.is_null() {
+                return Err(_last_null_pointer_err("GDALGetRasterBand"));
+            }
+            Ok(RasterBand::from_c_rasterband(self, c_band))
+        }
+    }
+
+    /// Builds overviews for the current `Dataset`. See [`GDALBuildOverviews`].
+    ///
+    /// # Arguments
+    /// * `resampling` - resampling method, as accepted by GDAL, e.g. `"CUBIC"`
+    /// * `overviews` - list of overview decimation factors, e.g. `&[2, 4, 8, 16, 32]`
+    /// * `bands` - list of bands to build the overviews for, or empty for all bands
+    ///
+    /// [`GDALBuildOverviews`]: https://gdal.org/api/raster_c_api.html#_CPPv418GDALBuildOverviews12GDALDatasetHPKciPKiiPKi16GDALProgressFuncPv
+    pub fn build_overviews(
+        &mut self,
+        resampling: &str,
+        overviews: &[i32],
+        bands: &[i32],
+    ) -> Result<()> {
+        let c_resampling = CString::new(resampling)?;
+        let rv = unsafe {
+            gdal_sys::GDALBuildOverviews(
+                self.c_dataset(),
+                c_resampling.as_ptr(),
+                overviews.len() as i32,
+                overviews.as_ptr() as *mut i32,
+                bands.len() as i32,
+                bands.as_ptr() as *mut i32,
+                None,
+                std::ptr::null_mut(),
+            )
+        };
+        if rv != CPLErr::CE_None {
+            return Err(_last_cpl_err(rv));
+        }
+        Ok(())
+    }
+
+    /// Fetch the number of raster bands on this dataset.
+    pub fn raster_count(&self) -> isize {
+        (unsafe { gdal_sys::GDALGetRasterCount(self.c_dataset()) }) as isize
+    }
+
+    /// Returns the raster dimensions: (width, height).
+    pub fn raster_size(&self) -> (usize, usize) {
+        let size_x = unsafe { gdal_sys::GDALGetRasterXSize(self.c_dataset()) } as usize;
+        let size_y = unsafe { gdal_sys::GDALGetRasterYSize(self.c_dataset()) } as usize;
+        (size_x, size_y)
+    }
+}
+
 /// Resampling algorithms used throughout various GDAL raster I/O operations.
 ///
 /// # Example
@@ -746,7 +808,7 @@ pub struct StatisticsAll {
 }
 
 impl<'a> MajorObject for RasterBand<'a> {
-    unsafe fn gdal_object_ptr(&self) -> GDALMajorObjectH {
+    fn gdal_object_ptr(&self) -> GDALMajorObjectH {
         self.c_rasterband
     }
 }

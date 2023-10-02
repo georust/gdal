@@ -159,7 +159,7 @@ impl<'a> MDArray<'a> {
         // If set to nullptr, will be set so that pDstBuffer is written in a compact way,
         // with elements of the last / fastest varying dimension being consecutive.
         let buffer_stride: *const i64 = std::ptr::null();
-        let p_dst_buffer_alloc_start: *mut libc::c_void = std::ptr::null_mut();
+        let p_dst_buffer_alloc_start: *mut c_void = std::ptr::null_mut();
         let n_dst_buffer_alloc_size = 0;
 
         let rv = unsafe {
@@ -282,7 +282,7 @@ impl<'a> MDArray<'a> {
         // with elements of the last / fastest varying dimension being consecutive.
         let buffer_stride: *const i64 = std::ptr::null();
 
-        let p_dst_buffer_alloc_start: *mut libc::c_void = std::ptr::null_mut();
+        let p_dst_buffer_alloc_start: *mut c_void = std::ptr::null_mut();
         let n_dst_buffer_alloc_size = 0;
 
         unsafe {
@@ -295,7 +295,7 @@ impl<'a> MDArray<'a> {
                 array_step,
                 buffer_stride,
                 data_type,
-                string_pointers.as_mut_ptr().cast::<std::ffi::c_void>(),
+                string_pointers.as_mut_ptr().cast::<c_void>(),
                 p_dst_buffer_alloc_start,
                 n_dst_buffer_alloc_size,
             );
@@ -796,12 +796,33 @@ impl Attribute {
     }
 }
 
+/// [Dataset] methods supporting multi-dimensional array operations.
+impl Dataset {
+    /// Opens the root group of a multi-dim GDAL raster
+    ///
+    /// # Note
+    /// You must have opened the dataset with the `GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER`
+    /// flag in order for it to work.
+    ///
+    #[cfg(all(major_ge_3, minor_ge_1))]
+    pub fn root_group(&self) -> Result<Group> {
+        unsafe {
+            let c_group = gdal_sys::GDALDatasetGetRootGroup(self.c_dataset());
+            if c_group.is_null() {
+                return Err(_last_null_pointer_err("GDALDatasetGetRootGroup"));
+            }
+            Ok(Group::from_c_group(self, c_group))
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
 
     use super::*;
 
-    use crate::{test_utils::TempFixture, Dataset, DatasetOptions, GdalOpenFlags};
+    use crate::options::DatasetOptions;
+    use crate::{test_utils::TempFixture, Dataset, GdalOpenFlags};
 
     #[test]
     #[cfg_attr(not(all(major_ge_3, minor_ge_4)), ignore)]

@@ -1,6 +1,9 @@
+use crate::{Dataset, DatasetOptions};
+use gdal_sys::GDALAccess;
 use std::ffi::c_void;
 use std::marker::PhantomData;
 use std::path::{Path, PathBuf};
+use tempfile::TempPath;
 
 /// A struct that contains a temporary directory and a path to a file in that directory.
 pub struct TempFixture {
@@ -74,4 +77,33 @@ impl Drop for SuppressGDALErrorLog {
     fn drop(&mut self) {
         unsafe { gdal_sys::CPLPopErrorHandler() };
     }
+}
+
+/// Copies the given file to a temporary file and opens it for writing. When the returned
+/// `TempPath` is dropped, the file is deleted.
+pub fn open_gpkg_for_update(path: &Path) -> (TempPath, Dataset) {
+    use std::fs;
+    use std::io::Write;
+
+    let input_data = fs::read(path).unwrap();
+    let (mut file, temp_path) = tempfile::Builder::new()
+        .suffix(".gpkg")
+        .tempfile()
+        .unwrap()
+        .into_parts();
+    file.write_all(&input_data).unwrap();
+    // Close the temporary file so that Dataset can open it safely even if the filesystem uses
+    // exclusive locking (Windows?).
+    drop(file);
+
+    let ds = Dataset::open_ex(
+        &temp_path,
+        DatasetOptions {
+            open_flags: GDALAccess::GA_Update.into(),
+            allowed_drivers: Some(&["GPKG"]),
+            ..DatasetOptions::default()
+        },
+    )
+    .unwrap();
+    (temp_path, ds)
 }

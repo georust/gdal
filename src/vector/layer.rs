@@ -2,15 +2,17 @@ use crate::metadata::Metadata;
 use crate::spatial_ref::SpatialRef;
 use crate::utils::{_last_null_pointer_err, _string};
 use crate::vector::defn::Defn;
-use crate::vector::{Envelope, Feature, FieldValue, Geometry};
+use crate::vector::{Envelope, Feature, FieldValue, Geometry, LayerOptions};
 use crate::{dataset::Dataset, gdal_major_object::MajorObject};
 use gdal_sys::{self, GDALMajorObjectH, OGRErr, OGRFieldDefnH, OGRFieldType, OGRLayerH};
 use libc::c_int;
+use std::ffi::NulError;
 use std::mem::MaybeUninit;
 use std::ptr::null_mut;
 use std::{convert::TryInto, ffi::CString, marker::PhantomData};
 
 use crate::errors::*;
+use crate::vector::feature::{FeatureIterator, OwnedFeatureIterator};
 
 /// Layer capabilities
 #[allow(clippy::upper_case_acronyms)]
@@ -104,7 +106,7 @@ pub struct Layer<'a> {
 }
 
 impl<'a> MajorObject for Layer<'a> {
-    unsafe fn gdal_object_ptr(&self) -> GDALMajorObjectH {
+    fn gdal_object_ptr(&self) -> GDALMajorObjectH {
         self.c_layer
     }
 }
@@ -159,7 +161,7 @@ pub struct OwnedLayer {
 }
 
 impl MajorObject for OwnedLayer {
-    unsafe fn gdal_object_ptr(&self) -> GDALMajorObjectH {
+    fn gdal_object_ptr(&self) -> GDALMajorObjectH {
         self.c_layer
     }
 }
@@ -503,103 +505,47 @@ pub trait LayerAccess: Sized {
     }
 }
 
-pub struct FeatureIterator<'a> {
-    defn: &'a Defn,
-    c_layer: OGRLayerH,
-    size_hint: Option<usize>,
+pub struct LayerIterator<'a> {
+    dataset: &'a Dataset,
+    idx: isize,
+    count: isize,
 }
 
-impl<'a> Iterator for FeatureIterator<'a> {
-    type Item = Feature<'a>;
+impl<'a> Iterator for LayerIterator<'a> {
+    type Item = Layer<'a>;
 
     #[inline]
-    fn next(&mut self) -> Option<Feature<'a>> {
-        let c_feature = unsafe { gdal_sys::OGR_L_GetNextFeature(self.c_layer) };
-        if c_feature.is_null() {
-            None
-        } else {
-            Some(unsafe { Feature::from_c_feature(self.defn, c_feature) })
+    fn next(&mut self) -> Option<Layer<'a>> {
+        let idx = self.idx;
+        if idx < self.count {
+            self.idx += 1;
+            let c_layer =
+                unsafe { gdal_sys::OGR_DS_GetLayer(self.dataset.c_dataset(), idx as c_int) };
+            if !c_layer.is_null() {
+                let layer = unsafe { Layer::from_c_layer(self.dataset, c_layer) };
+                return Some(layer);
+            }
         }
+        None
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        match self.size_hint {
+        match Some(self.count).and_then(|s| s.try_into().ok()) {
             Some(size) => (size, Some(size)),
             None => (0, None),
         }
     }
 }
 
-impl<'a> FeatureIterator<'a> {
-    pub(crate) fn _with_layer<L: LayerAccess>(layer: &'a L) -> Self {
-        let defn = layer.defn();
-        let size_hint = layer.try_feature_count().and_then(|s| s.try_into().ok());
-        Self {
-            c_layer: unsafe { layer.c_layer() },
-            size_hint,
-            defn,
+impl<'a> LayerIterator<'a> {
+    pub fn with_dataset(dataset: &'a Dataset) -> LayerIterator<'a> {
+        LayerIterator {
+            dataset,
+            idx: 0,
+            count: dataset.layer_count(),
         }
     }
 }
-
-pub struct OwnedFeatureIterator {
-    pub(crate) layer: OwnedLayer,
-    size_hint: Option<usize>,
-}
-
-impl<'a> Iterator for &'a mut OwnedFeatureIterator
-where
-    Self: 'a,
-{
-    type Item = Feature<'a>;
-
-    #[inline]
-    fn next(&mut self) -> Option<Feature<'a>> {
-        let c_feature = unsafe { gdal_sys::OGR_L_GetNextFeature(self.layer.c_layer()) };
-
-        if c_feature.is_null() {
-            return None;
-        }
-
-        Some(unsafe {
-            // We have to convince the compiler that our `Defn` adheres to our iterator lifetime `<'a>`
-            let defn: &'a Defn = std::mem::transmute::<&'_ _, &'a _>(self.layer.defn());
-
-            Feature::from_c_feature(defn, c_feature)
-        })
-    }
-
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        match self.size_hint {
-            Some(size) => (size, Some(size)),
-            None => (0, None),
-        }
-    }
-}
-
-impl OwnedFeatureIterator {
-    pub(crate) fn _with_layer(layer: OwnedLayer) -> Self {
-        let size_hint = layer.try_feature_count().and_then(|s| s.try_into().ok());
-        Self { layer, size_hint }
-    }
-
-    pub fn into_layer(self) -> OwnedLayer {
-        self.layer
-    }
-}
-
-impl AsMut<OwnedFeatureIterator> for OwnedFeatureIterator {
-    fn as_mut(&mut self) -> &mut Self {
-        self
-    }
-}
-
-impl From<OwnedFeatureIterator> for OwnedLayer {
-    fn from(feature_iterator: OwnedFeatureIterator) -> Self {
-        feature_iterator.into_layer()
-    }
-}
-
 pub struct FieldDefn {
     c_obj: OGRFieldDefnH,
 }
@@ -611,7 +557,7 @@ impl Drop for FieldDefn {
 }
 
 impl MajorObject for FieldDefn {
-    unsafe fn gdal_object_ptr(&self) -> GDALMajorObjectH {
+    fn gdal_object_ptr(&self) -> GDALMajorObjectH {
         self.c_obj
     }
 }
@@ -643,11 +589,152 @@ impl FieldDefn {
     }
 }
 
+/// [Layer] related methods for [Dataset].
+impl Dataset {
+    fn child_layer(&self, c_layer: OGRLayerH) -> Layer {
+        unsafe { Layer::from_c_layer(self, c_layer) }
+    }
+
+    fn into_child_layer(self, c_layer: OGRLayerH) -> OwnedLayer {
+        unsafe { OwnedLayer::from_c_layer(self, c_layer) }
+    }
+
+    /// Get the number of layers in this dataset.
+    pub fn layer_count(&self) -> isize {
+        (unsafe { gdal_sys::OGR_DS_GetLayerCount(self.c_dataset()) }) as isize
+    }
+
+    /// Fetch a layer by index.
+    ///
+    /// Applies to vector datasets, and fetches by the given
+    /// _0-based_ index.
+    pub fn layer(&self, idx: isize) -> Result<Layer> {
+        let c_layer = unsafe { gdal_sys::OGR_DS_GetLayer(self.c_dataset(), idx as c_int) };
+        if c_layer.is_null() {
+            return Err(_last_null_pointer_err("OGR_DS_GetLayer"));
+        }
+        Ok(self.child_layer(c_layer))
+    }
+
+    /// Fetch a layer by index.
+    ///
+    /// Applies to vector datasets, and fetches by the given
+    /// _0-based_ index.
+    pub fn into_layer(self, idx: isize) -> Result<OwnedLayer> {
+        let c_layer = unsafe { gdal_sys::OGR_DS_GetLayer(self.c_dataset(), idx as c_int) };
+        if c_layer.is_null() {
+            return Err(_last_null_pointer_err("OGR_DS_GetLayer"));
+        }
+        Ok(self.into_child_layer(c_layer))
+    }
+
+    /// Fetch a layer by name.
+    pub fn layer_by_name(&self, name: &str) -> Result<Layer> {
+        let c_name = CString::new(name)?;
+        let c_layer = unsafe { gdal_sys::OGR_DS_GetLayerByName(self.c_dataset(), c_name.as_ptr()) };
+        if c_layer.is_null() {
+            return Err(_last_null_pointer_err("OGR_DS_GetLayerByName"));
+        }
+        Ok(self.child_layer(c_layer))
+    }
+
+    /// Fetch a layer by name.
+    pub fn into_layer_by_name(self, name: &str) -> Result<OwnedLayer> {
+        let c_name = CString::new(name)?;
+        let c_layer = unsafe { gdal_sys::OGR_DS_GetLayerByName(self.c_dataset(), c_name.as_ptr()) };
+        if c_layer.is_null() {
+            return Err(_last_null_pointer_err("OGR_DS_GetLayerByName"));
+        }
+        Ok(self.into_child_layer(c_layer))
+    }
+
+    /// Returns an iterator over the layers of the dataset.
+    pub fn layers(&self) -> LayerIterator {
+        LayerIterator::with_dataset(self)
+    }
+
+    /// Creates a new layer. The [`LayerOptions`] struct implements `Default`, so you only need to
+    /// specify those options that deviate from the default.
+    ///
+    /// # Examples
+    ///
+    /// Create a new layer with an empty name, no spatial reference, and unknown geometry type:
+    ///
+    /// ```
+    /// # use gdal::DriverManager;
+    /// # let driver = DriverManager::get_driver_by_name("GPKG").unwrap();
+    /// # let mut dataset = driver.create_vector_only("/vsimem/example.gpkg").unwrap();
+    /// let blank_layer = dataset.create_layer(Default::default()).unwrap();
+    /// ```
+    ///
+    /// Create a new named line string layer using WGS84:
+    ///
+    /// ```
+    /// # use gdal::{DriverManager };
+    /// # use gdal::spatial_ref::SpatialRef;
+    /// # use gdal::vector::LayerOptions;
+    /// # let driver = DriverManager::get_driver_by_name("GPKG").unwrap();
+    /// # let mut dataset = driver.create_vector_only("/vsimem/example.gpkg").unwrap();
+    /// let roads = dataset.create_layer(LayerOptions {
+    ///     name: "roads",
+    ///     srs: Some(&SpatialRef::from_epsg(4326).unwrap()),
+    ///     ty: gdal_sys::OGRwkbGeometryType::wkbLineString,
+    ///     ..Default::default()
+    /// }).unwrap();
+    /// ```
+    pub fn create_layer(&mut self, options: LayerOptions<'_>) -> Result<Layer> {
+        let c_name = CString::new(options.name)?;
+        let c_srs = match options.srs {
+            Some(srs) => srs.to_c_hsrs(),
+            None => null_mut(),
+        };
+
+        // Handle string options: we need to keep the CStrings and the pointers around.
+        let c_options = options.options.map(|d| {
+            d.iter()
+                .map(|&s| CString::new(s))
+                .collect::<std::result::Result<Vec<CString>, NulError>>()
+        });
+        let c_options_vec = match c_options {
+            Some(Err(e)) => return Err(e.into()),
+            Some(Ok(c_options_vec)) => c_options_vec,
+            None => Vec::from([]),
+        };
+        let mut c_options_ptrs = c_options_vec.iter().map(|s| s.as_ptr()).collect::<Vec<_>>();
+        c_options_ptrs.push(std::ptr::null());
+
+        let c_options_ptr = if options.options.is_some() {
+            c_options_ptrs.as_ptr()
+        } else {
+            std::ptr::null()
+        };
+
+        let c_layer = unsafe {
+            // The C function takes `char **papszOptions` without mention of `const`, and this is
+            // propagated to the gdal_sys wrapper. The lack of `const` seems like a mistake in the
+            // GDAL API, so we just do a cast here.
+            gdal_sys::OGR_DS_CreateLayer(
+                self.c_dataset(),
+                c_name.as_ptr(),
+                c_srs,
+                options.ty,
+                c_options_ptr as *mut *mut libc::c_char,
+            )
+        };
+        if c_layer.is_null() {
+            return Err(_last_null_pointer_err("OGR_DS_CreateLayer"));
+        };
+        Ok(self.child_layer(c_layer))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::{LayerCaps::*, *};
-    use crate::test_utils::{fixture, SuppressGDALErrorLog, TempFixture};
-    use crate::{assert_almost_eq, Dataset, DatasetOptions, DriverManager, GdalOpenFlags};
+    use crate::options::DatasetOptions;
+    use crate::test_utils::{fixture, open_gpkg_for_update, SuppressGDALErrorLog, TempFixture};
+    use crate::vector::feature::FeatureIterator;
+    use crate::{assert_almost_eq, Dataset, DriverManager, GdalOpenFlags};
     use gdal_sys::OGRwkbGeometryType;
 
     fn ds_with_layer<F>(ds_name: &str, layer_name: &str, f: F)
@@ -689,6 +776,21 @@ mod tests {
         F: Fn(Feature),
     {
         with_layer(name, |layer| f(layer.feature(fid).unwrap()));
+    }
+
+    #[test]
+    fn test_create_layer_options() {
+        use gdal_sys::OGRwkbGeometryType::wkbPoint;
+        let (_temp_path, mut ds) = open_gpkg_for_update(&fixture("poly.gpkg"));
+        let mut options = LayerOptions {
+            name: "new",
+            ty: wkbPoint,
+            ..Default::default()
+        };
+        ds.create_layer(options.clone()).unwrap();
+        assert!(ds.create_layer(options.clone()).is_err());
+        options.options = Some(&["OVERWRITE=YES"]);
+        assert!(ds.create_layer(options).is_ok());
     }
 
     #[test]

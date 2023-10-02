@@ -183,15 +183,12 @@ fn _multi_dim_translate(
 ) -> Result<Dataset> {
     let (psz_dest_option, h_dst_ds) = match &destination {
         MultiDimTranslateDestination::Path(c_path) => (Some(c_path), null_mut()),
-        MultiDimTranslateDestination::Dataset { dataset, .. } => {
-            (None, unsafe { dataset.c_dataset() })
-        }
+        MultiDimTranslateDestination::Dataset { dataset, .. } => (None, dataset.c_dataset()),
     };
 
     let psz_dest = psz_dest_option.map(|x| x.as_ptr()).unwrap_or_else(null);
 
-    let mut pah_src_ds: Vec<gdal_sys::GDALDatasetH> =
-        input.iter().map(|x| unsafe { x.c_dataset() }).collect();
+    let mut pah_src_ds: Vec<gdal_sys::GDALDatasetH> = input.iter().map(|x| x.c_dataset()).collect();
 
     let ps_options = options
         .as_ref()
@@ -230,7 +227,8 @@ mod tests {
 
     use super::*;
 
-    use crate::{DatasetOptions, DriverManager, GdalOpenFlags};
+    use crate::options::DatasetOptions;
+    use crate::{DriverManager, GdalOpenFlags};
 
     #[test]
     #[cfg_attr(not(all(major_ge_3, minor_ge_4)), ignore)]

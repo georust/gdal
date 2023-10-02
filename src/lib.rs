@@ -108,7 +108,9 @@ mod driver;
 pub mod errors;
 mod gcp;
 mod gdal_major_object;
+mod geo_transform;
 mod metadata;
+mod options;
 pub mod programs;
 pub mod raster;
 pub mod spatial_ref;
@@ -119,10 +121,10 @@ pub mod vector;
 pub mod version;
 pub mod vsi;
 
-pub use dataset::{
-    Dataset, DatasetOptions, GdalOpenFlags, GeoTransform, GeoTransformEx, LayerIterator,
-    LayerOptions, Transaction,
-};
+pub use dataset::Dataset;
+pub use geo_transform::{GeoTransform, GeoTransformEx};
+pub use options::{DatasetOptions, GdalOpenFlags};
+
 pub use driver::{Driver, DriverManager};
 pub use gcp::{Gcp, GcpRef};
 #[cfg(any(major_ge_4, all(major_is_3, minor_ge_6)))]
