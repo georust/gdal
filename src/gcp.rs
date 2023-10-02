@@ -116,7 +116,7 @@ impl Dataset {
     ///
     /// See: [`GDALGetGCPSpatialRef`](https://gdal.org/api/raster_c_api.html#_CPPv420GDALGetGCPSpatialRef12GDALDatasetH)
     pub fn gcp_spatial_ref(&self) -> Option<SpatialRef> {
-        let c_ptr = unsafe { gdal_sys::GDALGetGCPSpatialRef(self.c_dataset()) };
+        let c_ptr = unsafe { gdal_sys::GDALGetGCPSpatialRef(self.as_ptr()) };
 
         if c_ptr.is_null() {
             return None;
@@ -134,7 +134,7 @@ impl Dataset {
     ///
     ///  See: [`GDALGetGCPProjection`](https://gdal.org/api/raster_c_api.html#gdal_8h_1a85ffa184d3ecb7c0a59a66096b22b2ec)
     pub fn gcp_projection(&self) -> Option<String> {
-        let cc_ptr = unsafe { gdal_sys::GDALGetGCPProjection(self.c_dataset()) };
+        let cc_ptr = unsafe { gdal_sys::GDALGetGCPProjection(self.as_ptr()) };
         if cc_ptr.is_null() {
             return None;
         }
@@ -145,8 +145,8 @@ impl Dataset {
     ///
     /// See: [`GDALDataset::GetGCPs`](https://gdal.org/api/gdaldataset_cpp.html#_CPPv4N11GDALDataset7GetGCPsEv)
     pub fn gcps(&self) -> &[GcpRef] {
-        let len = unsafe { gdal_sys::GDALGetGCPCount(self.c_dataset()) };
-        let data = unsafe { gdal_sys::GDALGetGCPs(self.c_dataset()) };
+        let len = unsafe { gdal_sys::GDALGetGCPCount(self.as_ptr()) };
+        let data = unsafe { gdal_sys::GDALGetGCPs(self.as_ptr()) };
         unsafe { std::slice::from_raw_parts(data as *const GcpRef, len as usize) }
     }
 
@@ -206,7 +206,7 @@ impl Dataset {
 
         let rv = unsafe {
             gdal_sys::GDALSetGCPs2(
-                self.c_dataset(),
+                self.as_ptr(),
                 len,
                 gdal_gcps.as_ptr(),
                 spatial_ref.as_ptr() as *mut _,

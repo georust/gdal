@@ -3,6 +3,7 @@ use crate::{
     utils::{_last_null_pointer_err, _path_to_c_string},
     Dataset,
 };
+use foreign_types::ForeignType;
 use gdal_sys::GDALBuildVRTOptions;
 use libc::{c_char, c_int};
 use std::{
@@ -101,7 +102,7 @@ fn _build_vrt(
     let dataset_out = unsafe {
         // Get raw handles to the datasets
         let mut datasets_raw: Vec<gdal_sys::GDALDatasetH> =
-            datasets.iter().map(|x| x.c_dataset()).collect();
+            datasets.iter().map(|x| x.as_ptr()).collect();
 
         gdal_sys::GDALBuildVRT(
             c_dest,
@@ -117,7 +118,7 @@ fn _build_vrt(
         return Err(_last_null_pointer_err("GDALBuildVRT"));
     }
 
-    let result = unsafe { Dataset::from_c_dataset(dataset_out) };
+    let result = unsafe { Dataset::from_ptr(dataset_out) };
 
     Ok(result)
 }

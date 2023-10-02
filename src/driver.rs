@@ -1,3 +1,4 @@
+use foreign_types::ForeignType;
 use std::ffi::CString;
 use std::path::Path;
 use std::sync::Once;
@@ -223,7 +224,7 @@ impl Driver {
             return Err(_last_null_pointer_err("GDALCreate"));
         };
 
-        Ok(unsafe { Dataset::from_c_dataset(c_dataset) })
+        Ok(unsafe { Dataset::from_ptr(c_dataset) })
     }
 
     /// Convenience for creating a vector-only dataset from a compatible driver.

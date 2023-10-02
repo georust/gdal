@@ -521,8 +521,7 @@ impl<'a> Iterator for LayerIterator<'a> {
         let idx = self.idx;
         if idx < self.count {
             self.idx += 1;
-            let c_layer =
-                unsafe { gdal_sys::OGR_DS_GetLayer(self.dataset.c_dataset(), idx as c_int) };
+            let c_layer = unsafe { gdal_sys::OGR_DS_GetLayer(self.dataset.as_ptr(), idx as c_int) };
             if !c_layer.is_null() {
                 let layer = unsafe { Layer::from_c_layer(self.dataset, c_layer) };
                 return Some(layer);
@@ -603,7 +602,7 @@ impl Dataset {
 
     /// Get the number of layers in this dataset.
     pub fn layer_count(&self) -> isize {
-        (unsafe { gdal_sys::OGR_DS_GetLayerCount(self.c_dataset()) }) as isize
+        (unsafe { gdal_sys::OGR_DS_GetLayerCount(self.as_ptr()) }) as isize
     }
 
     /// Fetch a layer by index.
@@ -611,7 +610,7 @@ impl Dataset {
     /// Applies to vector datasets, and fetches by the given
     /// _0-based_ index.
     pub fn layer(&self, idx: isize) -> Result<Layer> {
-        let c_layer = unsafe { gdal_sys::OGR_DS_GetLayer(self.c_dataset(), idx as c_int) };
+        let c_layer = unsafe { gdal_sys::OGR_DS_GetLayer(self.as_ptr(), idx as c_int) };
         if c_layer.is_null() {
             return Err(_last_null_pointer_err("OGR_DS_GetLayer"));
         }
@@ -623,7 +622,7 @@ impl Dataset {
     /// Applies to vector datasets, and fetches by the given
     /// _0-based_ index.
     pub fn into_layer(self, idx: isize) -> Result<OwnedLayer> {
-        let c_layer = unsafe { gdal_sys::OGR_DS_GetLayer(self.c_dataset(), idx as c_int) };
+        let c_layer = unsafe { gdal_sys::OGR_DS_GetLayer(self.as_ptr(), idx as c_int) };
         if c_layer.is_null() {
             return Err(_last_null_pointer_err("OGR_DS_GetLayer"));
         }
@@ -633,7 +632,7 @@ impl Dataset {
     /// Fetch a layer by name.
     pub fn layer_by_name(&self, name: &str) -> Result<Layer> {
         let c_name = CString::new(name)?;
-        let c_layer = unsafe { gdal_sys::OGR_DS_GetLayerByName(self.c_dataset(), c_name.as_ptr()) };
+        let c_layer = unsafe { gdal_sys::OGR_DS_GetLayerByName(self.as_ptr(), c_name.as_ptr()) };
         if c_layer.is_null() {
             return Err(_last_null_pointer_err("OGR_DS_GetLayerByName"));
         }
@@ -643,7 +642,7 @@ impl Dataset {
     /// Fetch a layer by name.
     pub fn into_layer_by_name(self, name: &str) -> Result<OwnedLayer> {
         let c_name = CString::new(name)?;
-        let c_layer = unsafe { gdal_sys::OGR_DS_GetLayerByName(self.c_dataset(), c_name.as_ptr()) };
+        let c_layer = unsafe { gdal_sys::OGR_DS_GetLayerByName(self.as_ptr(), c_name.as_ptr()) };
         if c_layer.is_null() {
             return Err(_last_null_pointer_err("OGR_DS_GetLayerByName"));
         }
@@ -715,7 +714,7 @@ impl Dataset {
             // propagated to the gdal_sys wrapper. The lack of `const` seems like a mistake in the
             // GDAL API, so we just do a cast here.
             gdal_sys::OGR_DS_CreateLayer(
-                self.c_dataset(),
+                self.as_ptr(),
                 c_name.as_ptr(),
                 c_srs,
                 options.ty,

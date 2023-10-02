@@ -1,7 +1,9 @@
-use foreign_types::ForeignTypeRef;
+use foreign_types::{foreign_type, ForeignType, ForeignTypeRef};
+use std::fmt::{Debug, Formatter};
+use std::mem::ManuallyDrop;
 use std::{ffi::CString, ffi::NulError, path::Path, ptr};
 
-use gdal_sys::{self, CPLErr, GDALDatasetH, GDALMajorObjectH};
+use gdal_sys::{self, CPLErr, GDALMajorObjectH};
 
 use crate::cpl::CslStringList;
 use crate::errors::*;
@@ -13,19 +15,20 @@ use crate::{
     gdal_major_object::MajorObject, spatial_ref::SpatialRef, Driver, GeoTransform, Metadata,
 };
 
-/// Wrapper around a [`GDALDataset`][GDALDataset] object.
-///
-/// Represents both a [vector dataset][vector-data-model]
-/// containing a collection of layers; and a
-/// [raster dataset][raster-data-model] containing a collection of raster-bands.
-///
-/// [vector-data-model]: https://gdal.org/user/vector_data_model.html
-/// [raster-data-model]: https://gdal.org/user/raster_data_model.html
-/// [GDALDataset]: https://gdal.org/api/gdaldataset_cpp.html#_CPPv411GDALDataset
-#[derive(Debug)]
-pub struct Dataset {
-    c_dataset: GDALDatasetH,
-    closed: bool,
+foreign_type! {
+    /// Wrapper around a [`GDALDataset`][GDALDataset] object.
+    ///
+    /// Represents both a [vector dataset][vector-data-model]
+    /// containing a collection of layers; and a
+    /// [raster dataset][raster-data-model] containing a collection of raster-bands.
+    ///
+    /// [vector-data-model]: https://gdal.org/user/vector_data_model.html
+    /// [raster-data-model]: https://gdal.org/user/raster_data_model.html
+    /// [GDALDataset]: https://gdal.org/api/gdaldataset_cpp.html#_CPPv411GDALDataset
+    pub unsafe type Dataset {
+        type CType = libc::c_void;
+        fn drop = gdal_sys::GDALClose;
+    }
 }
 
 // GDAL Docs state: The returned dataset should only be accessed by one thread at a time.
@@ -37,26 +40,6 @@ unsafe impl Send for Dataset {}
 
 /// Core dataset methods
 impl Dataset {
-    /// Returns the wrapped C pointer
-    ///
-    /// # Safety
-    /// This method returns a raw C pointer
-    pub fn c_dataset(&self) -> GDALDatasetH {
-        self.c_dataset
-    }
-
-    /// Creates a new Dataset by wrapping a C pointer
-    ///
-    /// # Safety
-    /// This method operates on a raw C pointer
-    /// The dataset must not have been closed (using [`GDALClose`]) before.
-    pub unsafe fn from_c_dataset(c_dataset: GDALDatasetH) -> Dataset {
-        Dataset {
-            c_dataset,
-            closed: false,
-        }
-    }
-
     /// Open a dataset at the given `path` with default
     /// options.
     pub fn open<P: AsRef<Path>>(path: P) -> Result<Dataset> {
@@ -158,10 +141,7 @@ impl Dataset {
         if c_dataset.is_null() {
             return Err(_last_null_pointer_err("GDALOpenEx"));
         }
-        Ok(Dataset {
-            c_dataset,
-            closed: false,
-        })
+        Ok(unsafe { Dataset::from_ptr(c_dataset) })
     }
 
     /// Flush all write cached data to disk.
@@ -172,7 +152,7 @@ impl Dataset {
     pub fn flush_cache(&mut self) -> Result<()> {
         #[cfg(any(all(major_ge_3, minor_ge_7), major_ge_4))]
         {
-            let rv = unsafe { gdal_sys::GDALFlushCache(self.c_dataset) };
+            let rv = unsafe { gdal_sys::GDALFlushCache(self.as_ptr()) };
             if rv != CPLErr::CE_None {
                 return Err(_last_cpl_err(rv));
             }
@@ -180,23 +160,29 @@ impl Dataset {
         #[cfg(not(any(all(major_is_3, minor_ge_7), major_ge_4)))]
         {
             unsafe {
-                gdal_sys::GDALFlushCache(self.c_dataset);
+                gdal_sys::GDALFlushCache(self.as_ptr());
             }
         }
         Ok(())
     }
 
-    /// Close the dataset.
+    /// Close the dataset, consuming it.
     ///
-    /// See [`GDALClose`].
+    /// See [`GDALClose`](https://gdal.org/api/raster_c_api.html#_CPPv49GDALClose12GDALDatasetH).
     ///
-    /// Note: on GDAL versions older than 3.7.0, this function always succeeds.
-    pub fn close(mut self) -> Result<()> {
-        self.closed = true;
-
+    /// # Notes
+    /// * `Drop`ing automatically closes the Dataset, so this method is usually not needed.
+    /// * On GDAL versions older than 3.7.0, this function always succeeds.
+    pub fn close(self) -> Result<()> {
+        // According to the C documentation, GDALClose will release all resources
+        // using the C++ `delete` operator.
+        // According to https://doc.rust-lang.org/std/mem/fn.forget.html#relationship-with-manuallydrop
+        // `ManuallyDrop` is the suggested means of transferring memory management while
+        // robustly preventing a double-free.
+        let ds = ManuallyDrop::new(self);
         #[cfg(any(all(major_ge_3, minor_ge_7), major_ge_4))]
         {
-            let rv = unsafe { gdal_sys::GDALClose(self.c_dataset) };
+            let rv = unsafe { gdal_sys::GDALClose(ds.as_ptr()) };
             if rv != CPLErr::CE_None {
                 return Err(_last_cpl_err(rv));
             }
@@ -204,7 +190,7 @@ impl Dataset {
         #[cfg(not(any(all(major_is_3, minor_ge_7), major_ge_4)))]
         {
             unsafe {
-                gdal_sys::GDALClose(self.c_dataset);
+                gdal_sys::GDALClose(ds.as_ptr());
             }
         }
         Ok(())
@@ -212,14 +198,14 @@ impl Dataset {
 
     /// Fetch the projection definition string for this dataset.
     pub fn projection(&self) -> String {
-        let rv = unsafe { gdal_sys::GDALGetProjectionRef(self.c_dataset) };
+        let rv = unsafe { gdal_sys::GDALGetProjectionRef(self.as_ptr()) };
         _string(rv)
     }
 
     /// Set the projection reference string for this dataset.
     pub fn set_projection(&mut self, projection: &str) -> Result<()> {
         let c_projection = CString::new(projection)?;
-        unsafe { gdal_sys::GDALSetProjection(self.c_dataset, c_projection.as_ptr()) };
+        unsafe { gdal_sys::GDALSetProjection(self.as_ptr(), c_projection.as_ptr()) };
         Ok(())
     }
 
@@ -227,7 +213,7 @@ impl Dataset {
     /// Get the spatial reference system for this dataset.
     pub fn spatial_ref(&self) -> Result<SpatialRef> {
         Ok(
-            unsafe { SpatialRefRef::from_ptr(gdal_sys::GDALGetSpatialRef(self.c_dataset)) }
+            unsafe { SpatialRefRef::from_ptr(gdal_sys::GDALGetSpatialRef(self.as_ptr())) }
                 .to_owned(),
         )
     }
@@ -235,7 +221,7 @@ impl Dataset {
     #[cfg(major_ge_3)]
     /// Set the spatial reference system for this dataset.
     pub fn set_spatial_ref(&mut self, spatial_ref: &SpatialRef) -> Result<()> {
-        let rv = unsafe { gdal_sys::GDALSetSpatialRef(self.c_dataset, spatial_ref.as_ptr()) };
+        let rv = unsafe { gdal_sys::GDALSetSpatialRef(self.as_ptr(), spatial_ref.as_ptr()) };
         if rv != CPLErr::CE_None {
             return Err(_last_cpl_err(rv));
         }
@@ -265,7 +251,7 @@ impl Dataset {
                 gdal_sys::GDALCreateCopy(
                     driver.c_driver(),
                     c_filename.as_ptr(),
-                    ds.c_dataset,
+                    ds.as_ptr(),
                     0,
                     c_options.as_ptr(),
                     None,
@@ -275,7 +261,7 @@ impl Dataset {
             if c_dataset.is_null() {
                 return Err(_last_null_pointer_err("GDALCreateCopy"));
             }
-            Ok(unsafe { Dataset::from_c_dataset(c_dataset) })
+            Ok(unsafe { Dataset::from_ptr(c_dataset) })
         }
         _create_copy(self, driver, filename.as_ref(), options)
     }
@@ -283,7 +269,7 @@ impl Dataset {
     /// Fetch the driver to which this dataset relates.
     pub fn driver(&self) -> Driver {
         unsafe {
-            let c_driver = gdal_sys::GDALGetDatasetDriver(self.c_dataset);
+            let c_driver = gdal_sys::GDALGetDatasetDriver(self.as_ptr());
             Driver::from_c_driver(c_driver)
         }
     }
@@ -304,7 +290,7 @@ impl Dataset {
     pub fn set_geo_transform(&mut self, transformation: &GeoTransform) -> Result<()> {
         assert_eq!(transformation.len(), 6);
         let rv = unsafe {
-            gdal_sys::GDALSetGeoTransform(self.c_dataset, transformation.as_ptr() as *mut f64)
+            gdal_sys::GDALSetGeoTransform(self.as_ptr(), transformation.as_ptr() as *mut f64)
         };
         if rv != CPLErr::CE_None {
             return Err(_last_cpl_err(rv));
@@ -324,7 +310,7 @@ impl Dataset {
     pub fn geo_transform(&self) -> Result<GeoTransform> {
         let mut transformation = GeoTransform::default();
         let rv =
-            unsafe { gdal_sys::GDALGetGeoTransform(self.c_dataset, transformation.as_mut_ptr()) };
+            unsafe { gdal_sys::GDALGetGeoTransform(self.as_ptr(), transformation.as_mut_ptr()) };
 
         // check if the dataset has a GeoTransform
         if rv != CPLErr::CE_None {
@@ -334,23 +320,24 @@ impl Dataset {
     }
 }
 
+impl Debug for Dataset {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Dataset")
+            .field(
+                "description",
+                &self.description().unwrap_or_else(|_| Default::default()),
+            )
+            .finish()
+    }
+}
+
 impl MajorObject for Dataset {
     fn gdal_object_ptr(&self) -> GDALMajorObjectH {
-        self.c_dataset
+        self.as_ptr()
     }
 }
 
 impl Metadata for Dataset {}
-
-impl Drop for Dataset {
-    fn drop(&mut self) {
-        if !self.closed {
-            unsafe {
-                gdal_sys::GDALClose(self.c_dataset);
-            }
-        }
-    }
-}
 
 #[cfg(test)]
 mod tests {

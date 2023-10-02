@@ -22,7 +22,7 @@ use libc::c_void;
 use std::ffi::CString;
 use std::os::raw::c_char;
 
-use foreign_types::ForeignTypeRef;
+use foreign_types::{ForeignType, ForeignTypeRef};
 #[cfg(feature = "ndarray")]
 use ndarray::{ArrayD, IxDyn};
 use std::fmt::{Debug, Display};
@@ -67,7 +67,7 @@ impl<'a> MDArray<'a> {
     pub unsafe fn from_c_mdarray_and_group(_group: &'a Group, c_mdarray: GDALMDArrayH) -> Self {
         Self {
             c_mdarray,
-            c_dataset: _group._dataset.c_dataset(),
+            c_dataset: _group._dataset.as_ptr(),
             _parent: GroupOrDimension::Group { _group },
         }
     }
@@ -83,7 +83,7 @@ impl<'a> MDArray<'a> {
         Self {
             c_mdarray,
             c_dataset: match _dimension._parent {
-                GroupOrArray::Group { _group } => _group._dataset.c_dataset(),
+                GroupOrArray::Group { _group } => _group._dataset.as_ptr(),
                 GroupOrArray::MDArray { _md_array } => _md_array.c_dataset,
             },
             _parent: GroupOrDimension::Dimension { _dimension },
@@ -802,7 +802,7 @@ impl Dataset {
     #[cfg(all(major_ge_3, minor_ge_1))]
     pub fn root_group(&self) -> Result<Group> {
         unsafe {
-            let c_group = gdal_sys::GDALDatasetGetRootGroup(self.c_dataset());
+            let c_group = gdal_sys::GDALDatasetGetRootGroup(self.as_ptr());
             if c_group.is_null() {
                 return Err(_last_null_pointer_err("GDALDatasetGetRootGroup"));
             }

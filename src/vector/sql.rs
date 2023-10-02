@@ -132,7 +132,7 @@ impl Dataset {
             filter_geom = spatial_filter.as_ptr();
         }
 
-        let c_dataset = self.c_dataset();
+        let c_dataset = self.as_ptr();
 
         unsafe { gdal_sys::CPLErrorReset() };
 
@@ -154,7 +154,7 @@ impl Dataset {
 
         Ok(Some(sql::ResultSet {
             layer,
-            dataset: c_dataset,
+            dataset: c_dataset, // TODO: We're ending up with a shared reference here...
         }))
     }
 }

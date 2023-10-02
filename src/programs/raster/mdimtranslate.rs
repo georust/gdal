@@ -3,6 +3,7 @@ use crate::{
     utils::{_last_null_pointer_err, _path_to_c_string},
     Dataset,
 };
+use foreign_types::ForeignType;
 use gdal_sys::{GDALMultiDimTranslate, GDALMultiDimTranslateOptions};
 use libc::{c_char, c_int};
 use std::{
@@ -183,12 +184,12 @@ fn _multi_dim_translate(
 ) -> Result<Dataset> {
     let (psz_dest_option, h_dst_ds) = match &destination {
         MultiDimTranslateDestination::Path(c_path) => (Some(c_path), null_mut()),
-        MultiDimTranslateDestination::Dataset { dataset, .. } => (None, dataset.c_dataset()),
+        MultiDimTranslateDestination::Dataset { dataset, .. } => (None, dataset.as_ptr()),
     };
 
     let psz_dest = psz_dest_option.map(|x| x.as_ptr()).unwrap_or_else(null);
 
-    let mut pah_src_ds: Vec<gdal_sys::GDALDatasetH> = input.iter().map(|x| x.c_dataset()).collect();
+    let mut pah_src_ds: Vec<gdal_sys::GDALDatasetH> = input.iter().map(|x| x.as_ptr()).collect();
 
     let ps_options = options
         .as_ref()
@@ -217,7 +218,7 @@ fn _multi_dim_translate(
         return Err(_last_null_pointer_err("GDALMultiDimTranslate"));
     }
 
-    let result = unsafe { Dataset::from_c_dataset(dataset_out) };
+    let result = unsafe { Dataset::from_ptr(dataset_out) };
 
     Ok(result)
 }

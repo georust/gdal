@@ -208,7 +208,7 @@ pub fn rasterize(
         // here.
 
         let error = gdal_sys::GDALRasterizeGeometries(
-            dataset.c_dataset(),
+            dataset.as_ptr(),
             bands.len() as i32,
             bands.as_ptr() as *mut i32,
             geometries.len() as i32,

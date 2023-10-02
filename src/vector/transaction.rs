@@ -1,5 +1,6 @@
 use crate::errors::{GdalError, Result};
 use crate::Dataset;
+use foreign_types::ForeignType;
 use gdal_sys::OGRErr;
 use std::ops::{Deref, DerefMut};
 
@@ -46,7 +47,7 @@ impl<'a> Transaction<'a> {
     ///
     /// Depending on drivers, this may or may not abort layer sequential readings that are active.
     pub fn commit(mut self) -> Result<()> {
-        let rv = unsafe { gdal_sys::GDALDatasetCommitTransaction(self.dataset.c_dataset()) };
+        let rv = unsafe { gdal_sys::GDALDatasetCommitTransaction(self.dataset.as_ptr()) };
         self.rollback_on_drop = false;
         if rv != OGRErr::OGRERR_NONE {
             return Err(GdalError::OgrError {
@@ -61,7 +62,7 @@ impl<'a> Transaction<'a> {
     ///
     /// If the rollback fails, will return [`OGRErr::OGRERR_FAILURE`].
     pub fn rollback(mut self) -> Result<()> {
-        let rv = unsafe { gdal_sys::GDALDatasetRollbackTransaction(self.dataset.c_dataset()) };
+        let rv = unsafe { gdal_sys::GDALDatasetRollbackTransaction(self.dataset.as_ptr()) };
         self.rollback_on_drop = false;
         if rv != OGRErr::OGRERR_NONE {
             return Err(GdalError::OgrError {
@@ -92,7 +93,7 @@ impl<'a> Drop for Transaction<'a> {
         if self.rollback_on_drop {
             // We silently swallow any errors, because we have no way to report them from a drop
             // function apart from panicking.
-            unsafe { gdal_sys::GDALDatasetRollbackTransaction(self.dataset.c_dataset()) };
+            unsafe { gdal_sys::GDALDatasetRollbackTransaction(self.dataset.as_ptr()) };
         }
     }
 }
@@ -168,7 +169,7 @@ impl Dataset {
     /// ```
     pub fn start_transaction(&mut self) -> Result<Transaction<'_>> {
         let force = 1;
-        let rv = unsafe { gdal_sys::GDALDatasetStartTransaction(self.c_dataset(), force) };
+        let rv = unsafe { gdal_sys::GDALDatasetStartTransaction(self.as_ptr(), force) };
         if rv != OGRErr::OGRERR_NONE {
             return Err(GdalError::OgrError {
                 err: rv,

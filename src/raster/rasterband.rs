@@ -3,7 +3,7 @@ use crate::metadata::Metadata;
 use crate::raster::{GdalDataType, GdalType};
 use crate::utils::{_last_cpl_err, _last_null_pointer_err, _string};
 use crate::Dataset;
-use foreign_types::{ForeignTypeRef, Opaque};
+use foreign_types::{ForeignType, ForeignTypeRef, Opaque};
 use gdal_sys::{
     self, CPLErr, GDALColorEntry, GDALColorInterp, GDALColorTableH, GDALComputeRasterMinMax,
     GDALCreateColorRamp, GDALCreateColorTable, GDALDestroyColorTable, GDALGetPaletteInterpretation,
@@ -28,7 +28,7 @@ impl Dataset {
     /// rasterband at the given _1-based_ index.
     pub fn rasterband(&self, band_index: isize) -> Result<&mut RasterBand> {
         unsafe {
-            let c_band = gdal_sys::GDALGetRasterBand(self.c_dataset(), band_index as c_int);
+            let c_band = gdal_sys::GDALGetRasterBand(self.as_ptr(), band_index as c_int);
             if c_band.is_null() {
                 return Err(_last_null_pointer_err("GDALGetRasterBand"));
             }
@@ -53,7 +53,7 @@ impl Dataset {
         let c_resampling = CString::new(resampling)?;
         let rv = unsafe {
             gdal_sys::GDALBuildOverviews(
-                self.c_dataset(),
+                self.as_ptr(),
                 c_resampling.as_ptr(),
                 overviews.len() as i32,
                 overviews.as_ptr() as *mut i32,
@@ -71,13 +71,13 @@ impl Dataset {
 
     /// Fetch the number of raster bands on this dataset.
     pub fn raster_count(&self) -> isize {
-        (unsafe { gdal_sys::GDALGetRasterCount(self.c_dataset()) }) as isize
+        (unsafe { gdal_sys::GDALGetRasterCount(self.as_ptr()) }) as isize
     }
 
     /// Returns the raster dimensions: (width, height).
     pub fn raster_size(&self) -> (usize, usize) {
-        let size_x = unsafe { gdal_sys::GDALGetRasterXSize(self.c_dataset()) } as usize;
-        let size_y = unsafe { gdal_sys::GDALGetRasterYSize(self.c_dataset()) } as usize;
+        let size_x = unsafe { gdal_sys::GDALGetRasterXSize(self.as_ptr()) } as usize;
+        let size_y = unsafe { gdal_sys::GDALGetRasterYSize(self.as_ptr()) } as usize;
         (size_x, size_y)
     }
 }
