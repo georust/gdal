@@ -1,3 +1,4 @@
+use foreign_types::ForeignType;
 use std::convert::TryFrom;
 use std::ptr;
 
@@ -191,10 +192,7 @@ pub fn rasterize(
     let bands: Vec<i32> = bands.iter().map(|&band| band as i32).collect();
     let options = options.unwrap_or_default();
 
-    let geometries: Vec<_> = geometries
-        .iter()
-        .map(|geo| unsafe { geo.c_geometry() })
-        .collect();
+    let geometries: Vec<_> = geometries.iter().map(|geo| geo.as_ptr()).collect();
     let burn_values: Vec<f64> = burn_values
         .iter()
         .flat_map(|burn| std::iter::repeat(burn).take(bands.len()))

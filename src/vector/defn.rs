@@ -1,68 +1,98 @@
-use crate::spatial_ref::SpatialRef;
+use crate::spatial_ref::{SpatialRef, SpatialRefRef};
 use crate::utils::{_last_null_pointer_err, _string};
 use crate::vector::LayerAccess;
+use foreign_types::{foreign_type, ForeignType, ForeignTypeRef};
 use gdal_sys::{
     self, OGRFeatureDefnH, OGRFieldDefnH, OGRFieldType, OGRGeomFieldDefnH, OGRwkbGeometryType,
 };
 use libc::c_int;
+use std::fmt::{Debug, Formatter};
 
 use crate::errors::*;
 
-/// Layer definition
-///
-/// Defines the fields available for features in a layer.
-#[derive(Debug)]
-pub struct Defn {
-    c_defn: OGRFeatureDefnH,
+foreign_type! {
+    /// Layer definition
+    ///
+    /// Defines the fields available for features in a layer.
+    pub unsafe type Defn {
+        type CType = libc::c_void;
+        fn drop = gdal_sys::OGR_FD_Release;
+    }
 }
 
 impl Defn {
-    /// Creates a new Defn by wrapping a C pointer
-    ///
-    /// # Safety
-    /// This method operates on a raw C pointer
-    pub unsafe fn from_c_defn(c_defn: OGRFeatureDefnH) -> Defn {
-        Defn { c_defn }
+    pub fn from_layer<L: LayerAccess>(lyr: &L) -> Self {
+        DefnRef::from_layer(lyr).to_owned()
+    }
+}
+
+/// GDAL implements reference counting over `OGRFeatureDefn`, so
+/// we can implement cheaper ownership via reference counting.
+impl ToOwned for DefnRef {
+    type Owned = Defn;
+
+    fn to_owned(&self) -> Self::Owned {
+        let ptr = self.as_ptr();
+        let _ = unsafe { gdal_sys::OGR_FD_Reference(ptr) };
+        unsafe { Defn::from_ptr(ptr) }
+    }
+}
+
+impl DefnRef {
+    pub fn from_layer<L: LayerAccess>(lyr: &L) -> &DefnRef {
+        unsafe { DefnRef::from_ptr(gdal_sys::OGR_L_GetLayerDefn(lyr.c_layer())) }
     }
 
-    /// Returns the wrapped C pointer
+    /// Number of non-geometry fields in the feature definition
     ///
-    /// # Safety
-    /// This method returns a raw C pointer
-    pub unsafe fn c_defn(&self) -> OGRFeatureDefnH {
-        self.c_defn
+    /// See: [`OGR_FD_GetFieldCount`](https://gdal.org/api/vector_c_api.html#_CPPv420OGR_FD_GetFieldCount15OGRFeatureDefnH)
+    pub fn field_count(&self) -> isize {
+        (unsafe { gdal_sys::OGR_FD_GetFieldCount(self.as_ptr()) } as isize)
     }
 
     /// Iterate over the field schema of this layer.
     pub fn fields(&self) -> FieldIterator {
-        let total = unsafe { gdal_sys::OGR_FD_GetFieldCount(self.c_defn) } as isize;
+        let total = self.field_count();
         FieldIterator {
             defn: self,
-            c_feature_defn: self.c_defn,
+            c_feature_defn: self.as_ptr(),
             next_id: 0,
             total,
         }
+    }
+
+    /// Number of geometry fields in the feature definition
+    ///
+    /// See: [`OGR_FD_GetGeomFieldCount`](https://gdal.org/api/vector_c_api.html#_CPPv424OGR_FD_GetGeomFieldCount15OGRFeatureDefnH)
+    pub fn geom_field_count(&self) -> isize {
+        (unsafe { gdal_sys::OGR_FD_GetGeomFieldCount(self.as_ptr()) } as isize)
     }
 
     /// Iterate over the geometry field schema of this layer.
     pub fn geom_fields(&self) -> GeomFieldIterator {
-        let total = unsafe { gdal_sys::OGR_FD_GetGeomFieldCount(self.c_defn) } as isize;
+        let total = self.geom_field_count();
         GeomFieldIterator {
             defn: self,
-            c_feature_defn: self.c_defn,
+            c_feature_defn: self.as_ptr(),
             next_id: 0,
             total,
         }
     }
+}
 
-    pub fn from_layer<L: LayerAccess>(lyr: &L) -> Defn {
-        let c_defn = unsafe { gdal_sys::OGR_L_GetLayerDefn(lyr.c_layer()) };
-        Defn { c_defn }
+impl Debug for Defn {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let f_count = self.field_count();
+        let g_count = self.geom_fields().count();
+        f.debug_struct("Defn")
+            .field("fields", &f_count)
+            .field("geometries", &g_count)
+            .finish()
     }
 }
 
 pub struct FieldIterator<'a> {
-    defn: &'a Defn,
+    defn: &'a DefnRef,
     c_feature_defn: OGRFeatureDefnH,
     next_id: isize,
     total: isize,
@@ -88,7 +118,7 @@ impl<'a> Iterator for FieldIterator<'a> {
 }
 
 pub struct Field<'a> {
-    _defn: &'a Defn,
+    _defn: &'a DefnRef,
     c_field_defn: OGRFieldDefnH,
 }
 
@@ -113,7 +143,7 @@ impl<'a> Field<'a> {
 }
 
 pub struct GeomFieldIterator<'a> {
-    defn: &'a Defn,
+    defn: &'a DefnRef,
     c_feature_defn: OGRFeatureDefnH,
     next_id: isize,
     total: isize,
@@ -140,7 +170,7 @@ impl<'a> Iterator for GeomFieldIterator<'a> {
 
 // http://gdal.org/classOGRGeomFieldDefn.html
 pub struct GeomField<'a> {
-    _defn: &'a Defn,
+    _defn: &'a DefnRef,
     c_field_defn: OGRGeomFieldDefnH,
 }
 
@@ -160,6 +190,6 @@ impl<'a> GeomField<'a> {
         if c_obj.is_null() {
             return Err(_last_null_pointer_err("OGR_GFld_GetSpatialRef"));
         }
-        unsafe { SpatialRef::from_c_obj(c_obj) }
+        Ok(unsafe { SpatialRefRef::from_ptr(c_obj).to_owned() })
     }
 }

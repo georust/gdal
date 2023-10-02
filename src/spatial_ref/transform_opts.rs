@@ -1,43 +1,32 @@
+use foreign_types::{foreign_type, ForeignType};
 use std::ffi::CString;
 
 use gdal_sys::{self, CPLErr};
 
-use crate::errors;
 use crate::errors::*;
 #[allow(unused)] // Referenced in doc comments.
 use crate::spatial_ref::transform::CoordTransform;
 use crate::utils::{_last_cpl_err, _last_null_pointer_err};
 
-/// Options for [`CoordTransform::new_with_options`].
-#[derive(Debug)]
-pub struct CoordTransformOptions {
-    inner: gdal_sys::OGRCoordinateTransformationOptionsH,
-}
-
-impl Drop for CoordTransformOptions {
-    fn drop(&mut self) {
-        unsafe { gdal_sys::OCTDestroyCoordinateTransformationOptions(self.inner) };
+foreign_type! {
+    /// Options for [`CoordTransform::new_with_options`].
+    #[derive(Debug)]
+    pub unsafe type CoordTransformOptions {
+        type CType = gdal_sys::OGRCoordinateTransformationOptions;
+        fn drop = gdal_sys::OCTDestroyCoordinateTransformationOptions;
     }
 }
 
 impl CoordTransformOptions {
     /// Creation options for [`CoordTransform`].
-    pub fn new() -> errors::Result<CoordTransformOptions> {
+    pub fn new() -> Result<CoordTransformOptions> {
         let c_obj = unsafe { gdal_sys::OCTNewCoordinateTransformationOptions() };
         if c_obj.is_null() {
             return Err(_last_null_pointer_err(
                 "OCTNewCoordinateTransformationOptions",
             ));
         }
-        Ok(CoordTransformOptions { inner: c_obj })
-    }
-
-    /// Returns a C pointer to the allocated [`gdal_sys::OGRCoordinateTransformationOptionsH`] memory.
-    ///
-    /// # Safety
-    /// This method returns a raw C pointer
-    pub(crate) unsafe fn c_options(&self) -> gdal_sys::OGRCoordinateTransformationOptionsH {
-        self.inner
+        Ok(unsafe { CoordTransformOptions::from_ptr(c_obj) })
     }
 
     /// Sets an area of interest.
@@ -63,7 +52,7 @@ impl CoordTransformOptions {
     ) -> Result<()> {
         let ret_val = unsafe {
             gdal_sys::OCTCoordinateTransformationOptionsSetAreaOfInterest(
-                self.inner,
+                self.as_ptr(),
                 west_longitude_deg,
                 south_latitude_deg,
                 east_longitude_deg,
@@ -91,7 +80,7 @@ impl CoordTransformOptions {
     #[cfg(any(major_ge_4, all(major_ge_3, minor_ge_3)))]
     pub fn desired_accuracy(&mut self, accuracy: f64) -> Result<()> {
         let ret_val = unsafe {
-            gdal_sys::OCTCoordinateTransformationOptionsSetDesiredAccuracy(self.inner, accuracy)
+            gdal_sys::OCTCoordinateTransformationOptionsSetDesiredAccuracy(self.as_ptr(), accuracy)
         };
         if ret_val == 0 {
             return Err(_last_cpl_err(CPLErr::CE_Failure));
@@ -112,7 +101,7 @@ impl CoordTransformOptions {
     pub fn set_ballpark_allowed(&mut self, ballpark_allowed: bool) -> Result<()> {
         let ret_val = unsafe {
             gdal_sys::OCTCoordinateTransformationOptionsSetBallparkAllowed(
-                self.inner,
+                self.as_ptr(),
                 ballpark_allowed as libc::c_int,
             )
         };
@@ -143,7 +132,7 @@ impl CoordTransformOptions {
         let c_co = CString::new(co)?;
         let ret_val = unsafe {
             gdal_sys::OCTCoordinateTransformationOptionsSetOperation(
-                self.inner,
+                self.as_ptr(),
                 c_co.as_ptr(),
                 reverse as libc::c_int,
             )

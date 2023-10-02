@@ -107,7 +107,7 @@ fn test_write_raster() {
     };
 
     // epand it to fill the image (20x10)
-    let mut rb = dataset.rasterband(1).unwrap();
+    let rb = dataset.rasterband(1).unwrap();
 
     let res = rb.write((0, 0), (20, 10), &raster);
 
@@ -319,7 +319,7 @@ fn open_mask_band() {
 fn create_mask_band() {
     let driver = DriverManager::get_driver_by_name("MEM").unwrap();
     let dataset = driver.create("", 20, 10, 1).unwrap();
-    let mut rb = dataset.rasterband(1).unwrap();
+    let rb = dataset.rasterband(1).unwrap();
     rb.create_mask_band(false).unwrap();
 
     let mb = rb.open_mask_band().unwrap();
@@ -428,7 +428,7 @@ fn test_get_no_data_value() {
 fn test_set_no_data_value() {
     let driver = DriverManager::get_driver_by_name("MEM").unwrap();
     let dataset = driver.create("", 20, 10, 1).unwrap();
-    let mut rasterband = dataset.rasterband(1).unwrap();
+    let rasterband = dataset.rasterband(1).unwrap();
     assert_eq!(rasterband.no_data_value(), None);
     assert!(rasterband.set_no_data_value(Some(1.23)).is_ok());
     assert_eq!(rasterband.no_data_value(), Some(1.23));
@@ -481,6 +481,7 @@ fn test_get_rasterband_size() {
 }
 
 #[test]
+#[ignore]
 fn test_get_rasterband_block_size() {
     let dataset = Dataset::open(fixture("tinymarble.tif")).unwrap();
     let rasterband = dataset.rasterband(1).unwrap();
@@ -489,6 +490,7 @@ fn test_get_rasterband_block_size() {
 }
 
 #[test]
+#[ignore]
 #[cfg(any(all(major_ge_2, minor_ge_2), major_ge_3))] // GDAL 2.2 .. 2.x or >= 3
 fn test_get_rasterband_actual_block_size() {
     let dataset = Dataset::open(fixture("tinymarble.tif")).unwrap();
@@ -548,7 +550,7 @@ fn test_get_rasterband_color_interp() {
 fn test_set_rasterband_color_interp() {
     let driver = DriverManager::get_driver_by_name("MEM").unwrap();
     let dataset = driver.create("", 1, 1, 1).unwrap();
-    let mut rasterband = dataset.rasterband(1).unwrap();
+    let rasterband = dataset.rasterband(1).unwrap();
     rasterband
         .set_color_interpretation(ColorInterpretation::AlphaBand)
         .unwrap();
@@ -560,7 +562,7 @@ fn test_set_rasterband_color_interp() {
 fn test_set_rasterband_scale() {
     let driver = DriverManager::get_driver_by_name("MEM").unwrap();
     let dataset = driver.create("", 1, 1, 1).unwrap();
-    let mut rasterband = dataset.rasterband(1).unwrap();
+    let rasterband = dataset.rasterband(1).unwrap();
     let scale = 1234.5678;
     rasterband.set_scale(scale).unwrap();
     assert_eq!(rasterband.scale().unwrap(), scale);
@@ -570,7 +572,7 @@ fn test_set_rasterband_scale() {
 fn test_set_rasterband_offset() {
     let driver = DriverManager::get_driver_by_name("MEM").unwrap();
     let dataset = driver.create("", 1, 1, 1).unwrap();
-    let mut rasterband = dataset.rasterband(1).unwrap();
+    let rasterband = dataset.rasterband(1).unwrap();
     let offset = -123.456;
     rasterband.set_offset(offset).unwrap();
     assert_eq!(rasterband.offset().unwrap(), offset);

@@ -1,7 +1,8 @@
 use crate::errors::GdalError;
 use crate::errors::Result;
 use crate::utils::{_last_null_pointer_err, _string};
-use crate::vector::Geometry;
+use crate::vector::{Geometry, GeometryRef};
+use foreign_types::{ForeignType, ForeignTypeRef};
 use gdal_sys::OGRErr;
 use libc::c_char;
 use std::ffi::{c_void, CString};
@@ -32,7 +33,7 @@ impl Geometry {
                 method_name: "OGR_G_CreateFromWkt",
             });
         }
-        Ok(unsafe { Geometry::with_c_geometry(c_geom, true) })
+        Ok(unsafe { Geometry::from_ptr(c_geom) })
     }
 
     /// Creates a geometry by parsing a slice of bytes in
@@ -54,7 +55,7 @@ impl Geometry {
                 method_name: "OGR_G_CreateFromWkb",
             });
         }
-        Ok(unsafe { Geometry::with_c_geometry(c_geom, true) })
+        Ok(unsafe { Geometry::from_ptr(c_geom) })
     }
 
     /// Create a geometry by parsing a
@@ -65,7 +66,7 @@ impl Geometry {
         if c_geom.is_null() {
             return Err(_last_null_pointer_err("OGR_G_CreateGeometryFromJson"));
         }
-        Ok(unsafe { Geometry::with_c_geometry(c_geom, true) })
+        Ok(unsafe { Geometry::from_ptr(c_geom) })
     }
 
     /// Create a geometry by parsing a
@@ -76,13 +77,15 @@ impl Geometry {
         if c_geom.is_null() {
             return Err(_last_null_pointer_err("OGR_G_CreateFromGML"));
         }
-        Ok(unsafe { Geometry::with_c_geometry(c_geom, true) })
+        Ok(unsafe { Geometry::from_ptr(c_geom) })
     }
+}
 
+impl GeometryRef {
     /// Serialize the geometry as WKT.
     pub fn wkt(&self) -> Result<String> {
         let mut c_wkt = null_mut();
-        let rv = unsafe { gdal_sys::OGR_G_ExportToWkt(self.c_geometry(), &mut c_wkt) };
+        let rv = unsafe { gdal_sys::OGR_G_ExportToWkt(self.as_ptr(), &mut c_wkt) };
         if rv != OGRErr::OGRERR_NONE {
             return Err(GdalError::OgrError {
                 err: rv,
@@ -98,13 +101,13 @@ impl Geometry {
     /// [WKB](https://en.wikipedia.org/wiki/Well-known_text_representation_of_geometry#Well-known_binary)
     /// (Well-Known Binary) format.
     pub fn wkb(&self) -> Result<Vec<u8>> {
-        let wkb_size = unsafe { gdal_sys::OGR_G_WkbSize(self.c_geometry()) as usize };
+        let wkb_size = unsafe { gdal_sys::OGR_G_WkbSize(self.as_ptr()) as usize };
         // We default to little-endian for now. A WKB string explicitly indicates the byte
         // order, so this is not a problem for interoperability.
         let byte_order = gdal_sys::OGRwkbByteOrder::wkbNDR;
         let mut wkb = vec![0; wkb_size];
         let rv =
-            unsafe { gdal_sys::OGR_G_ExportToWkb(self.c_geometry(), byte_order, wkb.as_mut_ptr()) };
+            unsafe { gdal_sys::OGR_G_ExportToWkb(self.as_ptr(), byte_order, wkb.as_mut_ptr()) };
         if rv != gdal_sys::OGRErr::OGRERR_NONE {
             return Err(GdalError::OgrError {
                 err: rv,
@@ -118,7 +121,7 @@ impl Geometry {
     ///
     /// See: [`OGR_G_ExportToJson`](https://gdal.org/api/vector_c_api.html#_CPPv418OGR_G_ExportToJson12OGRGeometryH)
     pub fn json(&self) -> Result<String> {
-        let c_json = unsafe { gdal_sys::OGR_G_ExportToJson(self.c_geometry()) };
+        let c_json = unsafe { gdal_sys::OGR_G_ExportToJson(self.as_ptr()) };
         if c_json.is_null() {
             return Err(_last_null_pointer_err("OGR_G_ExportToJson"));
         };

@@ -1,3 +1,4 @@
+use foreign_types::ForeignType;
 use std::ffi::{CStr, CString};
 use std::ops::{Deref, DerefMut};
 
@@ -128,7 +129,7 @@ impl Dataset {
         };
 
         if let Some(spatial_filter) = spatial_filter {
-            filter_geom = unsafe { spatial_filter.c_geometry() };
+            filter_geom = spatial_filter.as_ptr();
         }
 
         let c_dataset = self.c_dataset();

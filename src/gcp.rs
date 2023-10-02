@@ -6,9 +6,10 @@ use std::marker::PhantomData;
 use gdal_sys::CPLErr;
 
 use crate::errors::Result;
-use crate::spatial_ref::SpatialRef;
+use crate::spatial_ref::{SpatialRef, SpatialRefRef};
 use crate::utils::{_last_cpl_err, _string};
 use crate::Dataset;
+use foreign_types::{ForeignType, ForeignTypeRef};
 
 /// An owned Ground Control Point.
 #[derive(Clone, Debug, PartialEq, PartialOrd)]
@@ -120,8 +121,9 @@ impl Dataset {
         if c_ptr.is_null() {
             return None;
         }
-
-        unsafe { SpatialRef::from_c_obj(c_ptr) }.ok()
+        // NB: Creating a `SpatialRefRef` from a pointer acknowledges that GDAL is giving us
+        // a shared reference. We then call `to_owned` to appropriately get a clone.
+        Some(unsafe { SpatialRefRef::from_ptr(c_ptr) }.to_owned())
     }
 
     /// Get the projection definition string for the GCPs in this dataset.
@@ -207,7 +209,7 @@ impl Dataset {
                 self.c_dataset(),
                 len,
                 gdal_gcps.as_ptr(),
-                spatial_ref.to_c_hsrs() as *mut _,
+                spatial_ref.as_ptr() as *mut _,
             )
         };
 

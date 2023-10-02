@@ -1,4 +1,5 @@
 use crate::vector::Geometry;
+use foreign_types::ForeignType;
 
 /// # Set Operations
 ///
@@ -26,18 +27,11 @@ impl Geometry {
     /// [intersection]: https://en.wikipedia.org/wiki/Intersection_(geometry)
     /// [has_geos]: crate::version::VersionInfo::has_geos
     pub fn intersection(&self, other: &Self) -> Option<Self> {
-        if !self.has_gdal_ptr() {
-            return None;
-        }
-        if !other.has_gdal_ptr() {
-            return None;
-        }
-        let ogr_geom =
-            unsafe { gdal_sys::OGR_G_Intersection(self.c_geometry(), other.c_geometry()) };
+        let ogr_geom = unsafe { gdal_sys::OGR_G_Intersection(self.as_ptr(), other.as_ptr()) };
         if ogr_geom.is_null() {
             return None;
         }
-        Some(unsafe { Geometry::with_c_geometry(ogr_geom, true) })
+        Some(unsafe { Geometry::from_ptr(ogr_geom) })
     }
 
     /// Computes the [geometric union][union] of `self` and `other`.
@@ -60,18 +54,12 @@ impl Geometry {
     /// [union]: https://en.wikipedia.org/wiki/Constructive_solid_geometry#Workings
     /// [has_geos]: crate::version::VersionInfo::has_geos
     pub fn union(&self, other: &Self) -> Option<Self> {
-        if !self.has_gdal_ptr() {
-            return None;
-        }
-        if !other.has_gdal_ptr() {
-            return None;
-        }
         unsafe {
-            let ogr_geom = gdal_sys::OGR_G_Union(self.c_geometry(), other.c_geometry());
+            let ogr_geom = gdal_sys::OGR_G_Union(self.as_ptr(), other.as_ptr());
             if ogr_geom.is_null() {
                 return None;
             }
-            Some(Geometry::with_c_geometry(ogr_geom, true))
+            Some(Geometry::from_ptr(ogr_geom))
         }
     }
 }
@@ -96,18 +84,6 @@ mod tests {
         let inter = inter.unwrap();
 
         assert_eq!(inter.area(), 25.0);
-    }
-
-    #[test]
-    fn test_intersection_no_gdal_ptr() {
-        let geom =
-            Geometry::from_wkt("POLYGON ((0.0 10.0, 0.0 0.0, 10.0 0.0, 10.0 10.0, 0.0 10.0))")
-                .unwrap();
-        let other = unsafe { Geometry::lazy_feature_geometry() };
-
-        let inter = geom.intersection(&other);
-
-        assert!(inter.is_none());
     }
 
     #[test]
@@ -142,18 +118,6 @@ mod tests {
         let res = res.unwrap();
 
         assert_eq!(res.area(), 135.0);
-    }
-
-    #[test]
-    fn test_union_no_gdal_ptr() {
-        let geom =
-            Geometry::from_wkt("POLYGON ((0.0 10.0, 0.0 0.0, 10.0 0.0, 10.0 10.0, 0.0 10.0))")
-                .unwrap();
-        let other = unsafe { Geometry::lazy_feature_geometry() };
-
-        let res = geom.union(&other);
-
-        assert!(res.is_none());
     }
 
     #[test]

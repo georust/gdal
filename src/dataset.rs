@@ -1,3 +1,4 @@
+use foreign_types::ForeignTypeRef;
 use std::{ffi::CString, ffi::NulError, path::Path, ptr};
 
 use gdal_sys::{self, CPLErr, GDALDatasetH, GDALMajorObjectH};
@@ -6,6 +7,7 @@ use crate::cpl::CslStringList;
 use crate::errors::*;
 use crate::options::DatasetOptions;
 use crate::raster::RasterCreationOption;
+use crate::spatial_ref::SpatialRefRef;
 use crate::utils::{_last_cpl_err, _last_null_pointer_err, _path_to_c_string, _string};
 use crate::{
     gdal_major_object::MajorObject, spatial_ref::SpatialRef, Driver, GeoTransform, Metadata,
@@ -224,13 +226,16 @@ impl Dataset {
     #[cfg(major_ge_3)]
     /// Get the spatial reference system for this dataset.
     pub fn spatial_ref(&self) -> Result<SpatialRef> {
-        unsafe { SpatialRef::from_c_obj(gdal_sys::GDALGetSpatialRef(self.c_dataset)) }
+        Ok(
+            unsafe { SpatialRefRef::from_ptr(gdal_sys::GDALGetSpatialRef(self.c_dataset)) }
+                .to_owned(),
+        )
     }
 
     #[cfg(major_ge_3)]
     /// Set the spatial reference system for this dataset.
     pub fn set_spatial_ref(&mut self, spatial_ref: &SpatialRef) -> Result<()> {
-        let rv = unsafe { gdal_sys::GDALSetSpatialRef(self.c_dataset, spatial_ref.to_c_hsrs()) };
+        let rv = unsafe { gdal_sys::GDALSetSpatialRef(self.c_dataset, spatial_ref.as_ptr()) };
         if rv != CPLErr::CE_None {
             return Err(_last_cpl_err(rv));
         }

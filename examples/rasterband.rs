@@ -1,4 +1,3 @@
-use gdal::raster::RasterBand;
 use gdal::{Dataset, Metadata};
 use std::path::Path;
 
@@ -7,7 +6,7 @@ fn main() {
     let dataset = Dataset::open(path).unwrap();
     println!("dataset description: {:?}", dataset.description());
 
-    let rasterband: RasterBand = dataset.rasterband(1).unwrap();
+    let rasterband = dataset.rasterband(1).unwrap();
     println!("rasterband description: {:?}", rasterband.description());
     println!("rasterband no_data_value: {:?}", rasterband.no_data_value());
     println!("rasterband type: {:?}", rasterband.band_type());

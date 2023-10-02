@@ -382,7 +382,7 @@ mod tests {
     fn test_set_description() {
         let driver = DriverManager::get_driver_by_name("MEM").unwrap();
         let dataset = driver.create("", 1, 1, 1).unwrap();
-        let mut band = dataset.rasterband(1).unwrap();
+        let band = dataset.rasterband(1).unwrap();
 
         let description = "A merry and cheerful band description";
         assert_eq!(band.description().unwrap(), "");

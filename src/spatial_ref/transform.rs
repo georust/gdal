@@ -2,21 +2,17 @@ use crate::errors;
 use crate::errors::GdalError;
 use crate::spatial_ref::{CoordTransformOptions, SpatialRef};
 use crate::utils::{_last_cpl_err, _last_null_pointer_err};
+use foreign_types::{foreign_type, ForeignType};
 use gdal_sys::{CPLErr, OGRCoordinateTransformationH};
 use libc::c_int;
 use std::ptr::null_mut;
 
-#[derive(Debug)]
-/// Defines a coordinate transformation from one [`SpatialRef`] to another.
-pub struct CoordTransform {
-    inner: OGRCoordinateTransformationH,
-    from: String,
-    to: String,
-}
-
-impl Drop for CoordTransform {
-    fn drop(&mut self) {
-        unsafe { gdal_sys::OCTDestroyCoordinateTransformation(self.inner) };
+foreign_type! {
+    #[derive(Debug)]
+    /// Defines a coordinate transformation from one [`SpatialRef`] to another.
+    pub unsafe type CoordTransform {
+        type CType = libc::c_void;
+        fn drop = gdal_sys::OCTDestroyCoordinateTransformation;
     }
 }
 
@@ -25,17 +21,13 @@ impl CoordTransform {
     ///
     /// See: [OCTNewCoordinateTransformation](https://gdal.org/api/ogr_srs_api.html#_CPPv430OCTNewCoordinateTransformation20OGRSpatialReferenceH20OGRSpatialReferenceH)
     pub fn new(source: &SpatialRef, target: &SpatialRef) -> errors::Result<CoordTransform> {
-        let c_obj = unsafe {
-            gdal_sys::OCTNewCoordinateTransformation(source.to_c_hsrs(), target.to_c_hsrs())
-        };
+        let c_obj =
+            unsafe { gdal_sys::OCTNewCoordinateTransformation(source.as_ptr(), target.as_ptr()) };
         if c_obj.is_null() {
             return Err(_last_null_pointer_err("OCTNewCoordinateTransformation"));
         }
-        Ok(Self {
-            inner: c_obj,
-            from: source.authority().or_else(|_| source.to_proj4())?,
-            to: target.authority().or_else(|_| target.to_proj4())?,
-        })
+
+        Ok(unsafe { Self::from_ptr(c_obj) })
     }
 
     /// Constructs a new transformation from `source` to `target` with additional extended options
@@ -49,19 +41,42 @@ impl CoordTransform {
     ) -> errors::Result<CoordTransform> {
         let c_obj = unsafe {
             gdal_sys::OCTNewCoordinateTransformationEx(
-                source.to_c_hsrs(),
-                target.to_c_hsrs(),
-                options.c_options(),
+                source.as_ptr(),
+                target.as_ptr(),
+                options.as_ptr(),
             )
         };
         if c_obj.is_null() {
             return Err(_last_null_pointer_err("OCTNewCoordinateTransformation"));
         }
-        Ok(Self {
-            inner: c_obj,
-            from: source.authority().or_else(|_| source.to_proj4())?,
-            to: target.authority().or_else(|_| target.to_proj4())?,
-        })
+        Ok(unsafe { Self::from_ptr(c_obj) })
+    }
+
+    #[cfg(all(major_ge_3, minor_ge_4))]
+    /// Get the source coordinate system
+    pub fn source(&self) -> SpatialRef {
+        use crate::spatial_ref::SpatialRefRef;
+        use foreign_types::ForeignTypeRef;
+        let c_obj = unsafe { gdal_sys::OCTGetSourceCS(self.as_ptr()) };
+        let sr = unsafe { SpatialRefRef::from_ptr(c_obj) };
+        sr.to_owned()
+    }
+
+    #[cfg(all(major_ge_3, minor_ge_4))]
+    /// Get the target coordinate system
+    pub fn target(&self) -> SpatialRef {
+        use crate::spatial_ref::SpatialRefRef;
+        use foreign_types::ForeignTypeRef;
+        let c_obj = unsafe { gdal_sys::OCTGetTargetCS(self.as_ptr()) };
+        let sr = unsafe { SpatialRefRef::from_ptr(c_obj) };
+        sr.to_owned()
+    }
+
+    /// Convert `SpatialRef` to a string for error messages.
+    fn _sr_disp(srs: &SpatialRef) -> String {
+        srs.authority()
+            .or_else(|_| srs.to_proj4())
+            .unwrap_or("???".into())
     }
 
     /// Transform bounding box, densifying the edges to account for nonlinear
@@ -91,7 +106,7 @@ impl CoordTransform {
 
         let ret_val = unsafe {
             gdal_sys::OCTTransformBounds(
-                self.inner,
+                self.as_ptr(),
                 bounds[0],
                 bounds[1],
                 bounds[2],
@@ -113,8 +128,8 @@ impl CoordTransform {
                 err => return Err(err),
             };
             return Err(GdalError::InvalidCoordinateRange {
-                from: self.from.clone(),
-                to: self.to.clone(),
+                from: Self::_sr_disp(&self.source()),
+                to: Self::_sr_disp(&self.target()),
                 msg,
             });
         }
@@ -146,7 +161,7 @@ impl CoordTransform {
         );
         let ret_val = unsafe {
             gdal_sys::OCTTransform(
-                self.inner,
+                self.as_ptr(),
                 nb_coords as c_int,
                 x.as_mut_ptr(),
                 y.as_mut_ptr(),
@@ -178,11 +193,22 @@ impl CoordTransform {
             } else {
                 return Err(err);
             };
-            Err(GdalError::InvalidCoordinateRange {
-                from: self.from.clone(),
-                to: self.to.clone(),
+            #[cfg(all(major_ge_3, minor_ge_4))]
+            return Err(GdalError::InvalidCoordinateRange {
+                from: Self::_sr_disp(&self.source()),
+                to: Self::_sr_disp(&self.target()),
                 msg,
-            })
+            });
+            #[cfg(not(all(major_ge_3, minor_ge_4)))]
+            // Prior to GDAL 3.5, we don't have a way to get
+            // the source and destinations `SpatialRef`'s provided
+            // to the constructor, and storing them for prior versions
+            // just for this one case requires code bloat
+            return Err(GdalError::InvalidCoordinateRange {
+                from: "source".into(),
+                to: "destination".into(),
+                msg,
+            });
         }
     }
 
@@ -197,7 +223,7 @@ impl CoordTransform {
     /// # Safety
     /// This method returns a raw C pointer
     pub unsafe fn to_c_hct(&self) -> OGRCoordinateTransformationH {
-        self.inner
+        self.as_ptr()
     }
 }
 

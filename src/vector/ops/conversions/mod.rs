@@ -3,14 +3,14 @@ mod gdal_to_geo;
 mod geo_to_gdal;
 
 use crate::errors::Result;
-use crate::vector::Geometry;
+use crate::vector::{Geometry, GeometryRef};
 
 /// Convert object to a GDAL geometry.
 pub trait ToGdal {
     fn to_gdal(&self) -> Result<Geometry>;
 }
 
-impl Geometry {
+impl GeometryRef {
     /// Create a copy of self as a `geo-types` geometry.
     pub fn to_geo(&self) -> Result<geo_types::Geometry<f64>> {
         self.try_into()

@@ -1,69 +1,42 @@
 use crate::utils::{_last_null_pointer_err, _string, _string_array};
 use crate::vector::geometry::Geometry;
-use crate::vector::{Defn, LayerAccess, OwnedLayer};
-use gdal_sys::{self, OGRErr, OGRFeatureH, OGRFieldType, OGRLayerH};
+use crate::vector::OwnedLayer;
+use crate::vector::{Defn, GeometryRef, LayerAccess};
+use gdal_sys::{self, OGRErr, OGRFieldType, OGRLayerH};
 use libc::{c_char, c_double, c_int, c_longlong};
 use std::convert::TryInto;
 use std::ffi::{CString, NulError};
+use std::fmt::{Debug, Formatter};
+use std::marker::PhantomData;
 use std::ptr;
 
 use chrono::{DateTime, Datelike, FixedOffset, LocalResult, NaiveDate, TimeZone, Timelike};
 
 use crate::errors::*;
+use foreign_types::{foreign_type, ForeignType, ForeignTypeRef};
 use std::slice;
 
-/// OGR Feature
-#[derive(Debug)]
-pub struct Feature<'a> {
-    _defn: &'a Defn,
-    c_feature: OGRFeatureH,
-    geometry: Vec<Geometry>,
+foreign_type! {
+    /// OGR Feature
+    pub unsafe type Feature<'a> {
+        type CType = libc::c_void;
+        type PhantomData = &'a ();
+        fn drop = gdal_sys::OGR_F_Destroy;
+    }
 }
 
 impl<'a> Feature<'a> {
     pub fn new(defn: &'a Defn) -> Result<Feature> {
-        let c_feature = unsafe { gdal_sys::OGR_F_Create(defn.c_defn()) };
+        let c_feature = unsafe { gdal_sys::OGR_F_Create(defn.as_ptr()) };
         if c_feature.is_null() {
             return Err(_last_null_pointer_err("OGR_F_Create"));
         };
-        Ok(Feature {
-            _defn: defn,
-            c_feature,
-            geometry: Feature::_lazy_feature_geometries(defn),
-        })
-    }
-
-    /// Creates a new Feature by wrapping a C pointer and a Defn
-    ///
-    /// # Safety
-    /// This method operates on a raw C pointer
-    pub unsafe fn from_c_feature(defn: &'a Defn, c_feature: OGRFeatureH) -> Feature {
-        Feature {
-            _defn: defn,
-            c_feature,
-            geometry: Feature::_lazy_feature_geometries(defn),
-        }
-    }
-
-    /// Returns the C wrapped pointer
-    ///
-    /// # Safety
-    /// This method returns a raw C pointer
-    pub unsafe fn c_feature(&self) -> OGRFeatureH {
-        self.c_feature
-    }
-
-    pub fn _lazy_feature_geometries(defn: &'a Defn) -> Vec<Geometry> {
-        let geom_field_count =
-            unsafe { gdal_sys::OGR_FD_GetGeomFieldCount(defn.c_defn()) } as isize;
-        (0..geom_field_count)
-            .map(|_| unsafe { Geometry::lazy_feature_geometry() })
-            .collect()
+        Ok(unsafe { Feature::from_ptr(c_feature) })
     }
 
     /// Returns the feature identifier, or `None` if none has been assigned.
     pub fn fid(&self) -> Option<u64> {
-        let fid = unsafe { gdal_sys::OGR_F_GetFID(self.c_feature) };
+        let fid = unsafe { gdal_sys::OGR_F_GetFID(self.as_ptr()) };
         if fid < 0 {
             None
         } else {
@@ -91,59 +64,59 @@ impl<'a> Feature<'a> {
     ///
     /// If the field is null, returns `None`.
     fn field_from_id(&self, field_id: i32) -> Result<Option<FieldValue>> {
-        if unsafe { gdal_sys::OGR_F_IsFieldNull(self.c_feature, field_id) } != 0 {
+        if unsafe { gdal_sys::OGR_F_IsFieldNull(self.as_ptr(), field_id) } != 0 {
             return Ok(None);
         }
 
-        let field_defn = unsafe { gdal_sys::OGR_F_GetFieldDefnRef(self.c_feature, field_id) };
+        let field_defn = unsafe { gdal_sys::OGR_F_GetFieldDefnRef(self.as_ptr(), field_id) };
         let field_type = unsafe { gdal_sys::OGR_Fld_GetType(field_defn) };
         match field_type {
             OGRFieldType::OFTString => {
-                let rv = unsafe { gdal_sys::OGR_F_GetFieldAsString(self.c_feature, field_id) };
+                let rv = unsafe { gdal_sys::OGR_F_GetFieldAsString(self.as_ptr(), field_id) };
                 Ok(Some(FieldValue::StringValue(_string(rv))))
             }
             OGRFieldType::OFTStringList => {
                 let rv = unsafe {
-                    let ptr = gdal_sys::OGR_F_GetFieldAsStringList(self.c_feature, field_id);
+                    let ptr = gdal_sys::OGR_F_GetFieldAsStringList(self.as_ptr(), field_id);
                     _string_array(ptr)
                 };
                 Ok(Some(FieldValue::StringListValue(rv)))
             }
             OGRFieldType::OFTReal => {
-                let rv = unsafe { gdal_sys::OGR_F_GetFieldAsDouble(self.c_feature, field_id) };
+                let rv = unsafe { gdal_sys::OGR_F_GetFieldAsDouble(self.as_ptr(), field_id) };
                 Ok(Some(FieldValue::RealValue(rv)))
             }
             OGRFieldType::OFTRealList => {
                 let rv = unsafe {
                     let mut len: i32 = 0;
                     let ptr =
-                        gdal_sys::OGR_F_GetFieldAsDoubleList(self.c_feature, field_id, &mut len);
+                        gdal_sys::OGR_F_GetFieldAsDoubleList(self.as_ptr(), field_id, &mut len);
                     slice::from_raw_parts(ptr, len as usize).to_vec()
                 };
                 Ok(Some(FieldValue::RealListValue(rv)))
             }
             OGRFieldType::OFTInteger => {
-                let rv = unsafe { gdal_sys::OGR_F_GetFieldAsInteger(self.c_feature, field_id) };
+                let rv = unsafe { gdal_sys::OGR_F_GetFieldAsInteger(self.as_ptr(), field_id) };
                 Ok(Some(FieldValue::IntegerValue(rv)))
             }
             OGRFieldType::OFTIntegerList => {
                 let rv = unsafe {
                     let mut len: i32 = 0;
                     let ptr =
-                        gdal_sys::OGR_F_GetFieldAsIntegerList(self.c_feature, field_id, &mut len);
+                        gdal_sys::OGR_F_GetFieldAsIntegerList(self.as_ptr(), field_id, &mut len);
                     slice::from_raw_parts(ptr, len as usize).to_vec()
                 };
                 Ok(Some(FieldValue::IntegerListValue(rv)))
             }
             OGRFieldType::OFTInteger64 => {
-                let rv = unsafe { gdal_sys::OGR_F_GetFieldAsInteger64(self.c_feature, field_id) };
+                let rv = unsafe { gdal_sys::OGR_F_GetFieldAsInteger64(self.as_ptr(), field_id) };
                 Ok(Some(FieldValue::Integer64Value(rv)))
             }
             OGRFieldType::OFTInteger64List => {
                 let rv = unsafe {
                     let mut len: i32 = 0;
                     let ptr =
-                        gdal_sys::OGR_F_GetFieldAsInteger64List(self.c_feature, field_id, &mut len);
+                        gdal_sys::OGR_F_GetFieldAsInteger64List(self.as_ptr(), field_id, &mut len);
                     slice::from_raw_parts(ptr, len as usize).to_vec()
                 };
                 Ok(Some(FieldValue::Integer64ListValue(rv)))
@@ -168,7 +141,7 @@ impl<'a> Feature<'a> {
     fn field_idx_from_name<S: AsRef<str>>(&self, field_name: S) -> Result<i32> {
         let c_str_field_name = CString::new(field_name.as_ref())?;
         let field_id =
-            unsafe { gdal_sys::OGR_F_GetFieldIndex(self.c_feature, c_str_field_name.as_ptr()) };
+            unsafe { gdal_sys::OGR_F_GetFieldIndex(self.as_ptr(), c_str_field_name.as_ptr()) };
         if field_id == -1 {
             return Err(GdalError::InvalidFieldName {
                 field_name: field_name.as_ref().to_string(),
@@ -194,11 +167,11 @@ impl<'a> Feature<'a> {
             });
         }
 
-        if unsafe { gdal_sys::OGR_F_IsFieldNull(self.c_feature, field_idx) } != 0 {
+        if unsafe { gdal_sys::OGR_F_IsFieldNull(self.as_ptr(), field_idx) } != 0 {
             return Ok(None);
         }
 
-        let value = unsafe { gdal_sys::OGR_F_GetFieldAsInteger(self.c_feature, field_idx) };
+        let value = unsafe { gdal_sys::OGR_F_GetFieldAsInteger(self.as_ptr(), field_idx) };
 
         Ok(Some(value))
     }
@@ -213,11 +186,11 @@ impl<'a> Feature<'a> {
     pub fn field_as_integer_by_name(&self, field_name: &str) -> Result<Option<i32>> {
         let field_idx = self.field_idx_from_name(field_name)?;
 
-        if unsafe { gdal_sys::OGR_F_IsFieldNull(self.c_feature, field_idx) } != 0 {
+        if unsafe { gdal_sys::OGR_F_IsFieldNull(self.as_ptr(), field_idx) } != 0 {
             return Ok(None);
         }
 
-        let value = unsafe { gdal_sys::OGR_F_GetFieldAsInteger(self.c_feature, field_idx) };
+        let value = unsafe { gdal_sys::OGR_F_GetFieldAsInteger(self.as_ptr(), field_idx) };
 
         Ok(Some(value))
     }
@@ -232,11 +205,11 @@ impl<'a> Feature<'a> {
     pub fn field_as_integer64_by_name(&self, field_name: &str) -> Result<Option<i64>> {
         let field_idx = self.field_idx_from_name(field_name)?;
 
-        if unsafe { gdal_sys::OGR_F_IsFieldNull(self.c_feature, field_idx) } != 0 {
+        if unsafe { gdal_sys::OGR_F_IsFieldNull(self.as_ptr(), field_idx) } != 0 {
             return Ok(None);
         }
 
-        let value = unsafe { gdal_sys::OGR_F_GetFieldAsInteger64(self.c_feature, field_idx) };
+        let value = unsafe { gdal_sys::OGR_F_GetFieldAsInteger64(self.as_ptr(), field_idx) };
 
         Ok(Some(value))
     }
@@ -256,11 +229,11 @@ impl<'a> Feature<'a> {
             });
         }
 
-        if unsafe { gdal_sys::OGR_F_IsFieldNull(self.c_feature, field_idx) } != 0 {
+        if unsafe { gdal_sys::OGR_F_IsFieldNull(self.as_ptr(), field_idx) } != 0 {
             return Ok(None);
         }
 
-        let value = unsafe { gdal_sys::OGR_F_GetFieldAsInteger64(self.c_feature, field_idx) };
+        let value = unsafe { gdal_sys::OGR_F_GetFieldAsInteger64(self.as_ptr(), field_idx) };
 
         Ok(Some(value))
     }
@@ -275,11 +248,11 @@ impl<'a> Feature<'a> {
     pub fn field_as_double_by_name(&self, field_name: &str) -> Result<Option<f64>> {
         let field_idx = self.field_idx_from_name(field_name)?;
 
-        if unsafe { gdal_sys::OGR_F_IsFieldNull(self.c_feature, field_idx) } != 0 {
+        if unsafe { gdal_sys::OGR_F_IsFieldNull(self.as_ptr(), field_idx) } != 0 {
             return Ok(None);
         }
 
-        let value = unsafe { gdal_sys::OGR_F_GetFieldAsDouble(self.c_feature, field_idx) };
+        let value = unsafe { gdal_sys::OGR_F_GetFieldAsDouble(self.as_ptr(), field_idx) };
 
         Ok(Some(value))
     }
@@ -299,11 +272,11 @@ impl<'a> Feature<'a> {
             });
         }
 
-        if unsafe { gdal_sys::OGR_F_IsFieldNull(self.c_feature, field_idx) } != 0 {
+        if unsafe { gdal_sys::OGR_F_IsFieldNull(self.as_ptr(), field_idx) } != 0 {
             return Ok(None);
         }
 
-        let value = unsafe { gdal_sys::OGR_F_GetFieldAsDouble(self.c_feature, field_idx) };
+        let value = unsafe { gdal_sys::OGR_F_GetFieldAsDouble(self.as_ptr(), field_idx) };
 
         Ok(Some(value))
     }
@@ -317,11 +290,11 @@ impl<'a> Feature<'a> {
     pub fn field_as_string_by_name(&self, field_name: &str) -> Result<Option<String>> {
         let field_idx = self.field_idx_from_name(field_name)?;
 
-        if unsafe { gdal_sys::OGR_F_IsFieldNull(self.c_feature, field_idx) } != 0 {
+        if unsafe { gdal_sys::OGR_F_IsFieldNull(self.as_ptr(), field_idx) } != 0 {
             return Ok(None);
         }
 
-        let value = _string(unsafe { gdal_sys::OGR_F_GetFieldAsString(self.c_feature, field_idx) });
+        let value = _string(unsafe { gdal_sys::OGR_F_GetFieldAsString(self.as_ptr(), field_idx) });
 
         Ok(Some(value))
     }
@@ -340,11 +313,11 @@ impl<'a> Feature<'a> {
             });
         }
 
-        if unsafe { gdal_sys::OGR_F_IsFieldNull(self.c_feature, field_idx) } != 0 {
+        if unsafe { gdal_sys::OGR_F_IsFieldNull(self.as_ptr(), field_idx) } != 0 {
             return Ok(None);
         }
 
-        let value = _string(unsafe { gdal_sys::OGR_F_GetFieldAsString(self.c_feature, field_idx) });
+        let value = _string(unsafe { gdal_sys::OGR_F_GetFieldAsString(self.as_ptr(), field_idx) });
 
         Ok(Some(value))
     }
@@ -361,7 +334,7 @@ impl<'a> Feature<'a> {
     ) -> Result<Option<DateTime<FixedOffset>>> {
         let field_idx = self.field_idx_from_name(field_name)?;
 
-        if unsafe { gdal_sys::OGR_F_IsFieldNull(self.c_feature, field_idx) } != 0 {
+        if unsafe { gdal_sys::OGR_F_IsFieldNull(self.as_ptr(), field_idx) } != 0 {
             return Ok(None);
         }
 
@@ -384,7 +357,7 @@ impl<'a> Feature<'a> {
             });
         }
 
-        if unsafe { gdal_sys::OGR_F_IsFieldNull(self.c_feature, field_idx) } != 0 {
+        if unsafe { gdal_sys::OGR_F_IsFieldNull(self.as_ptr(), field_idx) } != 0 {
             return Ok(None);
         }
 
@@ -404,7 +377,7 @@ impl<'a> Feature<'a> {
 
         let success = unsafe {
             gdal_sys::OGR_F_GetFieldAsDateTime(
-                self.c_feature,
+                self.as_ptr(),
                 field_id,
                 &mut year,
                 &mut month,
@@ -450,23 +423,18 @@ impl<'a> Feature<'a> {
     }
 
     /// Get the feature's geometry.
-    pub fn geometry(&self) -> Option<&Geometry> {
-        match self.geometry.first() {
-            Some(geom) => {
-                if !geom.has_gdal_ptr() {
-                    let c_geom = unsafe { gdal_sys::OGR_F_GetGeometryRef(self.c_feature) };
-                    unsafe { geom.set_c_geometry(c_geom) };
-                }
-                Some(geom)
-            }
-            None => None,
+    pub fn geometry(&self) -> Option<&GeometryRef> {
+        if self.geom_field_count() <= 0 {
+            return None;
         }
+        let c_geom = unsafe { gdal_sys::OGR_F_GetGeometryRef(self.as_ptr()) };
+        Some(unsafe { GeometryRef::from_ptr(c_geom) })
     }
 
-    pub fn geometry_by_name(&self, field_name: &str) -> Result<&Geometry> {
+    pub fn geometry_by_name(&self, field_name: &str) -> Result<&GeometryRef> {
         let c_str_field_name = CString::new(field_name)?;
         let idx =
-            unsafe { gdal_sys::OGR_F_GetGeomFieldIndex(self.c_feature, c_str_field_name.as_ptr()) };
+            unsafe { gdal_sys::OGR_F_GetGeomFieldIndex(self.as_ptr(), c_str_field_name.as_ptr()) };
         if idx == -1 {
             Err(GdalError::InvalidFieldName {
                 field_name: field_name.to_string(),
@@ -477,25 +445,22 @@ impl<'a> Feature<'a> {
         }
     }
 
-    pub fn geometry_by_index(&self, idx: usize) -> Result<&Geometry> {
-        if idx >= self.geometry.len() {
+    pub fn geometry_by_index(&self, idx: usize) -> Result<&GeometryRef> {
+        if idx as i32 >= self.geom_field_count() {
             return Err(GdalError::InvalidFieldIndex {
                 index: idx,
                 method_name: "geometry_by_index",
             });
         }
-        if !self.geometry[idx].has_gdal_ptr() {
-            let c_geom = unsafe { gdal_sys::OGR_F_GetGeomFieldRef(self.c_feature, idx as i32) };
-            if c_geom.is_null() {
-                return Err(_last_null_pointer_err("OGR_F_GetGeomFieldRef"));
-            }
-            unsafe { self.geometry[idx].set_c_geometry(c_geom) };
+        let c_geom = unsafe { gdal_sys::OGR_F_GetGeomFieldRef(self.as_ptr(), idx as i32) };
+        if c_geom.is_null() {
+            return Err(_last_null_pointer_err("OGR_F_GetGeomFieldRef"));
         }
-        Ok(&self.geometry[idx])
+        Ok(unsafe { GeometryRef::from_ptr(c_geom) })
     }
 
     pub fn create<L: LayerAccess>(&self, lyr: &L) -> Result<()> {
-        let rv = unsafe { gdal_sys::OGR_L_CreateFeature(lyr.c_layer(), self.c_feature) };
+        let rv = unsafe { gdal_sys::OGR_L_CreateFeature(lyr.c_layer(), self.as_ptr()) };
         if rv != OGRErr::OGRERR_NONE {
             return Err(GdalError::OgrError {
                 err: rv,
@@ -508,7 +473,7 @@ impl<'a> Feature<'a> {
     pub fn set_field_string(&self, field_name: &str, value: &str) -> Result<()> {
         let c_str_value = CString::new(value)?;
         let idx = self.field_idx_from_name(field_name)?;
-        unsafe { gdal_sys::OGR_F_SetFieldString(self.c_feature, idx, c_str_value.as_ptr()) };
+        unsafe { gdal_sys::OGR_F_SetFieldString(self.as_ptr(), idx, c_str_value.as_ptr()) };
         Ok(())
     }
 
@@ -526,13 +491,13 @@ impl<'a> Feature<'a> {
         // gdal-sys despite being constant.
         let c_value = c_str_ptrs.as_ptr() as *mut *mut c_char;
         let idx = self.field_idx_from_name(field_name)?;
-        unsafe { gdal_sys::OGR_F_SetFieldStringList(self.c_feature, idx, c_value) };
+        unsafe { gdal_sys::OGR_F_SetFieldStringList(self.as_ptr(), idx, c_value) };
         Ok(())
     }
 
     pub fn set_field_double(&self, field_name: &str, value: f64) -> Result<()> {
         let idx = self.field_idx_from_name(field_name)?;
-        unsafe { gdal_sys::OGR_F_SetFieldDouble(self.c_feature, idx, value as c_double) };
+        unsafe { gdal_sys::OGR_F_SetFieldDouble(self.as_ptr(), idx, value as c_double) };
         Ok(())
     }
 
@@ -540,7 +505,7 @@ impl<'a> Feature<'a> {
         let idx = self.field_idx_from_name(field_name)?;
         unsafe {
             gdal_sys::OGR_F_SetFieldDoubleList(
-                self.c_feature,
+                self.as_ptr(),
                 idx,
                 value.len() as c_int,
                 value.as_ptr(),
@@ -551,7 +516,7 @@ impl<'a> Feature<'a> {
 
     pub fn set_field_integer(&self, field_name: &str, value: i32) -> Result<()> {
         let idx = self.field_idx_from_name(field_name)?;
-        unsafe { gdal_sys::OGR_F_SetFieldInteger(self.c_feature, idx, value as c_int) };
+        unsafe { gdal_sys::OGR_F_SetFieldInteger(self.as_ptr(), idx, value as c_int) };
         Ok(())
     }
 
@@ -559,7 +524,7 @@ impl<'a> Feature<'a> {
         let idx = self.field_idx_from_name(field_name)?;
         unsafe {
             gdal_sys::OGR_F_SetFieldIntegerList(
-                self.c_feature,
+                self.as_ptr(),
                 idx,
                 value.len() as c_int,
                 value.as_ptr(),
@@ -570,7 +535,7 @@ impl<'a> Feature<'a> {
 
     pub fn set_field_integer64(&self, field_name: &str, value: i64) -> Result<()> {
         let idx = self.field_idx_from_name(field_name)?;
-        unsafe { gdal_sys::OGR_F_SetFieldInteger64(self.c_feature, idx, value as c_longlong) };
+        unsafe { gdal_sys::OGR_F_SetFieldInteger64(self.as_ptr(), idx, value as c_longlong) };
         Ok(())
     }
 
@@ -578,7 +543,7 @@ impl<'a> Feature<'a> {
         let idx = self.field_idx_from_name(field_name)?;
         unsafe {
             gdal_sys::OGR_F_SetFieldInteger64List(
-                self.c_feature,
+                self.as_ptr(),
                 idx,
                 value.len() as c_int,
                 value.as_ptr(),
@@ -604,7 +569,7 @@ impl<'a> Feature<'a> {
 
         unsafe {
             gdal_sys::OGR_F_SetFieldDateTime(
-                self.c_feature,
+                self.as_ptr(),
                 idx,
                 year,
                 month,
@@ -649,22 +614,36 @@ impl<'a> Feature<'a> {
     }
 
     pub fn set_geometry(&mut self, geom: Geometry) -> Result<()> {
-        let rv = unsafe { gdal_sys::OGR_F_SetGeometry(self.c_feature, geom.c_geometry()) };
+        let rv = unsafe { gdal_sys::OGR_F_SetGeometry(self.as_ptr(), geom.as_ptr()) };
         if rv != OGRErr::OGRERR_NONE {
             return Err(GdalError::OgrError {
                 err: rv,
                 method_name: "OGR_F_SetGeometry",
             });
         }
-        self.geometry[0] = geom;
         Ok(())
     }
     pub fn field_count(&self) -> i32 {
-        unsafe { gdal_sys::OGR_F_GetFieldCount(self.c_feature) }
+        unsafe { gdal_sys::OGR_F_GetFieldCount(self.as_ptr()) }
+    }
+
+    pub fn geom_field_count(&self) -> i32 {
+        unsafe { gdal_sys::OGR_F_GetGeomFieldCount(self.as_ptr()) }
     }
 
     pub fn fields(&self) -> FieldValueIterator {
         FieldValueIterator::with_feature(self)
+    }
+}
+
+impl Debug for Feature<'_> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let fields = self.fields().collect::<Vec<_>>();
+        f.debug_struct("Feature")
+            .field("fid", &self.fid())
+            .field("geometry", &self.geometry())
+            .field("fields", &fields)
+            .finish()
     }
 }
 
@@ -692,8 +671,7 @@ impl<'a> Iterator for FieldValueIterator<'a> {
         let idx = self.idx;
         if idx < self.count {
             self.idx += 1;
-            let field_defn =
-                unsafe { gdal_sys::OGR_F_GetFieldDefnRef(self.feature.c_feature, idx) };
+            let field_defn = unsafe { gdal_sys::OGR_F_GetFieldDefnRef(self.feature.as_ptr(), idx) };
             let field_name = unsafe { gdal_sys::OGR_Fld_GetNameRef(field_defn) };
             let name = _string(field_name);
             let fv: Option<(String, Option<FieldValue>)> = self
@@ -719,18 +697,10 @@ impl<'a> Iterator for FieldValueIterator<'a> {
     }
 }
 
-impl<'a> Drop for Feature<'a> {
-    fn drop(&mut self) {
-        unsafe {
-            gdal_sys::OGR_F_Destroy(self.c_feature);
-        }
-    }
-}
-
 pub struct FeatureIterator<'a> {
-    defn: &'a Defn,
     c_layer: OGRLayerH,
     size_hint: Option<usize>,
+    _lifetime: PhantomData<&'a ()>,
 }
 
 impl<'a> Iterator for FeatureIterator<'a> {
@@ -742,7 +712,7 @@ impl<'a> Iterator for FeatureIterator<'a> {
         if c_feature.is_null() {
             None
         } else {
-            Some(unsafe { Feature::from_c_feature(self.defn, c_feature) })
+            Some(unsafe { Feature::from_ptr(c_feature) })
         }
     }
 
@@ -756,12 +726,11 @@ impl<'a> Iterator for FeatureIterator<'a> {
 
 impl<'a> FeatureIterator<'a> {
     pub(crate) fn _with_layer<L: LayerAccess>(layer: &'a L) -> Self {
-        let defn = layer.defn();
         let size_hint = layer.try_feature_count().and_then(|s| s.try_into().ok());
         Self {
             c_layer: unsafe { layer.c_layer() },
             size_hint,
-            defn,
+            _lifetime: PhantomData,
         }
     }
 }
@@ -785,12 +754,7 @@ where
             return None;
         }
 
-        Some(unsafe {
-            // We have to convince the compiler that our `Defn` adheres to our iterator lifetime `<'a>`
-            let defn: &'a Defn = std::mem::transmute::<&'_ _, &'a _>(self.layer.defn());
-
-            Feature::from_c_feature(defn, c_feature)
-        })
+        Some(unsafe { Feature::from_ptr(c_feature) })
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {

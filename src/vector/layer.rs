@@ -1,9 +1,12 @@
 use crate::metadata::Metadata;
-use crate::spatial_ref::SpatialRef;
+use crate::spatial_ref::{SpatialRef, SpatialRefRef};
 use crate::utils::{_last_null_pointer_err, _string};
-use crate::vector::defn::Defn;
-use crate::vector::{Envelope, Feature, FieldValue, Geometry, LayerOptions};
+use crate::vector::defn::{Defn, DefnRef};
+use crate::vector::{
+    Envelope, Feature, FeatureIterator, FieldValue, Geometry, LayerOptions, OwnedFeatureIterator,
+};
 use crate::{dataset::Dataset, gdal_major_object::MajorObject};
+use foreign_types::{ForeignType, ForeignTypeRef};
 use gdal_sys::{self, GDALMajorObjectH, OGRErr, OGRFieldDefnH, OGRFieldType, OGRLayerH};
 use libc::c_int;
 use std::ffi::NulError;
@@ -12,7 +15,6 @@ use std::ptr::null_mut;
 use std::{convert::TryInto, ffi::CString, marker::PhantomData};
 
 use crate::errors::*;
-use crate::vector::feature::{FeatureIterator, OwnedFeatureIterator};
 
 /// Layer capabilities
 #[allow(clippy::upper_case_acronyms)]
@@ -130,7 +132,7 @@ impl<'a> Layer<'a> {
     /// This method operates on a raw C pointer
     pub(crate) unsafe fn from_c_layer(_: &'a Dataset, c_layer: OGRLayerH) -> Self {
         let c_defn = gdal_sys::OGR_L_GetLayerDefn(c_layer);
-        let defn = Defn::from_c_defn(c_defn);
+        let defn = DefnRef::from_ptr(c_defn).to_owned();
         Self {
             c_layer,
             defn,
@@ -185,7 +187,7 @@ impl OwnedLayer {
     /// This method operates on a raw C pointer
     pub(crate) unsafe fn from_c_layer(dataset: Dataset, c_layer: OGRLayerH) -> Self {
         let c_defn = gdal_sys::OGR_L_GetLayerDefn(c_layer);
-        let defn = Defn::from_c_defn(c_defn);
+        let defn = DefnRef::from_ptr(c_defn).to_owned();
         Self {
             c_layer,
             defn,
@@ -240,7 +242,7 @@ pub trait LayerAccess: Sized {
         if c_feature.is_null() {
             None
         } else {
-            Some(unsafe { Feature::from_c_feature(self.defn(), c_feature) })
+            Some(unsafe { Feature::from_ptr(c_feature) })
         }
     }
 
@@ -258,7 +260,7 @@ pub trait LayerAccess: Sized {
     ///
     /// See: [SetFeature](https://gdal.org/doxygen/classOGRLayer.html#a681139bfd585b74d7218e51a32144283)
     fn set_feature(&self, feature: Feature) -> Result<()> {
-        unsafe { gdal_sys::OGR_L_SetFeature(self.c_layer(), feature.c_feature()) };
+        unsafe { gdal_sys::OGR_L_SetFeature(self.c_layer(), feature.into_ptr()) };
         Ok(())
     }
 
@@ -266,7 +268,7 @@ pub trait LayerAccess: Sized {
     ///
     /// See: [OGR_L_SetSpatialFilter](https://gdal.org/doxygen/classOGRLayer.html#a75c06b4993f8eb76b569f37365cd19ab)
     fn set_spatial_filter(&mut self, geometry: &Geometry) {
-        unsafe { gdal_sys::OGR_L_SetSpatialFilter(self.c_layer(), geometry.c_geometry()) };
+        unsafe { gdal_sys::OGR_L_SetSpatialFilter(self.c_layer(), geometry.as_ptr()) };
     }
 
     /// Set a spatial rectangle filter on this layer by specifying the bounds of a rectangle.
@@ -301,15 +303,15 @@ pub trait LayerAccess: Sized {
     fn create_feature(&mut self, geometry: Geometry) -> Result<()> {
         let feature = Feature::new(self.defn())?;
 
-        let c_geometry = unsafe { geometry.into_c_geometry() };
-        let rv = unsafe { gdal_sys::OGR_F_SetGeometryDirectly(feature.c_feature(), c_geometry) };
+        let rv =
+            unsafe { gdal_sys::OGR_F_SetGeometryDirectly(feature.as_ptr(), geometry.into_ptr()) };
         if rv != OGRErr::OGRERR_NONE {
             return Err(GdalError::OgrError {
                 err: rv,
                 method_name: "OGR_F_SetGeometryDirectly",
             });
         }
-        let rv = unsafe { gdal_sys::OGR_L_CreateFeature(self.c_layer(), feature.c_feature()) };
+        let rv = unsafe { gdal_sys::OGR_L_CreateFeature(self.c_layer(), feature.as_ptr()) };
         if rv != OGRErr::OGRERR_NONE {
             return Err(GdalError::OgrError {
                 err: rv,
@@ -421,7 +423,7 @@ pub trait LayerAccess: Sized {
         if c_obj.is_null() {
             None
         } else {
-            unsafe { SpatialRef::from_c_obj(c_obj) }.ok()
+            Some(unsafe { SpatialRefRef::from_ptr(c_obj).to_owned() })
         }
     }
 
@@ -652,7 +654,6 @@ impl Dataset {
     pub fn layers(&self) -> LayerIterator {
         LayerIterator::with_dataset(self)
     }
-
     /// Creates a new layer. The [`LayerOptions`] struct implements `Default`, so you only need to
     /// specify those options that deviate from the default.
     ///
@@ -685,7 +686,7 @@ impl Dataset {
     pub fn create_layer(&mut self, options: LayerOptions<'_>) -> Result<Layer> {
         let c_name = CString::new(options.name)?;
         let c_srs = match options.srs {
-            Some(srs) => srs.to_c_hsrs(),
+            Some(srs) => srs.as_ptr(),
             None => null_mut(),
         };
 
@@ -1254,6 +1255,7 @@ mod tests {
     #[test]
     fn test_geom_accessors() {
         with_feature("roads.geojson", 236194095, |feature| {
+            println!("{feature:?}");
             let geom = feature.geometry().unwrap();
             assert_eq!(geom.geometry_type(), OGRwkbGeometryType::wkbLineString);
             let coords = geom.get_point_vec();

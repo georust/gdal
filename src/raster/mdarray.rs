@@ -1,6 +1,6 @@
 use super::GdalType;
 use crate::errors::*;
-use crate::spatial_ref::SpatialRef;
+use crate::spatial_ref::{SpatialRef, SpatialRefRef};
 use crate::utils::{_last_cpl_err, _last_null_pointer_err, _string, _string_array};
 use crate::{cpl::CslStringList, Dataset};
 use gdal_sys::{
@@ -16,12 +16,13 @@ use gdal_sys::{
     GDALGroupOpenGroup, GDALGroupOpenMDArray, GDALGroupRelease, GDALMDArrayGetAttribute,
     GDALMDArrayGetDataType, GDALMDArrayGetDimensionCount, GDALMDArrayGetDimensions,
     GDALMDArrayGetNoDataValueAsDouble, GDALMDArrayGetSpatialRef, GDALMDArrayGetTotalElementsCount,
-    GDALMDArrayGetUnit, GDALMDArrayH, GDALMDArrayRelease, OSRDestroySpatialReference, VSIFree,
+    GDALMDArrayGetUnit, GDALMDArrayH, GDALMDArrayRelease, VSIFree,
 };
 use libc::c_void;
 use std::ffi::CString;
 use std::os::raw::c_char;
 
+use foreign_types::ForeignTypeRef;
 #[cfg(feature = "ndarray")]
 use ndarray::{ArrayD, IxDyn};
 use std::fmt::{Debug, Display};
@@ -324,15 +325,9 @@ impl<'a> MDArray<'a> {
     }
 
     pub fn spatial_reference(&self) -> Result<SpatialRef> {
-        unsafe {
-            let c_gdal_spatial_ref = GDALMDArrayGetSpatialRef(self.c_mdarray);
-
-            let gdal_spatial_ref = SpatialRef::from_c_obj(c_gdal_spatial_ref);
-
-            OSRDestroySpatialReference(c_gdal_spatial_ref);
-
-            gdal_spatial_ref
-        }
+        // NB: Creating a `SpatialRefRef` from a pointer acknowledges that GDAL is giving us
+        // a shared reference. We then call `to_owned` to appropriately get a clone.
+        Ok(unsafe { SpatialRefRef::from_ptr(GDALMDArrayGetSpatialRef(self.c_mdarray)) }.to_owned())
     }
 
     pub fn no_data_value_as_double(&self) -> Option<f64> {

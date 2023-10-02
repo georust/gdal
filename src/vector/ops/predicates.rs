@@ -1,4 +1,5 @@
 use crate::vector::Geometry;
+use foreign_types::ForeignType;
 
 /// # Geometric Predicates
 ///
@@ -17,7 +18,7 @@ impl Geometry {
     /// [OGR_G_Intersects]: https://gdal.org/api/vector_c_api.html#ogr__api_8h_1acaed6926b75cd33a42b284c10def6e87
     /// [has_geos]: crate::version::VersionInfo::has_geos
     pub fn intersects(&self, other: &Self) -> bool {
-        let p = unsafe { gdal_sys::OGR_G_Intersects(self.c_geometry(), other.c_geometry()) };
+        let p = unsafe { gdal_sys::OGR_G_Intersects(self.as_ptr(), other.as_ptr()) };
         p != 0
     }
 
@@ -35,7 +36,7 @@ impl Geometry {
     /// [OGR_G_Contains]: https://gdal.org/api/vector_c_api.html#_CPPv414OGR_G_Contains12OGRGeometryH12OGRGeometryH
     /// [has_geos]: crate::version::VersionInfo::has_geos
     pub fn contains(&self, other: &Self) -> bool {
-        let p = unsafe { gdal_sys::OGR_G_Contains(self.c_geometry(), other.c_geometry()) };
+        let p = unsafe { gdal_sys::OGR_G_Contains(self.as_ptr(), other.as_ptr()) };
         p != 0
     }
 
@@ -53,7 +54,7 @@ impl Geometry {
     /// [OGR_G_Disjoint]: https://gdal.org/api/vector_c_api.html#_CPPv414OGR_G_Disjoint12OGRGeometryH12OGRGeometryH
     /// [has_geos]: crate::version::VersionInfo::has_geos
     pub fn disjoint(&self, other: &Self) -> bool {
-        let p = unsafe { gdal_sys::OGR_G_Disjoint(self.c_geometry(), other.c_geometry()) };
+        let p = unsafe { gdal_sys::OGR_G_Disjoint(self.as_ptr(), other.as_ptr()) };
         p != 0
     }
 
@@ -71,7 +72,7 @@ impl Geometry {
     /// [OGR_G_Touches]: https://gdal.org/api/ogrgeometry_cpp.html#_CPPv4NK11OGRGeometry7TouchesEPK11OGRGeometry
     /// [has_geos]: crate::version::VersionInfo::has_geos
     pub fn touches(&self, other: &Self) -> bool {
-        let p = unsafe { gdal_sys::OGR_G_Touches(self.c_geometry(), other.c_geometry()) };
+        let p = unsafe { gdal_sys::OGR_G_Touches(self.as_ptr(), other.as_ptr()) };
         p != 0
     }
 
@@ -90,7 +91,7 @@ impl Geometry {
     /// [OGR_G_Crosses]: https://gdal.org/api/ogrgeometry_cpp.html#_CPPv4NK11OGRGeometry7CrossesEPK11OGRGeometry
     /// [has_geos]: crate::version::VersionInfo::has_geos
     pub fn crosses(&self, other: &Self) -> bool {
-        let p = unsafe { gdal_sys::OGR_G_Crosses(self.c_geometry(), other.c_geometry()) };
+        let p = unsafe { gdal_sys::OGR_G_Crosses(self.as_ptr(), other.as_ptr()) };
         p != 0
     }
 
@@ -108,7 +109,7 @@ impl Geometry {
     /// [OGR_G_Within]: https://gdal.org/api/ogrgeometry_cpp.html#_CPPv4NK11OGRGeometry6WithinEPK11OGRGeometry
     /// [has_geos]: crate::version::VersionInfo::has_geos
     pub fn within(&self, other: &Self) -> bool {
-        let p = unsafe { gdal_sys::OGR_G_Within(self.c_geometry(), other.c_geometry()) };
+        let p = unsafe { gdal_sys::OGR_G_Within(self.as_ptr(), other.as_ptr()) };
         p != 0
     }
 
@@ -128,7 +129,7 @@ impl Geometry {
     /// [OGR_G_Overlaps]: https://gdal.org/api/ogrgeometry_cpp.html#_CPPv4NK11OGRGeometry8OverlapsEPK11OGRGeometry
     /// [has_geos]: crate::version::VersionInfo::has_geos
     pub fn overlaps(&self, other: &Self) -> bool {
-        let p = unsafe { gdal_sys::OGR_G_Overlaps(self.c_geometry(), other.c_geometry()) };
+        let p = unsafe { gdal_sys::OGR_G_Overlaps(self.as_ptr(), other.as_ptr()) };
         p != 0
     }
 }

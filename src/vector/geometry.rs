@@ -1,78 +1,32 @@
-use std::cell::RefCell;
-use std::fmt::{self, Debug, Formatter};
-use std::marker::PhantomData;
-use std::mem::MaybeUninit;
-use std::ops::{Deref, DerefMut};
+use std::fmt::{self, Debug};
+use std::mem::{ManuallyDrop, MaybeUninit};
 
+use foreign_types::{foreign_type, ForeignType, ForeignTypeRef};
 use libc::{c_double, c_int};
 
-use gdal_sys::{self, OGRErr, OGRGeometryH, OGRwkbGeometryType};
+use gdal_sys::{self, OGRErr, OGRwkbGeometryType};
 
 use crate::errors::*;
-use crate::spatial_ref::SpatialRef;
+use crate::spatial_ref::{SpatialRef, SpatialRefRef};
 use crate::utils::{_last_null_pointer_err, _string};
 use crate::vector::{Envelope, Envelope3D};
 
-/// OGR Geometry
-pub struct Geometry {
-    c_geometry_ref: RefCell<Option<OGRGeometryH>>,
-    owned: bool,
+foreign_type! {
+    /// OGR Geometry
+    pub unsafe type Geometry {
+        type CType = libc::c_void;
+        fn drop = gdal_sys::OGR_G_DestroyGeometry;
+        fn clone = gdal_sys::OGR_G_Clone;
+    }
 }
 
 impl Geometry {
-    /// Create a new Geometry without a C pointer
-    ///
-    /// # Safety
-    /// This method returns a Geometry without wrapped pointer
-    pub unsafe fn lazy_feature_geometry() -> Geometry {
-        // Geometry objects created with this method map to a Feature's
-        // geometry whose memory is managed by the GDAL feature.
-        // This object has a tricky lifecycle:
-        //
-        // * Initially it's created with a null c_geometry
-        // * The first time `Feature::geometry` is called, it gets
-        //   c_geometry from GDAL and calls `set_c_geometry` with it.
-        // * When the Feature is destroyed, this object is also destroyed,
-        //   which is good, because that's when c_geometry (which is managed
-        //   by the GDAL feature) becomes invalid. Because `self.owned` is
-        //   `true`, we don't call `OGR_G_DestroyGeometry`.
-        Geometry {
-            c_geometry_ref: RefCell::new(None),
-            owned: false,
-        }
-    }
-
-    pub fn has_gdal_ptr(&self) -> bool {
-        self.c_geometry_ref.borrow().is_some()
-    }
-
-    /// Set the wrapped C pointer
-    ///
-    /// # Safety
-    /// This method operates on a raw C pointer
-    pub unsafe fn set_c_geometry(&self, c_geometry: OGRGeometryH) {
-        assert!(!self.has_gdal_ptr());
-        assert!(!self.owned);
-        *(self.c_geometry_ref.borrow_mut()) = Some(c_geometry);
-    }
-
-    pub(crate) unsafe fn with_c_geometry(c_geom: OGRGeometryH, owned: bool) -> Geometry {
-        Geometry {
-            c_geometry_ref: RefCell::new(Some(c_geom)),
-            owned,
-        }
-    }
-
     pub fn empty(wkb_type: OGRwkbGeometryType::Type) -> Result<Geometry> {
         let c_geom = unsafe { gdal_sys::OGR_G_CreateGeometry(wkb_type) };
         if c_geom.is_null() {
             return Err(_last_null_pointer_err("OGR_G_CreateGeometry"));
         };
-        Ok(unsafe { Geometry::with_c_geometry(c_geom, true) })
-    }
-
-    pub fn is_empty(&self) -> bool {
-        unsafe { gdal_sys::OGR_G_IsEmpty(self.c_geometry()) == 1 }
+        Ok(unsafe { Geometry::from_ptr(c_geom) })
     }
 
     /// Create a rectangular geometry from West, South, East and North values.
@@ -81,30 +35,18 @@ impl Geometry {
             "POLYGON (({w} {n}, {e} {n}, {e} {s}, {w} {s}, {w} {n}))",
         ))
     }
+}
 
-    /// Returns a C pointer to the wrapped Geometry
-    ///
-    /// # Safety
-    /// This method returns a raw C pointer
-    pub unsafe fn c_geometry(&self) -> OGRGeometryH {
-        self.c_geometry_ref.borrow().unwrap()
-    }
-
-    /// Returns the C pointer of a Geometry
-    ///
-    /// # Safety
-    /// This method returns a raw C pointer
-    pub unsafe fn into_c_geometry(mut self) -> OGRGeometryH {
-        assert!(self.owned);
-        self.owned = false;
-        self.c_geometry()
+impl GeometryRef {
+    pub fn is_empty(&self) -> bool {
+        unsafe { gdal_sys::OGR_G_IsEmpty(self.as_ptr()) == 1 }
     }
 
     pub fn set_point(&mut self, i: usize, point: (f64, f64, f64)) {
         let (x, y, z) = point;
         unsafe {
             gdal_sys::OGR_G_SetPoint(
-                self.c_geometry(),
+                self.as_ptr(),
                 i as c_int,
                 x as c_double,
                 y as c_double,
@@ -116,25 +58,20 @@ impl Geometry {
     pub fn set_point_2d(&mut self, i: usize, p: (f64, f64)) {
         let (x, y) = p;
         unsafe {
-            gdal_sys::OGR_G_SetPoint_2D(self.c_geometry(), i as c_int, x as c_double, y as c_double)
+            gdal_sys::OGR_G_SetPoint_2D(self.as_ptr(), i as c_int, x as c_double, y as c_double)
         };
     }
 
     pub fn add_point(&mut self, p: (f64, f64, f64)) {
         let (x, y, z) = p;
         unsafe {
-            gdal_sys::OGR_G_AddPoint(
-                self.c_geometry(),
-                x as c_double,
-                y as c_double,
-                z as c_double,
-            )
+            gdal_sys::OGR_G_AddPoint(self.as_ptr(), x as c_double, y as c_double, z as c_double)
         };
     }
 
     pub fn add_point_2d(&mut self, p: (f64, f64)) {
         let (x, y) = p;
-        unsafe { gdal_sys::OGR_G_AddPoint_2D(self.c_geometry(), x as c_double, y as c_double) };
+        unsafe { gdal_sys::OGR_G_AddPoint_2D(self.as_ptr(), x as c_double, y as c_double) };
     }
 
     /// Get point coordinates from a line string or a point geometry.
@@ -146,12 +83,12 @@ impl Geometry {
         let mut x: c_double = 0.;
         let mut y: c_double = 0.;
         let mut z: c_double = 0.;
-        unsafe { gdal_sys::OGR_G_GetPoint(self.c_geometry(), index, &mut x, &mut y, &mut z) };
+        unsafe { gdal_sys::OGR_G_GetPoint(self.as_ptr(), index, &mut x, &mut y, &mut z) };
         (x, y, z)
     }
 
     pub fn get_point_vec(&self) -> Vec<(f64, f64, f64)> {
-        let length = unsafe { gdal_sys::OGR_G_GetPointCount(self.c_geometry()) };
+        let length = unsafe { gdal_sys::OGR_G_GetPointCount(self.as_ptr()) };
         (0..length).map(|i| self.get_point(i)).collect()
     }
 
@@ -159,7 +96,7 @@ impl Geometry {
     ///
     /// See: [OGR_G_GetGeometryType](https://gdal.org/api/vector_c_api.html#_CPPv421OGR_G_GetGeometryType12OGRGeometryH)
     pub fn geometry_type(&self) -> OGRwkbGeometryType::Type {
-        unsafe { gdal_sys::OGR_G_GetGeometryType(self.c_geometry()) }
+        unsafe { gdal_sys::OGR_G_GetGeometryType(self.as_ptr()) }
     }
 
     /// Get the WKT name for the type of this geometry.
@@ -168,7 +105,7 @@ impl Geometry {
     pub fn geometry_name(&self) -> String {
         // Note: C API makes no statements about this possibly returning null.
         // So we don't have to result wrap this,
-        let c_str = unsafe { gdal_sys::OGR_G_GetGeometryName(self.c_geometry()) };
+        let c_str = unsafe { gdal_sys::OGR_G_GetGeometryName(self.as_ptr()) };
         if c_str.is_null() {
             "".into()
         } else {
@@ -185,7 +122,7 @@ impl Geometry {
     ///
     /// See: [`OGR_G_GetGeometryCount`](https://gdal.org/api/vector_c_api.html#_CPPv422OGR_G_GetGeometryCount12OGRGeometryH)
     pub fn geometry_count(&self) -> usize {
-        let cnt = unsafe { gdal_sys::OGR_G_GetGeometryCount(self.c_geometry()) };
+        let cnt = unsafe { gdal_sys::OGR_G_GetGeometryCount(self.as_ptr()) };
         cnt as usize
     }
 
@@ -195,35 +132,40 @@ impl Geometry {
     ///
     /// See: [`OGR_G_GetPointCount`](https://gdal.org/api/vector_c_api.html#_CPPv419OGR_G_GetPointCount12OGRGeometryH)
     pub fn point_count(&self) -> usize {
-        let cnt = unsafe { gdal_sys::OGR_G_GetPointCount(self.c_geometry()) };
+        let cnt = unsafe { gdal_sys::OGR_G_GetPointCount(self.as_ptr()) };
         cnt as usize
     }
 
-    /// Returns the n-th sub-geometry as a non-owned Geometry.
-    ///
-    /// # Safety
-    /// Don't keep this object for long.
-    pub unsafe fn get_unowned_geometry(&self, n: usize) -> Geometry {
-        // get the n-th sub-geometry as a non-owned Geometry; don't keep this
-        // object for long.
-        let c_geom = gdal_sys::OGR_G_GetGeometryRef(self.c_geometry(), n as c_int);
-        Geometry::with_c_geometry(c_geom, false)
-    }
-
     /// Get a reference to the geometry at given `index`
-    pub fn get_geometry(&self, index: usize) -> GeometryRef {
-        let geom = unsafe { self.get_unowned_geometry(index) };
-        GeometryRef {
-            geom,
-            _lifetime: PhantomData,
-        }
+    ///
+    /// # Arguments
+    /// * `index`: the index of the geometry to fetch, between 0 and getNumGeometries() - 1.
+    pub fn get_geometry(&self, index: usize) -> &GeometryRef {
+        let c_geom = unsafe { gdal_sys::OGR_G_GetGeometryRef(self.as_ptr(), index as c_int) };
+        unsafe { GeometryRef::from_ptr(c_geom) }
     }
 
-    pub fn add_geometry(&mut self, mut sub: Geometry) -> Result<()> {
-        assert!(sub.owned);
-        sub.owned = false;
-        let rv =
-            unsafe { gdal_sys::OGR_G_AddGeometryDirectly(self.c_geometry(), sub.c_geometry()) };
+    /// Get a mutable reference to the geometry at given `index`
+    ///
+    /// # Arguments
+    /// * `index`: the index of the geometry to fetch, between 0 and getNumGeometries() - 1.
+    pub fn get_geometry_mut(&mut self, index: usize) -> &mut GeometryRef {
+        let c_geom = unsafe { gdal_sys::OGR_G_GetGeometryRef(self.as_ptr(), index as c_int) };
+        unsafe { GeometryRef::from_ptr_mut(c_geom) }
+    }
+
+    /// Add a subgeometry
+    ///
+    /// # Arguments
+    /// * `sub`: geometry to add as a child of `self`.
+    pub fn add_geometry(&mut self, sub: Geometry) -> Result<()> {
+        // `OGR_G_AddGeometryDirectly` takes ownership of the Geometry.
+        // According to https://doc.rust-lang.org/std/mem/fn.forget.html#relationship-with-manuallydrop
+        // `ManuallyDrop` is the suggested means of transferring memory management while
+        // robustly preventing a double-free.
+        let sub = ManuallyDrop::new(sub);
+
+        let rv = unsafe { gdal_sys::OGR_G_AddGeometryDirectly(self.as_ptr(), sub.as_ptr()) };
         if rv != OGRErr::OGRERR_NONE {
             return Err(GdalError::OgrError {
                 err: rv,
@@ -240,7 +182,7 @@ impl Geometry {
     ///
     /// See: [`OGR_G_Length`](https://gdal.org/api/vector_c_api.html#_CPPv412OGR_G_Length12OGRGeometryH)
     pub fn length(&self) -> f64 {
-        unsafe { gdal_sys::OGR_G_Length(self.c_geometry()) }
+        unsafe { gdal_sys::OGR_G_Length(self.as_ptr()) }
     }
 
     /// Compute geometry area in square units of the spatial reference system in use.
@@ -250,7 +192,7 @@ impl Geometry {
     ///
     /// See: [`OGR_G_Area`](https://gdal.org/api/vector_c_api.html#_CPPv410OGR_G_Area12OGRGeometryH)
     pub fn area(&self) -> f64 {
-        unsafe { gdal_sys::OGR_G_Area(self.c_geometry()) }
+        unsafe { gdal_sys::OGR_G_Area(self.as_ptr()) }
     }
 
     /// Computes and returns the axis-aligned 2D bounding envelope for this geometry.
@@ -259,7 +201,7 @@ impl Geometry {
     pub fn envelope(&self) -> Envelope {
         let mut envelope = MaybeUninit::uninit();
         unsafe {
-            gdal_sys::OGR_G_GetEnvelope(self.c_geometry(), envelope.as_mut_ptr());
+            gdal_sys::OGR_G_GetEnvelope(self.as_ptr(), envelope.as_mut_ptr());
             envelope.assume_init()
         }
     }
@@ -270,7 +212,7 @@ impl Geometry {
     pub fn envelope_3d(&self) -> Envelope3D {
         let mut envelope = MaybeUninit::uninit();
         unsafe {
-            gdal_sys::OGR_G_GetEnvelope3D(self.c_geometry(), envelope.as_mut_ptr());
+            gdal_sys::OGR_G_GetEnvelope3D(self.as_ptr(), envelope.as_mut_ptr());
             envelope.assume_init()
         }
     }
@@ -279,7 +221,7 @@ impl Geometry {
     ///
     /// See: [`OGR_G_FlattenTo2D`](https://gdal.org/api/vector_c_api.html#_CPPv417OGR_G_FlattenTo2D12OGRGeometryH)
     pub fn flatten_to_2d(&mut self) {
-        unsafe { gdal_sys::OGR_G_FlattenTo2D(self.c_geometry()) };
+        unsafe { gdal_sys::OGR_G_FlattenTo2D(self.as_ptr()) };
     }
 
     /// Get the spatial reference system for this geometry.
@@ -288,19 +230,17 @@ impl Geometry {
     ///
     /// See: [OGR_G_GetSpatialReference](https://gdal.org/doxygen/ogr__api_8h.html#abc393e40282eec3801fb4a4abc9e25bf)
     pub fn spatial_ref(&self) -> Option<SpatialRef> {
-        let c_spatial_ref = unsafe { gdal_sys::OGR_G_GetSpatialReference(self.c_geometry()) };
+        let c_spatial_ref = unsafe { gdal_sys::OGR_G_GetSpatialReference(self.as_ptr()) };
 
         if c_spatial_ref.is_null() {
             None
         } else {
-            unsafe { SpatialRef::from_c_obj(c_spatial_ref) }.ok()
+            Some(unsafe { SpatialRefRef::from_ptr(c_spatial_ref).to_owned() })
         }
     }
 
     pub fn set_spatial_ref(&mut self, spatial_ref: SpatialRef) {
-        unsafe {
-            gdal_sys::OGR_G_AssignSpatialReference(self.c_geometry(), spatial_ref.to_c_hsrs())
-        };
+        unsafe { gdal_sys::OGR_G_AssignSpatialReference(self.as_ptr(), spatial_ref.as_ptr()) };
     }
 
     /// Test if the geometry is valid.
@@ -315,30 +255,12 @@ impl Geometry {
     ///
     /// [has_geos]: crate::version::VersionInfo::has_geos
     pub fn is_valid(&self) -> bool {
-        let p = unsafe { gdal_sys::OGR_G_IsValid(self.c_geometry()) };
+        let p = unsafe { gdal_sys::OGR_G_IsValid(self.as_ptr()) };
         p != 0
     }
 }
 
-impl Drop for Geometry {
-    fn drop(&mut self) {
-        if self.owned {
-            let c_geometry = self.c_geometry_ref.borrow();
-            unsafe { gdal_sys::OGR_G_DestroyGeometry(c_geometry.unwrap()) };
-        }
-    }
-}
-
-impl Clone for Geometry {
-    fn clone(&self) -> Geometry {
-        // assert!(self.has_gdal_ptr());
-        let c_geometry = self.c_geometry_ref.borrow();
-        let new_c_geom = unsafe { gdal_sys::OGR_G_Clone(c_geometry.unwrap()) };
-        unsafe { Geometry::with_c_geometry(new_c_geom, true) }
-    }
-}
-
-impl Debug for Geometry {
+impl Debug for GeometryRef {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self.wkt() {
             Ok(wkt) => f.write_str(wkt.as_str()),
@@ -347,9 +269,23 @@ impl Debug for Geometry {
     }
 }
 
+impl PartialEq for GeometryRef {
+    fn eq(&self, other: &Self) -> bool {
+        unsafe { gdal_sys::OGR_G_Equal(self.as_ptr(), other.as_ptr()) != 0 }
+    }
+}
+
+impl Eq for GeometryRef {}
+
+impl Debug for Geometry {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        Debug::fmt(self.as_ref(), f)
+    }
+}
+
 impl PartialEq for Geometry {
     fn eq(&self, other: &Self) -> bool {
-        unsafe { gdal_sys::OGR_G_Equal(self.c_geometry(), other.c_geometry()) != 0 }
+        PartialEq::eq(self.as_ref(), other.as_ref())
     }
 }
 
@@ -362,40 +298,16 @@ pub fn geometry_type_to_name(ty: OGRwkbGeometryType::Type) -> String {
     _string(rv)
 }
 
-/// Reference to owned geometry
-pub struct GeometryRef<'a> {
-    geom: Geometry,
-    _lifetime: PhantomData<&'a ()>,
-}
-
-impl Deref for GeometryRef<'_> {
-    type Target = Geometry;
-
-    fn deref(&self) -> &Self::Target {
-        &self.geom
-    }
-}
-
-impl DerefMut for GeometryRef<'_> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.geom
-    }
-}
-
-impl Debug for GeometryRef<'_> {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        Debug::fmt(&self.geom, f)
-    }
-}
-
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::spatial_ref::SpatialRef;
-    use crate::test_utils::SuppressGDALErrorLog;
     use gdal_sys::OGRwkbGeometryType::{
         wkbLineString, wkbLinearRing, wkbMultiPoint, wkbMultiPolygon, wkbPoint, wkbPolygon,
     };
+
+    use crate::spatial_ref::SpatialRef;
+    use crate::test_utils::SuppressGDALErrorLog;
+
+    use super::*;
 
     #[test]
     fn test_create_bbox() {
@@ -550,9 +462,10 @@ mod tests {
 
     #[test]
     pub fn test_geometry_modify() {
-        let polygon = Geometry::from_wkt("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))").unwrap();
+        let mut polygon =
+            Geometry::from_wkt("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))").unwrap();
         for i in 0..polygon.geometry_count() {
-            let mut ring = polygon.get_geometry(i);
+            let ring = &mut polygon.get_geometry_mut(i);
             for j in 0..ring.point_count() {
                 let (x, y, _) = ring.get_point(j as i32);
                 ring.set_point_2d(j, (x * 10.0, y * 10.0));

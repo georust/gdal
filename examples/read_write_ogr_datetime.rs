@@ -32,7 +32,7 @@ fn run() -> gdal::errors::Result<()> {
     for feature_a in layer_a.features() {
         let mut ft = Feature::new(&defn)?;
         if let Some(geom) = feature_a.geometry() {
-            ft.set_geometry(geom.clone())?;
+            ft.set_geometry(geom.to_owned())?;
         }
         // copy each field value of the feature:
         for field in defn.fields() {

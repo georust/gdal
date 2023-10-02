@@ -1,4 +1,5 @@
 use crate::utils::{_last_null_pointer_err, _string};
+use foreign_types::{foreign_type, ForeignType, ForeignTypeRef};
 use gdal_sys::{self, OGRErr};
 use std::ffi::{CStr, CString};
 use std::ptr::{self};
@@ -6,34 +7,26 @@ use std::str::FromStr;
 
 use crate::errors::*;
 
-/// A OpenGIS Spatial Reference System definition.
-///
-/// Used in geo-referencing raster and vector data, and in coordinate transformations.
-///
-/// # Notes
-/// * See also: [OGR Coordinate Reference Systems and Coordinate Transformation Tutorial](https://gdal.org/tutorials/osr_api_tut.html)
-/// * Consult the [OGC WKT Coordinate System Issues](https://gdal.org/tutorials/wktproblems.html)
-/// page for implementation details of WKT in OGR.
-#[derive(Debug)]
-pub struct SpatialRef(gdal_sys::OGRSpatialReferenceH);
-
-impl Drop for SpatialRef {
-    fn drop(&mut self) {
-        unsafe { gdal_sys::OSRRelease(self.0) };
-        self.0 = ptr::null_mut();
-    }
-}
-
-impl Clone for SpatialRef {
-    fn clone(&self) -> SpatialRef {
-        let n_obj = unsafe { gdal_sys::OSRClone(self.0) };
-        SpatialRef(n_obj)
+foreign_type! {
+    /// A OpenGIS Spatial Reference System definition.
+    ///
+    /// Used in geo-referencing raster and vector data, and in coordinate transformations.
+    ///
+    /// # Notes
+    /// * See also: [OGR Coordinate Reference Systems and Coordinate Transformation Tutorial](https://gdal.org/tutorials/osr_api_tut.html)
+    /// * Consult the [OGC WKT Coordinate System Issues](https://gdal.org/tutorials/wktproblems.html)
+    /// page for implementation details of WKT in OGR.
+    #[derive(Debug)]
+    pub unsafe type SpatialRef {
+        type CType = libc::c_void;
+        fn drop = gdal_sys::OSRRelease;
+        fn clone = gdal_sys::OSRClone;
     }
 }
 
 impl PartialEq for SpatialRef {
     fn eq(&self, other: &SpatialRef) -> bool {
-        unsafe { gdal_sys::OSRIsSame(self.0, other.0) == 1 }
+        unsafe { gdal_sys::OSRIsSame(self.as_ptr(), other.as_ptr()) == 1 }
     }
 }
 
@@ -43,25 +36,7 @@ impl SpatialRef {
         if c_obj.is_null() {
             return Err(_last_null_pointer_err("OSRNewSpatialReference"));
         }
-        Ok(SpatialRef(c_obj))
-    }
-
-    /// Returns a wrapped `SpatialRef` from a raw C API handle.
-    ///
-    /// # Safety
-    /// The handle passed to this function must be valid.
-    pub unsafe fn from_c_obj(c_obj: gdal_sys::OGRSpatialReferenceH) -> Result<SpatialRef> {
-        let mut_c_obj = gdal_sys::OSRClone(c_obj);
-        if mut_c_obj.is_null() {
-            Err(_last_null_pointer_err("OSRClone"))
-        } else {
-            Ok(SpatialRef(mut_c_obj))
-        }
-    }
-
-    /// Returns a C pointer to the allocated [`gdal_sys::OGRSpatialReferenceH`] memory.
-    pub fn to_c_hsrs(&self) -> gdal_sys::OGRSpatialReferenceH {
-        self.0
+        Ok(unsafe { Self::from_ptr(c_obj) })
     }
 
     /// Set spatial reference from various text formats.
@@ -84,7 +59,7 @@ impl SpatialRef {
                 method_name: "OSRSetFromUserInput",
             });
         }
-        Ok(SpatialRef(c_obj))
+        Ok(unsafe { Self::from_ptr(c_obj) })
     }
 
     pub fn from_wkt(wkt: &str) -> Result<SpatialRef> {
@@ -93,7 +68,7 @@ impl SpatialRef {
         if c_obj.is_null() {
             return Err(_last_null_pointer_err("OSRNewSpatialReference"));
         }
-        Ok(SpatialRef(c_obj))
+        Ok(unsafe { Self::from_ptr(c_obj) })
     }
 
     pub fn from_epsg(epsg_code: u32) -> Result<SpatialRef> {
@@ -106,7 +81,7 @@ impl SpatialRef {
                 method_name: "OSRImportFromEPSG",
             })
         } else {
-            Ok(SpatialRef(c_obj))
+            Ok(unsafe { Self::from_ptr(c_obj) })
         }
     }
 
@@ -121,7 +96,7 @@ impl SpatialRef {
                 method_name: "OSRImportFromProj4",
             })
         } else {
-            Ok(SpatialRef(c_obj))
+            Ok(unsafe { Self::from_ptr(c_obj) })
         }
     }
 
@@ -137,13 +112,15 @@ impl SpatialRef {
                 method_name: "OSRImportFromESRI",
             })
         } else {
-            Ok(SpatialRef(c_obj))
+            Ok(unsafe { Self::from_ptr(c_obj) })
         }
     }
+}
 
+impl SpatialRefRef {
     pub fn to_wkt(&self) -> Result<String> {
         let mut c_wkt = ptr::null_mut();
-        let rv = unsafe { gdal_sys::OSRExportToWkt(self.0, &mut c_wkt) };
+        let rv = unsafe { gdal_sys::OSRExportToWkt(self.as_ptr(), &mut c_wkt) };
         let res = if rv != OGRErr::OGRERR_NONE {
             Err(GdalError::OgrError {
                 err: rv,
@@ -157,7 +134,7 @@ impl SpatialRef {
     }
 
     pub fn morph_to_esri(&self) -> Result<()> {
-        let rv = unsafe { gdal_sys::OSRMorphToESRI(self.0) };
+        let rv = unsafe { gdal_sys::OSRMorphToESRI(self.as_ptr()) };
         if rv != OGRErr::OGRERR_NONE {
             return Err(GdalError::OgrError {
                 err: rv,
@@ -169,8 +146,9 @@ impl SpatialRef {
 
     pub fn to_pretty_wkt(&self) -> Result<String> {
         let mut c_wkt = ptr::null_mut();
-        let rv =
-            unsafe { gdal_sys::OSRExportToPrettyWkt(self.0, &mut c_wkt, false as libc::c_int) };
+        let rv = unsafe {
+            gdal_sys::OSRExportToPrettyWkt(self.as_ptr(), &mut c_wkt, false as libc::c_int)
+        };
         let res = if rv != OGRErr::OGRERR_NONE {
             Err(GdalError::OgrError {
                 err: rv,
@@ -185,7 +163,7 @@ impl SpatialRef {
 
     pub fn to_xml(&self) -> Result<String> {
         let mut c_raw_xml = ptr::null_mut();
-        let rv = unsafe { gdal_sys::OSRExportToXML(self.0, &mut c_raw_xml, ptr::null()) };
+        let rv = unsafe { gdal_sys::OSRExportToXML(self.as_ptr(), &mut c_raw_xml, ptr::null()) };
         let res = if rv != OGRErr::OGRERR_NONE {
             Err(GdalError::OgrError {
                 err: rv,
@@ -200,7 +178,7 @@ impl SpatialRef {
 
     pub fn to_proj4(&self) -> Result<String> {
         let mut c_proj4str = ptr::null_mut();
-        let rv = unsafe { gdal_sys::OSRExportToProj4(self.0, &mut c_proj4str) };
+        let rv = unsafe { gdal_sys::OSRExportToProj4(self.as_ptr(), &mut c_proj4str) };
         let res = if rv != OGRErr::OGRERR_NONE {
             Err(GdalError::OgrError {
                 err: rv,
@@ -217,7 +195,8 @@ impl SpatialRef {
     pub fn to_projjson(&self) -> Result<String> {
         let mut c_projjsonstr = ptr::null_mut();
         let options = ptr::null();
-        let rv = unsafe { gdal_sys::OSRExportToPROJJSON(self.0, &mut c_projjsonstr, options) };
+        let rv =
+            unsafe { gdal_sys::OSRExportToPROJJSON(self.as_ptr(), &mut c_projjsonstr, options) };
         let res = if rv != OGRErr::OGRERR_NONE {
             Err(GdalError::OgrError {
                 err: rv,
@@ -231,7 +210,7 @@ impl SpatialRef {
     }
 
     pub fn auth_name(&self) -> Result<String> {
-        let c_ptr = unsafe { gdal_sys::OSRGetAuthorityName(self.0, ptr::null()) };
+        let c_ptr = unsafe { gdal_sys::OSRGetAuthorityName(self.as_ptr(), ptr::null()) };
         if c_ptr.is_null() {
             Err(_last_null_pointer_err("SRGetAuthorityName"))
         } else {
@@ -240,7 +219,7 @@ impl SpatialRef {
     }
 
     pub fn auth_code(&self) -> Result<i32> {
-        let c_ptr = unsafe { gdal_sys::OSRGetAuthorityCode(self.0, ptr::null()) };
+        let c_ptr = unsafe { gdal_sys::OSRGetAuthorityCode(self.as_ptr(), ptr::null()) };
         if c_ptr.is_null() {
             return Err(_last_null_pointer_err("OSRGetAuthorityCode"));
         }
@@ -256,12 +235,12 @@ impl SpatialRef {
     }
 
     pub fn authority(&self) -> Result<String> {
-        let c_ptr = unsafe { gdal_sys::OSRGetAuthorityName(self.0, ptr::null()) };
+        let c_ptr = unsafe { gdal_sys::OSRGetAuthorityName(self.as_ptr(), ptr::null()) };
         if c_ptr.is_null() {
             return Err(_last_null_pointer_err("SRGetAuthorityName"));
         }
         let name = unsafe { CStr::from_ptr(c_ptr) }.to_str()?;
-        let c_ptr = unsafe { gdal_sys::OSRGetAuthorityCode(self.0, ptr::null()) };
+        let c_ptr = unsafe { gdal_sys::OSRGetAuthorityCode(self.as_ptr(), ptr::null()) };
         if c_ptr.is_null() {
             return Err(_last_null_pointer_err("OSRGetAuthorityCode"));
         }
@@ -270,7 +249,7 @@ impl SpatialRef {
     }
 
     pub fn auto_identify_epsg(&mut self) -> Result<()> {
-        let rv = unsafe { gdal_sys::OSRAutoIdentifyEPSG(self.0) };
+        let rv = unsafe { gdal_sys::OSRAutoIdentifyEPSG(self.as_ptr()) };
         if rv != OGRErr::OGRERR_NONE {
             Err(GdalError::OgrError {
                 err: rv,
@@ -283,7 +262,7 @@ impl SpatialRef {
 
     #[cfg(major_ge_3)]
     pub fn name(&self) -> Result<String> {
-        let c_ptr = unsafe { gdal_sys::OSRGetName(self.0) };
+        let c_ptr = unsafe { gdal_sys::OSRGetName(self.as_ptr()) };
         if c_ptr.is_null() {
             return Err(_last_null_pointer_err("OSRGetName"));
         }
@@ -292,7 +271,7 @@ impl SpatialRef {
 
     pub fn angular_units_name(&self) -> Result<String> {
         let mut c_ptr = ptr::null_mut();
-        unsafe { gdal_sys::OSRGetAngularUnits(self.0, &mut c_ptr) };
+        unsafe { gdal_sys::OSRGetAngularUnits(self.as_ptr(), &mut c_ptr) };
         if c_ptr.is_null() {
             return Err(_last_null_pointer_err("OSRGetAngularUnits"));
         }
@@ -300,12 +279,12 @@ impl SpatialRef {
     }
 
     pub fn angular_units(&self) -> f64 {
-        unsafe { gdal_sys::OSRGetAngularUnits(self.0, ptr::null_mut()) }
+        unsafe { gdal_sys::OSRGetAngularUnits(self.as_ptr(), ptr::null_mut()) }
     }
 
     pub fn linear_units_name(&self) -> Result<String> {
         let mut c_ptr = ptr::null_mut();
-        unsafe { gdal_sys::OSRGetLinearUnits(self.0, &mut c_ptr) };
+        unsafe { gdal_sys::OSRGetLinearUnits(self.as_ptr(), &mut c_ptr) };
         if c_ptr.is_null() {
             return Err(_last_null_pointer_err("OSRGetLinearUnits"));
         }
@@ -313,43 +292,43 @@ impl SpatialRef {
     }
 
     pub fn linear_units(&self) -> f64 {
-        unsafe { gdal_sys::OSRGetLinearUnits(self.0, ptr::null_mut()) }
+        unsafe { gdal_sys::OSRGetLinearUnits(self.as_ptr(), ptr::null_mut()) }
     }
 
     #[inline]
     pub fn is_geographic(&self) -> bool {
-        unsafe { gdal_sys::OSRIsGeographic(self.0) == 1 }
+        unsafe { gdal_sys::OSRIsGeographic(self.as_ptr()) == 1 }
     }
 
     #[inline]
     #[cfg(all(major_ge_3, minor_ge_1))]
     pub fn is_derived_geographic(&self) -> bool {
-        unsafe { gdal_sys::OSRIsDerivedGeographic(self.0) == 1 }
+        unsafe { gdal_sys::OSRIsDerivedGeographic(self.as_ptr()) == 1 }
     }
 
     #[inline]
     pub fn is_local(&self) -> bool {
-        unsafe { gdal_sys::OSRIsLocal(self.0) == 1 }
+        unsafe { gdal_sys::OSRIsLocal(self.as_ptr()) == 1 }
     }
 
     #[inline]
     pub fn is_projected(&self) -> bool {
-        unsafe { gdal_sys::OSRIsProjected(self.0) == 1 }
+        unsafe { gdal_sys::OSRIsProjected(self.as_ptr()) == 1 }
     }
 
     #[inline]
     pub fn is_compound(&self) -> bool {
-        unsafe { gdal_sys::OSRIsCompound(self.0) == 1 }
+        unsafe { gdal_sys::OSRIsCompound(self.as_ptr()) == 1 }
     }
 
     #[inline]
     pub fn is_geocentric(&self) -> bool {
-        unsafe { gdal_sys::OSRIsGeocentric(self.0) == 1 }
+        unsafe { gdal_sys::OSRIsGeocentric(self.as_ptr()) == 1 }
     }
 
     #[inline]
     pub fn is_vertical(&self) -> bool {
-        unsafe { gdal_sys::OSRIsVertical(self.0) == 1 }
+        unsafe { gdal_sys::OSRIsVertical(self.as_ptr()) == 1 }
     }
 
     pub fn axis_orientation(
@@ -360,7 +339,7 @@ impl SpatialRef {
         let mut orientation = gdal_sys::OGRAxisOrientation::OAO_Other;
         let c_ptr = unsafe {
             gdal_sys::OSRGetAxis(
-                self.0,
+                self.as_ptr(),
                 CString::new(target_key)?.as_ptr(),
                 axis as libc::c_int,
                 &mut orientation,
@@ -381,7 +360,7 @@ impl SpatialRef {
         // See get_axis_orientation
         let c_ptr = unsafe {
             gdal_sys::OSRGetAxis(
-                self.0,
+                self.as_ptr(),
                 CString::new(target_key)?.as_ptr(),
                 axis as libc::c_int,
                 ptr::null_mut(),
@@ -399,13 +378,13 @@ impl SpatialRef {
 
     #[cfg(all(major_ge_3, minor_ge_1))]
     pub fn axes_count(&self) -> i32 {
-        unsafe { gdal_sys::OSRGetAxesCount(self.0) }
+        unsafe { gdal_sys::OSRGetAxesCount(self.as_ptr()) }
     }
 
     #[cfg(major_ge_3)]
     pub fn set_axis_mapping_strategy(&self, strategy: gdal_sys::OSRAxisMappingStrategy::Type) {
         unsafe {
-            gdal_sys::OSRSetAxisMappingStrategy(self.0, strategy);
+            gdal_sys::OSRSetAxisMappingStrategy(self.as_ptr(), strategy);
         }
     }
 
@@ -417,7 +396,7 @@ impl SpatialRef {
 
     #[cfg(major_ge_3)]
     pub fn axis_mapping_strategy(&self) -> gdal_sys::OSRAxisMappingStrategy::Type {
-        unsafe { gdal_sys::OSRGetAxisMappingStrategy(self.0) }
+        unsafe { gdal_sys::OSRGetAxisMappingStrategy(self.as_ptr()) }
     }
 
     #[cfg(major_ge_3)]
@@ -430,7 +409,7 @@ impl SpatialRef {
             (0.0, 0.0, 0.0, 0.0);
         let ret_val = unsafe {
             gdal_sys::OSRGetAreaOfUse(
-                self.0,
+                self.as_ptr(),
                 &mut w_long,
                 &mut s_lat,
                 &mut e_long,
@@ -459,7 +438,7 @@ impl SpatialRef {
     /// See: [`OSRGetSemiMajor`](https://gdal.org/api/ogr_srs_api.html#_CPPv415OSRGetSemiMajor20OGRSpatialReferenceHP6OGRErr)
     pub fn semi_major(&self) -> Result<f64> {
         let mut err_code = OGRErr::OGRERR_NONE;
-        let a = unsafe { gdal_sys::OSRGetSemiMajor(self.0, &mut err_code as *mut u32) };
+        let a = unsafe { gdal_sys::OSRGetSemiMajor(self.as_ptr(), &mut err_code as *mut u32) };
         if err_code != OGRErr::OGRERR_NONE {
             return Err(GdalError::OgrError {
                 err: err_code,
@@ -476,7 +455,7 @@ impl SpatialRef {
     /// See: [`OSRGetSemiMinor`](https://gdal.org/api/ogr_srs_api.html#_CPPv415OSRGetSemiMinor20OGRSpatialReferenceHP6OGRErr)
     pub fn semi_minor(&self) -> Result<f64> {
         let mut err_code = OGRErr::OGRERR_NONE;
-        let b = unsafe { gdal_sys::OSRGetSemiMinor(self.0, &mut err_code as *mut u32) };
+        let b = unsafe { gdal_sys::OSRGetSemiMinor(self.as_ptr(), &mut err_code as *mut u32) };
         if err_code != OGRErr::OGRERR_NONE {
             return Err(GdalError::OgrError {
                 err: err_code,
@@ -493,7 +472,7 @@ impl SpatialRef {
     /// See: [`OSRSetProjParm`](https://gdal.org/api/ogr_srs_api.html#_CPPv414OSRSetProjParm20OGRSpatialReferenceHPKcd)
     pub fn set_proj_param(&mut self, name: &str, value: f64) -> Result<()> {
         let c_name = CString::new(name)?;
-        let rv = unsafe { gdal_sys::OSRSetProjParm(self.0, c_name.as_ptr(), value) };
+        let rv = unsafe { gdal_sys::OSRSetProjParm(self.as_ptr(), c_name.as_ptr(), value) };
         if rv != OGRErr::OGRERR_NONE {
             return Err(GdalError::OgrError {
                 err: rv,
@@ -515,7 +494,12 @@ impl SpatialRef {
         let c_name = CString::new(name)?;
         let mut err_code = OGRErr::OGRERR_NONE;
         let p = unsafe {
-            gdal_sys::OSRGetProjParm(self.0, c_name.as_ptr(), 0.0, &mut err_code as *mut u32)
+            gdal_sys::OSRGetProjParm(
+                self.as_ptr(),
+                c_name.as_ptr(),
+                0.0,
+                &mut err_code as *mut u32,
+            )
         };
         if err_code != OGRErr::OGRERR_NONE {
             match err_code {
@@ -545,7 +529,8 @@ impl SpatialRef {
             .as_ref()
             .map(|s| s.as_ptr())
             .unwrap_or(ptr::null());
-        let rv = unsafe { gdal_sys::OSRSetAttrValue(self.0, c_node_path.as_ptr(), value_ptr) };
+        let rv =
+            unsafe { gdal_sys::OSRSetAttrValue(self.as_ptr(), c_node_path.as_ptr(), value_ptr) };
         if rv != OGRErr::OGRERR_NONE {
             return Err(GdalError::OgrError {
                 err: rv,
@@ -571,7 +556,7 @@ impl SpatialRef {
         let child = child.try_into().expect("`child` must fit in `c_int`");
 
         let c_node_path = CString::new(node_path)?;
-        let rv = unsafe { gdal_sys::OSRGetAttrValue(self.0, c_node_path.as_ptr(), child) };
+        let rv = unsafe { gdal_sys::OSRGetAttrValue(self.as_ptr(), c_node_path.as_ptr(), child) };
         if rv.is_null() {
             Ok(None)
         } else {
@@ -585,12 +570,12 @@ impl SpatialRef {
     ///
     /// See: [OSRCloneGeogCS](https://gdal.org/api/ogr_srs_api.html#_CPPv414OSRCloneGeogCS20OGRSpatialReferenceH)
     pub fn geog_cs(&self) -> Result<SpatialRef> {
-        let raw_ret = unsafe { gdal_sys::OSRCloneGeogCS(self.0) };
+        let raw_ret = unsafe { gdal_sys::OSRCloneGeogCS(self.as_ptr()) };
         if raw_ret.is_null() {
             return Err(_last_null_pointer_err("OSRCloneGeogCS"));
         }
 
-        Ok(SpatialRef(raw_ret))
+        Ok(unsafe { SpatialRef::from_ptr(raw_ret) })
     }
 }
 
