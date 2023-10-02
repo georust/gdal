@@ -6,7 +6,7 @@
  - **Breaking**: Moved `LayerIterator`, `LayerOptions` and `Transaction` to `crate::vector`.
  - Accessors `MajorObject::gdal_object_ptr` and `Dataset::c_dataset()` are no longer marked as `unsafe` (it's not idiomatic Rust to do so).
   
-   - <> 
+   - <https://github.com/georust/gdal/pull/447> 
  
  - Fixed build script error with development GDAL versions
 
