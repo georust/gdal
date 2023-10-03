@@ -6,8 +6,8 @@ use crate::vector::{
     Envelope, Feature, FeatureIterator, FieldValue, Geometry, LayerOptions, OwnedFeatureIterator,
 };
 use crate::{dataset::Dataset, gdal_major_object::MajorObject};
-use foreign_types::{ForeignType, ForeignTypeRef};
-use gdal_sys::{self, GDALMajorObjectH, OGRErr, OGRFieldDefnH, OGRFieldType, OGRLayerH};
+use foreign_types::{foreign_type, ForeignType, ForeignTypeRef};
+use gdal_sys::{self, GDALMajorObjectH, OGRErr, OGRFieldType, OGRLayerH};
 use libc::c_int;
 use std::ffi::NulError;
 use std::mem::MaybeUninit;
@@ -547,19 +547,20 @@ impl<'a> LayerIterator<'a> {
         }
     }
 }
-pub struct FieldDefn {
-    c_obj: OGRFieldDefnH,
-}
 
-impl Drop for FieldDefn {
-    fn drop(&mut self) {
-        unsafe { gdal_sys::OGR_Fld_Destroy(self.c_obj) };
+foreign_type! {
+    /// Field definition
+    ///
+    /// Defines a discrete field in a feature.
+    pub unsafe type FieldDefn {
+        type CType = libc::c_void;
+        fn drop = gdal_sys::OGR_Fld_Destroy;
     }
 }
 
 impl MajorObject for FieldDefn {
     fn gdal_object_ptr(&self) -> GDALMajorObjectH {
-        self.c_obj
+        self.as_ptr()
     }
 }
 
@@ -570,16 +571,19 @@ impl FieldDefn {
         if c_obj.is_null() {
             return Err(_last_null_pointer_err("OGR_Fld_Create"));
         };
-        Ok(FieldDefn { c_obj })
+        Ok(unsafe { FieldDefn::from_ptr(c_obj) })
     }
+}
+
+impl FieldDefnRef {
     pub fn set_width(&self, width: i32) {
-        unsafe { gdal_sys::OGR_Fld_SetWidth(self.c_obj, width as c_int) };
+        unsafe { gdal_sys::OGR_Fld_SetWidth(self.as_ptr(), width as c_int) };
     }
     pub fn set_precision(&self, precision: i32) {
-        unsafe { gdal_sys::OGR_Fld_SetPrecision(self.c_obj, precision as c_int) };
+        unsafe { gdal_sys::OGR_Fld_SetPrecision(self.as_ptr(), precision as c_int) };
     }
     pub fn add_to_layer<L: LayerAccess>(&self, layer: &L) -> Result<()> {
-        let rv = unsafe { gdal_sys::OGR_L_CreateField(layer.c_layer(), self.c_obj, 1) };
+        let rv = unsafe { gdal_sys::OGR_L_CreateField(layer.c_layer(), self.as_ptr(), 1) };
         if rv != OGRErr::OGRERR_NONE {
             return Err(GdalError::OgrError {
                 err: rv,
