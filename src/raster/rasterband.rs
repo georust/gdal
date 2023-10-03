@@ -24,9 +24,21 @@ use crate::errors::*;
 impl Dataset {
     /// Fetch a band object for a dataset.
     ///
-    /// Applies to raster datasets, and fetches the
-    /// rasterband at the given _1-based_ index.
-    pub fn rasterband(&self, band_index: isize) -> Result<&mut RasterBand> {
+    /// Applies to raster datasets, and fetches the rasterband at the given _1-based_ index.
+    pub fn rasterband(&self, band_index: isize) -> Result<&RasterBand> {
+        unsafe {
+            let c_band = gdal_sys::GDALGetRasterBand(self.as_ptr(), band_index as c_int);
+            if c_band.is_null() {
+                return Err(_last_null_pointer_err("GDALGetRasterBand"));
+            }
+            Ok(RasterBand::from_ptr(c_band))
+        }
+    }
+
+    /// Fetch a mutable band object for a dataset.
+    ///
+    /// Applies to raster datasets, and fetches the rasterband at the given _1-based_ index.
+    pub fn rasterband_mut(&mut self, band_index: isize) -> Result<&mut RasterBand> {
         unsafe {
             let c_band = gdal_sys::GDALGetRasterBand(self.as_ptr(), band_index as c_int);
             if c_band.is_null() {
@@ -1097,8 +1109,8 @@ impl Debug for ColorEntry {
 ///
 /// // Create in-memory copy to mutate
 /// let mem_driver = DriverManager::get_driver_by_name("MEM")?;
-/// let ds = ds.create_copy(&mem_driver, "<mem>", &[])?;
-/// let band = ds.rasterband(1)?;
+/// let mut ds = ds.create_copy(&mem_driver, "<mem>", &[])?;
+/// let band = ds.rasterband_mut(1)?;
 /// assert!(band.color_table().is_none());
 ///
 /// // Create a new color table for 3 classes + no-data

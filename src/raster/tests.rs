@@ -98,7 +98,7 @@ fn test_read_raster_with_average_resample() {
 #[test]
 fn test_write_raster() {
     let driver = DriverManager::get_driver_by_name("MEM").unwrap();
-    let dataset = driver.create("", 20, 10, 1).unwrap();
+    let mut dataset = driver.create("", 20, 10, 1).unwrap();
 
     // create a 2x1 raster
     let raster = ByteBuffer {
@@ -107,7 +107,7 @@ fn test_write_raster() {
     };
 
     // epand it to fill the image (20x10)
-    let rb = dataset.rasterband(1).unwrap();
+    let rb = dataset.rasterband_mut(1).unwrap();
 
     let res = rb.write((0, 0), (20, 10), &raster);
 
@@ -318,8 +318,8 @@ fn open_mask_band() {
 #[test]
 fn create_mask_band() {
     let driver = DriverManager::get_driver_by_name("MEM").unwrap();
-    let dataset = driver.create("", 20, 10, 1).unwrap();
-    let rb = dataset.rasterband(1).unwrap();
+    let mut dataset = driver.create("", 20, 10, 1).unwrap();
+    let rb = dataset.rasterband_mut(1).unwrap();
     rb.create_mask_band(false).unwrap();
 
     let mb = rb.open_mask_band().unwrap();
@@ -427,8 +427,8 @@ fn test_get_no_data_value() {
 #[allow(clippy::float_cmp)]
 fn test_set_no_data_value() {
     let driver = DriverManager::get_driver_by_name("MEM").unwrap();
-    let dataset = driver.create("", 20, 10, 1).unwrap();
-    let rasterband = dataset.rasterband(1).unwrap();
+    let mut dataset = driver.create("", 20, 10, 1).unwrap();
+    let rasterband = dataset.rasterband_mut(1).unwrap();
     assert_eq!(rasterband.no_data_value(), None);
     assert!(rasterband.set_no_data_value(Some(1.23)).is_ok());
     assert_eq!(rasterband.no_data_value(), Some(1.23));
@@ -549,8 +549,8 @@ fn test_get_rasterband_color_interp() {
 #[test]
 fn test_set_rasterband_color_interp() {
     let driver = DriverManager::get_driver_by_name("MEM").unwrap();
-    let dataset = driver.create("", 1, 1, 1).unwrap();
-    let rasterband = dataset.rasterband(1).unwrap();
+    let mut dataset = driver.create("", 1, 1, 1).unwrap();
+    let rasterband = dataset.rasterband_mut(1).unwrap();
     rasterband
         .set_color_interpretation(ColorInterpretation::AlphaBand)
         .unwrap();
@@ -561,8 +561,8 @@ fn test_set_rasterband_color_interp() {
 #[test]
 fn test_set_rasterband_scale() {
     let driver = DriverManager::get_driver_by_name("MEM").unwrap();
-    let dataset = driver.create("", 1, 1, 1).unwrap();
-    let rasterband = dataset.rasterband(1).unwrap();
+    let mut dataset = driver.create("", 1, 1, 1).unwrap();
+    let rasterband = dataset.rasterband_mut(1).unwrap();
     let scale = 1234.5678;
     rasterband.set_scale(scale).unwrap();
     assert_eq!(rasterband.scale().unwrap(), scale);
@@ -571,8 +571,8 @@ fn test_set_rasterband_scale() {
 #[test]
 fn test_set_rasterband_offset() {
     let driver = DriverManager::get_driver_by_name("MEM").unwrap();
-    let dataset = driver.create("", 1, 1, 1).unwrap();
-    let rasterband = dataset.rasterband(1).unwrap();
+    let mut dataset = driver.create("", 1, 1, 1).unwrap();
+    let rasterband = dataset.rasterband_mut(1).unwrap();
     let offset = -123.456;
     rasterband.set_offset(offset).unwrap();
     assert_eq!(rasterband.offset().unwrap(), offset);
@@ -680,11 +680,11 @@ fn test_create_color_table() {
         assert!(band.color_table().is_none());
 
         // Create a new file to put color table in
-        let dataset = dataset
+        let mut dataset = dataset
             .create_copy(&dataset.driver(), &outfile, &[])
             .unwrap();
         dataset
-            .rasterband(1)
+            .rasterband_mut(1)
             .unwrap()
             .set_no_data_value(None)
             .unwrap();
@@ -698,7 +698,7 @@ fn test_create_color_table() {
         assert_eq!(ct.entry(2), Some(ColorEntry::rgba(255, 0, 0, 255)));
         assert_eq!(ct.entry(8), None);
 
-        dataset.rasterband(1).unwrap().set_color_table(&ct);
+        dataset.rasterband_mut(1).unwrap().set_color_table(&ct);
     }
 
     // Reopen to confirm the changes.
