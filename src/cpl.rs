@@ -4,16 +4,15 @@
 //!
 
 use std::ffi::CString;
-use std::fmt::{Debug, Formatter};
+use std::fmt::{Debug, Display, Formatter};
+use std::ops::Deref;
 use std::ptr;
 
-use gdal_sys::{
-    CSLAddString, CSLCount, CSLDestroy, CSLDuplicate, CSLFetchNameValue, CSLSetNameValue,
-};
-use libc::c_char;
+use gdal_sys::{CSLAddString, CSLCount, CSLDestroy, CSLDuplicate, CSLFetchNameValue, CSLFindString, CSLFindStringCaseSensitive, CSLGetField, CSLPartialFindString, CSLSetNameValue};
+use libc::{c_char, c_int};
 
 use crate::errors::{GdalError, Result};
-use crate::utils::{_string, _string_tuple};
+use crate::utils::_string;
 
 /// Wraps a [`gdal_sys::CSLConstList`]  (a.k.a. `char **papszStrList`). This data structure
 /// (a null-terminated array of null-terminated strings) is used throughout GDAL to pass
@@ -59,9 +58,10 @@ impl CslStringList {
         Ok(())
     }
 
-    /// Adds the string `value` to the list.
+    /// Adds a copy of the string slice `value` to the list.
     ///
-    /// Returns `Ok<()>` on success, `Err<GdalError>` if `value` cannot be converted to a C string.
+    /// Returns `Ok<()>` on success, `Err<GdalError>` if `value` cannot be converted to a C string,
+    /// e.g. `value` contains a `0` byte, which is used as a string termination sentinel in C.
     ///
     /// See: [`CSLAddString`](https://gdal.org/api/cpl.html#_CPPv412CSLAddStringPPcPKc)
     pub fn add_string(&mut self, value: &str) -> Result<()> {
@@ -74,18 +74,90 @@ impl CslStringList {
     ///
     /// See [`CSLFetchNameValue`](https://gdal.org/doxygen/cpl__string_8h.html#a4f23675f8b6f015ed23d9928048361a1)
     /// for details.
-    pub fn fetch_name_value(&self, key: &str) -> Result<Option<String>> {
-        let key = CString::new(key)?;
+    pub fn fetch_name_value(&self, key: &str) -> Option<String> {
+        // If CString conversion fails because `key` has an embedded null byte, then
+        // we know already `key` will never exist in a valid CslStringList.
+        let key = CString::new(key).ok()?;
         let c_value = unsafe { CSLFetchNameValue(self.as_ptr(), key.as_ptr()) };
-        let value = if c_value.is_null() {
+        if c_value.is_null() {
             None
         } else {
             Some(_string(c_value))
-        };
-        Ok(value)
+        }
+    }
+
+    /// Perform a case <u>insensitive</u> search for the given string
+    ///
+    /// Returns `Some(usize)` of value index position, or `None` if not found.
+    ///
+    /// See: [`CSLFindString`](https://gdal.org/api/cpl.html#_CPPv413CSLFindString12CSLConstListPKc)
+    /// for details.
+    pub fn find_string(&self, value: &str) -> Option<usize> {
+        let value = CString::new(value).ok()?;
+        let idx = unsafe { CSLFindString(self.as_ptr(), value.as_ptr()) };
+        if idx < 0 {
+            None
+        } else {
+            Some(idx as usize)
+        }
+    }
+
+    /// Perform a case sensitive search for the given string
+    ///
+    /// Returns `Some(usize)` of value index position, or `None` if not found.
+    ///
+    /// See: [`CSLFindString`](https://gdal.org/api/cpl.html#_CPPv413CSLFindString12CSLConstListPKc)
+    /// for details.
+    pub fn find_string_case_sensitive(&self, value: &str) -> Option<usize> {
+        let value = CString::new(value).ok()?;
+        let idx = unsafe { CSLFindStringCaseSensitive(self.as_ptr(), value.as_ptr()) };
+        if idx < 0 {
+            None
+        } else {
+            Some(idx as usize)
+        }
+    }
+
+    /// Perform a case sensitive partial string search indicated by `fragment`.
+    ///
+    /// Returns `Some(usize)` of value index position, or `None` if not found.
+    ///
+    /// See:: [`CSLPartialFindString`](https://gdal.org/api/cpl.html#_CPPv420CSLPartialFindString12CSLConstListPKc)
+    /// for details.
+    pub fn partial_find_string(&self, fragment: &str) -> Option<usize> {
+        let fragment = CString::new(fragment).ok()?;
+        let idx = unsafe { CSLPartialFindString(self.as_ptr(), fragment.as_ptr()) };
+        if idx < 0 {
+            None
+        } else {
+            Some(idx as usize)
+        }
+    }
+
+    /// Fetch the [CslStringListEntry] for the entry at the given index.
+    ///
+    /// Returns `None` if index is out of bounds
+    pub fn get_field(&self, index: usize) -> Option<CslStringListEntry> {
+        // In the C++ implementation, an index-out-of-bounds returns an empty string, not an error.
+        // We don't want to check against `len` because that scans the list.
+        // See: https://github.com/OSGeo/gdal/blob/fada29feb681e97f0fc4e8861e07f86b16855681/port/cpl_string.cpp#L181-L182
+        let field = unsafe { CSLGetField(self.as_ptr(), index as c_int) };
+        if field.is_null() {
+            return None
+        }
+
+        let field = _string(field);
+        if field.is_empty() {
+            None
+        }
+        else {
+            Some(field.deref().into())
+        }
     }
 
     /// Determine the number of entries in the list.
+    ///
+    /// See [`CSLCount`](https://gdal.org/api/cpl.html#_CPPv48CSLCount12CSLConstList) for details.
     pub fn len(&self) -> usize {
         (unsafe { CSLCount(self.as_ptr()) }) as usize
     }
@@ -95,8 +167,8 @@ impl CslStringList {
         self.len() == 0
     }
 
-    /// Get an iterator over the name/value elements of the list.
-    pub fn iter(&self) -> CslStringListIterator {
+    /// Get an iterator over the `name=value` elements of the list.
+    pub fn iter<'a>(&'a self) -> impl Iterator<Item=CslStringListEntry> + 'a {
         CslStringListIterator::new(self)
     }
 
@@ -125,7 +197,55 @@ impl Clone for CslStringList {
     }
 }
 
+impl Debug for CslStringList {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let mut b = f.debug_tuple("CslStringList");
+
+        for e in self.iter() {
+            b.field(&e.to_string());
+        }
+
+        b.finish()
+    }
+}
+
+/// Represents an entry in a [CslStringList], which is ether a single token, or a key/value assignment.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum CslStringListEntry {
+    Arg(String),
+    Assign { key: String, value: String },
+}
+
+impl From<&str> for CslStringListEntry {
+    fn from(value: &str) -> Self {
+        match value.split_once('=') {
+            Some(kv) => kv.into(),
+            None => Self::Arg(value.to_owned()),
+        }
+    }
+}
+
+impl From<(&str, &str)> for CslStringListEntry {
+    fn from((key, value): (&str, &str)) -> Self {
+        Self::Assign {
+            key: key.to_owned(),
+            value: value.to_owned(),
+        }
+    }
+}
+
+impl Display for CslStringListEntry {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            CslStringListEntry::Arg(s) => f.write_str(s),
+            CslStringListEntry::Assign { key, value } => f.write_fmt(format_args!("{key}={value}")),
+        }
+    }
+}
+
 /// State for iterator over [`CslStringList`] entries.
+///
+/// Note: Does not include values inserted with [CslStringList::add_string]
 pub struct CslStringListIterator<'a> {
     list: &'a CslStringList,
     idx: usize,
@@ -146,7 +266,7 @@ impl<'a> CslStringListIterator<'a> {
 }
 
 impl<'a> Iterator for CslStringListIterator<'a> {
-    type Item = (String, String);
+    type Item = CslStringListEntry;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.is_done() {
@@ -159,21 +279,13 @@ impl<'a> Iterator for CslStringListIterator<'a> {
             let slice = std::slice::from_raw_parts(self.list.list_ptr, self.count);
             slice[self.idx]
         };
+        self.idx += 1;
         if field.is_null() {
             None
         } else {
-            self.idx += 1;
-            _string_tuple(field, '=')
+            let entry = _string(field);
+            Some(entry.deref().into())
         }
-    }
-}
-
-impl Debug for CslStringList {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        for (k, v) in self.iter() {
-            f.write_fmt(format_args!("{k}={v}\n"))?;
-        }
-        Ok(())
     }
 }
 
@@ -209,16 +321,16 @@ mod tests {
         l.set_name_value("ONE", "1")?;
         l.set_name_value("TWO", "2")?;
         l.set_name_value("THREE", "3")?;
-
+        l.add_string("SOME_FLAG")?;
         Ok(l)
     }
 
     #[test]
     fn basic_list() -> Result<()> {
         let l = fixture()?;
-        assert!(matches!(l.fetch_name_value("ONE"), Ok(Some(s)) if s == *"1"));
-        assert!(matches!(l.fetch_name_value("THREE"), Ok(Some(s)) if s == *"3"));
-        assert!(matches!(l.fetch_name_value("FOO"), Ok(None)));
+        assert!(matches!(l.fetch_name_value("ONE"), Some(s) if s == *"1"));
+        assert!(matches!(l.fetch_name_value("THREE"), Some(s) if s == *"3"));
+        assert!(matches!(l.fetch_name_value("FOO"), None));
 
         Ok(())
     }
@@ -226,7 +338,7 @@ mod tests {
     #[test]
     fn has_length() -> Result<()> {
         let l = fixture()?;
-        assert_eq!(l.len(), 3);
+        assert_eq!(l.len(), 4);
 
         Ok(())
     }
@@ -246,9 +358,10 @@ mod tests {
     fn has_iterator() -> Result<()> {
         let f = fixture()?;
         let mut it = f.iter();
-        assert_eq!(it.next(), Some(("ONE".to_string(), "1".to_string())));
-        assert_eq!(it.next(), Some(("TWO".to_string(), "2".to_string())));
-        assert_eq!(it.next(), Some(("THREE".to_string(), "3".to_string())));
+        assert_eq!(it.next(), Some(("ONE", "1").into()));
+        assert_eq!(it.next(), Some(("TWO", "2").into()));
+        assert_eq!(it.next(), Some(("THREE", "3").into()));
+        assert_eq!(it.next(), Some("SOME_FLAG".into()));
         assert_eq!(it.next(), None);
         assert_eq!(it.next(), None);
         Ok(())
@@ -266,8 +379,8 @@ mod tests {
     #[test]
     fn try_from_impl() -> Result<()> {
         let l = CslStringList::try_from(&[("ONE", "1"), ("TWO", "2")])?;
-        assert!(matches!(l.fetch_name_value("ONE"), Ok(Some(s)) if s == *"1"));
-        assert!(matches!(l.fetch_name_value("TWO"), Ok(Some(s)) if s == *"2"));
+        assert!(matches!(l.fetch_name_value("ONE"), Some(s) if s == *"1"));
+        assert!(matches!(l.fetch_name_value("TWO"), Some(s) if s == *"2"));
 
         Ok(())
     }
@@ -279,6 +392,7 @@ mod tests {
         assert!(s.contains("ONE=1"));
         assert!(s.contains("TWO=2"));
         assert!(s.contains("THREE=3"));
+        assert!(s.contains("SOME_FLAG"));
 
         Ok(())
     }
@@ -293,6 +407,39 @@ mod tests {
         l.add_string("B")?;
         assert_eq!(l.len(), 4);
 
+        Ok(())
+    }
+
+    #[test]
+    fn find_string() -> Result<()> {
+        let f = fixture()?;
+        assert_eq!(f.find_string("NON_FLAG"), None);
+        assert_eq!(f.find_string("SOME_FLAG"), Some(3));
+        assert_eq!(f.find_string("ONE=1"), Some(0));
+        assert_eq!(f.find_string("one=1"), Some(0));
+        assert_eq!(f.find_string("TWO="), None);
+        Ok(())
+    }
+
+    #[test]
+    fn find_string_case_sensitive() -> Result<()> {
+        let f = fixture()?;
+        assert_eq!(f.find_string_case_sensitive("ONE=1"), Some(0));
+        assert_eq!(f.find_string_case_sensitive("one=1"), None);
+        assert_eq!(f.find_string_case_sensitive("SOME_FLAG"), Some(3));
+        Ok(())
+    }
+
+    #[test]
+    fn partial_find_string() -> Result<()> {
+        let f = fixture()?;
+        assert_eq!(f.partial_find_string("ONE=1"), Some(0));
+        assert_eq!(f.partial_find_string("ONE="), Some(0));
+        assert_eq!(f.partial_find_string("=1"), Some(0));
+        assert_eq!(f.partial_find_string("1"), Some(0));
+        assert_eq!(f.partial_find_string("THREE="), Some(2));
+        assert_eq!(f.partial_find_string("THREE"), Some(2));
+        assert_eq!(f.partial_find_string("three"), None);
         Ok(())
     }
 }
