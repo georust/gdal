@@ -6,7 +6,7 @@
  - **Breaking**: `CslStringList::fetch_name_value` returns `Option<String>` instead of `Result<Option<String>>`, better reflecting the semantics of GDAL C API.
  - Added `CslStringList::get_field`, `CslStringList::find_string`, `CslStringList::partial_find_string`, `CslStringList::find_string_case_sensitive`, `CslStringList::into_ptr`
  
-   - <>
+   - <https://github.com/georust/gdal/pull/455>
 
  - **Breaking**: `ExtendedDataType` no longer implements `Clone`, `PartialEq` and `Eq`
 
