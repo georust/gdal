@@ -5,18 +5,43 @@
 
 use std::ffi::CString;
 use std::fmt::{Debug, Display, Formatter};
+use std::mem::ManuallyDrop;
 use std::ops::Deref;
 use std::ptr;
+use std::str::FromStr;
 
-use gdal_sys::{CSLAddString, CSLCount, CSLDestroy, CSLDuplicate, CSLFetchNameValue, CSLFindString, CSLFindStringCaseSensitive, CSLGetField, CSLPartialFindString, CSLSetNameValue};
+use gdal_sys::{
+    CSLAddString, CSLCount, CSLDestroy, CSLDuplicate, CSLFetchNameValue, CSLFindString,
+    CSLFindStringCaseSensitive, CSLGetField, CSLPartialFindString, CSLSetNameValue,
+    CSLTokenizeString2,
+};
 use libc::{c_char, c_int};
 
 use crate::errors::{GdalError, Result};
 use crate::utils::_string;
 
-/// Wraps a [`gdal_sys::CSLConstList`]  (a.k.a. `char **papszStrList`). This data structure
-/// (a null-terminated array of null-terminated strings) is used throughout GDAL to pass
-/// `KEY=VALUE`-formatted options to various functions.
+/// Wraps a [`gdal_sys::CSLConstList`]  (a.k.a. `char **papszStrList`).
+///
+/// This data structure (a null-terminated array of null-terminated strings) is used throughout
+/// GDAL to pass `KEY=VALUE`-formatted options to various functions.
+///
+/// There are a number of ways to populate a [`CslStringList`]. See below for examples.
+///
+/// # Example
+///
+/// ```rust
+/// use gdal::cpl::CslStringList;
+///
+/// let mut sl1 = CslStringList::new();
+/// sl1.set_name_value("NUM_THREADS", "ALL_CPUS").unwrap();
+/// sl1.set_name_value("COMPRESS", "LZW").unwrap();
+///
+/// let sl2: CslStringList = "NUM_THREADS=ALL_CPUS COMPRESS=LZW".parse().unwrap();
+/// let sl3: CslStringList = (&[("NUM_THREADS", "ALL_CPUS"), ("COMPRESS", "LZW")]).try_into().unwrap();
+///
+/// assert_eq!(sl1, sl2);
+/// assert_eq!(sl2, sl3);
+/// ```
 ///
 /// See the [`CSL*` GDAL functions](https://gdal.org/api/cpl.html#cpl-string-h) for more details.
 pub struct CslStringList {
@@ -122,7 +147,7 @@ impl CslStringList {
     ///
     /// Returns `Some(usize)` of value index position, or `None` if not found.
     ///
-    /// See:: [`CSLPartialFindString`](https://gdal.org/api/cpl.html#_CPPv420CSLPartialFindString12CSLConstListPKc)
+    /// See: [`CSLPartialFindString`](https://gdal.org/api/cpl.html#_CPPv420CSLPartialFindString12CSLConstListPKc)
     /// for details.
     pub fn partial_find_string(&self, fragment: &str) -> Option<usize> {
         let fragment = CString::new(fragment).ok()?;
@@ -143,21 +168,20 @@ impl CslStringList {
         // See: https://github.com/OSGeo/gdal/blob/fada29feb681e97f0fc4e8861e07f86b16855681/port/cpl_string.cpp#L181-L182
         let field = unsafe { CSLGetField(self.as_ptr(), index as c_int) };
         if field.is_null() {
-            return None
+            return None;
         }
 
         let field = _string(field);
         if field.is_empty() {
             None
-        }
-        else {
+        } else {
             Some(field.deref().into())
         }
     }
 
     /// Determine the number of entries in the list.
     ///
-    /// See [`CSLCount`](https://gdal.org/api/cpl.html#_CPPv48CSLCount12CSLConstList) for details.
+    /// See: [`CSLCount`](https://gdal.org/api/cpl.html#_CPPv48CSLCount12CSLConstList) for details.
     pub fn len(&self) -> usize {
         (unsafe { CSLCount(self.as_ptr()) }) as usize
     }
@@ -168,13 +192,20 @@ impl CslStringList {
     }
 
     /// Get an iterator over the `name=value` elements of the list.
-    pub fn iter<'a>(&'a self) -> impl Iterator<Item=CslStringListEntry> + 'a {
+    pub fn iter(&self) -> impl Iterator<Item = CslStringListEntry> + '_ {
         CslStringListIterator::new(self)
     }
 
     /// Get the raw pointer to the underlying data.
     pub fn as_ptr(&self) -> gdal_sys::CSLConstList {
         self.list_ptr
+    }
+
+    /// Get the raw pointer to the underlying data, passing ownership
+    /// (and responsibility for freeing) to the the caller.
+    pub fn into_ptr(self) -> gdal_sys::CSLConstList {
+        let s = ManuallyDrop::new(self);
+        s.list_ptr
     }
 }
 
@@ -206,6 +237,72 @@ impl Debug for CslStringList {
         }
 
         b.finish()
+    }
+}
+
+impl Display for CslStringList {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        // CSLPrint would be preferable here, but it can only write to a file descriptor.
+        let len = self.len();
+        for i in 0..len {
+            if let Some(field) = self.get_field(i) {
+                f.write_fmt(format_args!("{field}\n"))?;
+            }
+        }
+        Ok(())
+    }
+}
+
+impl PartialEq for CslStringList {
+    fn eq(&self, other: &Self) -> bool {
+        // Not the best comparison mechanism, but C API doesn't help us here.
+        self.to_string() == other.to_string()
+    }
+}
+
+/// Parse a space-delimited string into a [`CslStringList`].
+///
+/// See [`CSLTokenizeString`](https://gdal.org/api/cpl.html#_CPPv417CSLTokenizeStringPKc) for details
+impl FromStr for CslStringList {
+    type Err = GdalError;
+
+    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
+        // See: https://github.com/OSGeo/gdal/blob/cd2a054b0d7b881534baece69a8f52ddb69a53d9/port/cpl_string.h#L86C1-L97
+        static CSLT_HONOURSTRINGS: c_int = 0x0001;
+        static CSLT_PRESERVEESCAPES: c_int = 0x0008;
+        static DELIM: &[u8; 4] = b" \n\t\0";
+
+        let cstr = CString::new(s)?;
+        let c_list = unsafe {
+            CSLTokenizeString2(
+                cstr.as_ptr(),
+                DELIM.as_ptr() as *const c_char,
+                CSLT_HONOURSTRINGS | CSLT_PRESERVEESCAPES,
+            )
+        };
+        Ok(Self { list_ptr: c_list })
+    }
+}
+
+/// Convenience for creating a [`CslStringList`] from a slice of _key_/_value_ tuples.
+///
+/// # Example
+///
+/// ```rust, no_run
+/// use gdal::cpl::CslStringList;
+///
+/// let opts = CslStringList::try_from(&[("One", "1"), ("Two", "2"), ("Three", "3")]).expect("known valid");
+/// assert_eq!(opts.len(), 3);
+/// ```
+impl<const N: usize> TryFrom<&[(&str, &str); N]> for CslStringList {
+    type Error = GdalError;
+
+    fn try_from(pairs: &[(&str, &str); N]) -> Result<Self> {
+        let mut result = Self::default();
+        for (k, v) in pairs {
+            result.set_name_value(k, v)?;
+        }
+        Ok(result)
     }
 }
 
@@ -289,28 +386,6 @@ impl<'a> Iterator for CslStringListIterator<'a> {
     }
 }
 
-/// Convenience for creating a [`CslStringList`] from a slice of _key_/_value_ tuples.
-///
-/// # Example
-///
-/// ```rust, no_run
-/// use gdal::cpl::CslStringList;
-///
-/// let opts = CslStringList::try_from(&[("One", "1"), ("Two", "2"), ("Three", "3")]).expect("known valid");
-/// assert_eq!(opts.len(), 3);
-/// ```
-impl<const N: usize> TryFrom<&[(&str, &str); N]> for CslStringList {
-    type Error = GdalError;
-
-    fn try_from(pairs: &[(&str, &str); N]) -> Result<Self> {
-        let mut result = Self::default();
-        for (k, v) in pairs {
-            result.set_name_value(k, v)?;
-        }
-        Ok(result)
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use crate::cpl::CslStringList;
@@ -330,7 +405,7 @@ mod tests {
         let l = fixture()?;
         assert!(matches!(l.fetch_name_value("ONE"), Some(s) if s == *"1"));
         assert!(matches!(l.fetch_name_value("THREE"), Some(s) if s == *"3"));
-        assert!(matches!(l.fetch_name_value("FOO"), None));
+        assert!(l.fetch_name_value("FOO").is_none());
 
         Ok(())
     }
@@ -440,6 +515,20 @@ mod tests {
         assert_eq!(f.partial_find_string("THREE="), Some(2));
         assert_eq!(f.partial_find_string("THREE"), Some(2));
         assert_eq!(f.partial_find_string("three"), None);
+        Ok(())
+    }
+
+    #[test]
+    fn parse() -> Result<()> {
+        let f = fixture()?;
+        let s = f.to_string();
+        let r: CslStringList = s.parse()?;
+
+        assert_eq!(f.len(), r.len());
+        assert_eq!(r.find_string("SOME_FLAG"), Some(3));
+        assert_eq!(f.partial_find_string("THREE="), Some(2));
+        assert_eq!(s, r.to_string());
+
         Ok(())
     }
 }

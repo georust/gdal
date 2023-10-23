@@ -4,7 +4,7 @@
 
  - **Breaking**: `CslStringListIterator` returns a `CslStringListEntry` instead of `(String, String)` in order to differentiate between `key=value` entries vs `flag` entries.
  - **Breaking**: `CslStringList::fetch_name_value` returns `Option<String>` instead of `Result<Option<String>>`, better reflecting the semantics of GDAL C API.
- - Added `CslStringList::get_field`, `CslStringList::find_string`, `CslStringList::partial_find_string`, `CslStringList::find_string_case_sensitive`
+ - Added `CslStringList::get_field`, `CslStringList::find_string`, `CslStringList::partial_find_string`, `CslStringList::find_string_case_sensitive`, `CslStringList::into_ptr`
  
    - <>
 
