@@ -159,7 +159,7 @@ impl CslStringList {
         }
     }
 
-    /// Fetch the [CslStringListEntry] for the entry at the given index.
+    /// Fetch the [`CslStringListEntry`] for the entry at the given index.
     ///
     /// Returns `None` if index is out of bounds
     pub fn get_field(&self, index: usize) -> Option<CslStringListEntry> {
@@ -306,7 +306,7 @@ impl<const N: usize> TryFrom<&[(&str, &str); N]> for CslStringList {
     }
 }
 
-/// Represents an entry in a [CslStringList], which is ether a single token, or a key/value assignment.
+/// Represents an entry in a [`CslStringList`], which is ether a single token, or a key/value assignment.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum CslStringListEntry {
     Arg(String),
@@ -342,7 +342,7 @@ impl Display for CslStringListEntry {
 
 /// State for iterator over [`CslStringList`] entries.
 ///
-/// Note: Does not include values inserted with [CslStringList::add_string]
+/// Note: Does not include values inserted with [`CslStringList::add_string`]
 pub struct CslStringListIterator<'a> {
     list: &'a CslStringList,
     idx: usize,
