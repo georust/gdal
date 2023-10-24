@@ -10,7 +10,11 @@ use std::ops::Deref;
 use std::ptr;
 use std::str::FromStr;
 
-use gdal_sys::{CSLAddNameValue, CSLAddString, CSLCount, CSLDestroy, CSLDuplicate, CSLFetchNameValue, CSLFindString, CSLFindStringCaseSensitive, CSLGetField, CSLPartialFindString, CSLSetNameValue, CSLTokenizeString2};
+use gdal_sys::{
+    CSLAddNameValue, CSLAddString, CSLCount, CSLDestroy, CSLDuplicate, CSLFetchNameValue,
+    CSLFindString, CSLFindStringCaseSensitive, CSLGetField, CSLPartialFindString, CSLSetNameValue,
+    CSLTokenizeString2,
+};
 use libc::{c_char, c_int};
 
 use crate::errors::{GdalError, Result};
@@ -35,8 +39,8 @@ use crate::utils::_string;
 /// let sl2: CslStringList = "NUM_THREADS=ALL_CPUS COMPRESS=LZW".parse().unwrap();
 /// let sl3: CslStringList = (&[("NUM_THREADS", "ALL_CPUS"), ("COMPRESS", "LZW")]).try_into().unwrap();
 ///
-/// assert_eq!(sl1, sl2);
-/// assert_eq!(sl2, sl3);
+/// assert_eq!(sl1.to_string(), sl2.to_string());
+/// assert_eq!(sl2.to_string(), sl3.to_string());
 /// ```
 ///
 /// See the [`CSL*` GDAL functions](https://gdal.org/api/cpl.html#cpl-string-h) for more details.
@@ -63,8 +67,7 @@ impl CslStringList {
             Err(GdalError::BadArgument(format!(
                 "Invalid characters in name: '{name}'"
             )))
-        }
-        else {
+        } else {
             Ok(())
         }
     }
@@ -80,15 +83,14 @@ impl CslStringList {
             Err(GdalError::BadArgument(format!(
                 "Invalid characters in value: '{value}'"
             )))
-        }
-        else {
+        } else {
             Ok(())
         }
     }
 
     /// Assigns `value` to the key `name` without checking for a pre-existing assignments.
     ///
-    /// Returns `Ok<()>` on success, or `Err<GdalError::BadArgument>`
+    /// Returns `Ok(())` on success, or `Err(GdalError::BadArgument)`
     /// if `name` has non-alphanumeric characters or `value` has newline characters.
     ///
     /// See: [`CSLAddNameValue`](https://gdal.org/api/cpl.html#_CPPv415CSLAddNameValuePPcPKcPKc)
@@ -109,7 +111,7 @@ impl CslStringList {
 
     /// Assigns `value` to the key `name`, overwriting any existing assignment to `name`.
     ///
-    /// Returns `Ok<()>` on success, or `Err<GdalError::BadArgument>`
+    /// Returns `Ok(())` on success, or `Err(GdalError::BadArgument)`
     /// if `name` has non-alphanumeric characters or `value` has newline characters.
     ///
     /// See: [`CSLSetNameValue`](https://gdal.org/api/cpl.html#_CPPv415CSLSetNameValuePPcPKcPKc)
@@ -130,7 +132,7 @@ impl CslStringList {
 
     /// Adds a copy of the string slice `value` to the list.
     ///
-    /// Returns `Ok<()>` on success, `Err<GdalError>` if `value` cannot be converted to a C string,
+    /// Returns `Ok(())` on success, `Err(GdalError::FfiNulError)` if `value` cannot be converted to a C string,
     /// e.g. `value` contains a `0` byte, which is used as a string termination sentinel in C.
     ///
     /// See: [`CSLAddString`](https://gdal.org/api/cpl.html#_CPPv412CSLAddStringPPcPKc)
@@ -140,14 +142,14 @@ impl CslStringList {
         Ok(())
     }
 
-    /// Looks up the value corresponding to `key`.
+    /// Looks up the value corresponding to `name`.
     ///
     /// See [`CSLFetchNameValue`](https://gdal.org/doxygen/cpl__string_8h.html#a4f23675f8b6f015ed23d9928048361a1)
     /// for details.
-    pub fn fetch_name_value(&self, key: &str) -> Option<String> {
+    pub fn fetch_name_value(&self, name: &str) -> Option<String> {
         // If CString conversion fails because `key` has an embedded null byte, then
-        // we know already `key` will never exist in a valid CslStringList.
-        let key = CString::new(key).ok()?;
+        // we know already `name` will never exist in a valid CslStringList.
+        let key = CString::new(name).ok()?;
         let c_value = unsafe { CSLFetchNameValue(self.as_ptr(), key.as_ptr()) };
         if c_value.is_null() {
             None
@@ -206,8 +208,11 @@ impl CslStringList {
 
     /// Fetch the [`CslStringListEntry`] for the entry at the given index.
     ///
-    /// Returns `None` if index is out of bounds
+    /// Returns `None` if index is out of bounds, `Some(entry)` otherwise.
     pub fn get_field(&self, index: usize) -> Option<CslStringListEntry> {
+        if index > c_int::MAX as usize {
+            return None;
+        }
         // In the C++ implementation, an index-out-of-bounds returns an empty string, not an error.
         // We don't want to check against `len` because that scans the list.
         // See: https://github.com/OSGeo/gdal/blob/fada29feb681e97f0fc4e8861e07f86b16855681/port/cpl_string.cpp#L181-L182
@@ -237,7 +242,7 @@ impl CslStringList {
     }
 
     /// Get an iterator over the `name=value` elements of the list.
-    pub fn iter(&self) -> impl Iterator<Item = CslStringListEntry> + '_ {
+    pub fn iter(&self) -> CslStringListIterator {
         CslStringListIterator::new(self)
     }
 
@@ -288,20 +293,10 @@ impl Debug for CslStringList {
 impl Display for CslStringList {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         // CSLPrint would be preferable here, but it can only write to a file descriptor.
-        let len = self.len();
-        for i in 0..len {
-            if let Some(field) = self.get_field(i) {
-                f.write_fmt(format_args!("{field}\n"))?;
-            }
+        for e in self.iter() {
+            f.write_fmt(format_args!("{e}\n"))?;
         }
         Ok(())
-    }
-}
-
-impl PartialEq for CslStringList {
-    fn eq(&self, other: &Self) -> bool {
-        // Not the best comparison mechanism, but C API doesn't help us here.
-        self.to_string() == other.to_string()
     }
 }
 
@@ -351,26 +346,29 @@ impl<const N: usize> TryFrom<&[(&str, &str); N]> for CslStringList {
     }
 }
 
-/// Represents an entry in a [`CslStringList`], which is ether a single token, or a key/value assignment.
+/// Represents an entry in a [`CslStringList`], which is ether a single token (`Flag`),
+/// or a `name=value` assignment (`Pair`).
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum CslStringListEntry {
-    Arg(String),
-    Assign { key: String, value: String },
+    /// A single token entry.
+    Flag(String),
+    /// A `name=value` pair entry.
+    Pair { name: String, value: String },
 }
 
 impl From<&str> for CslStringListEntry {
     fn from(value: &str) -> Self {
         match value.split_once('=') {
             Some(kv) => kv.into(),
-            None => Self::Arg(value.to_owned()),
+            None => Self::Flag(value.to_owned()),
         }
     }
 }
 
 impl From<(&str, &str)> for CslStringListEntry {
     fn from((key, value): (&str, &str)) -> Self {
-        Self::Assign {
-            key: key.to_owned(),
+        Self::Pair {
+            name: key.to_owned(),
             value: value.to_owned(),
         }
     }
@@ -379,8 +377,10 @@ impl From<(&str, &str)> for CslStringListEntry {
 impl Display for CslStringListEntry {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            CslStringListEntry::Arg(s) => f.write_str(s),
-            CslStringListEntry::Assign { key, value } => f.write_fmt(format_args!("{key}={value}")),
+            CslStringListEntry::Flag(s) => f.write_str(s),
+            CslStringListEntry::Pair { name: key, value } => {
+                f.write_fmt(format_args!("{key}={value}"))
+            }
         }
     }
 }
@@ -502,13 +502,13 @@ mod tests {
         f.add_name_value("ONE", "1")?;
         f.add_name_value("ONE", "2")?;
         let s = f.to_string();
-        assert!(s.contains("ONE") && s.contains("1") && s.contains("2"));
+        assert!(s.contains("ONE") && s.contains('1') && s.contains('2'));
 
         let mut f = CslStringList::new();
         f.set_name_value("ONE", "1")?;
         f.set_name_value("ONE", "2")?;
         let s = f.to_string();
-        assert!(s.contains("ONE") && !s.contains("1") && s.contains("2"));
+        assert!(s.contains("ONE") && !s.contains('1') && s.contains('2'));
 
         Ok(())
     }
