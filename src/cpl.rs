@@ -10,11 +10,7 @@ use std::ops::Deref;
 use std::ptr;
 use std::str::FromStr;
 
-use gdal_sys::{
-    CSLAddString, CSLCount, CSLDestroy, CSLDuplicate, CSLFetchNameValue, CSLFindString,
-    CSLFindStringCaseSensitive, CSLGetField, CSLPartialFindString, CSLSetNameValue,
-    CSLTokenizeString2,
-};
+use gdal_sys::{CSLAddNameValue, CSLAddString, CSLCount, CSLDestroy, CSLDuplicate, CSLFetchNameValue, CSLFindString, CSLFindStringCaseSensitive, CSLGetField, CSLPartialFindString, CSLSetNameValue, CSLTokenizeString2};
 use libc::{c_char, c_int};
 
 use crate::errors::{GdalError, Result};
@@ -56,23 +52,72 @@ impl CslStringList {
         }
     }
 
-    /// Assigns `value` to `name`.
+    /// Check that the given `name` is a valid [`CslStringList`] key.
     ///
-    /// Overwrites duplicate `name`s.
+    /// Per [GDAL documentation](https://gdal.org/api/cpl.html#_CPPv415CSLSetNameValuePPcPKcPKc),
+    /// a key cannot have non-alphanumeric characters in it.
     ///
-    /// Returns `Ok<()>` on success, `Err<GdalError>` if `name` has non alphanumeric
-    /// characters, or `value` has newline characters.
-    pub fn set_name_value(&mut self, name: &str, value: &str) -> Result<()> {
+    /// Returns `Err(GdalError::BadArgument)` on invalid name, `Ok(())` otherwise.
+    fn check_valid_name(name: &str) -> Result<()> {
         if !name.chars().all(|c| c.is_ascii_alphanumeric() || c == '_') {
-            return Err(GdalError::BadArgument(format!(
+            Err(GdalError::BadArgument(format!(
                 "Invalid characters in name: '{name}'"
-            )));
+            )))
         }
+        else {
+            Ok(())
+        }
+    }
+
+    /// Check that the given `value` is a valid [`CslStringList`] value.
+    ///
+    /// Per [GDAL documentation](https://gdal.org/api/cpl.html#_CPPv415CSLSetNameValuePPcPKcPKc),
+    /// a key cannot have newline characters in it.
+    ///
+    /// Returns `Err(GdalError::BadArgument)` on invalid value, `Ok(())` otherwise.
+    fn check_valid_value(value: &str) -> Result<()> {
         if value.contains(|c| c == '\n' || c == '\r') {
-            return Err(GdalError::BadArgument(format!(
+            Err(GdalError::BadArgument(format!(
                 "Invalid characters in value: '{value}'"
-            )));
+            )))
         }
+        else {
+            Ok(())
+        }
+    }
+
+    /// Assigns `value` to the key `name` without checking for a pre-existing assignments.
+    ///
+    /// Returns `Ok<()>` on success, or `Err<GdalError::BadArgument>`
+    /// if `name` has non-alphanumeric characters or `value` has newline characters.
+    ///
+    /// See: [`CSLAddNameValue`](https://gdal.org/api/cpl.html#_CPPv415CSLAddNameValuePPcPKcPKc)
+    /// for details.
+    pub fn add_name_value(&mut self, name: &str, value: &str) -> Result<()> {
+        Self::check_valid_name(name)?;
+        Self::check_valid_value(value)?;
+
+        let psz_name = CString::new(name)?;
+        let psz_value = CString::new(value)?;
+
+        unsafe {
+            self.list_ptr = CSLAddNameValue(self.list_ptr, psz_name.as_ptr(), psz_value.as_ptr());
+        }
+
+        Ok(())
+    }
+
+    /// Assigns `value` to the key `name`, overwriting any existing assignment to `name`.
+    ///
+    /// Returns `Ok<()>` on success, or `Err<GdalError::BadArgument>`
+    /// if `name` has non-alphanumeric characters or `value` has newline characters.
+    ///
+    /// See: [`CSLSetNameValue`](https://gdal.org/api/cpl.html#_CPPv415CSLSetNameValuePPcPKcPKc)
+    /// for details.
+    pub fn set_name_value(&mut self, name: &str, value: &str) -> Result<()> {
+        Self::check_valid_name(name)?;
+        Self::check_valid_value(value)?;
+
         let psz_name = CString::new(name)?;
         let psz_value = CString::new(value)?;
 
@@ -443,10 +488,27 @@ mod tests {
     }
 
     #[test]
-    fn invalid_keys() -> Result<()> {
+    fn invalid_name_value() -> Result<()> {
         let mut l = fixture()?;
         assert!(l.set_name_value("l==t", "2").is_err());
         assert!(l.set_name_value("foo", "2\n4\r5").is_err());
+
+        Ok(())
+    }
+
+    #[test]
+    fn add_vs_set() -> Result<()> {
+        let mut f = CslStringList::new();
+        f.add_name_value("ONE", "1")?;
+        f.add_name_value("ONE", "2")?;
+        let s = f.to_string();
+        assert!(s.contains("ONE") && s.contains("1") && s.contains("2"));
+
+        let mut f = CslStringList::new();
+        f.set_name_value("ONE", "1")?;
+        f.set_name_value("ONE", "2")?;
+        let s = f.to_string();
+        assert!(s.contains("ONE") && !s.contains("1") && s.contains("2"));
 
         Ok(())
     }
