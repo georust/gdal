@@ -272,8 +272,8 @@ mod tests {
 
     #[test]
     fn transform_coordinates() {
-        let spatial_ref1 = SpatialRef::from_wkt("GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",7030]],TOWGS84[0,0,0,0,0,0,0],AUTHORITY[\"EPSG\",6326]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",8901]],UNIT[\"DMSH\",0.0174532925199433,AUTHORITY[\"EPSG\",9108]],AXIS[\"Lat\",NORTH],AXIS[\"Long\",EAST],AUTHORITY[\"EPSG\",4326]]").unwrap();
-        let spatial_ref2 = SpatialRef::from_epsg(3035).unwrap();
+        let mut spatial_ref1 = SpatialRef::from_wkt("GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",7030]],TOWGS84[0,0,0,0,0,0,0],AUTHORITY[\"EPSG\",6326]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",8901]],UNIT[\"DMSH\",0.0174532925199433,AUTHORITY[\"EPSG\",9108]],AXIS[\"Lat\",NORTH],AXIS[\"Long\",EAST],AUTHORITY[\"EPSG\",4326]]").unwrap();
+        let mut spatial_ref2 = SpatialRef::from_epsg(3035).unwrap();
 
         // TODO: handle axis order in tests
         #[cfg(major_ge_3)]
@@ -306,11 +306,11 @@ mod tests {
             "POLYGON((23.43 37.58, 23.43 40.0, 25.29 40.0, 25.29 37.58, 23.43 37.58))",
         )
         .unwrap();
-        let spatial_ref1 = SpatialRef::from_proj4(
+        let mut spatial_ref1 = SpatialRef::from_proj4(
         "+proj=laea +lat_0=52 +lon_0=10 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +units=m +no_defs",
     )
     .unwrap();
-        let spatial_ref2 = SpatialRef::from_wkt("GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",7030]],TOWGS84[0,0,0,0,0,0,0],AUTHORITY[\"EPSG\",6326]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",8901]],UNIT[\"DMSH\",0.0174532925199433,AUTHORITY[\"EPSG\",9108]],AXIS[\"Lat\",NORTH],AXIS[\"Long\",EAST],AUTHORITY[\"EPSG\",4326]]").unwrap();
+        let mut spatial_ref2 = SpatialRef::from_wkt("GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",7030]],TOWGS84[0,0,0,0,0,0,0],AUTHORITY[\"EPSG\",6326]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",8901]],UNIT[\"DMSH\",0.0174532925199433,AUTHORITY[\"EPSG\",9108]],AXIS[\"Lat\",NORTH],AXIS[\"Long\",EAST],AUTHORITY[\"EPSG\",4326]]").unwrap();
 
         // TODO: handle axis order in tests
         #[cfg(major_ge_3)]
@@ -329,8 +329,8 @@ mod tests {
 
     #[test]
     fn failing_transformation() {
-        let wgs84 = SpatialRef::from_epsg(4326).unwrap();
-        let dhd_2 = SpatialRef::from_epsg(31462).unwrap();
+        let mut wgs84 = SpatialRef::from_epsg(4326).unwrap();
+        let mut dhd_2 = SpatialRef::from_epsg(31462).unwrap();
 
         // TODO: handle axis order in tests
         #[cfg(major_ge_3)]
@@ -350,8 +350,8 @@ mod tests {
         let r = trafo.transform_coords(&mut x, &mut y, &mut z);
         assert!(r.is_err());
 
-        let wgs84 = SpatialRef::from_epsg(4326).unwrap();
-        let webmercator = SpatialRef::from_epsg(3857).unwrap();
+        let mut wgs84 = SpatialRef::from_epsg(4326).unwrap();
+        let mut webmercator = SpatialRef::from_epsg(3857).unwrap();
 
         // TODO: handle axis order in tests
         #[cfg(major_ge_3)]

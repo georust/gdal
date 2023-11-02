@@ -2,12 +2,16 @@
 
 ## Unreleased
 
+- **Breaking**: `SpatialRef::set_axis_mapping_strategy` now takes `&mut self`
+
+  - <https://github.com/georust/gdal/pull/461>
+
 - **Breaking**: `Dataset::raster_count` now returns an `usize` and `Dataset::rasterband` now takes `usize` instead of `isize`
 
   - <https://github.com/georust/gdal/pull/434>
 
- - **Breaking**: `CslStringListIterator` returns a `CslStringListEntry` instead of `(String, String)` in order to differentiate between `key=value` entries vs `flag` entries.
- - **Breaking**: `CslStringList::fetch_name_value` returns `Option<String>` instead of `Result<Option<String>>`, better reflecting the semantics of GDAL C API.
+- **Breaking**: `CslStringListIterator` returns a `CslStringListEntry` instead of `(String, String)` in order to differentiate between `key=value` entries vs `flag` entries.
+- **Breaking**: `CslStringList::fetch_name_value` returns `Option<String>` instead of `Result<Option<String>>`, better reflecting the semantics of GDAL C API.
  - Added `CslStringList::get_field`, `CslStringList::find_string`, `CslStringList::partial_find_string`, `CslStringList::find_string_case_sensitive`, `CslStringList::into_ptr`, `CslStringList::add_name_value`.
 
    - <https://github.com/georust/gdal/pull/455>
