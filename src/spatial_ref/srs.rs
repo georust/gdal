@@ -403,7 +403,7 @@ impl SpatialRef {
     }
 
     #[cfg(major_ge_3)]
-    pub fn set_axis_mapping_strategy(&self, strategy: gdal_sys::OSRAxisMappingStrategy::Type) {
+    pub fn set_axis_mapping_strategy(&mut self, strategy: gdal_sys::OSRAxisMappingStrategy::Type) {
         unsafe {
             gdal_sys::OSRSetAxisMappingStrategy(self.0, strategy);
         }
@@ -748,7 +748,7 @@ mod tests {
     #[cfg(major_ge_3)]
     #[test]
     fn axis_mapping_strategy() {
-        let spatial_ref = SpatialRef::from_epsg(4326).unwrap();
+        let mut spatial_ref = SpatialRef::from_epsg(4326).unwrap();
         assert_eq!(
             spatial_ref.axis_mapping_strategy(),
             gdal_sys::OSRAxisMappingStrategy::OAMS_AUTHORITY_COMPLIANT
