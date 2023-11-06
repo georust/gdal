@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+ - **Breaking**: Replaced `TryFrom<&[(&str, &str); N]> for CslStringList` with `impl FromIterator<CslStringListEntry> for CslStringList`, `impl FromIterator<String> for CslStringList` and `impl<'a> FromIterator<&'a str> for CslStringList`
+ - Added `Extend<CslStringListEntry> for CslStringList`, and `CslStringList::merge`
+
+    - <https://github.com/georust/gdal/pull/457>
+
 - **Breaking**: `SpatialRef::set_axis_mapping_strategy` now takes `&mut self`
 
   - <https://github.com/georust/gdal/pull/461>

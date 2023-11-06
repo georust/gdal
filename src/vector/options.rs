@@ -1,7 +1,7 @@
 use crate::spatial_ref::SpatialRef;
 use gdal_sys::OGRwkbGeometryType;
 
-/// Parameters for [`Dataset::create_layer`].
+/// Parameters for [`crate::Dataset::create_layer`].
 #[derive(Clone, Debug)]
 pub struct LayerOptions<'a> {
     /// The name of the newly created layer. May be an empty string.

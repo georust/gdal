@@ -302,7 +302,7 @@ mod tests {
         let src =
             Geometry::from_wkt("POLYGON ((0 0, 0 10, 10 10, 10 0, 0 0),(5 5, 15 10, 15 0, 5 5))")
                 .unwrap();
-        let opts = CslStringList::try_from(&[("STRUCTURE", "LINEWORK")]).unwrap();
+        let opts = CslStringList::from_iter(["STRUCTURE=LINEWORK"]);
         let dst = src.make_valid(&opts);
         assert!(dst.is_ok(), "{dst:?}");
         assert!(dst.unwrap().is_valid());

@@ -2,7 +2,7 @@ use bitflags::bitflags;
 use gdal_sys::GDALAccess;
 use libc::c_uint;
 
-/// Open options for [Dataset]
+/// Open options for [`crate::Dataset`]
 #[derive(Debug, Default)]
 pub struct DatasetOptions<'a> {
     pub open_flags: GdalOpenFlags,

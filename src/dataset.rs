@@ -47,7 +47,7 @@ impl Dataset {
     ///
     /// # Safety
     /// This method operates on a raw C pointer
-    /// The dataset must not have been closed (using [`GDALClose`]) before.
+    /// The dataset must not have been closed (using [`gdal_sys::GDALClose`]) before.
     pub unsafe fn from_c_dataset(c_dataset: GDALDatasetH) -> Dataset {
         Dataset {
             c_dataset,
@@ -164,7 +164,7 @@ impl Dataset {
 
     /// Flush all write cached data to disk.
     ///
-    /// See [`GDALFlushCache`].
+    /// See [`gdal_sys::GDALFlushCache`].
     ///
     /// Note: on GDAL versions older than 3.7, this function always succeeds.
     pub fn flush_cache(&mut self) -> Result<()> {
@@ -186,7 +186,7 @@ impl Dataset {
 
     /// Close the dataset.
     ///
-    /// See [`GDALClose`].
+    /// See [`gdal_sys::GDALClose`].
     ///
     /// Note: on GDAL versions older than 3.7.0, this function always succeeds.
     pub fn close(mut self) -> Result<()> {
@@ -307,7 +307,7 @@ impl Dataset {
         Ok(())
     }
 
-    /// Get the coefficients of the [`Dataset`]'s affine transformation.
+    /// Get the coefficients of the [`crate::Dataset`]'s affine transformation.
     ///
     /// # Returns
     /// - x-coordinate of the top-left corner pixel (x-offset)

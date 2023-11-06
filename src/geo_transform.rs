@@ -5,7 +5,7 @@ use std::mem::MaybeUninit;
 
 /// A six-element array storing the coefficients of an [affine transform]
 /// used in mapping coordinates between pixel/line `(P, L)` (raster) space,
-/// and `(Xp,Yp)` (projection/[`SpatialRef`]) space.
+/// and `(Xp,Yp)` (projection/[`crate::spatial_ref::SpatialRef`]) space.
 ///
 /// # Interpretation
 ///
