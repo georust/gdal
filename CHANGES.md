@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added support for digital elevation model raster processing: `DemProcessing::aspect`, `DemProcessing::color_relief`, `DemProcessing::hillshade`, `DemProcessing::roughness`, `DemProcessing::slope`, `DemProcessing::terrain_ruggedness_index`, `DemProcessing::topographic_position_index`.
+
+   - <https://github.com/georust/gdal/pull/456> 
+
  - **Breaking**: Replaced `TryFrom<&[(&str, &str); N]> for CslStringList` with `impl FromIterator<CslStringListEntry> for CslStringList`, `impl FromIterator<String> for CslStringList` and `impl<'a> FromIterator<&'a str> for CslStringList`
  - Added `Extend<CslStringListEntry> for CslStringList`, and `CslStringList::merge`
 
@@ -17,7 +21,7 @@
 
 - **Breaking**: `CslStringListIterator` returns a `CslStringListEntry` instead of `(String, String)` in order to differentiate between `key=value` entries vs `flag` entries.
 - **Breaking**: `CslStringList::fetch_name_value` returns `Option<String>` instead of `Result<Option<String>>`, better reflecting the semantics of GDAL C API.
- - Added `CslStringList::get_field`, `CslStringList::find_string`, `CslStringList::partial_find_string`, `CslStringList::find_string_case_sensitive`, `CslStringList::into_ptr`, `CslStringList::add_name_value`.
+- Added `CslStringList::get_field`, `CslStringList::find_string`, `CslStringList::partial_find_string`, `CslStringList::find_string_case_sensitive`, `CslStringList::into_ptr`, `CslStringList::add_name_value`.
 
    - <https://github.com/georust/gdal/pull/455>
 
