@@ -25,22 +25,39 @@ use crate::utils::_string;
 /// This data structure (a null-terminated array of null-terminated strings) is used throughout
 /// GDAL to pass `KEY=VALUE`-formatted options to various functions.
 ///
-/// There are a number of ways to populate a [`CslStringList`]. See below for examples.
-///
 /// # Example
 ///
-/// ```rust
-/// use gdal::cpl::CslStringList;
+/// There are a number of ways to populate a [`CslStringList`]:
+///
+/// ```rust, no_run
+/// use gdal::cpl::{CslStringList, CslStringListEntry};
 ///
 /// let mut sl1 = CslStringList::new();
 /// sl1.set_name_value("NUM_THREADS", "ALL_CPUS").unwrap();
 /// sl1.set_name_value("COMPRESS", "LZW").unwrap();
+/// sl1.add_string("MAGIC_FLAG").unwrap();
 ///
-/// let sl2: CslStringList = "NUM_THREADS=ALL_CPUS COMPRESS=LZW".parse().unwrap();
-/// let sl3: CslStringList = (&[("NUM_THREADS", "ALL_CPUS"), ("COMPRESS", "LZW")]).try_into().unwrap();
+/// let sl2: CslStringList = "NUM_THREADS=ALL_CPUS COMPRESS=LZW MAGIC_FLAG".parse().unwrap();
+/// let sl3 = CslStringList::from_iter(["NUM_THREADS=ALL_CPUS", "COMPRESS=LZW", "MAGIC_FLAG"]);
+/// let sl4 = CslStringList::from_iter([
+///     CslStringListEntry::from(("NUM_THREADS", "ALL_CPUS")),
+///     CslStringListEntry::from(("COMPRESS", "LZW")),
+///     CslStringListEntry::from("MAGIC_FLAG")
+/// ]);
 ///
 /// assert_eq!(sl1.to_string(), sl2.to_string());
 /// assert_eq!(sl2.to_string(), sl3.to_string());
+/// assert_eq!(sl3.to_string(), sl4.to_string());
+/// ```
+/// One [`CslStringList`] can be combined with another:
+///
+/// ```rust
+/// use gdal::cpl::CslStringList;
+/// let mut base: CslStringList = "NUM_THREADS=ALL_CPUS COMPRESS=LZW".parse().unwrap();
+/// let debug: CslStringList = "CPL_CURL_VERBOSE=YES CPL_DEBUG=YES".parse().unwrap();
+/// base.extend(&debug);
+///
+/// assert_eq!(base.fetch_name_value("CPL_DEBUG"), Some("YES".into()));
 /// ```
 ///
 /// See the [`CSL*` GDAL functions](https://gdal.org/api/cpl.html#cpl-string-h) for more details.
@@ -140,6 +157,17 @@ impl CslStringList {
         let v = CString::new(value)?;
         self.list_ptr = unsafe { CSLAddString(self.list_ptr, v.as_ptr()) };
         Ok(())
+    }
+
+    /// Adds the contents of a [`CslStringListEntry`] to `self`.
+    ///
+    /// Returns `Err(GdalError::BadArgument)` if entry doesn't not meet entry restrictions as
+    /// described by [`CslStringListEntry`].
+    pub fn add_entry(&mut self, entry: &CslStringListEntry) -> Result<()> {
+        match entry {
+            CslStringListEntry::Flag(f) => self.add_string(f),
+            CslStringListEntry::Pair { name, value } => self.add_name_value(name, value),
+        }
     }
 
     /// Looks up the value corresponding to `name`.
@@ -300,6 +328,15 @@ impl Display for CslStringList {
     }
 }
 
+impl<'a> IntoIterator for &'a CslStringList {
+    type Item = CslStringListEntry;
+    type IntoIter = CslStringListIterator<'a>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
+}
+
 /// Parse a space-delimited string into a [`CslStringList`].
 ///
 /// See [`CSLTokenizeString`](https://gdal.org/api/cpl.html#_CPPv417CSLTokenizeStringPKc) for details
@@ -324,30 +361,46 @@ impl FromStr for CslStringList {
     }
 }
 
-/// Convenience for creating a [`CslStringList`] from a slice of _key_/_value_ tuples.
-///
-/// # Example
-///
-/// ```rust, no_run
-/// use gdal::cpl::CslStringList;
-///
-/// let opts = CslStringList::try_from(&[("One", "1"), ("Two", "2"), ("Three", "3")]).expect("known valid");
-/// assert_eq!(opts.len(), 3);
-/// ```
-impl<const N: usize> TryFrom<&[(&str, &str); N]> for CslStringList {
-    type Error = GdalError;
-
-    fn try_from(pairs: &[(&str, &str); N]) -> Result<Self> {
+impl FromIterator<CslStringListEntry> for CslStringList {
+    fn from_iter<T: IntoIterator<Item = CslStringListEntry>>(iter: T) -> Self {
         let mut result = Self::default();
-        for (k, v) in pairs {
-            result.set_name_value(k, v)?;
+        for e in iter {
+            result.add_entry(&e).unwrap_or_default()
         }
-        Ok(result)
+        result
     }
 }
 
-/// Represents an entry in a [`CslStringList`], which is ether a single token (`Flag`),
-/// or a `name=value` assignment (`Pair`).
+impl<'a> FromIterator<&'a str> for CslStringList {
+    fn from_iter<T: IntoIterator<Item = &'a str>>(iter: T) -> Self {
+        iter.into_iter()
+            .map(Into::<CslStringListEntry>::into)
+            .collect()
+    }
+}
+
+impl FromIterator<String> for CslStringList {
+    fn from_iter<T: IntoIterator<Item = String>>(iter: T) -> Self {
+        iter.into_iter()
+            .map(Into::<CslStringListEntry>::into)
+            .collect()
+    }
+}
+
+impl Extend<CslStringListEntry> for CslStringList {
+    fn extend<T: IntoIterator<Item = CslStringListEntry>>(&mut self, iter: T) {
+        for e in iter {
+            self.add_entry(&e).unwrap_or_default();
+        }
+    }
+}
+
+/// Represents an entry in a [`CslStringList`]
+///
+/// An Entry is ether a single token (`Flag`), or a `name=value` assignment (`Pair`).
+///
+/// Note: When constructed directly, assumes string values do not contain newline characters nor
+/// the null `\0` character. If these conditions are violated, the provided values will be ignored.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum CslStringListEntry {
     /// A single token entry.
@@ -356,21 +409,54 @@ pub enum CslStringListEntry {
     Pair { name: String, value: String },
 }
 
+impl CslStringListEntry {
+    /// Create a new [`Self::Flag`] entry.
+    ///
+    /// Assumes `flag` does not contain `=`, `\n`, `\r`, or `\0`.  If it does, an
+    /// error will be returned by [`CslStringList::add_entry`].
+    pub fn new_flag(flag: &str) -> Self {
+        CslStringListEntry::Flag(flag.to_owned())
+    }
+
+    /// Create a new [`Self::Pair`] entry.
+    ///
+    /// Assumes neither `name` nor `value` contain `=`, `\n`, `\r`, or `\0`.  If it does, an
+    /// error will be returned by [`CslStringList::add_entry`].
+    pub fn new_pair(name: &str, value: &str) -> Self {
+        CslStringListEntry::Pair {
+            name: name.to_owned(),
+            value: value.to_owned(),
+        }
+    }
+}
+
 impl From<&str> for CslStringListEntry {
     fn from(value: &str) -> Self {
-        match value.split_once('=') {
-            Some(kv) => kv.into(),
-            None => Self::Flag(value.to_owned()),
-        }
+        // `into` parses for '='
+        value.to_owned().into()
     }
 }
 
 impl From<(&str, &str)> for CslStringListEntry {
     fn from((key, value): (&str, &str)) -> Self {
-        Self::Pair {
-            name: key.to_owned(),
-            value: value.to_owned(),
+        Self::new_pair(key, value)
+    }
+}
+
+impl From<String> for CslStringListEntry {
+    fn from(value: String) -> Self {
+        match value.split_once('=') {
+            Some((name, value)) => Self::new_pair(name, value),
+            None => Self::new_flag(&value),
         }
+    }
+}
+
+impl From<(String, String)> for CslStringListEntry {
+    fn from((name, value): (String, String)) -> Self {
+        // Using struct initializer rather than method to avoid
+        // going to/from slice.
+        Self::Pair { name, value }
     }
 }
 
@@ -386,8 +472,6 @@ impl Display for CslStringListEntry {
 }
 
 /// State for iterator over [`CslStringList`] entries.
-///
-/// Note: Does not include values inserted with [`CslStringList::add_string`]
 pub struct CslStringListIterator<'a> {
     list: &'a CslStringList,
     idx: usize,
@@ -433,7 +517,7 @@ impl<'a> Iterator for CslStringListIterator<'a> {
 
 #[cfg(test)]
 mod tests {
-    use crate::cpl::CslStringList;
+    use super::*;
     use crate::errors::Result;
 
     fn fixture() -> Result<CslStringList> {
@@ -443,6 +527,30 @@ mod tests {
         l.set_name_value("THREE", "3")?;
         l.add_string("SOME_FLAG")?;
         Ok(l)
+    }
+
+    #[test]
+    fn construct() -> Result<()> {
+        let mut sl1 = CslStringList::new();
+        sl1.set_name_value("NUM_THREADS", "ALL_CPUS").unwrap();
+        sl1.set_name_value("COMPRESS", "LZW").unwrap();
+        sl1.add_string("MAGIC_FLAG").unwrap();
+
+        let sl2: CslStringList = "NUM_THREADS=ALL_CPUS COMPRESS=LZW MAGIC_FLAG"
+            .parse()
+            .unwrap();
+        let sl3 = CslStringList::from_iter(["NUM_THREADS=ALL_CPUS", "COMPRESS=LZW", "MAGIC_FLAG"]);
+        let sl4 = CslStringList::from_iter([
+            CslStringListEntry::from(("NUM_THREADS", "ALL_CPUS")),
+            CslStringListEntry::from(("COMPRESS", "LZW")),
+            CslStringListEntry::from("MAGIC_FLAG"),
+        ]);
+
+        assert_eq!(sl1.to_string(), sl2.to_string());
+        assert_eq!(sl2.to_string(), sl3.to_string());
+        assert_eq!(sl3.to_string(), sl4.to_string());
+
+        Ok(())
     }
 
     #[test]
@@ -515,7 +623,7 @@ mod tests {
 
     #[test]
     fn try_from_impl() -> Result<()> {
-        let l = CslStringList::try_from(&[("ONE", "1"), ("TWO", "2")])?;
+        let l = CslStringList::from_iter(["ONE=1", "TWO=2"]);
         assert!(matches!(l.fetch_name_value("ONE"), Some(s) if s == *"1"));
         assert!(matches!(l.fetch_name_value("TWO"), Some(s) if s == *"2"));
 
@@ -591,6 +699,16 @@ mod tests {
         assert_eq!(f.partial_find_string("THREE="), Some(2));
         assert_eq!(s, r.to_string());
 
+        Ok(())
+    }
+
+    #[test]
+    fn extend() -> Result<()> {
+        let mut f = fixture()?;
+        let o: CslStringList = "A=a B=b C=c D=d".parse()?;
+        f.extend(&o);
+        assert_eq!(f.len(), 8);
+        assert_eq!(f.fetch_name_value("A"), Some("a".into()));
         Ok(())
     }
 }
