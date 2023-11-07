@@ -9,6 +9,7 @@ use crate::test_utils::{fixture, TempFixture};
 use crate::vsi::unlink_mem_file;
 use crate::DriverManager;
 use std::path::Path;
+use std::str::FromStr;
 
 #[cfg(feature = "ndarray")]
 use ndarray::arr2;
@@ -748,4 +749,16 @@ fn test_raster_stats() {
             max: 255.0,
         }
     );
+}
+
+#[test]
+fn test_resample_str() {
+    assert!(ResampleAlg::from_str("foobar").is_err());
+
+    for e in ResampleAlg::iter() {
+        let stringed = e.to_string();
+        let parsed = ResampleAlg::from_str(&stringed);
+        assert!(parsed.is_ok(), "{stringed}");
+        assert_eq!(parsed.unwrap(), e, "{stringed}");
+    }
 }
