@@ -753,11 +753,11 @@ fn test_raster_stats() {
 
 #[test]
 fn test_resample_str() {
-    assert!(ResampleAlg::from_str("foobar").is_err());
+    assert!(IOResampleAlg::from_str("foobar").is_err());
 
-    for e in ResampleAlg::iter() {
+    for e in IOResampleAlg::iter() {
         let stringed = e.to_string();
-        let parsed = ResampleAlg::from_str(&stringed);
+        let parsed = IOResampleAlg::from_str(&stringed);
         assert!(parsed.is_ok(), "{stringed}");
         assert_eq!(parsed.unwrap(), e, "{stringed}");
     }

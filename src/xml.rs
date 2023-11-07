@@ -13,6 +13,11 @@ use crate::utils::_last_cpl_err;
 pub struct GdalXmlNode(NonNull<CPLXMLNode>);
 
 impl GdalXmlNode {
+    /// Create a Self from a raw pointer.
+    ///
+    /// # Safety
+    /// Caller is responsible for ensuring `ptr` is not null, and
+    /// ownership of `ptr` is properly transferred.
     pub unsafe fn from_ptr(ptr: *mut CPLXMLNode) -> GdalXmlNode {
         Self(NonNull::new_unchecked(ptr))
     }
@@ -55,7 +60,7 @@ impl FromStr for GdalXmlNode {
 impl Display for GdalXmlNode {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let s = unsafe { CString::from_raw(CPLSerializeXMLTree(self.as_ptr_mut())) };
-        f.write_str(&s.to_string_lossy().trim_end())
+        f.write_str(s.to_string_lossy().trim_end())
     }
 }
 

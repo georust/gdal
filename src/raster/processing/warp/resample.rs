@@ -4,6 +4,7 @@ use gdal_sys::GDALResampleAlg;
 /// GDAL Warp Resampling Algorithm
 #[derive(Debug, Copy, Clone, Default)]
 #[repr(u32)]
+#[allow(clippy::upper_case_acronyms)]
 pub enum WarpResampleAlg {
     /// Nearest neighbour (select on one input pixel)
     #[default]
@@ -37,8 +38,8 @@ pub enum WarpResampleAlg {
 }
 
 impl WarpResampleAlg {
-    pub fn to_gdal(&self) -> GDALResampleAlg::Type {
-        *self as GDALResampleAlg::Type
+    pub fn to_gdal(self) -> GDALResampleAlg::Type {
+        self as GDALResampleAlg::Type
     }
     pub fn from_gdal(alg: GDALResampleAlg::Type) -> Result<Self> {
         Ok(match alg {

@@ -33,6 +33,6 @@ impl WarpProcessing for Dataset {
         options: &ReprojectOptions,
     ) -> Result<()> {
         let dest_file = dst_file.as_ref();
-        reproject::reproject(self, dest_file, dst_projection, &options)
+        reproject::reproject(self, dest_file, dst_projection, options)
     }
 }

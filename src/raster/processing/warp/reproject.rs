@@ -147,7 +147,7 @@ pub(super) fn reproject(
     // If no-data values are specified, we need to initialize some state in
     // `GdalWarpOptions` first.
     if options.src_nodata.is_some() || options.dst_nodata.is_some() {
-        warp_options.with_band_count(src.raster_count() as usize);
+        warp_options.with_band_count(src.raster_count());
     }
 
     if let Some(src_nodata) = options.src_nodata {

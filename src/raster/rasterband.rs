@@ -19,9 +19,6 @@ use std::str::FromStr;
 use ndarray::Array2;
 
 use crate::errors::*;
-use crate::raster::ResampleAlg::{
-    Average, Bilinear, Cubic, CubicSpline, Gauss, Lanczos, Mode, NearestNeighbour,
-};
 
 /// [Dataset] methods for raster datasets.
 impl Dataset {
@@ -138,8 +135,8 @@ impl IOResampleAlg {
     }
 
     /// Get an iterator over all the valid enumeration values.
-    pub fn iter() -> impl Iterator<Item = ResampleAlg> {
-        use ResampleAlg::*;
+    pub fn iter() -> impl Iterator<Item = IOResampleAlg> {
+        use IOResampleAlg::*;
         [
             NearestNeighbour,
             Bilinear,
@@ -154,17 +151,18 @@ impl IOResampleAlg {
     }
 }
 
-impl Display for ResampleAlg {
+impl Display for IOResampleAlg {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         // Display format is the same as debug format.
         Debug::fmt(self, f)
     }
 }
 
-impl FromStr for ResampleAlg {
+impl FromStr for IOResampleAlg {
     type Err = GdalError;
 
     fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
+        use IOResampleAlg::*;
         match s.to_lowercase().as_str() {
             "nearestneighbour" => Ok(NearestNeighbour),
             "bilinear" => Ok(Bilinear),

@@ -72,7 +72,10 @@ impl CslStringList {
         unsafe { Self::from_ptr(ptr::null_mut()) }
     }
 
-    /// Create self from a raw pointer.
+    /// Create Self from a raw pointer.
+    ///
+    /// # Safety
+    /// Caller is responsible for ensuring ownership of `ptr` is properly transferred
     pub unsafe fn from_ptr(ptr: *mut *mut c_char) -> Self {
         Self { list_ptr: ptr }
     }

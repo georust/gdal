@@ -27,6 +27,11 @@ impl GdalWarpOptions {
         unsafe { Self::from_ptr(GDALCreateWarpOptions()) }
     }
 
+    /// Create Self from a raw pointer.
+    ///
+    /// # Safety
+    /// Caller is responsible for ensuring `ptr` is not null, and
+    /// ownership of `ptr` is properly transferred
     pub unsafe fn from_ptr(ptr: *mut GDALWarpOptions) -> Self {
         Self(NonNull::new_unchecked(ptr))
     }
@@ -160,7 +165,7 @@ impl GdalWarpOptions {
     pub fn extra_options_mut(&mut self) -> &mut CslStringList {
         let opts_array: &*mut *mut c_char = unsafe { &(*self.as_ptr()).papszWarpOptions };
         // See `extra_options` for rationale on transmute.
-        let csl: *mut CslStringList = unsafe { transmute(opts_array) };
+        let csl: *mut CslStringList = opts_array as *const *mut *mut i8 as *mut CslStringList;
         // `unwrap` should be ok because `opts_array` points to an offset against `self`, and
         // we can assume `self` is not null.
         unsafe { csl.as_mut().unwrap() }
