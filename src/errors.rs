@@ -82,6 +82,8 @@ pub enum GdalError {
         data_type: crate::raster::ExtendedDataTypeClass,
         method_name: &'static str,
     },
+    #[error("An unexpected logic error has occurred: {0}")]
+    UnexpectedLogicError(String),
 }
 
 /// A wrapper for [`CPLErr::Type`] that reflects it as an enum

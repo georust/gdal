@@ -88,11 +88,13 @@ pub use mdarray::{
 };
 pub use rasterband::{
     Buffer, ByteBuffer, CmykEntry, ColorEntry, ColorInterpretation, ColorTable, GrayEntry,
-    HlsEntry, PaletteInterpretation, RasterBand, ResampleAlg, RgbaEntry, StatisticsAll,
+    HlsEntry, IOResampleAlg, PaletteInterpretation, RasterBand, RgbaEntry, StatisticsAll,
     StatisticsMinMax,
 };
 pub use rasterize::{rasterize, BurnSource, MergeAlgorithm, OptimizeMode, RasterizeOptions};
 pub use types::{AdjustedValue, GdalDataType, GdalType};
+
+#[deprecated(note = "Please use `WarpProcessing::reproject` instead")]
 pub use warp::reproject;
 
 /// Key/value pair for passing driver-specific creation options to

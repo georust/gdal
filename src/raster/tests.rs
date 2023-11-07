@@ -1,6 +1,6 @@
 use crate::dataset::Dataset;
 use crate::metadata::Metadata;
-use crate::raster::rasterband::ResampleAlg;
+use crate::raster::rasterband::IOResampleAlg;
 use crate::raster::{
     ByteBuffer, ColorEntry, ColorInterpretation, ColorTable, GdalDataType, RasterCreationOption,
     StatisticsAll, StatisticsMinMax,
@@ -82,7 +82,7 @@ fn test_read_raster_with_default_resample() {
 fn test_read_raster_with_average_resample() {
     let dataset = Dataset::open(fixture("tinymarble.tif")).unwrap();
     let rb = dataset.rasterband(1).unwrap();
-    let resample_alg = ResampleAlg::Average;
+    let resample_alg = IOResampleAlg::Average;
     let rv = rb
         .read_as::<u8>((20, 30), (4, 4), (2, 2), Some(resample_alg))
         .unwrap();

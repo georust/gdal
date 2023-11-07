@@ -120,6 +120,7 @@ mod utils;
 pub mod vector;
 pub mod version;
 pub mod vsi;
+pub mod xml;
 
 pub use dataset::Dataset;
 pub use geo_transform::{GeoTransform, GeoTransformEx};

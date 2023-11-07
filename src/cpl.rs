@@ -61,6 +61,7 @@ use crate::utils::_string;
 /// ```
 ///
 /// See the [`CSL*` GDAL functions](https://gdal.org/api/cpl.html#cpl-string-h) for more details.
+#[repr(transparent)]
 pub struct CslStringList {
     list_ptr: *mut *mut c_char,
 }
@@ -68,9 +69,12 @@ pub struct CslStringList {
 impl CslStringList {
     /// Creates an empty GDAL string list.
     pub fn new() -> Self {
-        Self {
-            list_ptr: ptr::null_mut(),
-        }
+        unsafe { Self::from_ptr(ptr::null_mut()) }
+    }
+
+    /// Create self from a raw pointer.
+    pub unsafe fn from_ptr(ptr: *mut *mut c_char) -> Self {
+        Self { list_ptr: ptr }
     }
 
     /// Check that the given `name` is a valid [`CslStringList`] key.

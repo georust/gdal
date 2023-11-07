@@ -99,12 +99,12 @@ impl Dataset {
 /// ```rust, no_run
 /// use gdal::Dataset;
 /// # fn main() -> gdal::errors::Result<()> {
-/// use gdal::raster::ResampleAlg;
+/// use gdal::raster::IOResampleAlg;
 /// let ds = Dataset::open("fixtures/tinymarble.tif")?;
 /// let band1 = ds.rasterband(1)?;
 /// let stats = band1.get_statistics(true, false)?.unwrap();
 /// // Down-sample a image using cubic-spline interpolation
-/// let buf = band1.read_as::<f64>((0, 0), ds.raster_size(), (2, 2), Some(ResampleAlg::CubicSpline))?;
+/// let buf = band1.read_as::<f64>((0, 0), ds.raster_size(), (2, 2), Some(IOResampleAlg::CubicSpline))?;
 /// // In this particular image, resulting data should be close to the overall average.
 /// assert!(buf.data.iter().all(|c| (c - stats.mean).abs() < stats.std_dev / 2.0));
 /// # Ok(())
@@ -112,7 +112,7 @@ impl Dataset {
 /// ```
 #[derive(Debug, Copy, Clone, PartialEq)]
 #[repr(u32)]
-pub enum ResampleAlg {
+pub enum IOResampleAlg {
     /// Nearest neighbour
     NearestNeighbour = GDALRIOResampleAlg::GRIORA_NearestNeighbour,
     /// Bilinear (2x2 kernel)
@@ -131,7 +131,7 @@ pub enum ResampleAlg {
     Gauss = GDALRIOResampleAlg::GRIORA_Gauss,
 }
 
-impl ResampleAlg {
+impl IOResampleAlg {
     /// Convert Rust enum discriminant to value expected by [`GDALRasterIOExtraArg`].
     pub fn to_gdal(&self) -> GDALRIOResampleAlg::Type {
         *self as GDALRIOResampleAlg::Type
@@ -183,6 +183,10 @@ impl FromStr for ResampleAlg {
     }
 }
 
+#[allow(dead_code)]
+#[deprecated(note = "Please use `IOResampleAlg` instead")]
+type ResampleAlg = IOResampleAlg;
+
 /// Wrapper type for gdal mask flags.
 /// From the GDAL docs:
 /// - `GMF_ALL_VALID`(0x01): There are no invalid pixels, all mask values will be 255. When used this will normally be the only flag set.
@@ -221,7 +225,7 @@ impl GdalMaskFlags {
 #[allow(clippy::upper_case_acronyms)]
 pub struct RasterIOExtraArg {
     pub n_version: usize,
-    pub e_resample_alg: ResampleAlg,
+    pub e_resample_alg: IOResampleAlg,
     pub pfn_progress: gdal_sys::GDALProgressFunc,
     p_progress_data: *mut libc::c_void,
     pub b_floating_point_window_validity: usize,
@@ -237,7 +241,7 @@ impl Default for RasterIOExtraArg {
             n_version: 1,
             pfn_progress: None,
             p_progress_data: std::ptr::null_mut(),
-            e_resample_alg: ResampleAlg::NearestNeighbour,
+            e_resample_alg: IOResampleAlg::NearestNeighbour,
             b_floating_point_window_validity: 0,
             df_x_off: 0.0,
             df_y_off: 0.0,
@@ -354,13 +358,13 @@ impl<'a> RasterBand<'a> {
     /// ```rust, no_run
     /// # fn main() -> gdal::errors::Result<()> {
     /// use gdal::Dataset;
-    /// use gdal::raster::{GdalDataType, ResampleAlg};
+    /// use gdal::raster::{GdalDataType, IOResampleAlg};
     /// let dataset = Dataset::open("fixtures/m_3607824_se_17_1_20160620_sub.tif")?;
     /// let band1 = dataset.rasterband(1)?;
     /// assert_eq!(band1.band_type(), GdalDataType::UInt8);
     /// let size = 4;
     /// let mut buf = vec![0; size*size];
-    /// band1.read_into_slice::<u8>((0, 0), band1.size(), (size, size), buf.as_mut_slice(), Some(ResampleAlg::Bilinear))?;
+    /// band1.read_into_slice::<u8>((0, 0), band1.size(), (size, size), buf.as_mut_slice(), Some(IOResampleAlg::Bilinear))?;
     /// assert_eq!(buf, [101u8, 119, 94, 87, 92, 110, 92, 87, 91, 90, 89, 87, 92, 91, 88, 88]);
     /// # Ok(())
     /// # }
@@ -371,12 +375,12 @@ impl<'a> RasterBand<'a> {
         window_size: (usize, usize),
         size: (usize, usize),
         buffer: &mut [T],
-        e_resample_alg: Option<ResampleAlg>,
+        e_resample_alg: Option<IOResampleAlg>,
     ) -> Result<()> {
         let pixels = size.0 * size.1;
         assert_eq!(buffer.len(), pixels);
 
-        let resample_alg = e_resample_alg.unwrap_or(ResampleAlg::NearestNeighbour);
+        let resample_alg = e_resample_alg.unwrap_or(IOResampleAlg::NearestNeighbour);
 
         let mut options: GDALRasterIOExtraArg = RasterIOExtraArg {
             e_resample_alg: resample_alg,
@@ -423,12 +427,12 @@ impl<'a> RasterBand<'a> {
     /// ```rust, no_run
     /// # fn main() -> gdal::errors::Result<()> {
     /// use gdal::Dataset;
-    /// use gdal::raster::{GdalDataType, ResampleAlg};
+    /// use gdal::raster::{GdalDataType, IOResampleAlg};
     /// let dataset = Dataset::open("fixtures/m_3607824_se_17_1_20160620_sub.tif")?;
     /// let band1 = dataset.rasterband(1)?;
     /// assert_eq!(band1.band_type(), GdalDataType::UInt8);
     /// let size = 4;
-    /// let buf = band1.read_as::<u8>((0, 0), band1.size(), (size, size), Some(ResampleAlg::Bilinear))?;
+    /// let buf = band1.read_as::<u8>((0, 0), band1.size(), (size, size), Some(IOResampleAlg::Bilinear))?;
     /// assert_eq!(buf.size, (size, size));
     /// assert_eq!(buf.data, [101u8, 119, 94, 87, 92, 110, 92, 87, 91, 90, 89, 87, 92, 91, 88, 88]);
     /// # Ok(())
@@ -439,12 +443,12 @@ impl<'a> RasterBand<'a> {
         window: (isize, isize),
         window_size: (usize, usize),
         size: (usize, usize),
-        e_resample_alg: Option<ResampleAlg>,
+        e_resample_alg: Option<IOResampleAlg>,
     ) -> Result<Buffer<T>> {
         let pixels = size.0 * size.1;
         let mut data: Vec<T> = Vec::with_capacity(pixels);
 
-        let resample_alg = e_resample_alg.unwrap_or(ResampleAlg::NearestNeighbour);
+        let resample_alg = e_resample_alg.unwrap_or(IOResampleAlg::NearestNeighbour);
 
         let mut options: GDALRasterIOExtraArg = RasterIOExtraArg {
             e_resample_alg: resample_alg,
@@ -504,7 +508,7 @@ impl<'a> RasterBand<'a> {
         window: (isize, isize),
         window_size: (usize, usize),
         array_size: (usize, usize),
-        e_resample_alg: Option<ResampleAlg>,
+        e_resample_alg: Option<IOResampleAlg>,
     ) -> Result<Array2<T>> {
         let data = self.read_as::<T>(window, window_size, array_size, e_resample_alg)?;
 

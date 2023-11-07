@@ -98,7 +98,7 @@ impl GdalDataType {
     /// assert_eq!(<u16>::datatype().name(), "UInt16");
     /// ```
     pub fn name(&self) -> String {
-        let c_str = unsafe { GDALGetDataTypeName(self.gdal_ordinal()) };
+        let c_str = unsafe { GDALGetDataTypeName(self.to_gdal()) };
         if c_str.is_null() {
             // This case shouldn't happen, because `self` only exists for valid
             // GDALDataType ordinals.
@@ -112,31 +112,31 @@ impl GdalDataType {
 
     /// Get the [`GDALDataType`] size in **bits**.
     pub fn bits(&self) -> u8 {
-        unsafe { GDALGetDataTypeSizeBits(self.gdal_ordinal()) }
+        unsafe { GDALGetDataTypeSizeBits(self.to_gdal()) }
             .try_into()
             .expect("GDALGetDataTypeSizeBits")
     }
 
     /// Get the [`GDALDataType`] size in **bytes**.
     pub fn bytes(&self) -> u8 {
-        unsafe { GDALGetDataTypeSizeBytes(self.gdal_ordinal()) }
+        unsafe { GDALGetDataTypeSizeBytes(self.to_gdal()) }
             .try_into()
             .expect("GDALGetDataTypeSizeBytes")
     }
 
     /// Returns `true` if [`GDALDataType`] is integral (non-floating point)
     pub fn is_integer(&self) -> bool {
-        (unsafe { GDALDataTypeIsInteger(self.gdal_ordinal()) }) > 0
+        (unsafe { GDALDataTypeIsInteger(self.to_gdal()) }) > 0
     }
 
     /// Returns `true` if [`GDALDataType`] is floating point (non-integral)
     pub fn is_floating(&self) -> bool {
-        (unsafe { GDALDataTypeIsFloating(self.gdal_ordinal()) }) > 0
+        (unsafe { GDALDataTypeIsFloating(self.to_gdal()) }) > 0
     }
 
     /// Returns `true` if [`GDALDataType`] supports negative values.
     pub fn is_signed(&self) -> bool {
-        (unsafe { GDALDataTypeIsSigned(self.gdal_ordinal()) }) > 0
+        (unsafe { GDALDataTypeIsSigned(self.to_gdal()) }) > 0
     }
 
     /// Return the descriptor for smallest [`GDALDataType`] that fully contains both data types
@@ -153,7 +153,7 @@ impl GdalDataType {
     /// );
     /// ```
     pub fn union(&self, other: Self) -> Self {
-        let gdal_type = unsafe { GDALDataTypeUnion(self.gdal_ordinal(), other.gdal_ordinal()) };
+        let gdal_type = unsafe { GDALDataTypeUnion(self.to_gdal(), other.to_gdal()) };
         Self::try_from(gdal_type).expect("GDALDataTypeUnion")
     }
 
@@ -176,7 +176,7 @@ impl GdalDataType {
 
         let result = unsafe {
             GDALAdjustValueToDataType(
-                self.gdal_ordinal(),
+                self.to_gdal(),
                 value.into(),
                 &mut is_clamped,
                 &mut is_rounded,
@@ -201,7 +201,7 @@ impl GdalDataType {
     /// assert!(<i16>::datatype().is_conversion_lossy(<u8>::datatype()))
     /// ```
     pub fn is_conversion_lossy(&self, other: Self) -> bool {
-        let r = unsafe { GDALDataTypeIsConversionLossy(self.gdal_ordinal(), other.gdal_ordinal()) };
+        let r = unsafe { GDALDataTypeIsConversionLossy(self.to_gdal(), other.to_gdal()) };
         r != 0
     }
 
@@ -226,7 +226,7 @@ impl GdalDataType {
     }
 
     #[inline]
-    pub(crate) fn gdal_ordinal(&self) -> GDALDataType::Type {
+    pub fn to_gdal(&self) -> GDALDataType::Type {
         *self as GDALDataType::Type
     }
 }
@@ -238,7 +238,7 @@ impl Debug for GdalDataType {
             .field("bits", &self.bits())
             .field("signed", &self.is_signed())
             .field("floating", &self.is_floating())
-            .field("gdal_ordinal", &self.gdal_ordinal())
+            .field("gdal_ordinal", &self.to_gdal())
             .finish()
     }
 }
@@ -422,12 +422,12 @@ mod tests {
     fn test_gdal_data_type() {
         for t in GdalDataType::iter() {
             // Test converting from GDALDataType:Type
-            let t2: GdalDataType = t.gdal_ordinal().try_into().unwrap();
+            let t2: GdalDataType = t.to_gdal().try_into().unwrap();
             assert_eq!(&t, &t2, "{t}");
             assert!(t.bits() > 0, "{}", t);
             assert_eq!(t.bits(), t.bytes() * 8, "{t}");
             let name = t.name();
-            match t.gdal_ordinal() {
+            match t.to_gdal() {
                 GDT_Byte | GDT_UInt16 | GDT_Int16 | GDT_UInt32 | GDT_Int32 => {
                     assert!(t.is_integer(), "{}", &name);
                     assert!(!t.is_floating(), "{}", &name);
@@ -444,7 +444,7 @@ mod tests {
 
                 o => panic!("unknown type ordinal '{o}'"),
             }
-            match t.gdal_ordinal() {
+            match t.to_gdal() {
                 GDT_Byte | GDT_UInt16 | GDT_UInt32 => {
                     assert!(!t.is_signed(), "{}", &name);
                 }
