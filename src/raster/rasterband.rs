@@ -11,13 +11,17 @@ use gdal_sys::{
 };
 use libc::c_int;
 use std::ffi::CString;
-use std::fmt::{Debug, Formatter};
+use std::fmt::{Debug, Display, Formatter};
 use std::marker::PhantomData;
+use std::str::FromStr;
 
 #[cfg(feature = "ndarray")]
 use ndarray::Array2;
 
 use crate::errors::*;
+use crate::raster::ResampleAlg::{
+    Average, Bilinear, Cubic, CubicSpline, Gauss, Lanczos, Mode, NearestNeighbour,
+};
 
 /// [Dataset] methods for raster datasets.
 impl Dataset {
@@ -106,7 +110,7 @@ impl Dataset {
 /// # Ok(())
 /// # }
 /// ```
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 #[repr(u32)]
 pub enum ResampleAlg {
     /// Nearest neighbour
@@ -131,6 +135,51 @@ impl ResampleAlg {
     /// Convert Rust enum discriminant to value expected by [`GDALRasterIOExtraArg`].
     pub fn to_gdal(&self) -> GDALRIOResampleAlg::Type {
         *self as GDALRIOResampleAlg::Type
+    }
+
+    /// Get an iterator over all the valid enumeration values.
+    pub fn iter() -> impl Iterator<Item = ResampleAlg> {
+        use ResampleAlg::*;
+        [
+            NearestNeighbour,
+            Bilinear,
+            Cubic,
+            CubicSpline,
+            Lanczos,
+            Average,
+            Mode,
+            Gauss,
+        ]
+        .into_iter()
+    }
+}
+
+impl Display for ResampleAlg {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        // Display format is the same as debug format.
+        Debug::fmt(self, f)
+    }
+}
+
+impl FromStr for ResampleAlg {
+    type Err = GdalError;
+
+    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "nearestneighbour" => Ok(NearestNeighbour),
+            "bilinear" => Ok(Bilinear),
+            "cubic" => Ok(Cubic),
+            "cubicspline" => Ok(CubicSpline),
+            "lanczos" => Ok(Lanczos),
+            "average" => Ok(Average),
+            "mode" => Ok(Mode),
+            "gauss" => Ok(Gauss),
+            o => Err(GdalError::BadArgument(format!(
+                "'{}' does not match one of {:?}",
+                o,
+                Self::iter().map(|e| e.to_string()).collect::<Vec<_>>()
+            ))),
+        }
     }
 }
 

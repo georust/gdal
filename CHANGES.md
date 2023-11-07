@@ -2,9 +2,14 @@
 
 ## Unreleased
 
+
 - Added support for digital elevation model raster processing: `DemProcessing::aspect`, `DemProcessing::color_relief`, `DemProcessing::hillshade`, `DemProcessing::roughness`, `DemProcessing::slope`, `DemProcessing::terrain_ruggedness_index`, `DemProcessing::topographic_position_index`.
 
    - <https://github.com/georust/gdal/pull/456> 
+
+- Added `{Display|FromStr} for ResampleAlg` and `ResampleAlg::iter`.
+
+    - <https://github.com/georust/gdal/pull/462>
 
  - **Breaking**: Replaced `TryFrom<&[(&str, &str); N]> for CslStringList` with `impl FromIterator<CslStringListEntry> for CslStringList`, `impl FromIterator<String> for CslStringList` and `impl<'a> FromIterator<&'a str> for CslStringList`
  - Added `Extend<CslStringListEntry> for CslStringList`, and `CslStringList::merge`
