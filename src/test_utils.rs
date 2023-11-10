@@ -49,9 +49,16 @@ impl AsRef<Path> for TempFixture {
 }
 
 /// Returns the fully qualified path to `filename` in `${CARGO_MANIFEST_DIR}/fixtures`.
-pub(crate) fn fixture(filename: &str) -> PathBuf {
+pub fn fixture(filename: &str) -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("fixtures")
+        .join(filename)
+}
+
+/// Returns the fully qualified path to `filename` in `${CARGO_MANIFEST_DIR}/target`.
+pub fn target(filename: &str) -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("target")
         .join(filename)
 }
 
@@ -106,4 +113,55 @@ pub fn open_gpkg_for_update(path: &Path) -> (TempPath, Dataset) {
     )
     .unwrap();
     (temp_path, ds)
+}
+
+/// Assert numerical difference between two expressions is less than
+/// 64-bit machine epsilon or a specified epsilon.
+///
+/// # Examples:
+/// ```rust, no_run
+/// use gdal::assert_near;
+/// use std::f64::consts::{PI, E};
+/// assert_near!(PI / E, 1.1557273497909217);
+/// // with specified epsilon
+/// assert_near!(PI / E, 1.15572734, epsilon = 1e-8);
+/// ```
+#[macro_export]
+macro_rules! assert_near {
+    ($left:expr, $right:expr) => {
+        assert_near!($left, $right, epsilon = f64::EPSILON)
+    };
+    ($left:expr, $right:expr, epsilon = $ep:expr) => {
+        assert!(
+            ($left - $right).abs() < $ep,
+            "|{} - {}| = {} is greater than epsilon {:.4e}",
+            $left,
+            $right,
+            ($left - $right).abs(),
+            $ep
+        )
+    };
+    ($left:expr, $right:expr, epsilon = $ep:expr, field = $field:expr) => {
+        assert!(
+            ($left - $right).abs() < $ep,
+            "field {}: |{} - {}| = {} is greater than epsilon {:.4e}",
+            $field,
+            $left,
+            $right,
+            ($left - $right).abs(),
+            $ep
+        )
+    };
+    // Pseudo-specialization
+    (StatisticsAll, $left:expr, $right:expr, epsilon = $ep:expr) => {
+        assert_near!($left.min, $right.min, epsilon = $ep, field = "min");
+        assert_near!($left.max, $right.max, epsilon = $ep, field = "max");
+        assert_near!($left.mean, $right.mean, epsilon = $ep, field = "mean");
+        assert_near!(
+            $left.std_dev,
+            $right.std_dev,
+            epsilon = $ep,
+            field = "std_dev"
+        );
+    };
 }

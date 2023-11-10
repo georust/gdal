@@ -1,6 +1,12 @@
-mod utils;
-
 use gdal::{Dataset, DriverManager};
+use std::path::{Path, PathBuf};
+
+/// Returns the fully qualified path to `filename` in `${CARGO_MANIFEST_DIR}/fixtures`.
+fn fixture(filename: &str) -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("fixtures")
+        .join(filename)
+}
 
 #[test]
 /// Sequentially run tests
@@ -16,21 +22,21 @@ fn test_manually_registering_drivers() {
 
     assert_eq!(DriverManager::count(), 0);
 
-    assert!(Dataset::open(fixture!("tinymarble.tif")).is_err());
+    assert!(Dataset::open(fixture("tinymarble.tif")).is_err());
 
     DriverManager::register_all();
 
-    assert!(Dataset::open(fixture!("tinymarble.tif")).is_ok());
+    assert!(Dataset::open(fixture("tinymarble.tif")).is_ok());
 
     let driver = DriverManager::get_driver_by_name("GTiff").unwrap();
 
     DriverManager::deregister_driver(&driver);
 
-    assert!(Dataset::open(fixture!("tinymarble.tif")).is_err());
+    assert!(Dataset::open(fixture("tinymarble.tif")).is_err());
 
     DriverManager::register_driver(&driver);
 
-    assert!(Dataset::open(fixture!("tinymarble.tif")).is_ok());
+    assert!(Dataset::open(fixture("tinymarble.tif")).is_ok());
 }
 
 fn test_deregister_all_but_one() {

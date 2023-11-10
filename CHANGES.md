@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+
+- Added support for digital elevation model raster processing: `aspect`, `color_relief`, `hillshade`, `roughness`, `slope`, `terrain_ruggedness_index`, `topographic_position_index`.
+
+   - <https://github.com/georust/gdal/pull/456> 
+
 - Added `{Display|FromStr} for ResampleAlg` and `ResampleAlg::iter`.
 
     - <https://github.com/georust/gdal/pull/462>
@@ -21,7 +26,7 @@
 
 - **Breaking**: `CslStringListIterator` returns a `CslStringListEntry` instead of `(String, String)` in order to differentiate between `key=value` entries vs `flag` entries.
 - **Breaking**: `CslStringList::fetch_name_value` returns `Option<String>` instead of `Result<Option<String>>`, better reflecting the semantics of GDAL C API.
- - Added `CslStringList::get_field`, `CslStringList::find_string`, `CslStringList::partial_find_string`, `CslStringList::find_string_case_sensitive`, `CslStringList::into_ptr`, `CslStringList::add_name_value`.
+- Added `CslStringList::get_field`, `CslStringList::find_string`, `CslStringList::partial_find_string`, `CslStringList::find_string_case_sensitive`, `CslStringList::into_ptr`, `CslStringList::add_name_value`.
 
    - <https://github.com/georust/gdal/pull/455>
 

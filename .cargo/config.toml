@@ -1,5 +1,9 @@
 [alias]
-# Run doctests, displaying compiler output
-dto = "test --doc -- --show-output"
+# Run doctests, displaying compiler output.
+# Due to this issue:
+#    https://github.com/rust-lang/cargo/pull/9705#issuecomment-1226149265
+# the following is required for full output during documentation development debugging:
+#    RUSTDOCFLAGS="-Z unstable-options --nocapture" cargo +nightly test --doc
+dto = "test --doc -- --show-output --nocapture"
 # Run clippy, raising warnings to errors
 nowarn = "clippy --all-targets -- -D warnings"

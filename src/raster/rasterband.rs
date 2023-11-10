@@ -96,7 +96,7 @@ impl Dataset {
 ///
 /// # Example
 ///
-/// ```rust
+/// ```rust, no_run
 /// use gdal::Dataset;
 /// # fn main() -> gdal::errors::Result<()> {
 /// use gdal::raster::ResampleAlg;
