@@ -1,4 +1,3 @@
-use std::fmt::{Display, Formatter};
 use std::ptr;
 use std::ptr::NonNull;
 
@@ -47,14 +46,16 @@ pub enum DemAlg {
     Tri,
 }
 
-impl Display for DemAlg {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+impl DemAlg {
+    pub(crate) fn to_gdal_option(&self) -> &'static str {
         match self {
-            Self::ColorRelief => f.write_str("color-relief"),
-            _ => {
-                let s = format!("{self:?}").to_lowercase();
-                f.write_str(&s)
-            }
+            DemAlg::Aspect => "aspect",
+            DemAlg::ColorRelief => "color-relief",
+            DemAlg::Hillshade => "hillshade",
+            DemAlg::Roughness => "roughness",
+            DemAlg::Slope => "slope",
+            DemAlg::Tpi => "TPI",
+            DemAlg::Tri => "TRI",
         }
     }
 }
@@ -69,9 +70,12 @@ pub enum DemSlopeAlg {
     ZevenbergenThorne,
 }
 
-impl Display for DemSlopeAlg {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        f.write_fmt(format_args!("{self:?}"))
+impl DemSlopeAlg {
+    pub(crate) fn to_gdal_option(&self) -> &'static str {
+        match self {
+            DemSlopeAlg::Horn => "Horn",
+            DemSlopeAlg::ZevenbergenThorne => "ZevenbergenThorne",
+        }
     }
 }
 

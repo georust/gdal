@@ -1,4 +1,3 @@
-use std::fmt::{Display, Formatter};
 use std::num::NonZeroUsize;
 
 use crate::cpl::CslStringList;
@@ -41,7 +40,7 @@ impl TriOptions {
         #[cfg(all(major_is_3, minor_ge_3))]
         if let Some(alg) = self.algorithm {
             opts.add_string("-alg").unwrap();
-            opts.add_string(&alg.to_string()).unwrap();
+            opts.add_string(alg.to_gdal_option()).unwrap();
         }
 
         opts
@@ -66,9 +65,13 @@ pub enum DemTriAlg {
     Riley,
 }
 
-impl Display for DemTriAlg {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        f.write_fmt(format_args!("{self:?}"))
+impl DemTriAlg {
+    pub(crate) fn to_gdal_option(&self) -> &'static str {
+        match self {
+            DemTriAlg::Wilson => "Wilson",
+            #[cfg(all(major_is_3, minor_ge_3))]
+            DemTriAlg::Riley => "Riley",
+        }
     }
 }
 

@@ -372,7 +372,7 @@ pub fn slope<P: AsRef<Path>>(
 ///     std_dev: 0.48943078832474257,
 /// }
 /// ```
-///    
+///
 /// See: [`gdaldem tpi`](https://gdal.org/programs/gdaldem.html#tpi) for details.
 pub fn topographic_position_index<P: AsRef<Path>>(
     ds: &Dataset,
@@ -447,7 +447,7 @@ fn dem_eval(
     color_relief_config: Option<PathBuf>,
 ) -> Result<Dataset> {
     let popts = options::GdalDEMProcessingOptions::new(options)?;
-    let mode = CString::new(alg.to_string())?;
+    let mode = CString::new(alg.to_gdal_option())?;
     let dest = _path_to_c_string(dst_file)?;
     let cfile = color_relief_config.and_then(|p| _path_to_c_string(&p).ok());
     let cfile_ptr = cfile.as_deref().map(CStr::as_ptr).unwrap_or(ptr::null());

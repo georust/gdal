@@ -52,7 +52,7 @@ impl AspectOptions {
 
         if let Some(alg) = self.algorithm {
             opts.add_string("-alg").unwrap();
-            opts.add_string(&alg.to_string()).unwrap();
+            opts.add_string(alg.to_gdal_option()).unwrap();
         }
 
         if self.zero_for_flat == Some(true) {

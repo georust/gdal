@@ -1,7 +1,6 @@
 use crate::cpl::CslStringList;
 use crate::raster::processing::dem::options::common_dem_options;
 use crate::raster::processing::dem::DemSlopeAlg;
-use std::fmt::{Display, Formatter};
 use std::num::NonZeroUsize;
 
 /// Configuration options for [`hillshade()`][super::hillshade()].
@@ -122,7 +121,7 @@ impl HillshadeOptions {
 
         if let Some(alg) = self.algorithm {
             opts.add_string("-alg").unwrap();
-            opts.add_string(&alg.to_string()).unwrap();
+            opts.add_string(alg.to_gdal_option()).unwrap();
         }
 
         if let Some(scale) = self.scale {
@@ -131,7 +130,7 @@ impl HillshadeOptions {
         }
 
         if let Some(mode) = self.shading {
-            opts.add_string(&format!("-{mode}")).unwrap();
+            opts.add_string(mode.to_gdal_option()).unwrap();
         }
 
         if let Some(factor) = self.z_factor {
@@ -172,10 +171,13 @@ pub enum ShadingMode {
     Igor,
 }
 
-impl Display for ShadingMode {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let s = format!("{self:?}");
-        f.write_str(&s.to_lowercase())
+impl ShadingMode {
+    pub(crate) fn to_gdal_option(&self) -> &'static str {
+        match self {
+            ShadingMode::Combined => "-combined",
+            ShadingMode::Multidirectional => "-multidirectional",
+            ShadingMode::Igor => "-igor",
+        }
     }
 }
 
