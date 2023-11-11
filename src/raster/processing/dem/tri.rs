@@ -36,8 +36,8 @@ impl TriOptions {
         self.store_common_options_to(&mut opts)?;
 
         // Before 3.3, Wilson is the only algorithm and therefore there's no
-        // selection option. Rust caller can still specify Wilson, but
-        // we don't pass it along.
+        // selection option.
+        // Callers can still specify Wilson, but we don't pass it along.
         #[cfg(all(major_is_3, minor_ge_3))]
         if let Some(alg) = self.algorithm {
             opts.add_string("-alg")?;
