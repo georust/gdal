@@ -1,7 +1,9 @@
+use std::num::NonZeroUsize;
+
 use crate::cpl::CslStringList;
+use crate::errors;
 use crate::raster::processing::dem::options::common_dem_options;
 use crate::raster::processing::dem::DemSlopeAlg;
-use std::num::NonZeroUsize;
 
 /// Configuration options for [`hillshade()`][super::hillshade()].
 #[derive(Debug, Clone, Default)]
@@ -114,41 +116,41 @@ impl HillshadeOptions {
 
     /// Render relevant common options into [`CslStringList`] values, as compatible with
     /// [`gdal_sys::GDALDEMProcessing`].
-    pub fn to_options_list(&self) -> CslStringList {
+    pub fn to_options_list(&self) -> errors::Result<CslStringList> {
         let mut opts = CslStringList::default();
 
-        self.store_common_options_to(&mut opts);
+        self.store_common_options_to(&mut opts)?;
 
         if let Some(alg) = self.algorithm {
-            opts.add_string("-alg").unwrap();
-            opts.add_string(alg.to_gdal_option()).unwrap();
+            opts.add_string("-alg")?;
+            opts.add_string(alg.to_gdal_option())?;
         }
 
         if let Some(scale) = self.scale {
-            opts.add_string("-s").unwrap();
-            opts.add_string(&scale.to_string()).unwrap();
+            opts.add_string("-s")?;
+            opts.add_string(&scale.to_string())?;
         }
 
         if let Some(mode) = self.shading {
-            opts.add_string(mode.to_gdal_option()).unwrap();
+            opts.add_string(mode.to_gdal_option())?;
         }
 
         if let Some(factor) = self.z_factor {
-            opts.add_string("-z").unwrap();
-            opts.add_string(&factor.to_string()).unwrap();
+            opts.add_string("-z")?;
+            opts.add_string(&factor.to_string())?;
         }
 
         if let Some(altitude) = self.altitude {
-            opts.add_string("-alt").unwrap();
-            opts.add_string(&altitude.to_string()).unwrap();
+            opts.add_string("-alt")?;
+            opts.add_string(&altitude.to_string())?;
         }
 
         if let Some(azimuth) = self.azimuth {
-            opts.add_string("-az").unwrap();
-            opts.add_string(&azimuth.to_string()).unwrap();
+            opts.add_string("-az")?;
+            opts.add_string(&azimuth.to_string())?;
         }
 
-        opts
+        Ok(opts)
     }
 }
 
@@ -210,7 +212,7 @@ mod tests {
         let expected: CslStringList =
             "-compute_edges -b 2 -of GTiff CPL_DEBUG=ON -alg ZevenbergenThorne -s 98473 -igor -z 2 -alt 45 -az 330"
                 .parse()?;
-        assert_eq!(expected.to_string(), proc.to_options_list().to_string());
+        assert_eq!(expected.to_string(), proc.to_options_list()?.to_string());
 
         Ok(())
     }

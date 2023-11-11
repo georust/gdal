@@ -1,7 +1,9 @@
+use std::num::NonZeroUsize;
+
 use crate::cpl::CslStringList;
+use crate::errors;
 use crate::raster::processing::dem::options::common_dem_options;
 use crate::raster::processing::dem::DemSlopeAlg;
-use std::num::NonZeroUsize;
 
 /// Configuration options for [`slope()`][super::slope()].
 #[derive(Debug, Clone, Default)]
@@ -69,26 +71,26 @@ impl SlopeOptions {
 
     /// Render relevant common options into [`CslStringList`] values, as compatible with
     /// [`gdal_sys::GDALDEMProcessing`].
-    pub fn to_options_list(&self) -> CslStringList {
+    pub fn to_options_list(&self) -> errors::Result<CslStringList> {
         let mut opts = CslStringList::default();
 
-        self.store_common_options_to(&mut opts);
+        self.store_common_options_to(&mut opts)?;
 
         if let Some(alg) = self.algorithm {
-            opts.add_string("-alg").unwrap();
-            opts.add_string(alg.to_gdal_option()).unwrap();
+            opts.add_string("-alg")?;
+            opts.add_string(alg.to_gdal_option())?;
         }
 
         if let Some(scale) = self.scale {
-            opts.add_string("-s").unwrap();
-            opts.add_string(&scale.to_string()).unwrap();
+            opts.add_string("-s")?;
+            opts.add_string(&scale.to_string())?;
         }
 
         if self.percentage_results == Some(true) {
-            opts.add_string("-p").unwrap();
+            opts.add_string("-p")?;
         }
 
-        opts
+        Ok(opts)
     }
 }
 
@@ -118,7 +120,7 @@ mod tests {
         let expected: CslStringList =
             "-compute_edges -b 2 -of GTiff CPL_DEBUG=ON -alg ZevenbergenThorne -s 98473 -p"
                 .parse()?;
-        assert_eq!(expected.to_string(), proc.to_options_list().to_string());
+        assert_eq!(expected.to_string(), proc.to_options_list()?.to_string());
 
         Ok(())
     }

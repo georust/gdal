@@ -1,6 +1,8 @@
-use crate::cpl::CslStringList;
-use crate::raster::processing::dem::options::common_dem_options;
 use std::num::NonZeroUsize;
+
+use crate::cpl::CslStringList;
+use crate::errors;
+use crate::raster::processing::dem::options::common_dem_options;
 
 /// Configuration options for [`topographic_position_index()`][super::topographic_position_index()].
 #[derive(Debug, Clone, Default)]
@@ -21,10 +23,10 @@ impl TpiOptions {
 
     /// Render options into [`CslStringList`] values, as compatible with
     /// [`gdal_sys::GDALDEMProcessing`].
-    pub fn to_options_list(&self) -> CslStringList {
+    pub fn to_options_list(&self) -> errors::Result<CslStringList> {
         let mut opts = CslStringList::new();
-        self.store_common_options_to(&mut opts);
-        opts
+        self.store_common_options_to(&mut opts)?;
+        Ok(opts)
     }
 }
 
@@ -48,7 +50,7 @@ mod tests {
             .with_additional_options("CPL_DEBUG=ON".parse()?);
 
         let expected: CslStringList = "-compute_edges -b 2 -of GTiff CPL_DEBUG=ON".parse()?;
-        assert_eq!(expected.to_string(), proc.to_options_list().to_string());
+        assert_eq!(expected.to_string(), proc.to_options_list()?.to_string());
 
         Ok(())
     }

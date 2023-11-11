@@ -149,24 +149,26 @@ macro_rules! common_dem_options {
         }
 
         /// Private utility to convert common options into [`CslStringList`] options.
-        fn store_common_options_to(&self, opts: &mut CslStringList) {
+        fn store_common_options_to(&self, opts: &mut CslStringList) -> errors::Result<()> {
             if self.compute_edges {
-                opts.add_string("-compute_edges").unwrap();
+                opts.add_string("-compute_edges")?;
             }
 
             if let Some(band) = self.input_band {
-                opts.add_string("-b").unwrap();
-                opts.add_string(&band.to_string()).unwrap();
+                opts.add_string("-b")?;
+                opts.add_string(&band.to_string())?;
             }
 
             if let Some(of) = &self.output_format {
-                opts.add_string("-of").unwrap();
-                opts.add_string(of).unwrap();
+                opts.add_string("-of")?;
+                opts.add_string(of)?;
             }
 
             if !self.additional_options.is_empty() {
                 opts.extend(&self.additional_options);
             }
+
+            Ok(())
         }
     };
 }

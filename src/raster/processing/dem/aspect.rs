@@ -1,7 +1,9 @@
+use std::num::NonZeroUsize;
+
 use super::options::common_dem_options;
 use crate::cpl::CslStringList;
+use crate::errors;
 use crate::raster::processing::dem::DemSlopeAlg;
-use std::num::NonZeroUsize;
 
 /// Configuration options for [`aspect()`][super::aspect()].
 #[derive(Debug, Clone, Default)]
@@ -45,25 +47,25 @@ impl AspectOptions {
 
     /// Render relevant common options into [`CslStringList`] values, as compatible with
     /// [`gdal_sys::GDALDEMProcessing`].
-    pub fn to_options_list(&self) -> CslStringList {
+    pub fn to_options_list(&self) -> errors::Result<CslStringList> {
         let mut opts = CslStringList::default();
 
-        self.store_common_options_to(&mut opts);
+        self.store_common_options_to(&mut opts)?;
 
         if let Some(alg) = self.algorithm {
-            opts.add_string("-alg").unwrap();
-            opts.add_string(alg.to_gdal_option()).unwrap();
+            opts.add_string("-alg")?;
+            opts.add_string(alg.to_gdal_option())?;
         }
 
         if self.zero_for_flat == Some(true) {
-            opts.add_string("-zero_for_flat").unwrap();
+            opts.add_string("-zero_for_flat")?;
         }
 
         if self.trigonometric == Some(true) {
-            opts.add_string("-trigonometric").unwrap();
+            opts.add_string("-trigonometric")?;
         }
 
-        opts
+        Ok(opts)
     }
 }
 
@@ -93,7 +95,7 @@ mod tests {
         let expected: CslStringList =
             "-compute_edges -b 2 -of GTiff CPL_DEBUG=ON -alg ZevenbergenThorne -zero_for_flat -trigonometric"
                 .parse()?;
-        assert_eq!(expected.to_string(), proc.to_options_list().to_string());
+        assert_eq!(expected.to_string(), proc.to_options_list()?.to_string());
 
         Ok(())
     }

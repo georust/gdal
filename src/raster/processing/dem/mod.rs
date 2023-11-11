@@ -106,7 +106,7 @@ pub fn aspect<P: AsRef<Path>>(
         ds,
         dest_file.as_ref(),
         DemAlg::Aspect,
-        &options.to_options_list(),
+        &options.to_options_list()?,
         None,
     )
 }
@@ -166,7 +166,7 @@ pub fn color_relief<P: AsRef<Path>>(
         ds,
         dest_file.as_ref(),
         DemAlg::ColorRelief,
-        &options.to_options_list(),
+        &options.to_options_list()?,
         Some(colors),
     )
 }
@@ -224,7 +224,7 @@ pub fn hillshade<P: AsRef<Path>>(
         ds,
         dest_file.as_ref(),
         DemAlg::Hillshade,
-        &options.to_options_list(),
+        &options.to_options_list()?,
         None,
     )
 }
@@ -274,7 +274,7 @@ pub fn roughness<P: AsRef<Path>>(
         ds,
         dest_file.as_ref(),
         DemAlg::Roughness,
-        &options.to_options_list(),
+        &options.to_options_list()?,
         None,
     )
 }
@@ -333,7 +333,7 @@ pub fn slope<P: AsRef<Path>>(
         ds,
         dest_file.as_ref(),
         DemAlg::Slope,
-        &options.to_options_list(),
+        &options.to_options_list()?,
         None,
     )
 }
@@ -383,7 +383,7 @@ pub fn topographic_position_index<P: AsRef<Path>>(
         ds,
         dest_file.as_ref(),
         DemAlg::Tpi,
-        &options.to_options_list(),
+        &options.to_options_list()?,
         None,
     )
 }
@@ -433,7 +433,7 @@ pub fn terrain_ruggedness_index<P: AsRef<Path>>(
         ds,
         dest_file.as_ref(),
         DemAlg::Tri,
-        &options.to_options_list(),
+        &options.to_options_list()?,
         None,
     )
 }
