@@ -119,8 +119,8 @@ macro_rules! common_dem_options {
         }
 
         /// Fetch the specified output format driver identifier.
-        pub fn output_format(&self) -> Option<String> {
-            self.output_format.clone()
+        pub fn output_format(&self) -> Option<&str> {
+            self.output_format.as_ref().map(|f| f.as_str())
         }
 
         /// Compute values at image edges.
