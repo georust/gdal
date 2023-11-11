@@ -1,5 +1,4 @@
 use std::fmt::{Display, Formatter};
-use std::marker::PhantomData;
 use std::ptr;
 use std::ptr::NonNull;
 
@@ -12,18 +11,17 @@ use crate::errors;
 use crate::utils::_last_null_pointer_err;
 
 /// Payload for [`GDALDEMProcessing`]. Intended for internal use only.
-pub struct GdalDEMProcessingOptions<'opts>(
-    NonNull<GDALDEMProcessingOptions>,
-    PhantomData<&'opts CslStringList>,
-);
+pub struct GdalDEMProcessingOptions(NonNull<GDALDEMProcessingOptions>);
 
-impl<'opts> GdalDEMProcessingOptions<'opts> {
-    pub fn new(opts: &'opts CslStringList) -> errors::Result<Self> {
+impl GdalDEMProcessingOptions {
+    pub fn new(opts: &CslStringList) -> errors::Result<Self> {
+        // GDAL copies the relevant value out of `opts`, we don't need to keep them alive:
+        // https://github.com/OSGeo/gdal/blob/59eaaed3168f49e8a7a3821730277aff68a86d16/apps/gdaldem_lib.cpp#L3770
         let popts = unsafe { GDALDEMProcessingOptionsNew(opts.as_ptr(), ptr::null_mut()) };
-        if popts.is_null() {
-            return Err(_last_null_pointer_err("GDALDEMProcessingOptionsNew"));
+        match NonNull::new(popts) {
+            Some(popts) => Ok(Self(popts)),
+            None => Err(_last_null_pointer_err("GDALDEMProcessingOptionsNew")),
         }
-        Ok(Self(unsafe { NonNull::new_unchecked(popts) }, PhantomData))
     }
 
     pub fn as_ptr(&self) -> *const GDALDEMProcessingOptions {
@@ -31,7 +29,7 @@ impl<'opts> GdalDEMProcessingOptions<'opts> {
     }
 }
 
-impl Drop for GdalDEMProcessingOptions<'_> {
+impl Drop for GdalDEMProcessingOptions {
     fn drop(&mut self) {
         unsafe { GDALDEMProcessingOptionsFree(self.0.as_ptr()) };
     }
