@@ -47,7 +47,7 @@ pub enum DemAlg {
 }
 
 impl DemAlg {
-    pub(crate) fn to_gdal_option(&self) -> &'static str {
+    pub(super) fn to_gdal_option(self) -> &'static str {
         match self {
             DemAlg::Aspect => "aspect",
             DemAlg::ColorRelief => "color-relief",
@@ -71,7 +71,7 @@ pub enum DemSlopeAlg {
 }
 
 impl DemSlopeAlg {
-    pub(crate) fn to_gdal_option(&self) -> &'static str {
+    pub(super) fn to_gdal_option(self) -> &'static str {
         match self {
             DemSlopeAlg::Horn => "Horn",
             DemSlopeAlg::ZevenbergenThorne => "ZevenbergenThorne",

@@ -67,7 +67,7 @@ pub enum DemTriAlg {
 }
 
 impl DemTriAlg {
-    pub(crate) fn to_gdal_option(&self) -> &'static str {
+    fn to_gdal_option(self) -> &'static str {
         match self {
             DemTriAlg::Wilson => "Wilson",
             #[cfg(all(major_is_3, minor_ge_3))]

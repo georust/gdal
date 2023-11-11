@@ -174,7 +174,7 @@ pub enum ShadingMode {
 }
 
 impl ShadingMode {
-    pub(crate) fn to_gdal_option(&self) -> &'static str {
+    fn to_gdal_option(self) -> &'static str {
         match self {
             ShadingMode::Combined => "-combined",
             ShadingMode::Multidirectional => "-multidirectional",
