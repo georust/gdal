@@ -31,11 +31,6 @@ impl SlopeOptions {
         self
     }
 
-    /// Fetch the specified slope computation algorithm.
-    pub fn algorithm(&self) -> Option<DemSlopeAlg> {
-        self.algorithm
-    }
-
     /// Apply a elevation scaling factor.
     ///
     /// Routine assumes x, y and z units are identical.
@@ -52,13 +47,6 @@ impl SlopeOptions {
     pub fn with_scale(&mut self, scale: f64) -> &mut Self {
         self.scale = Some(scale);
         self
-    }
-
-    /// Fetch the specified scaling factor.
-    ///
-    /// Returns `None` if one has not been previously set via [`Self::with_scale`].
-    pub fn scale(&self) -> Option<f64> {
-        self.scale
     }
 
     /// If `state` is `true`, the slope will be expressed as percent slope.

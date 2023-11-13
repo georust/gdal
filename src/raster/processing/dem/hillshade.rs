@@ -34,22 +34,12 @@ impl HillshadeOptions {
         self
     }
 
-    /// Fetch the specified slope computation algorithm
-    pub fn algorithm(&self) -> Option<DemSlopeAlg> {
-        self.algorithm
-    }
-
     /// Specify the altitude of the light, in degrees.
     ///
     /// `90` if the light comes from above the DEM, `0` if it is raking light.
     pub fn with_altitude(&mut self, altitude: f64) -> &mut Self {
         self.altitude = Some(altitude);
         self
-    }
-
-    /// Fetch the specified light altitude, in degrees.
-    pub fn altitude(&self) -> Option<f64> {
-        self.altitude
     }
 
     /// Specify the azimuth of the light, in degrees:
@@ -83,13 +73,6 @@ impl HillshadeOptions {
         self
     }
 
-    /// Fetch the specified scaling factor.
-    ///
-    /// Returns `None` if one has not been previously set vai [`Self::with_scale`].
-    pub fn scale(&self) -> Option<f64> {
-        self.scale
-    }
-
     /// Specify the shading mode to render with.
     ///
     /// See [`ShadingMode`] for mode descriptions.
@@ -98,20 +81,10 @@ impl HillshadeOptions {
         self
     }
 
-    /// Fetch the specified shading mode.
-    pub fn shading_mode(&self) -> Option<ShadingMode> {
-        self.shading
-    }
-
     /// Vertical exaggeration used to pre-multiply the elevations
     pub fn with_z_factor(&mut self, z_factor: f64) -> &mut Self {
         self.z_factor = Some(z_factor);
         self
-    }
-
-    /// Fetch the applied z-factor value.
-    pub fn z_factor(&self) -> Option<f64> {
-        self.z_factor
     }
 
     /// Render relevant common options into [`CslStringList`] values, as compatible with

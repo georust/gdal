@@ -75,11 +75,6 @@ impl ColorReliefOptions {
         self
     }
 
-    /// Get path to the color relief configuration file.
-    pub fn color_config(&self) -> PathBuf {
-        self.color_config.to_owned()
-    }
-
     /// Specify the color matching mode.
     ///
     /// See [`ColorMatchingMode`] for details.
@@ -88,9 +83,8 @@ impl ColorReliefOptions {
         self
     }
 
-    /// Get the color matching mode to be used.
-    pub fn color_matching_mode(&self) -> ColorMatchingMode {
-        self.color_matching_mode
+    pub(crate) fn color_config(&self) -> &Path {
+        &self.color_config
     }
 
     /// Render relevant common options into [`CslStringList`] values, as compatible with

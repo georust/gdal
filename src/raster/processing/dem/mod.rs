@@ -23,7 +23,7 @@
 //!
 
 use std::ffi::{CStr, CString};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::ptr;
 
 use libc::c_int;
@@ -444,7 +444,7 @@ fn dem_eval(
     dst_file: &Path,
     alg: DemAlg,
     options: &CslStringList,
-    color_relief_config: Option<PathBuf>,
+    color_relief_config: Option<&Path>,
 ) -> Result<Dataset> {
     let popts = options::GdalDEMProcessingOptions::new(options)?;
     let mode = CString::new(alg.to_gdal_option())?;

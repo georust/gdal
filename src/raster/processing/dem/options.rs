@@ -89,11 +89,6 @@ macro_rules! common_dem_options {
             self
         }
 
-        /// Fetch the specified input band to read from.
-        pub fn input_band(&self) -> Option<NonZeroUsize> {
-            self.input_band
-        }
-
         /// Explicitly specify output raster format.
         ///
         /// This is equivalent to the `-of <format>` CLI flag accepted by many GDAL tools.
@@ -118,11 +113,6 @@ macro_rules! common_dem_options {
             self
         }
 
-        /// Fetch the specified output format driver identifier.
-        pub fn output_format(&self) -> Option<&str> {
-            self.output_format.as_ref().map(|f| f.as_str())
-        }
-
         /// Compute values at image edges.
         ///
         /// If true, causes interpolation of values at image edges or if a no-data value is found
@@ -132,20 +122,10 @@ macro_rules! common_dem_options {
             self
         }
 
-        /// Fetch the compute edges mode.
-        pub fn compute_edges(&self) -> bool {
-            self.compute_edges
-        }
-
         /// Additional generic options to be included.
         pub fn with_additional_options(&mut self, extra_options: CslStringList) -> &mut Self {
             self.additional_options.extend(&extra_options);
             self
-        }
-
-        /// Fetch additional options.
-        pub fn additional_options(&self) -> &CslStringList {
-            &self.additional_options
         }
 
         /// Private utility to convert common options into [`CslStringList`] options.
