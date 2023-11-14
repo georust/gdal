@@ -9,7 +9,7 @@ use crate::raster::processing::dem::options::common_dem_options;
 #[derive(Debug, Clone)]
 pub struct ColorReliefOptions {
     input_band: Option<NonZeroUsize>,
-    compute_edges: bool,
+    compute_edges: Option<bool>,
     output_format: Option<String>,
     additional_options: CslStringList,
     color_config: PathBuf,
@@ -58,7 +58,7 @@ impl ColorReliefOptions {
     pub fn new<P: AsRef<Path>>(color_config: P) -> Self {
         Self {
             input_band: None,
-            compute_edges: false,
+            compute_edges: None,
             output_format: None,
             additional_options: Default::default(),
             color_config: color_config.as_ref().to_path_buf(),

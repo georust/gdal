@@ -118,7 +118,7 @@ macro_rules! common_dem_options {
         /// If true, causes interpolation of values at image edges or if a no-data value is found
         /// in the 3x3 processing window.
         pub fn with_compute_edges(&mut self, state: bool) -> &mut Self {
-            self.compute_edges = state;
+            self.compute_edges = Some(state);
             self
         }
 
@@ -130,7 +130,7 @@ macro_rules! common_dem_options {
 
         /// Private utility to convert common options into [`CslStringList`] options.
         fn store_common_options_to(&self, opts: &mut CslStringList) -> errors::Result<()> {
-            if self.compute_edges {
+            if matches!(self.compute_edges, Some(true)) {
                 opts.add_string("-compute_edges")?;
             }
 

@@ -8,7 +8,7 @@ use crate::raster::processing::dem::options::common_dem_options;
 #[derive(Debug, Clone, Default)]
 pub struct TpiOptions {
     input_band: Option<NonZeroUsize>,
-    compute_edges: bool,
+    compute_edges: Option<bool>,
     output_format: Option<String>,
     additional_options: CslStringList,
 }

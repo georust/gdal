@@ -9,7 +9,7 @@ use crate::raster::processing::dem::DemSlopeAlg;
 #[derive(Debug, Clone, Default)]
 pub struct AspectOptions {
     input_band: Option<NonZeroUsize>,
-    compute_edges: bool,
+    compute_edges: Option<bool>,
     output_format: Option<String>,
     additional_options: CslStringList,
     algorithm: Option<DemSlopeAlg>,
