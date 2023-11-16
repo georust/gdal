@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added pre-built bindings for GDAL 3.8
+
+  - <https://github.com/georust/gdal/pull/466>
+
 - Added `{Display|FromStr} for ResampleAlg` and `ResampleAlg::iter`.
 
     - <https://github.com/georust/gdal/pull/462>

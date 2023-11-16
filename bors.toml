@@ -1,4 +1,5 @@
 status = [
+    "ci gdal-3.8.0",
     "ci gdal-3.7.3",
     "ci gdal-3.6.4",
     "ci gdal-3.5.3",
