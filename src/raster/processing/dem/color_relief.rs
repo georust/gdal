@@ -2,13 +2,14 @@ use std::num::NonZeroUsize;
 use std::path::{Path, PathBuf};
 
 use crate::cpl::CslStringList;
+use crate::errors;
 use crate::raster::processing::dem::options::common_dem_options;
 
 /// Configuration options for [`color_relief()`][super::color_relief()].
 #[derive(Debug, Clone)]
 pub struct ColorReliefOptions {
     input_band: Option<NonZeroUsize>,
-    compute_edges: bool,
+    compute_edges: Option<bool>,
     output_format: Option<String>,
     additional_options: CslStringList,
     color_config: PathBuf,
@@ -43,7 +44,7 @@ impl ColorReliefOptions {
     ///
     /// # Example
     /// Here's an example `.clr` file showing a number of the features described above.
-    ///  
+    ///
     /// ```text
     /// 2600  white
     /// 2000  235 220 175
@@ -57,7 +58,7 @@ impl ColorReliefOptions {
     pub fn new<P: AsRef<Path>>(color_config: P) -> Self {
         Self {
             input_band: None,
-            compute_edges: false,
+            compute_edges: None,
             output_format: None,
             additional_options: Default::default(),
             color_config: color_config.as_ref().to_path_buf(),
@@ -74,11 +75,6 @@ impl ColorReliefOptions {
         self
     }
 
-    /// Get path to the color relief configuration file.
-    pub fn color_config(&self) -> PathBuf {
-        self.color_config.to_owned()
-    }
-
     /// Specify the color matching mode.
     ///
     /// See [`ColorMatchingMode`] for details.
@@ -87,31 +83,28 @@ impl ColorReliefOptions {
         self
     }
 
-    /// Get the color matching mode to be used.
-    pub fn color_matching_mode(&self) -> ColorMatchingMode {
-        self.color_matching_mode
+    pub(crate) fn color_config(&self) -> &Path {
+        &self.color_config
     }
 
     /// Render relevant common options into [`CslStringList`] values, as compatible with
     /// [`gdal_sys::GDALDEMProcessing`].
-    pub fn to_options_list(&self) -> CslStringList {
+    pub fn to_options_list(&self) -> errors::Result<CslStringList> {
         let mut opts = CslStringList::default();
 
-        self.store_common_options_to(&mut opts);
+        self.store_common_options_to(&mut opts)?;
 
         if self.alpha == Some(true) {
-            opts.add_string("-alpha").unwrap();
+            opts.add_string("-alpha")?;
         }
 
         match self.color_matching_mode {
-            ColorMatchingMode::ExactColorEntry => opts.add_string("-exact_color_entry").unwrap(),
-            ColorMatchingMode::NearestColorEntry => {
-                opts.add_string("-nearest_color_entry").unwrap()
-            }
+            ColorMatchingMode::ExactColorEntry => opts.add_string("-exact_color_entry")?,
+            ColorMatchingMode::NearestColorEntry => opts.add_string("-nearest_color_entry")?,
             _ => {}
         }
 
-        opts
+        Ok(opts)
     }
 }
 
@@ -155,7 +148,7 @@ mod tests {
 
         let expected: CslStringList =
             "-compute_edges -b 2 -of GTiff CPL_DEBUG=ON -alpha -nearest_color_entry".parse()?;
-        assert_eq!(expected.to_string(), proc.to_options_list().to_string());
+        assert_eq!(expected.to_string(), proc.to_options_list()?.to_string());
 
         Ok(())
     }

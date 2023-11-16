@@ -1,14 +1,15 @@
+use std::num::NonZeroUsize;
+
 use crate::cpl::CslStringList;
+use crate::errors;
 use crate::raster::processing::dem::options::common_dem_options;
 use crate::raster::processing::dem::DemSlopeAlg;
-use std::fmt::{Display, Formatter};
-use std::num::NonZeroUsize;
 
 /// Configuration options for [`hillshade()`][super::hillshade()].
 #[derive(Debug, Clone, Default)]
 pub struct HillshadeOptions {
     input_band: Option<NonZeroUsize>,
-    compute_edges: bool,
+    compute_edges: Option<bool>,
     output_format: Option<String>,
     additional_options: CslStringList,
     algorithm: Option<DemSlopeAlg>,
@@ -33,22 +34,12 @@ impl HillshadeOptions {
         self
     }
 
-    /// Fetch the specified slope computation algorithm
-    pub fn algorithm(&self) -> Option<DemSlopeAlg> {
-        self.algorithm
-    }
-
     /// Specify the altitude of the light, in degrees.
     ///
     /// `90` if the light comes from above the DEM, `0` if it is raking light.
     pub fn with_altitude(&mut self, altitude: f64) -> &mut Self {
         self.altitude = Some(altitude);
         self
-    }
-
-    /// Fetch the specified light altitude, in degrees.
-    pub fn altitude(&self) -> Option<f64> {
-        self.altitude
     }
 
     /// Specify the azimuth of the light, in degrees:
@@ -82,13 +73,6 @@ impl HillshadeOptions {
         self
     }
 
-    /// Fetch the specified scaling factor.
-    ///
-    /// Returns `None` if one has not been previously set vai [`Self::with_scale`].
-    pub fn scale(&self) -> Option<f64> {
-        self.scale
-    }
-
     /// Specify the shading mode to render with.
     ///
     /// See [`ShadingMode`] for mode descriptions.
@@ -97,59 +81,49 @@ impl HillshadeOptions {
         self
     }
 
-    /// Fetch the specified shading mode.
-    pub fn shading_mode(&self) -> Option<ShadingMode> {
-        self.shading
-    }
-
     /// Vertical exaggeration used to pre-multiply the elevations
     pub fn with_z_factor(&mut self, z_factor: f64) -> &mut Self {
         self.z_factor = Some(z_factor);
         self
     }
 
-    /// Fetch the applied z-factor value.
-    pub fn z_factor(&self) -> Option<f64> {
-        self.z_factor
-    }
-
     /// Render relevant common options into [`CslStringList`] values, as compatible with
     /// [`gdal_sys::GDALDEMProcessing`].
-    pub fn to_options_list(&self) -> CslStringList {
+    pub fn to_options_list(&self) -> errors::Result<CslStringList> {
         let mut opts = CslStringList::default();
 
-        self.store_common_options_to(&mut opts);
+        self.store_common_options_to(&mut opts)?;
 
         if let Some(alg) = self.algorithm {
-            opts.add_string("-alg").unwrap();
-            opts.add_string(&alg.to_string()).unwrap();
+            opts.add_string("-alg")?;
+            opts.add_string(alg.to_gdal_option())?;
         }
 
         if let Some(scale) = self.scale {
-            opts.add_string("-s").unwrap();
-            opts.add_string(&scale.to_string()).unwrap();
+            opts.add_string("-s")?;
+            opts.add_string(&scale.to_string())?;
         }
 
         if let Some(mode) = self.shading {
-            opts.add_string(&format!("-{mode}")).unwrap();
+            opts.add_string(mode.to_gdal_option())?;
         }
 
         if let Some(factor) = self.z_factor {
-            opts.add_string("-z").unwrap();
-            opts.add_string(&factor.to_string()).unwrap();
+            opts.add_string("-z")?;
+            opts.add_string(&factor.to_string())?;
         }
 
         if let Some(altitude) = self.altitude {
-            opts.add_string("-alt").unwrap();
-            opts.add_string(&altitude.to_string()).unwrap();
+            opts.add_string("-alt")?;
+            opts.add_string(&altitude.to_string())?;
         }
 
         if let Some(azimuth) = self.azimuth {
-            opts.add_string("-az").unwrap();
-            opts.add_string(&azimuth.to_string()).unwrap();
+            opts.add_string("-az")?;
+            opts.add_string(&azimuth.to_string())?;
         }
 
-        opts
+        Ok(opts)
     }
 }
 
@@ -172,10 +146,13 @@ pub enum ShadingMode {
     Igor,
 }
 
-impl Display for ShadingMode {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let s = format!("{self:?}");
-        f.write_str(&s.to_lowercase())
+impl ShadingMode {
+    fn to_gdal_option(self) -> &'static str {
+        match self {
+            ShadingMode::Combined => "-combined",
+            ShadingMode::Multidirectional => "-multidirectional",
+            ShadingMode::Igor => "-igor",
+        }
     }
 }
 
@@ -208,7 +185,7 @@ mod tests {
         let expected: CslStringList =
             "-compute_edges -b 2 -of GTiff CPL_DEBUG=ON -alg ZevenbergenThorne -s 98473 -igor -z 2 -alt 45 -az 330"
                 .parse()?;
-        assert_eq!(expected.to_string(), proc.to_options_list().to_string());
+        assert_eq!(expected.to_string(), proc.to_options_list()?.to_string());
 
         Ok(())
     }

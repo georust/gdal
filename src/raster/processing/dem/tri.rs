@@ -1,14 +1,14 @@
-use std::fmt::{Display, Formatter};
 use std::num::NonZeroUsize;
 
 use crate::cpl::CslStringList;
+use crate::errors;
 use crate::raster::processing::dem::options::common_dem_options;
 
 /// Configuration options for [`terrain_ruggedness_index()`][super::terrain_ruggedness_index()].
 #[derive(Debug, Clone, Default)]
 pub struct TriOptions {
     input_band: Option<NonZeroUsize>,
-    compute_edges: bool,
+    compute_edges: Option<bool>,
     output_format: Option<String>,
     additional_options: CslStringList,
     algorithm: Option<DemTriAlg>,
@@ -30,21 +30,21 @@ impl TriOptions {
 
     /// Render relevant common options into [`CslStringList`] values, as compatible with
     /// [`gdal_sys::GDALDEMProcessing`].
-    pub fn to_options_list(&self) -> CslStringList {
+    pub fn to_options_list(&self) -> errors::Result<CslStringList> {
         let mut opts = CslStringList::default();
 
-        self.store_common_options_to(&mut opts);
+        self.store_common_options_to(&mut opts)?;
 
         // Before 3.3, Wilson is the only algorithm and therefore there's no
-        // selection option. Rust caller can still specify Wilson, but
-        // we don't pass it along.
+        // selection option.
+        // Callers can still specify Wilson, but we don't pass it along.
         #[cfg(all(major_is_3, minor_ge_3))]
         if let Some(alg) = self.algorithm {
-            opts.add_string("-alg").unwrap();
-            opts.add_string(&alg.to_string()).unwrap();
+            opts.add_string("-alg")?;
+            opts.add_string(alg.to_gdal_option())?;
         }
 
-        opts
+        Ok(opts)
     }
 }
 
@@ -66,9 +66,13 @@ pub enum DemTriAlg {
     Riley,
 }
 
-impl Display for DemTriAlg {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        f.write_fmt(format_args!("{self:?}"))
+impl DemTriAlg {
+    fn to_gdal_option(self) -> &'static str {
+        match self {
+            DemTriAlg::Wilson => "Wilson",
+            #[cfg(all(major_is_3, minor_ge_3))]
+            DemTriAlg::Riley => "Riley",
+        }
     }
 }
 
@@ -96,7 +100,7 @@ mod tests {
 
         let expected: CslStringList =
             "-compute_edges -b 2 -of GTiff CPL_DEBUG=ON -alg Wilson".parse()?;
-        assert_eq!(expected.to_string(), opts.to_options_list().to_string());
+        assert_eq!(expected.to_string(), opts.to_options_list()?.to_string());
 
         Ok(())
     }

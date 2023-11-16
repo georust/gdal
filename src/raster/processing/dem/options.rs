@@ -1,5 +1,3 @@
-use std::fmt::{Display, Formatter};
-use std::marker::PhantomData;
 use std::ptr;
 use std::ptr::NonNull;
 
@@ -12,18 +10,17 @@ use crate::errors;
 use crate::utils::_last_null_pointer_err;
 
 /// Payload for [`GDALDEMProcessing`]. Intended for internal use only.
-pub struct GdalDEMProcessingOptions<'opts>(
-    NonNull<GDALDEMProcessingOptions>,
-    PhantomData<&'opts CslStringList>,
-);
+pub struct GdalDEMProcessingOptions(NonNull<GDALDEMProcessingOptions>);
 
-impl<'opts> GdalDEMProcessingOptions<'opts> {
-    pub fn new(opts: &'opts CslStringList) -> errors::Result<Self> {
+impl GdalDEMProcessingOptions {
+    pub fn new(opts: &CslStringList) -> errors::Result<Self> {
+        // GDAL copies the relevant value out of `opts`, we don't need to keep them alive:
+        // https://github.com/OSGeo/gdal/blob/59eaaed3168f49e8a7a3821730277aff68a86d16/apps/gdaldem_lib.cpp#L3770
         let popts = unsafe { GDALDEMProcessingOptionsNew(opts.as_ptr(), ptr::null_mut()) };
-        if popts.is_null() {
-            return Err(_last_null_pointer_err("GDALDEMProcessingOptionsNew"));
+        match NonNull::new(popts) {
+            Some(popts) => Ok(Self(popts)),
+            None => Err(_last_null_pointer_err("GDALDEMProcessingOptionsNew")),
         }
-        Ok(Self(unsafe { NonNull::new_unchecked(popts) }, PhantomData))
     }
 
     pub fn as_ptr(&self) -> *const GDALDEMProcessingOptions {
@@ -31,7 +28,7 @@ impl<'opts> GdalDEMProcessingOptions<'opts> {
     }
 }
 
-impl Drop for GdalDEMProcessingOptions<'_> {
+impl Drop for GdalDEMProcessingOptions {
     fn drop(&mut self) {
         unsafe { GDALDEMProcessingOptionsFree(self.0.as_ptr()) };
     }
@@ -49,14 +46,16 @@ pub enum DemAlg {
     Tri,
 }
 
-impl Display for DemAlg {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+impl DemAlg {
+    pub(super) fn to_gdal_option(self) -> &'static str {
         match self {
-            Self::ColorRelief => f.write_str("color-relief"),
-            _ => {
-                let s = format!("{self:?}").to_lowercase();
-                f.write_str(&s)
-            }
+            DemAlg::Aspect => "aspect",
+            DemAlg::ColorRelief => "color-relief",
+            DemAlg::Hillshade => "hillshade",
+            DemAlg::Roughness => "roughness",
+            DemAlg::Slope => "slope",
+            DemAlg::Tpi => "TPI",
+            DemAlg::Tri => "TRI",
         }
     }
 }
@@ -71,9 +70,12 @@ pub enum DemSlopeAlg {
     ZevenbergenThorne,
 }
 
-impl Display for DemSlopeAlg {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        f.write_fmt(format_args!("{self:?}"))
+impl DemSlopeAlg {
+    pub(super) fn to_gdal_option(self) -> &'static str {
+        match self {
+            DemSlopeAlg::Horn => "Horn",
+            DemSlopeAlg::ZevenbergenThorne => "ZevenbergenThorne",
+        }
     }
 }
 
@@ -85,11 +87,6 @@ macro_rules! common_dem_options {
         pub fn with_input_band(&mut self, band: NonZeroUsize) -> &mut Self {
             self.input_band = Some(band);
             self
-        }
-
-        /// Fetch the specified input band to read from.
-        pub fn input_band(&self) -> Option<NonZeroUsize> {
-            self.input_band
         }
 
         /// Explicitly specify output raster format.
@@ -116,23 +113,13 @@ macro_rules! common_dem_options {
             self
         }
 
-        /// Fetch the specified output format driver identifier.
-        pub fn output_format(&self) -> Option<String> {
-            self.output_format.clone()
-        }
-
         /// Compute values at image edges.
         ///
         /// If true, causes interpolation of values at image edges or if a no-data value is found
         /// in the 3x3 processing window.
         pub fn with_compute_edges(&mut self, state: bool) -> &mut Self {
-            self.compute_edges = state;
+            self.compute_edges = Some(state);
             self
-        }
-
-        /// Fetch the compute edges mode.
-        pub fn compute_edges(&self) -> bool {
-            self.compute_edges
         }
 
         /// Additional generic options to be included.
@@ -141,30 +128,27 @@ macro_rules! common_dem_options {
             self
         }
 
-        /// Fetch additional options.
-        pub fn additional_options(&self) -> &CslStringList {
-            &self.additional_options
-        }
-
         /// Private utility to convert common options into [`CslStringList`] options.
-        fn store_common_options_to(&self, opts: &mut CslStringList) {
-            if self.compute_edges {
-                opts.add_string("-compute_edges").unwrap();
+        fn store_common_options_to(&self, opts: &mut CslStringList) -> errors::Result<()> {
+            if matches!(self.compute_edges, Some(true)) {
+                opts.add_string("-compute_edges")?;
             }
 
             if let Some(band) = self.input_band {
-                opts.add_string("-b").unwrap();
-                opts.add_string(&band.to_string()).unwrap();
+                opts.add_string("-b")?;
+                opts.add_string(&band.to_string())?;
             }
 
             if let Some(of) = &self.output_format {
-                opts.add_string("-of").unwrap();
-                opts.add_string(of).unwrap();
+                opts.add_string("-of")?;
+                opts.add_string(of)?;
             }
 
             if !self.additional_options.is_empty() {
                 opts.extend(&self.additional_options);
             }
+
+            Ok(())
         }
     };
 }
