@@ -5,9 +5,10 @@ use crate::raster::{GdalDataType, GdalType};
 use crate::utils::{_last_cpl_err, _last_null_pointer_err, _string};
 use gdal_sys::{
     self, CPLErr, GDALColorEntry, GDALColorInterp, GDALColorTableH, GDALComputeRasterMinMax,
-    GDALCreateColorRamp, GDALCreateColorTable, GDALDestroyColorTable, GDALGetPaletteInterpretation,
-    GDALGetRasterStatistics, GDALMajorObjectH, GDALPaletteInterp, GDALRIOResampleAlg, GDALRWFlag,
-    GDALRasterBandH, GDALRasterIOExtraArg, GDALSetColorEntry, GDALSetRasterColorTable,
+    GDALCreateColorRamp, GDALCreateColorTable, GDALDestroyColorTable, GDALGetDefaultHistogram,
+    GDALGetPaletteInterpretation, GDALGetRasterStatistics, GDALMajorObjectH, GDALPaletteInterp,
+    GDALRIOResampleAlg, GDALRWFlag, GDALRasterBandH, GDALRasterIOExtraArg, GDALSetColorEntry,
+    GDALSetRasterColorTable,
 };
 use libc::c_int;
 use std::ffi::CString;
@@ -847,6 +848,96 @@ impl<'a> RasterBand<'a> {
             max: min_max[1],
         })
     }
+
+    /// Fetch default raster histogram.
+    ///
+    /// # Arguments
+    ///
+    /// * `force` - If `true`, force the computation. If `false` and no default histogram is available, the method will return None
+    pub fn get_default_histogram(&self, force: bool) -> Result<Option<Histogram>> {
+        let mut hist = Histogram {
+            min: 0.0,
+            max: 0.0,
+            n_buckets: 0,
+            histogram: std::ptr::null_mut(),
+            histogram_vec: None,
+        };
+
+        let rv = unsafe {
+            GDALGetDefaultHistogram(
+                self.c_rasterband,
+                &mut hist.min,
+                &mut hist.max,
+                &mut hist.n_buckets,
+                &mut hist.histogram as *mut *mut i32,
+                libc::c_int::from(force),
+                None,
+                std::ptr::null_mut(),
+            )
+        };
+
+        match CplErrType::from(rv) {
+            CplErrType::None => {
+                // if everything when ok, can this still be null?
+                if hist.histogram.is_null() {
+                    Ok(None)
+                } else {
+                    Ok(Some(hist))
+                }
+            }
+            CplErrType::Warning => Ok(None),
+            _ => Err(_last_cpl_err(rv)),
+        }
+    }
+
+    /// Compute raster histogram.
+    ///
+    /// # Arguments
+    ///
+    /// * `min` - Histogram lower bound
+    /// * `max` - Histogram upper bound
+    /// * `n_buckets` - Number of buckets in the histogram
+    /// * `include_out_of_range` - if `true`, values below the histogram range will be mapped into the first bucket, and values above will be mapped into the last one. If `false`, out of range values are discarded
+    /// * `is_approx_ok` - If an approximate, or incomplete histogram is OK
+    pub fn get_histogram(
+        &self,
+        min: f64,
+        max: f64,
+        n_buckets: i32,
+        include_out_of_range: bool,
+        is_approx_ok: bool,
+    ) -> Result<Option<Histogram>> {
+        let mut hist = Histogram {
+            min,
+            max,
+            n_buckets,
+            histogram_vec: Some(vec![0; n_buckets as usize]),
+            histogram: std::ptr::null_mut(),
+        };
+
+        let rv = unsafe {
+            gdal_sys::GDALGetRasterHistogram(
+                self.c_rasterband,
+                min,
+                max,
+                n_buckets,
+                hist.histogram_vec.as_mut().unwrap().as_mut_ptr(),
+                libc::c_int::from(include_out_of_range),
+                libc::c_int::from(is_approx_ok),
+                None,
+                std::ptr::null_mut(),
+            )
+        };
+
+        match CplErrType::from(rv) {
+            CplErrType::None => {
+                hist.histogram = hist.histogram_vec.as_mut().unwrap().as_mut_ptr();
+                Ok(Some(hist))
+            }
+            CplErrType::Warning => Ok(None),
+            _ => Err(_last_cpl_err(rv)),
+        }
+    }
 }
 
 #[derive(Debug, PartialEq)]
@@ -861,6 +952,50 @@ pub struct StatisticsAll {
     pub max: f64,
     pub mean: f64,
     pub std_dev: f64,
+}
+
+#[derive(Debug)]
+pub struct Histogram {
+    min: f64,
+    max: f64,
+    n_buckets: i32,
+    histogram: *mut i32,
+    histogram_vec: Option<Vec<i32>>,
+}
+
+impl Histogram {
+    /// Histogram lower bound
+    pub fn min(&self) -> f64 {
+        self.min
+    }
+
+    /// Histogram upper bound
+    pub fn max(&self) -> f64 {
+        self.max
+    }
+    /// Histogram values for each bucket
+    pub fn histogram(&self) -> &[i32] {
+        if let Some(hist) = self.histogram_vec.as_ref() {
+            return hist.as_slice();
+        }
+
+        unsafe { std::slice::from_raw_parts(self.histogram, self.n_buckets as usize) }
+    }
+
+    /// Histogram bucket size
+    pub fn bucket_size(&self) -> f64 {
+        (self.max - self.min) / self.histogram().len() as f64
+    }
+}
+
+impl Drop for Histogram {
+    fn drop(&mut self) {
+        if self.histogram_vec.is_none() {
+            unsafe {
+                gdal_sys::VSIFree(self.histogram as *mut libc::c_void);
+            }
+        }
+    }
 }
 
 impl<'a> MajorObject for RasterBand<'a> {

@@ -752,6 +752,39 @@ fn test_raster_stats() {
 }
 
 #[test]
+fn test_raster_histogram() {
+    let fixture = TempFixture::fixture("tinymarble.tif");
+
+    let dataset = Dataset::open(&fixture).unwrap();
+    let rb = dataset.rasterband(1).unwrap();
+
+    let hist = rb.get_default_histogram(true).unwrap().unwrap();
+    let expected = &[
+        548, 104, 133, 127, 141, 125, 156, 129, 130, 117, 94, 94, 80, 81, 78, 63, 50, 66, 48, 48,
+        33, 38, 41, 35, 41, 39, 32, 40, 26, 27, 25, 24, 18, 25, 29, 27, 20, 34, 17, 24, 29, 11, 20,
+        21, 12, 19, 16, 16, 11, 10, 19, 5, 11, 10, 6, 9, 7, 12, 13, 6, 8, 7, 8, 14, 9, 14, 4, 8, 5,
+        12, 6, 10, 7, 9, 8, 6, 3, 7, 5, 8, 9, 5, 4, 8, 3, 9, 3, 6, 11, 7, 6, 3, 9, 9, 7, 6, 9, 10,
+        10, 4, 7, 2, 4, 7, 2, 12, 7, 10, 4, 6, 5, 2, 4, 5, 7, 3, 5, 7, 7, 14, 9, 12, 6, 6, 8, 5, 8,
+        3, 3, 5, 11, 4, 9, 7, 14, 7, 10, 11, 6, 6, 5, 4, 9, 6, 6, 9, 5, 12, 11, 9, 3, 8, 5, 6, 4,
+        2, 9, 7, 9, 9, 9, 6, 6, 8, 5, 9, 13, 4, 9, 4, 7, 13, 10, 5, 7, 8, 11, 12, 5, 17, 9, 11, 9,
+        8, 9, 5, 8, 9, 5, 6, 9, 11, 8, 7, 7, 6, 7, 8, 8, 8, 5, 6, 7, 5, 8, 5, 6, 8, 7, 4, 8, 6, 5,
+        11, 8, 8, 5, 4, 6, 4, 9, 7, 6, 6, 7, 7, 12, 6, 9, 17, 12, 20, 18, 17, 21, 24, 30, 29, 57,
+        72, 83, 21, 11, 9, 18, 7, 13, 10, 2, 4, 0, 1, 3, 4, 1, 1,
+    ];
+    assert_eq!(hist.histogram(), expected);
+
+    let hist = rb
+        .get_histogram(-0.5, 255.5, 128, true, true)
+        .unwrap()
+        .unwrap();
+    let expected_small = (0..expected.len())
+        .step_by(2)
+        .map(|i| expected[i] + expected[i + 1])
+        .collect::<Vec<_>>();
+    assert_eq!(hist.histogram(), &expected_small);
+}
+
+#[test]
 fn test_resample_str() {
     assert!(ResampleAlg::from_str("foobar").is_err());
 
