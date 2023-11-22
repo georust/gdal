@@ -5,13 +5,12 @@ use crate::errors;
 use crate::raster::processing::dem::options::common_dem_options;
 use crate::raster::processing::dem::DemSlopeAlg;
 
+use super::options::CommonOptions;
+
 /// Configuration options for [`slope()`][super::slope()].
 #[derive(Debug, Clone, Default)]
 pub struct SlopeOptions {
-    input_band: Option<NonZeroUsize>,
-    compute_edges: Option<bool>,
-    output_format: Option<String>,
-    additional_options: CslStringList,
+    common_options: CommonOptions,
     algorithm: Option<DemSlopeAlg>,
     scale: Option<f64>,
     percentage_results: Option<bool>,

@@ -1,3 +1,4 @@
+use std::num::NonZeroUsize;
 use std::ptr;
 use std::ptr::NonNull;
 
@@ -79,13 +80,21 @@ impl DemSlopeAlg {
     }
 }
 
+#[derive(Debug, Clone, Default)]
+pub(crate) struct CommonOptions {
+    pub(crate) input_band: Option<NonZeroUsize>,
+    pub(crate) compute_edges: Option<bool>,
+    pub(crate) output_format: Option<String>,
+    pub(crate) additional_options: CslStringList,
+}
+
 macro_rules! common_dem_options {
     () => {
         /// Specify which band in the input [`Dataset`][crate::Dataset] to read from.
         ///
         /// Defaults to the first band.
         pub fn with_input_band(&mut self, band: NonZeroUsize) -> &mut Self {
-            self.input_band = Some(band);
+            self.common_options.input_band = Some(band);
             self
         }
 
@@ -109,7 +118,7 @@ macro_rules! common_dem_options {
         /// ```
         ///
         pub fn with_output_format(&mut self, format: &str) -> &mut Self {
-            self.output_format = Some(format.to_owned());
+            self.common_options.output_format = Some(format.to_owned());
             self
         }
 
@@ -118,34 +127,36 @@ macro_rules! common_dem_options {
         /// If true, causes interpolation of values at image edges or if a no-data value is found
         /// in the 3x3 processing window.
         pub fn with_compute_edges(&mut self, state: bool) -> &mut Self {
-            self.compute_edges = Some(state);
+            self.common_options.compute_edges = Some(state);
             self
         }
 
         /// Additional generic options to be included.
         pub fn with_additional_options(&mut self, extra_options: CslStringList) -> &mut Self {
-            self.additional_options.extend(&extra_options);
+            self.common_options
+                .additional_options
+                .extend(&extra_options);
             self
         }
 
         /// Private utility to convert common options into [`CslStringList`] options.
         fn store_common_options_to(&self, opts: &mut CslStringList) -> errors::Result<()> {
-            if matches!(self.compute_edges, Some(true)) {
+            if matches!(self.common_options.compute_edges, Some(true)) {
                 opts.add_string("-compute_edges")?;
             }
 
-            if let Some(band) = self.input_band {
+            if let Some(band) = self.common_options.input_band {
                 opts.add_string("-b")?;
                 opts.add_string(&band.to_string())?;
             }
 
-            if let Some(of) = &self.output_format {
+            if let Some(of) = &self.common_options.output_format {
                 opts.add_string("-of")?;
                 opts.add_string(of)?;
             }
 
-            if !self.additional_options.is_empty() {
-                opts.extend(&self.additional_options);
+            if !self.common_options.additional_options.is_empty() {
+                opts.extend(&self.common_options.additional_options);
             }
 
             Ok(())

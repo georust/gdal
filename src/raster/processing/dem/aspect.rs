@@ -1,6 +1,6 @@
 use std::num::NonZeroUsize;
 
-use super::options::common_dem_options;
+use super::options::{common_dem_options, CommonOptions};
 use crate::cpl::CslStringList;
 use crate::errors;
 use crate::raster::processing::dem::DemSlopeAlg;
@@ -8,10 +8,7 @@ use crate::raster::processing::dem::DemSlopeAlg;
 /// Configuration options for [`aspect()`][super::aspect()].
 #[derive(Debug, Clone, Default)]
 pub struct AspectOptions {
-    input_band: Option<NonZeroUsize>,
-    compute_edges: Option<bool>,
-    output_format: Option<String>,
-    additional_options: CslStringList,
+    common_options: CommonOptions,
     algorithm: Option<DemSlopeAlg>,
     zero_for_flat: Option<bool>,
     trigonometric: Option<bool>,

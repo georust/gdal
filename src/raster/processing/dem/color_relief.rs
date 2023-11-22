@@ -5,13 +5,12 @@ use crate::cpl::CslStringList;
 use crate::errors;
 use crate::raster::processing::dem::options::common_dem_options;
 
+use super::options::CommonOptions;
+
 /// Configuration options for [`color_relief()`][super::color_relief()].
 #[derive(Debug, Clone)]
 pub struct ColorReliefOptions {
-    input_band: Option<NonZeroUsize>,
-    compute_edges: Option<bool>,
-    output_format: Option<String>,
-    additional_options: CslStringList,
+    common_options: CommonOptions,
     color_config: PathBuf,
     alpha: Option<bool>,
     color_matching_mode: ColorMatchingMode,
@@ -57,10 +56,7 @@ impl ColorReliefOptions {
     /// details.
     pub fn new<P: AsRef<Path>>(color_config: P) -> Self {
         Self {
-            input_band: None,
-            compute_edges: None,
-            output_format: None,
-            additional_options: Default::default(),
+            common_options: Default::default(),
             color_config: color_config.as_ref().to_path_buf(),
             alpha: None,
             color_matching_mode: Default::default(),
