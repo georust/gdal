@@ -38,12 +38,19 @@ impl Drop for GdalDEMProcessingOptions {
 /// DEM processor mode, to stringify and pass to [`gdal_sys::GDALDEMProcessing`].
 #[derive(Debug, Clone, Copy)]
 pub enum DemAlg {
+    /// Computes the azimuth that the slopes in some DEM data are facing.
     Aspect,
+    /// Uses a configuration file to colorized a DEM dataset.
     ColorRelief,
+    /// Performs hill-shade rendering of DEM data.
     Hillshade,
+    /// Computes the roughness from DEM data, which is the largest difference between the central pixel and its surrounding cells.
     Roughness,
+    /// Computes slope values from DEM data.
     Slope,
+    /// Computes the Topographic Position Index from DEM data, which is the difference between the central pixel and the mean of its surrounding cells.
     Tpi,
+    /// Computes the Topographic Roughness Index from DEM data, which measures the difference between the central pixel and the surrounding cells.
     Tri,
 }
 
@@ -67,7 +74,9 @@ impl DemAlg {
 /// whereas `Horn` performs better on rougher terrain.
 #[derive(Debug, Clone, Copy)]
 pub enum DemSlopeAlg {
+    /// The Horn's formula, which performs better on rougher terrain.
     Horn,
+    /// Zevenbergen & Thorne, which works better on smooth terrain.
     ZevenbergenThorne,
 }
 

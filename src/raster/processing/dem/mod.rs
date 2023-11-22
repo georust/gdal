@@ -22,6 +22,8 @@
 //! * [`topographic_position_index()`]
 //!
 
+#![deny(missing_docs)]
+
 use std::ffi::{CStr, CString};
 use std::path::Path;
 use std::ptr;
