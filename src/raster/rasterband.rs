@@ -854,22 +854,19 @@ impl<'a> RasterBand<'a> {
     /// # Arguments
     ///
     /// * `force` - If `true`, force the computation. If `false` and no default histogram is available, the method will return None
-    pub fn get_default_histogram(&self, force: bool) -> Result<Option<Histogram>> {
-        let mut hist = Histogram {
-            min: 0.0,
-            max: 0.0,
-            n_buckets: 0,
-            histogram: std::ptr::null_mut(),
-            histogram_vec: None,
-        };
+    pub fn default_histogram(&self, force: bool) -> Result<Option<Histogram>> {
+        let mut counts = std::ptr::null_mut();
+        let mut min = 0.0;
+        let mut max = 0.0;
+        let mut n_buckets = 0i32;
 
         let rv = unsafe {
             GDALGetDefaultHistogram(
                 self.c_rasterband,
-                &mut hist.min,
-                &mut hist.max,
-                &mut hist.n_buckets,
-                &mut hist.histogram as *mut *mut i32,
+                &mut min,
+                &mut max,
+                &mut n_buckets,
+                &mut counts as *mut *mut i32,
                 libc::c_int::from(force),
                 None,
                 std::ptr::null_mut(),
@@ -877,14 +874,12 @@ impl<'a> RasterBand<'a> {
         };
 
         match CplErrType::from(rv) {
-            CplErrType::None => {
-                // if everything when ok, can this still be null?
-                if hist.histogram.is_null() {
-                    Ok(None)
-                } else {
-                    Ok(Some(hist))
-                }
-            }
+            CplErrType::None => Ok(Some(Histogram {
+                min,
+                max,
+                n_buckets: n_buckets as usize,
+                counts: HistCounts::Borrowed(counts),
+            })),
             CplErrType::Warning => Ok(None),
             _ => Err(_last_cpl_err(rv)),
         }
@@ -899,29 +894,23 @@ impl<'a> RasterBand<'a> {
     /// * `n_buckets` - Number of buckets in the histogram
     /// * `include_out_of_range` - if `true`, values below the histogram range will be mapped into the first bucket, and values above will be mapped into the last one. If `false`, out of range values are discarded
     /// * `is_approx_ok` - If an approximate, or incomplete histogram is OK
-    pub fn get_histogram(
+    pub fn histogram(
         &self,
         min: f64,
         max: f64,
-        n_buckets: i32,
+        n_buckets: usize,
         include_out_of_range: bool,
         is_approx_ok: bool,
     ) -> Result<Option<Histogram>> {
-        let mut hist = Histogram {
-            min,
-            max,
-            n_buckets,
-            histogram_vec: Some(vec![0; n_buckets as usize]),
-            histogram: std::ptr::null_mut(),
-        };
+        let mut counts = vec![0; n_buckets];
 
         let rv = unsafe {
             gdal_sys::GDALGetRasterHistogram(
                 self.c_rasterband,
                 min,
                 max,
-                n_buckets,
-                hist.histogram_vec.as_mut().unwrap().as_mut_ptr(),
+                n_buckets as i32,
+                counts.as_mut_ptr(),
                 libc::c_int::from(include_out_of_range),
                 libc::c_int::from(is_approx_ok),
                 None,
@@ -930,10 +919,12 @@ impl<'a> RasterBand<'a> {
         };
 
         match CplErrType::from(rv) {
-            CplErrType::None => {
-                hist.histogram = hist.histogram_vec.as_mut().unwrap().as_mut_ptr();
-                Ok(Some(hist))
-            }
+            CplErrType::None => Ok(Some(Histogram {
+                min,
+                max,
+                n_buckets,
+                counts: HistCounts::Owned(counts),
+            })),
             CplErrType::Warning => Ok(None),
             _ => Err(_last_cpl_err(rv)),
         }
@@ -958,9 +949,8 @@ pub struct StatisticsAll {
 pub struct Histogram {
     min: f64,
     max: f64,
-    n_buckets: i32,
-    histogram: *mut i32,
-    histogram_vec: Option<Vec<i32>>,
+    n_buckets: usize,
+    counts: HistCounts,
 }
 
 impl Histogram {
@@ -974,26 +964,32 @@ impl Histogram {
         self.max
     }
     /// Histogram values for each bucket
-    pub fn histogram(&self) -> &[i32] {
-        if let Some(hist) = self.histogram_vec.as_ref() {
-            return hist.as_slice();
+    pub fn counts(&self) -> &[i32] {
+        match &self.counts {
+            HistCounts::Borrowed(p) => unsafe { std::slice::from_raw_parts(*p, self.n_buckets) },
+            HistCounts::Owned(v) => v.as_slice(),
         }
-
-        unsafe { std::slice::from_raw_parts(self.histogram, self.n_buckets as usize) }
     }
 
     /// Histogram bucket size
     pub fn bucket_size(&self) -> f64 {
-        (self.max - self.min) / self.histogram().len() as f64
+        (self.max - self.min) / self.counts().len() as f64
     }
 }
 
-impl Drop for Histogram {
+#[derive(Debug)]
+enum HistCounts {
+    Borrowed(*mut i32),
+    Owned(Vec<i32>),
+}
+
+impl Drop for HistCounts {
     fn drop(&mut self) {
-        if self.histogram_vec.is_none() {
-            unsafe {
-                gdal_sys::VSIFree(self.histogram as *mut libc::c_void);
-            }
+        match self {
+            HistCounts::Borrowed(p) => unsafe {
+                gdal_sys::VSIFree(*p as *mut libc::c_void);
+            },
+            HistCounts::Owned(_) => {}
         }
     }
 }
