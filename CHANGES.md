@@ -2,27 +2,31 @@
 
 ## Unreleased
 
-
 - Added support for digital elevation model raster processing: `aspect`, `color_relief`, `hillshade`, `roughness`, `slope`, `terrain_ruggedness_index`, `topographic_position_index`.
 
    - <https://github.com/georust/gdal/pull/456> 
 
+- Added pre-built bindings for GDAL 3.8
+
+   - <https://github.com/georust/gdal/pull/466>
+
+
 - Added `{Display|FromStr} for ResampleAlg` and `ResampleAlg::iter`.
 
-    - <https://github.com/georust/gdal/pull/462>
+   - <https://github.com/georust/gdal/pull/462>
 
- - **Breaking**: Replaced `TryFrom<&[(&str, &str); N]> for CslStringList` with `impl FromIterator<CslStringListEntry> for CslStringList`, `impl FromIterator<String> for CslStringList` and `impl<'a> FromIterator<&'a str> for CslStringList`
- - Added `Extend<CslStringListEntry> for CslStringList`, and `CslStringList::merge`
+- **Breaking**: Replaced `TryFrom<&[(&str, &str); N]> for CslStringList` with `impl FromIterator<CslStringListEntry> for CslStringList`, `impl FromIterator<String> for CslStringList` and `impl<'a> FromIterator<&'a str> for CslStringList`
+- Added `Extend<CslStringListEntry> for CslStringList`, and `CslStringList::merge`
 
-    - <https://github.com/georust/gdal/pull/457>
+  - <https://github.com/georust/gdal/pull/457>
 
 - **Breaking**: `SpatialRef::set_axis_mapping_strategy` now takes `&mut self`
 
-  - <https://github.com/georust/gdal/pull/461>
+   - <https://github.com/georust/gdal/pull/461>
 
 - **Breaking**: `Dataset::raster_count` now returns an `usize` and `Dataset::rasterband` now takes `usize` instead of `isize`
 
-  - <https://github.com/georust/gdal/pull/434>
+   - <https://github.com/georust/gdal/pull/434>
 
 - **Breaking**: `CslStringListIterator` returns a `CslStringListEntry` instead of `(String, String)` in order to differentiate between `key=value` entries vs `flag` entries.
 - **Breaking**: `CslStringList::fetch_name_value` returns `Option<String>` instead of `Result<Option<String>>`, better reflecting the semantics of GDAL C API.

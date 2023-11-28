@@ -69,7 +69,7 @@ fn main() {
     // Hardcode a prebuilt binding version while generating docs.
     // Otherwise docs.rs will explode due to not actually having libgdal installed.
     if std::env::var("DOCS_RS").is_ok() {
-        let version = Version::parse("3.7.0").expect("invalid version for docs.rs");
+        let version = Version::parse("3.8.0").expect("invalid version for docs.rs");
         println!(
             "cargo:rustc-cfg=gdal_sys_{}_{}_{}",
             version.major, version.minor, version.patch
