@@ -66,6 +66,7 @@ pub enum DemTriAlg {
 }
 
 impl DemTriAlg {
+    #[allow(dead_code)]
     fn to_gdal_option(self) -> &'static str {
         match self {
             DemTriAlg::Wilson => "Wilson",

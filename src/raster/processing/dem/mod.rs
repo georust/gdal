@@ -451,7 +451,7 @@ fn dem_eval(
     let popts = options::GdalDEMProcessingOptions::new(options)?;
     let mode = CString::new(alg.to_gdal_option())?;
     let dest = _path_to_c_string(dst_file)?;
-    let cfile = color_relief_config.and_then(|p| _path_to_c_string(&p).ok());
+    let cfile = color_relief_config.and_then(|p| _path_to_c_string(p).ok());
     let cfile_ptr = cfile.as_deref().map(CStr::as_ptr).unwrap_or(ptr::null());
 
     let mut pb_usage_error: c_int = 0;
