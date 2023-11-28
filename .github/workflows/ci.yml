@@ -69,7 +69,7 @@ jobs:
       - name: Build (--all-features)
         run: cargo build --all-features
       - name: Run tests (--all-features)
-        run: cargo test --all-features
+        run: cargo test --all-features -- --nocapture
 
   ubuntu_lts:
     name: "ci ubuntu-lts"
@@ -112,4 +112,4 @@ jobs:
       - name: Build (--all-features)
         run: cargo build --all-features
       - name: Run tests (--all-features)
-        run: cargo test --all-features
+        run: cargo test --all-features -- --nocapture

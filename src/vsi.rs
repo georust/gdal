@@ -2,7 +2,6 @@
 //!
 //! This module provides safe access to a subset of the [GDAL VSI Functions](https://gdal.org/doxygen/cpl__vsi_8h.html).
 //! See [GDAL Virtual File Systems document](https://gdal.org/user/virtual_file_systems.html) for details.
-//!
 
 use std::marker::PhantomData;
 use std::mem::ManuallyDrop;
@@ -15,59 +14,57 @@ use crate::utils::{_last_null_pointer_err, _path_to_c_string, _pathbuf_array};
 
 /// Read the file names from a virtual file system with optional recursion.
 pub fn read_dir<P: AsRef<Path>>(path: P, recursive: bool) -> Result<Vec<PathBuf>> {
+    fn _read_dir(path: &Path, recursive: bool) -> Result<Vec<PathBuf>> {
+        let path = _path_to_c_string(path)?;
+        let data = if recursive {
+            let data = unsafe { gdal_sys::VSIReadDirRecursive(path.as_ptr()) };
+            if data.is_null() {
+                return Err(_last_null_pointer_err("VSIReadDirRecursive"));
+            }
+            data
+        } else {
+            let data = unsafe { gdal_sys::VSIReadDir(path.as_ptr()) };
+            if data.is_null() {
+                return Err(_last_null_pointer_err("VSIReadDir"));
+            }
+            data
+        };
+
+        Ok(_pathbuf_array(data))
+    }
     _read_dir(path.as_ref(), recursive)
-}
-
-fn _read_dir(path: &Path, recursive: bool) -> Result<Vec<PathBuf>> {
-    let path = _path_to_c_string(path)?;
-    let data = if recursive {
-        let data = unsafe { gdal_sys::VSIReadDirRecursive(path.as_ptr()) };
-        if data.is_null() {
-            return Err(_last_null_pointer_err("VSIReadDirRecursive"));
-        }
-        data
-    } else {
-        let data = unsafe { gdal_sys::VSIReadDir(path.as_ptr()) };
-        if data.is_null() {
-            return Err(_last_null_pointer_err("VSIReadDir"));
-        }
-        data
-    };
-
-    Ok(_pathbuf_array(data))
 }
 
 /// Creates a new VSIMemFile from a given buffer.
 pub fn create_mem_file<P: AsRef<Path>>(file_name: P, data: Vec<u8>) -> Result<()> {
+    fn _create_mem_file(file_name: &Path, data: Vec<u8>) -> Result<()> {
+        let file_name = _path_to_c_string(file_name)?;
+
+        // ownership will be given to GDAL, so it should not be automaticly dropped
+        let mut data = ManuallyDrop::new(data);
+
+        let handle = unsafe {
+            VSIFileFromMemBuffer(
+                file_name.as_ptr(),
+                data.as_mut_ptr(),
+                data.len() as u64,
+                true as i32,
+            )
+        };
+
+        if handle.is_null() {
+            // on error, allow dropping the data again
+            ManuallyDrop::into_inner(data);
+            return Err(_last_null_pointer_err("VSIGetMemFileBuffer"));
+        }
+
+        unsafe {
+            VSIFCloseL(handle);
+        }
+
+        Ok(())
+    }
     _create_mem_file(file_name.as_ref(), data)
-}
-
-fn _create_mem_file(file_name: &Path, data: Vec<u8>) -> Result<()> {
-    let file_name = _path_to_c_string(file_name)?;
-
-    // ownership will be given to GDAL, so it should not be automaticly dropped
-    let mut data = ManuallyDrop::new(data);
-
-    let handle = unsafe {
-        VSIFileFromMemBuffer(
-            file_name.as_ptr(),
-            data.as_mut_ptr(),
-            data.len() as u64,
-            true as i32,
-        )
-    };
-
-    if handle.is_null() {
-        // on error, allow dropping the data again
-        ManuallyDrop::into_inner(data);
-        return Err(_last_null_pointer_err("VSIGetMemFileBuffer"));
-    }
-
-    unsafe {
-        VSIFCloseL(handle);
-    }
-
-    Ok(())
 }
 
 /// A helper struct that unlinks a mem file that points to borrowed data
@@ -100,77 +97,77 @@ pub fn create_mem_file_from_ref<P: AsRef<Path>>(
     file_name: P,
     data: &mut [u8],
 ) -> Result<MemFileRef<'_>> {
+    fn _create_mem_file_from_ref<'d>(
+        file_name: &Path,
+        data: &'d mut [u8],
+    ) -> Result<MemFileRef<'d>> {
+        let file_name_c = _path_to_c_string(file_name)?;
+
+        let handle = unsafe {
+            VSIFileFromMemBuffer(
+                file_name_c.as_ptr(),
+                data.as_mut_ptr(),
+                data.len() as u64,
+                false as i32,
+            )
+        };
+
+        if handle.is_null() {
+            return Err(_last_null_pointer_err("VSIGetMemFileBuffer"));
+        }
+
+        unsafe {
+            VSIFCloseL(handle);
+        }
+
+        Ok(MemFileRef::new(file_name))
+    }
     _create_mem_file_from_ref(file_name.as_ref(), data)
-}
-
-fn _create_mem_file_from_ref<'d>(file_name: &Path, data: &'d mut [u8]) -> Result<MemFileRef<'d>> {
-    let file_name_c = _path_to_c_string(file_name)?;
-
-    let handle = unsafe {
-        VSIFileFromMemBuffer(
-            file_name_c.as_ptr(),
-            data.as_mut_ptr(),
-            data.len() as u64,
-            false as i32,
-        )
-    };
-
-    if handle.is_null() {
-        return Err(_last_null_pointer_err("VSIGetMemFileBuffer"));
-    }
-
-    unsafe {
-        VSIFCloseL(handle);
-    }
-
-    Ok(MemFileRef::new(file_name))
 }
 
 /// Unlink a VSIMemFile.
 pub fn unlink_mem_file<P: AsRef<Path>>(file_name: P) -> Result<()> {
-    _unlink_mem_file(file_name.as_ref())
-}
+    fn _unlink_mem_file(file_name: &Path) -> Result<()> {
+        let file_name_c = _path_to_c_string(file_name)?;
 
-fn _unlink_mem_file(file_name: &Path) -> Result<()> {
-    let file_name_c = _path_to_c_string(file_name)?;
+        let rv = unsafe { VSIUnlink(file_name_c.as_ptr()) };
 
-    let rv = unsafe { VSIUnlink(file_name_c.as_ptr()) };
+        if rv != 0 {
+            return Err(GdalError::UnlinkMemFile {
+                file_name: file_name.display().to_string(),
+            });
+        }
 
-    if rv != 0 {
-        return Err(GdalError::UnlinkMemFile {
-            file_name: file_name.display().to_string(),
-        });
+        Ok(())
     }
-
-    Ok(())
+    _unlink_mem_file(file_name.as_ref())
 }
 
 /// Copies the bytes of the VSIMemFile with given `file_name`.
 /// Takes the ownership and frees the memory of the VSIMemFile.
 pub fn get_vsi_mem_file_bytes_owned<P: AsRef<Path>>(file_name: P) -> Result<Vec<u8>> {
+    fn _get_vsi_mem_file_bytes_owned(file_name: &Path) -> Result<Vec<u8>> {
+        let file_name = _path_to_c_string(file_name)?;
+
+        let owned_bytes = unsafe {
+            let mut length: u64 = 0;
+            let bytes = VSIGetMemFileBuffer(file_name.as_ptr(), &mut length, true as i32);
+
+            if bytes.is_null() {
+                return Err(_last_null_pointer_err("VSIGetMemFileBuffer"));
+            }
+
+            let slice = std::slice::from_raw_parts(bytes, length as usize);
+            let vec = slice.to_vec();
+
+            VSIFree(bytes.cast::<std::ffi::c_void>());
+
+            vec
+        };
+
+        Ok(owned_bytes)
+    }
     _get_vsi_mem_file_bytes_owned(file_name.as_ref())
-}
-
-fn _get_vsi_mem_file_bytes_owned(file_name: &Path) -> Result<Vec<u8>> {
-    let file_name = _path_to_c_string(file_name)?;
-
-    let owned_bytes = unsafe {
-        let mut length: u64 = 0;
-        let bytes = VSIGetMemFileBuffer(file_name.as_ptr(), &mut length, true as i32);
-
-        if bytes.is_null() {
-            return Err(_last_null_pointer_err("VSIGetMemFileBuffer"));
-        }
-
-        let slice = std::slice::from_raw_parts(bytes, length as usize);
-        let vec = slice.to_vec();
-
-        VSIFree(bytes.cast::<std::ffi::c_void>());
-
-        vec
-    };
-
-    Ok(owned_bytes)
 }
 
 /// Computes a function on the bytes of the vsi in-memory file with given `file_name`.
@@ -179,27 +176,18 @@ pub fn call_on_mem_file_bytes<F, R, P: AsRef<Path>>(file_name: P, fun: F) -> Res
 where
     F: FnOnce(&[u8]) -> R,
 {
-    _call_on_mem_file_bytes(file_name.as_ref(), fun)
-}
+    let file_name = _path_to_c_string(file_name.as_ref())?;
 
-fn _call_on_mem_file_bytes<F, R>(file_name: &Path, fun: F) -> Result<R>
-where
-    F: FnOnce(&[u8]) -> R,
-{
-    let file_name = _path_to_c_string(file_name)?;
+    let mut length: u64 = 0;
+    let bytes = unsafe { VSIGetMemFileBuffer(file_name.as_ptr(), &mut length, false as i32) };
 
-    unsafe {
-        let mut length: u64 = 0;
-        let bytes = VSIGetMemFileBuffer(file_name.as_ptr(), &mut length, false as i32);
-
-        if bytes.is_null() {
-            return Err(_last_null_pointer_err("VSIGetMemFileBuffer"));
-        }
-
-        let slice = std::slice::from_raw_parts(bytes, length as usize);
-
-        Ok(fun(slice))
+    if bytes.is_null() {
+        return Err(_last_null_pointer_err("VSIGetMemFileBuffer"));
     }
+
+    let slice = unsafe { std::slice::from_raw_parts(bytes, length as usize) };
+
+    Ok(fun(slice))
 }
 
 #[cfg(test)]
