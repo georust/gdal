@@ -878,7 +878,7 @@ impl<'a> RasterBand<'a> {
                 min,
                 max,
                 n_buckets: n_buckets as usize,
-                counts: HistCounts::Borrowed(counts),
+                counts: HistCounts::GdalAllocated(counts),
             })),
             CplErrType::Warning => Ok(None),
             _ => Err(_last_cpl_err(rv)),
@@ -923,7 +923,7 @@ impl<'a> RasterBand<'a> {
                 min,
                 max,
                 n_buckets,
-                counts: HistCounts::Owned(counts),
+                counts: HistCounts::RustAllocated(counts),
             })),
             CplErrType::Warning => Ok(None),
             _ => Err(_last_cpl_err(rv)),
@@ -966,8 +966,10 @@ impl Histogram {
     /// Histogram values for each bucket
     pub fn counts(&self) -> &[i32] {
         match &self.counts {
-            HistCounts::Borrowed(p) => unsafe { std::slice::from_raw_parts(*p, self.n_buckets) },
-            HistCounts::Owned(v) => v.as_slice(),
+            HistCounts::GdalAllocated(p) => unsafe {
+                std::slice::from_raw_parts(*p, self.n_buckets)
+            },
+            HistCounts::RustAllocated(v) => v.as_slice(),
         }
     }
 
@@ -977,19 +979,30 @@ impl Histogram {
     }
 }
 
+/// Union type over histogram storage mechanisms.
+///
+/// This private enum exists to normalize over the two different ways
+/// [`GDALGetRasterHistogram`] and [`GDALGetDefaultHistogram`] return data:
+/// * `GDALGetRasterHistogram`: requires a pre-allocated array, stored in `HistCounts::RustAllocated`.
+/// * `GDALGetDefaultHistogram`: returns a pointer (via an 'out' parameter) to a GDAL allocated array,
+///   stored in `HistCounts::GdalAllocated`, to be deallocated with [`VSIFree`][gdal_sys::VSIFree].
 #[derive(Debug)]
 enum HistCounts {
-    Borrowed(*mut i32),
-    Owned(Vec<i32>),
+    /// Pointer to GDAL allocated array of histogram counts.
+    ///
+    /// Requires freeing with [`VSIFree`][gdal_sys::VSIFree].
+    GdalAllocated(*mut i32),
+    /// Rust-allocated vector into which GDAL stores histogram counts.
+    RustAllocated(Vec<i32>),
 }
 
 impl Drop for HistCounts {
     fn drop(&mut self) {
         match self {
-            HistCounts::Borrowed(p) => unsafe {
+            HistCounts::GdalAllocated(p) => unsafe {
                 gdal_sys::VSIFree(*p as *mut libc::c_void);
             },
-            HistCounts::Owned(_) => {}
+            HistCounts::RustAllocated(_) => {}
         }
     }
 }
