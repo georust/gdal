@@ -5,10 +5,10 @@ use crate::raster::{GdalDataType, GdalType};
 use crate::utils::{_last_cpl_err, _last_null_pointer_err, _string};
 use gdal_sys::{
     self, CPLErr, GDALColorEntry, GDALColorInterp, GDALColorTableH, GDALComputeRasterMinMax,
-    GDALCreateColorRamp, GDALCreateColorTable, GDALDestroyColorTable, GDALGetDefaultHistogram,
-    GDALGetPaletteInterpretation, GDALGetRasterStatistics, GDALMajorObjectH, GDALPaletteInterp,
-    GDALRIOResampleAlg, GDALRWFlag, GDALRasterBandH, GDALRasterIOExtraArg, GDALSetColorEntry,
-    GDALSetRasterColorTable,
+    GDALCreateColorRamp, GDALCreateColorTable, GDALDestroyColorTable, GDALGetDefaultHistogramEx,
+    GDALGetPaletteInterpretation, GDALGetRasterHistogramEx, GDALGetRasterStatistics,
+    GDALMajorObjectH, GDALPaletteInterp, GDALRIOResampleAlg, GDALRWFlag, GDALRasterBandH,
+    GDALRasterIOExtraArg, GDALSetColorEntry, GDALSetRasterColorTable,
 };
 use libc::c_int;
 use std::ffi::CString;
@@ -853,7 +853,7 @@ impl<'a> RasterBand<'a> {
     ///
     /// # Arguments
     ///
-    /// * `force` - If `true`, force the computation. If `false` and no default histogram is available, the method will return None
+    /// * `force` - If `true`, force the computation. If `false` and no default histogram is available, the method will return `Ok(None)`
     pub fn default_histogram(&self, force: bool) -> Result<Option<Histogram>> {
         let mut counts = std::ptr::null_mut();
         let mut min = 0.0;
@@ -861,12 +861,12 @@ impl<'a> RasterBand<'a> {
         let mut n_buckets = 0i32;
 
         let rv = unsafe {
-            GDALGetDefaultHistogram(
+            GDALGetDefaultHistogramEx(
                 self.c_rasterband,
                 &mut min,
                 &mut max,
                 &mut n_buckets,
-                &mut counts as *mut *mut i32,
+                &mut counts as *mut *mut u64,
                 libc::c_int::from(force),
                 None,
                 std::ptr::null_mut(),
@@ -877,8 +877,7 @@ impl<'a> RasterBand<'a> {
             CplErrType::None => Ok(Some(Histogram {
                 min,
                 max,
-                n_buckets: n_buckets as usize,
-                counts: HistCounts::GdalAllocated(counts),
+                counts: HistogramCounts::GdalAllocated(counts, n_buckets as usize),
             })),
             CplErrType::Warning => Ok(None),
             _ => Err(_last_cpl_err(rv)),
@@ -901,11 +900,11 @@ impl<'a> RasterBand<'a> {
         n_buckets: usize,
         include_out_of_range: bool,
         is_approx_ok: bool,
-    ) -> Result<Option<Histogram>> {
+    ) -> Result<Histogram> {
         let mut counts = vec![0; n_buckets];
 
         let rv = unsafe {
-            gdal_sys::GDALGetRasterHistogram(
+            GDALGetRasterHistogramEx(
                 self.c_rasterband,
                 min,
                 max,
@@ -919,13 +918,11 @@ impl<'a> RasterBand<'a> {
         };
 
         match CplErrType::from(rv) {
-            CplErrType::None => Ok(Some(Histogram {
+            CplErrType::None => Ok(Histogram {
                 min,
                 max,
-                n_buckets,
-                counts: HistCounts::RustAllocated(counts),
-            })),
-            CplErrType::Warning => Ok(None),
+                counts: HistogramCounts::RustAllocated(counts),
+            }),
             _ => Err(_last_cpl_err(rv)),
         }
     }
@@ -949,8 +946,7 @@ pub struct StatisticsAll {
 pub struct Histogram {
     min: f64,
     max: f64,
-    n_buckets: usize,
-    counts: HistCounts,
+    counts: HistogramCounts,
 }
 
 impl Histogram {
@@ -963,14 +959,18 @@ impl Histogram {
     pub fn max(&self) -> f64 {
         self.max
     }
+
     /// Histogram values for each bucket
-    pub fn counts(&self) -> &[i32] {
+    pub fn counts(&self) -> &[u64] {
         match &self.counts {
-            HistCounts::GdalAllocated(p) => unsafe {
-                std::slice::from_raw_parts(*p, self.n_buckets)
-            },
-            HistCounts::RustAllocated(v) => v.as_slice(),
+            HistogramCounts::GdalAllocated(p, n) => unsafe { std::slice::from_raw_parts(*p, *n) },
+            HistogramCounts::RustAllocated(v) => v.as_slice(),
         }
+    }
+
+    /// Number of buckets in histogram
+    pub fn n_buckets(&self) -> usize {
+        self.counts().len()
     }
 
     /// Histogram bucket size
@@ -983,26 +983,37 @@ impl Histogram {
 ///
 /// This private enum exists to normalize over the two different ways
 /// [`GDALGetRasterHistogram`] and [`GDALGetDefaultHistogram`] return data:
-/// * `GDALGetRasterHistogram`: requires a pre-allocated array, stored in `HistCounts::RustAllocated`.
+/// * `GDALGetRasterHistogram`: requires a pre-allocated array, stored in `HistogramCounts::RustAllocated`.
 /// * `GDALGetDefaultHistogram`: returns a pointer (via an 'out' parameter) to a GDAL allocated array,
-///   stored in `HistCounts::GdalAllocated`, to be deallocated with [`VSIFree`][gdal_sys::VSIFree].
-#[derive(Debug)]
-enum HistCounts {
-    /// Pointer to GDAL allocated array of histogram counts.
+///   stored in `HistogramCounts::GdalAllocated`, to be deallocated with [`VSIFree`][gdal_sys::VSIFree].
+enum HistogramCounts {
+    /// Pointer to GDAL allocated array and lenght of histogram counts.
     ///
     /// Requires freeing with [`VSIFree`][gdal_sys::VSIFree].
-    GdalAllocated(*mut i32),
+    GdalAllocated(*mut u64, usize),
     /// Rust-allocated vector into which GDAL stores histogram counts.
-    RustAllocated(Vec<i32>),
+    RustAllocated(Vec<u64>),
 }
 
-impl Drop for HistCounts {
+impl Debug for HistogramCounts {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            HistogramCounts::GdalAllocated(p, n) => {
+                let s = unsafe { std::slice::from_raw_parts(*p, *n) };
+                s.fmt(f)
+            }
+            HistogramCounts::RustAllocated(v) => v.fmt(f),
+        }
+    }
+}
+
+impl Drop for HistogramCounts {
     fn drop(&mut self) {
         match self {
-            HistCounts::GdalAllocated(p) => unsafe {
+            HistogramCounts::GdalAllocated(p, _) => unsafe {
                 gdal_sys::VSIFree(*p as *mut libc::c_void);
             },
-            HistCounts::RustAllocated(_) => {}
+            HistogramCounts::RustAllocated(_) => {}
         }
     }
 }

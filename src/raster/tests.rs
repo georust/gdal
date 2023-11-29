@@ -758,6 +758,9 @@ fn test_raster_histogram() {
     let dataset = Dataset::open(&fixture).unwrap();
     let rb = dataset.rasterband(1).unwrap();
 
+    let hist = rb.default_histogram(false).unwrap();
+    assert!(hist.is_none());
+
     let hist = rb.default_histogram(true).unwrap().unwrap();
     let expected = &[
         548, 104, 133, 127, 141, 125, 156, 129, 130, 117, 94, 94, 80, 81, 78, 63, 50, 66, 48, 48,
@@ -773,7 +776,7 @@ fn test_raster_histogram() {
     ];
     assert_eq!(hist.counts(), expected);
 
-    let hist = rb.histogram(-0.5, 255.5, 128, true, true).unwrap().unwrap();
+    let hist = rb.histogram(-0.5, 255.5, 128, true, true).unwrap();
     let expected_small = (0..expected.len())
         .step_by(2)
         .map(|i| expected[i] + expected[i + 1])
