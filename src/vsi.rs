@@ -30,7 +30,9 @@ pub fn read_dir<P: AsRef<Path>>(path: P, recursive: bool) -> Result<Vec<PathBuf>
             data
         };
 
-        Ok(_pathbuf_array(data))
+        let ret = Ok(_pathbuf_array(data));
+        unsafe { gdal_sys::CSLDestroy(data) };
+        ret
     }
     _read_dir(path.as_ref(), recursive)
 }
