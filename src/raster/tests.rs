@@ -782,6 +782,10 @@ fn test_raster_histogram() {
         .map(|i| expected[i] + expected[i + 1])
         .collect::<Vec<_>>();
     assert_eq!(hist.counts(), &expected_small);
+
+    // n_buckets = 0 is not allowed
+    let hist = rb.histogram(-0.5, 255.5, 0, true, true);
+    hist.expect_err("histogram with 0 buckets should panic");
 }
 
 #[test]
