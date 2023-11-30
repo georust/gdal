@@ -82,7 +82,7 @@ mod tests {
     use crate::errors::Result;
     use crate::raster::processing::dem::terrain_ruggedness_index;
     use crate::raster::StatisticsAll;
-    use crate::test_utils::{fixture, target};
+    use crate::test_utils::{fixture, InMemoryFixture};
     use crate::Dataset;
 
     use super::*;
@@ -112,7 +112,8 @@ mod tests {
 
         let ds = Dataset::open(fixture("dem-hills.tiff"))?;
 
-        let tri = terrain_ruggedness_index(&ds, target("dem-hills-tri.tiff"), &opts)?;
+        let output = InMemoryFixture::new("dem-hills-tri.tiff");
+        let tri = terrain_ruggedness_index(&ds, output.path(), &opts)?;
 
         let stats = tri.rasterband(1)?.get_statistics(true, false)?.unwrap();
 

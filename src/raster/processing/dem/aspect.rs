@@ -73,7 +73,7 @@ mod tests {
     use crate::errors::Result;
     use crate::raster::processing::dem::aspect;
     use crate::raster::StatisticsAll;
-    use crate::test_utils::{fixture, target};
+    use crate::test_utils::{fixture, InMemoryFixture};
     use crate::Dataset;
 
     use super::*;
@@ -105,7 +105,8 @@ mod tests {
 
         let ds = Dataset::open(fixture("dem-hills.tiff"))?;
 
-        let aspect = aspect(&ds, target("dem-hills-aspect.tiff"), &opts)?;
+        let output = InMemoryFixture::new("dem-hills-aspect.tiff");
+        let aspect = aspect(&ds, output.path(), &opts)?;
 
         let stats = aspect.rasterband(1)?.get_statistics(true, false)?.unwrap();
 

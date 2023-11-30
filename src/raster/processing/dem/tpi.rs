@@ -37,7 +37,7 @@ mod tests {
     use crate::raster::processing::dem::topographic_position_index;
     use crate::raster::processing::dem::tpi::TpiOptions;
     use crate::raster::StatisticsAll;
-    use crate::test_utils::{fixture, target};
+    use crate::test_utils::{fixture, InMemoryFixture};
     use crate::Dataset;
 
     #[test]
@@ -59,7 +59,8 @@ mod tests {
 
         let ds = Dataset::open(fixture("dem-hills.tiff"))?;
 
-        let slope = topographic_position_index(&ds, target("dem-hills-slope.tiff"), &opts)?;
+        let output = InMemoryFixture::new("dem-hills-tpi.tiff");
+        let slope = topographic_position_index(&ds, output.path(), &opts)?;
 
         let stats = slope.rasterband(1)?.get_statistics(true, false)?.unwrap();
 
