@@ -38,7 +38,7 @@ mod tests {
     use crate::raster::processing::dem::roughness;
     use crate::raster::processing::dem::roughness::RoughnessOptions;
     use crate::raster::StatisticsAll;
-    use crate::test_utils::{fixture, target};
+    use crate::test_utils::{fixture, InMemoryFixture};
     use crate::Dataset;
 
     #[test]
@@ -61,7 +61,8 @@ mod tests {
 
         let ds = Dataset::open(fixture("dem-hills.tiff"))?;
 
-        let roughness = roughness(&ds, target("dem-hills-roughness.tiff"), &opts)?;
+        let output = InMemoryFixture::new("dem-hills-roughness.tiff");
+        let roughness = roughness(&ds, output.path(), &opts)?;
 
         let stats = roughness
             .rasterband(1)?

@@ -1,3 +1,4 @@
+use crate::vsi::unlink_mem_file;
 use crate::{Dataset, DatasetOptions};
 use gdal_sys::GDALAccess;
 use std::ffi::c_void;
@@ -55,11 +56,31 @@ pub fn fixture(filename: &str) -> PathBuf {
         .join(filename)
 }
 
-/// Returns the fully qualified path to `filename` in `${CARGO_MANIFEST_DIR}/target`.
-pub fn target(filename: &str) -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("target")
-        .join(filename)
+/// A struct that represents a `/vsimem/` (in-memory) path.
+///
+/// The file will be deleted when the value is dropped.
+pub struct InMemoryFixture {
+    path: PathBuf,
+}
+
+impl InMemoryFixture {
+    pub fn new(filename: &str) -> Self {
+        // TODO: use `VSIStatL` to make sure the file doesn't exist.
+        let mut path = PathBuf::from("/vsimem");
+        path.push(filename);
+
+        Self { path }
+    }
+
+    pub fn path(&self) -> &Path {
+        &self.path
+    }
+}
+
+impl Drop for InMemoryFixture {
+    fn drop(&mut self) {
+        unlink_mem_file(&self.path).expect("unable to remove in-memory file");
+    }
 }
 
 /// Scoped value for temporarily suppressing thread-local GDAL log messages.

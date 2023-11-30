@@ -162,7 +162,7 @@ mod tests {
     use crate::errors::Result;
     use crate::raster::processing::dem::hillshade;
     use crate::raster::StatisticsAll;
-    use crate::test_utils::{fixture, target};
+    use crate::test_utils::{fixture, InMemoryFixture};
     use crate::Dataset;
 
     use super::*;
@@ -200,7 +200,8 @@ mod tests {
             .with_z_factor(2.0)
             .with_scale(scale_factor);
 
-        let shade = hillshade(&ds, target("dem-hills-shade.tiff"), &opts)?;
+        let output = InMemoryFixture::new("dem-hills-shade.tiff");
+        let shade = hillshade(&ds, output.path(), &opts)?;
 
         let stats = shade.rasterband(1)?.get_statistics(true, false)?.unwrap();
 

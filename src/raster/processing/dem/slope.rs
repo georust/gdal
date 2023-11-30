@@ -87,7 +87,7 @@ mod tests {
     use crate::errors::Result;
     use crate::raster::processing::dem::slope;
     use crate::raster::StatisticsAll;
-    use crate::test_utils::{fixture, target};
+    use crate::test_utils::{fixture, InMemoryFixture};
     use crate::Dataset;
     use crate::{assert_near, GeoTransformEx};
 
@@ -128,7 +128,8 @@ mod tests {
             .with_percentage_results(true)
             .with_scale(scale_factor);
 
-        let slope = slope(&ds, target("dem-hills-slope.tiff"), &opts)?;
+        let output = InMemoryFixture::new("dem-hills-slope.tiff");
+        let slope = slope(&ds, output.path(), &opts)?;
 
         let stats = slope.rasterband(1)?.get_statistics(true, false)?.unwrap();
 
