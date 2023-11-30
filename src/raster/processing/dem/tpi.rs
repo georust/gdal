@@ -59,7 +59,7 @@ mod tests {
 
         let ds = Dataset::open(fixture("dem-hills.tiff"))?;
 
-        let slope = topographic_position_index(&ds, target("dem-hills-slope.tiff"), &opts)?;
+        let slope = topographic_position_index(&ds, target("dem-hills-tpi.tiff"), &opts)?;
 
         let stats = slope.rasterband(1)?.get_statistics(true, false)?.unwrap();
 
