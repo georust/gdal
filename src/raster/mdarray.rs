@@ -330,11 +330,15 @@ impl<'a> MDArray<'a> {
             let strings = string_pointers
                 .into_iter()
                 .map(|string_ptr| {
-                    let string = _string(string_ptr);
+                    if string_ptr == std::ptr::null() {
+                        String::new()
+                    } else {
+                        let string = _string(string_ptr);
 
-                    VSIFree(string_ptr as *mut c_void);
+                        VSIFree(string_ptr as *mut c_void);
 
-                    string
+                        string
+                    }
                 })
                 .collect();
 
