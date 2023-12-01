@@ -16,7 +16,7 @@ Contains:
 
 The build script should work an Linux and Windows systems. It can be configured with a couple of environment variables:
 
-* if `GDAL_INCLUDE_DIR` or `GDAL_LIB_DIR` are defined, they will be used
+* if `GDAL_INCLUDE_DIR` or `GDAL_LIB_DIR` are defined, they will be used. You should also set `GDAL_VERSION` to ``X.Y.Z``
 * otherwise, if `GDAL_HOME` is defined, the build script looks for `GDAL_HOME/include`, `GDAL_HOME/lib` and `GDAL_HOME/bin`
 * finally, `pkg-config` is queried to determine the `GDAL` location
 * you can define `GDAL_STATIC` to link `GDAL` statically
