@@ -113,3 +113,9 @@ jobs:
         run: cargo build --all-features
       - name: Run tests (--all-features)
         run: cargo test --all-features -- --nocapture
+      - name: Install valgrind and cargo-valgrind
+        run: |
+          sudo apt-get install valgrind -y
+          cargo install cargo-valgrind
+      - name: Run --lib tests under valgrind
+        run: cargo valgrind test --lib
