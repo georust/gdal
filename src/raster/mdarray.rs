@@ -150,10 +150,19 @@ impl<'a> MDArray<'a> {
     ///
     pub fn read_into_slice<T: Copy + GdalType>(
         &self,
-        buffer: &mut [T],
+        buffer: &mut Vec<T>,
         array_start_index: Vec<u64>,
         count: Vec<usize>,
     ) -> Result<()> {
+        let pixels: usize = count.iter().product();
+        if buffer.capacity() < pixels {
+            return Err(GdalError::BadArgument(format!(
+                "buffer capacity is {}. It should be at least {}",
+                buffer.capacity(),
+                pixels
+            )));
+        }
+
         // If set to nullptr, [1, 1, … 1] will be used as a default to indicate consecutive elements.
         let array_step: *const i64 = std::ptr::null();
         // If set to nullptr, will be set so that pDstBuffer is written in a compact way,
@@ -985,6 +994,16 @@ mod tests {
         let md_array = root_group
             .open_md_array("byte_no_cf", CslStringList::new())
             .unwrap();
+
+        let mut buffer: Vec<u8> = Vec::with_capacity(20 * 20);
+        md_array
+            .read_into_slice(&mut buffer, vec![0, 0], vec![20, 20])
+            .unwrap();
+
+        let mut buffer: Vec<u8> = Vec::with_capacity(20 * 20 - 1);
+        md_array
+            .read_into_slice(&mut buffer, vec![0, 0], vec![20, 20])
+            .expect_err("read_into_slice() with insufficient capacity should panic");
 
         let values = md_array.read_as::<u8>(vec![0, 0], vec![20, 20]).unwrap();
 
