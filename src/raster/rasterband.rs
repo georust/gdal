@@ -902,7 +902,9 @@ impl<'a> RasterBand<'a> {
         is_approx_ok: bool,
     ) -> Result<Histogram> {
         if n_buckets == 0 {
-            return Err(GdalError::BadArgument("n_buckets should be > 0".to_string()));
+            return Err(GdalError::BadArgument(
+                "n_buckets should be > 0".to_string(),
+            ));
         }
 
         let mut counts = vec![0; n_buckets];
