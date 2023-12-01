@@ -349,7 +349,7 @@ impl Debug for Geometry {
 
 impl PartialEq for Geometry {
     fn eq(&self, other: &Self) -> bool {
-        unsafe { gdal_sys::OGR_G_Equal(self.c_geometry(), other.c_geometry()) != 0 }
+        unsafe { gdal_sys::OGR_G_Equals(self.c_geometry(), other.c_geometry()) != 0 }
     }
 }
 
