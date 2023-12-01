@@ -142,7 +142,9 @@ mod tests {
             date_iter.by_ref().take(2).collect::<String>(),
         );
 
-        assert_eq!(version_text, expected_text);
+        // Use starts_with() instead of equality check, because on a debug
+        // GDAL build, version_text will end with " (debug build)".
+        assert!(version_text.starts_with(&expected_text));
     }
 
     #[test]
