@@ -139,18 +139,9 @@ impl<'a> MDArray<'a> {
         }
     }
 
-    /// Wrapper for `GDALMDArrayRead`
-    ///
-    /// # Params
-    /// * buffer - Mutable buffer to read into
-    /// * array_start_index - Values representing the starting index to read in each dimension (in `[0, aoDims[i].GetSize()-1]` range).
-    ///   Array of `GetDimensionCount()` values. Must not be empty, unless for a zero-dimensional array.
-    /// * count - Values representing the number of values to extract in each dimension. Array of `GetDimensionCount()` values.
-    ///   Must not be empty, unless for a zero-dimensional array.
-    ///
-    pub fn read_into_slice<T: Copy + GdalType>(
+    unsafe fn read<T: Copy + GdalType>(
         &self,
-        buffer: &mut [T],
+        buffer: *mut T,
         array_start_index: Vec<u64>,
         count: Vec<usize>,
     ) -> Result<()> {
@@ -179,7 +170,7 @@ impl<'a> MDArray<'a> {
                 array_step,
                 buffer_stride,
                 data_type,
-                buffer.as_mut_ptr() as *mut c_void,
+                buffer as *mut c_void,
                 p_dst_buffer_alloc_start,
                 n_dst_buffer_alloc_size,
             );
@@ -198,6 +189,34 @@ impl<'a> MDArray<'a> {
         Ok(())
     }
 
+    /// Wrapper for `GDALMDArrayRead`
+    ///
+    /// # Params
+    /// * buffer - Mutable buffer to read into
+    /// * array_start_index - Values representing the starting index to read in each dimension (in `[0, aoDims[i].GetSize()-1]` range).
+    ///   Array of `GetDimensionCount()` values. Must not be empty, unless for a zero-dimensional array.
+    /// * count - Values representing the number of values to extract in each dimension. Array of `GetDimensionCount()` values.
+    ///   Must not be empty, unless for a zero-dimensional array.
+    ///
+    pub fn read_into_slice<T: Copy + GdalType>(
+        &self,
+        buffer: &mut [T],
+        array_start_index: Vec<u64>,
+        count: Vec<usize>,
+    ) -> Result<()> {
+        let pixels: usize = count.iter().product();
+        if buffer.len() < pixels {
+            return Err(GdalError::BadArgument(format!(
+                "buffer length is {}, must be at least {}",
+                buffer.len(),
+                pixels
+            )));
+        }
+
+        // SAFETY: we checked the buffer length above.
+        unsafe { self.read(buffer.as_mut_ptr(), array_start_index, count) }
+    }
+
     /// Read a [`Vec<T>`] from this band, where `T` implements [`GdalType`].
     ///
     /// # Arguments
@@ -214,13 +233,13 @@ impl<'a> MDArray<'a> {
         let pixels: usize = count.iter().product();
         let mut data: Vec<T> = Vec::with_capacity(pixels);
 
-        // Safety: the read_into_slice line below writes
-        // exactly pixel elements into the slice, before we
+        // SAFETY: the `read` line below writes
+        // exactly `pixels` elements into the slice, before we
         // read from this slice. This paradigm is suggested
-        // in the rust std docs
-        // (https://doc.rust-lang.org/std/vec/struct.Vec.html#examples-18)
+        // in the standard library docs.
+        // (https://doc.rust-lang.org/std/vec/struct.Vec.html#method.set_len)
         unsafe {
-            self.read_into_slice(&mut data, array_start_index, count)?;
+            self.read(data.as_mut_ptr(), array_start_index, count)?;
             data.set_len(pixels);
         };
 
@@ -992,6 +1011,16 @@ mod tests {
 
         let values = md_array.read_as::<u16>(vec![0, 0], vec![20, 20]).unwrap();
         assert_eq!(&values[..4], &[181, 181, 156, 148]);
+
+        let mut buffer: Vec<u8> = vec![0; 20 * 20];
+        md_array
+            .read_into_slice(&mut buffer, vec![0, 0], vec![20, 20])
+            .unwrap();
+
+        let mut buffer: Vec<u8> = vec![0; 20 * 20 - 1];
+        md_array
+            .read_into_slice(&mut buffer, vec![0, 0], vec![20, 20])
+            .expect_err("read_into_slice() with insufficient capacity should panic");
     }
 
     #[test]
