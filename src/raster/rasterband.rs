@@ -968,10 +968,7 @@ impl Histogram {
 
     /// Histogram values for each bucket
     pub fn counts(&self) -> &[u64] {
-        match &self.counts {
-            HistogramCounts::GdalAllocated(p, n) => unsafe { std::slice::from_raw_parts(*p, *n) },
-            HistogramCounts::RustAllocated(v) => v.as_slice(),
-        }
+        self.counts.as_slice()
     }
 
     /// Number of buckets in histogram
@@ -993,7 +990,7 @@ impl Histogram {
 /// * `GDALGetDefaultHistogram`: returns a pointer (via an 'out' parameter) to a GDAL allocated array,
 ///   stored in `HistogramCounts::GdalAllocated`, to be deallocated with [`VSIFree`][gdal_sys::VSIFree].
 enum HistogramCounts {
-    /// Pointer to GDAL allocated array and lenght of histogram counts.
+    /// Pointer to GDAL allocated array and length of histogram counts.
     ///
     /// Requires freeing with [`VSIFree`][gdal_sys::VSIFree].
     GdalAllocated(*mut u64, usize),
@@ -1001,15 +998,18 @@ enum HistogramCounts {
     RustAllocated(Vec<u64>),
 }
 
+impl HistogramCounts {
+    fn as_slice(&self) -> &[u64] {
+        match &self {
+            Self::GdalAllocated(p, n) => unsafe { std::slice::from_raw_parts(*p, *n) },
+            Self::RustAllocated(v) => v.as_slice(),
+        }
+    }
+}
+
 impl Debug for HistogramCounts {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            HistogramCounts::GdalAllocated(p, n) => {
-                let s = unsafe { std::slice::from_raw_parts(*p, *n) };
-                s.fmt(f)
-            }
-            HistogramCounts::RustAllocated(v) => v.fmt(f),
-        }
+        self.as_slice().fmt(f)
     }
 }
 
