@@ -5,9 +5,10 @@ use crate::raster::{GdalDataType, GdalType};
 use crate::utils::{_last_cpl_err, _last_null_pointer_err, _string};
 use gdal_sys::{
     self, CPLErr, GDALColorEntry, GDALColorInterp, GDALColorTableH, GDALComputeRasterMinMax,
-    GDALCreateColorRamp, GDALCreateColorTable, GDALDestroyColorTable, GDALGetPaletteInterpretation,
-    GDALGetRasterStatistics, GDALMajorObjectH, GDALPaletteInterp, GDALRIOResampleAlg, GDALRWFlag,
-    GDALRasterBandH, GDALRasterIOExtraArg, GDALSetColorEntry, GDALSetRasterColorTable,
+    GDALCreateColorRamp, GDALCreateColorTable, GDALDestroyColorTable, GDALGetDefaultHistogramEx,
+    GDALGetPaletteInterpretation, GDALGetRasterHistogramEx, GDALGetRasterStatistics,
+    GDALMajorObjectH, GDALPaletteInterp, GDALRIOResampleAlg, GDALRWFlag, GDALRasterBandH,
+    GDALRasterIOExtraArg, GDALSetColorEntry, GDALSetRasterColorTable,
 };
 use libc::c_int;
 use std::ffi::CString;
@@ -847,6 +848,90 @@ impl<'a> RasterBand<'a> {
             max: min_max[1],
         })
     }
+
+    /// Fetch default raster histogram.
+    ///
+    /// # Arguments
+    ///
+    /// * `force` - If `true`, force the computation. If `false` and no default histogram is available, the method will return `Ok(None)`
+    pub fn default_histogram(&self, force: bool) -> Result<Option<Histogram>> {
+        let mut counts = std::ptr::null_mut();
+        let mut min = 0.0;
+        let mut max = 0.0;
+        let mut n_buckets = 0i32;
+
+        let rv = unsafe {
+            GDALGetDefaultHistogramEx(
+                self.c_rasterband,
+                &mut min,
+                &mut max,
+                &mut n_buckets,
+                &mut counts as *mut *mut u64,
+                libc::c_int::from(force),
+                None,
+                std::ptr::null_mut(),
+            )
+        };
+
+        match CplErrType::from(rv) {
+            CplErrType::None => Ok(Some(Histogram {
+                min,
+                max,
+                counts: HistogramCounts::GdalAllocated(counts, n_buckets as usize),
+            })),
+            CplErrType::Warning => Ok(None),
+            _ => Err(_last_cpl_err(rv)),
+        }
+    }
+
+    /// Compute raster histogram.
+    ///
+    /// # Arguments
+    ///
+    /// * `min` - Histogram lower bound
+    /// * `max` - Histogram upper bound
+    /// * `n_buckets` - Number of buckets in the histogram
+    /// * `include_out_of_range` - if `true`, values below the histogram range will be mapped into the first bucket, and values above will be mapped into the last one. If `false`, out of range values are discarded
+    /// * `is_approx_ok` - If an approximate, or incomplete histogram is OK
+    pub fn histogram(
+        &self,
+        min: f64,
+        max: f64,
+        n_buckets: usize,
+        include_out_of_range: bool,
+        is_approx_ok: bool,
+    ) -> Result<Histogram> {
+        if n_buckets == 0 {
+            return Err(GdalError::BadArgument(
+                "n_buckets should be > 0".to_string(),
+            ));
+        }
+
+        let mut counts = vec![0; n_buckets];
+
+        let rv = unsafe {
+            GDALGetRasterHistogramEx(
+                self.c_rasterband,
+                min,
+                max,
+                n_buckets as i32,
+                counts.as_mut_ptr(),
+                libc::c_int::from(include_out_of_range),
+                libc::c_int::from(is_approx_ok),
+                None,
+                std::ptr::null_mut(),
+            )
+        };
+
+        match CplErrType::from(rv) {
+            CplErrType::None => Ok(Histogram {
+                min,
+                max,
+                counts: HistogramCounts::RustAllocated(counts),
+            }),
+            _ => Err(_last_cpl_err(rv)),
+        }
+    }
 }
 
 #[derive(Debug, PartialEq)]
@@ -861,6 +946,82 @@ pub struct StatisticsAll {
     pub max: f64,
     pub mean: f64,
     pub std_dev: f64,
+}
+
+#[derive(Debug)]
+pub struct Histogram {
+    min: f64,
+    max: f64,
+    counts: HistogramCounts,
+}
+
+impl Histogram {
+    /// Histogram lower bound
+    pub fn min(&self) -> f64 {
+        self.min
+    }
+
+    /// Histogram upper bound
+    pub fn max(&self) -> f64 {
+        self.max
+    }
+
+    /// Histogram values for each bucket
+    pub fn counts(&self) -> &[u64] {
+        self.counts.as_slice()
+    }
+
+    /// Number of buckets in histogram
+    pub fn n_buckets(&self) -> usize {
+        self.counts().len()
+    }
+
+    /// Histogram bucket size
+    pub fn bucket_size(&self) -> f64 {
+        (self.max - self.min) / self.counts().len() as f64
+    }
+}
+
+/// Union type over histogram storage mechanisms.
+///
+/// This private enum exists to normalize over the two different ways
+/// [`GDALGetRasterHistogram`] and [`GDALGetDefaultHistogram`] return data:
+/// * `GDALGetRasterHistogram`: requires a pre-allocated array, stored in `HistogramCounts::RustAllocated`.
+/// * `GDALGetDefaultHistogram`: returns a pointer (via an 'out' parameter) to a GDAL allocated array,
+///   stored in `HistogramCounts::GdalAllocated`, to be deallocated with [`VSIFree`][gdal_sys::VSIFree].
+enum HistogramCounts {
+    /// Pointer to GDAL allocated array and length of histogram counts.
+    ///
+    /// Requires freeing with [`VSIFree`][gdal_sys::VSIFree].
+    GdalAllocated(*mut u64, usize),
+    /// Rust-allocated vector into which GDAL stores histogram counts.
+    RustAllocated(Vec<u64>),
+}
+
+impl HistogramCounts {
+    fn as_slice(&self) -> &[u64] {
+        match &self {
+            Self::GdalAllocated(p, n) => unsafe { std::slice::from_raw_parts(*p, *n) },
+            Self::RustAllocated(v) => v.as_slice(),
+        }
+    }
+}
+
+impl Debug for HistogramCounts {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        self.as_slice().fmt(f)
+    }
+}
+
+impl Drop for HistogramCounts {
+    fn drop(&mut self) {
+        match self {
+            HistogramCounts::GdalAllocated(p, _) => unsafe {
+                gdal_sys::VSIFree(*p as *mut libc::c_void);
+            },
+            HistogramCounts::RustAllocated(_) => {}
+        }
+    }
 }
 
 impl<'a> MajorObject for RasterBand<'a> {

@@ -88,7 +88,7 @@ pub use mdarray::{
 };
 pub use rasterband::{
     Buffer, ByteBuffer, CmykEntry, ColorEntry, ColorInterpretation, ColorTable, GrayEntry,
-    HlsEntry, PaletteInterpretation, RasterBand, ResampleAlg, RgbaEntry, StatisticsAll,
+    Histogram, HlsEntry, PaletteInterpretation, RasterBand, ResampleAlg, RgbaEntry, StatisticsAll,
     StatisticsMinMax,
 };
 pub use rasterize::{rasterize, BurnSource, MergeAlgorithm, OptimizeMode, RasterizeOptions};
