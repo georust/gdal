@@ -50,9 +50,11 @@
 
   - <https://github.com/georust/gdal/pull/439>
 
-- Added histogram calculation
+- Added raster histogram methods (setter and getter)
 
-  - <https://github.com/georust/gdal/pull/468>
+  - Getter: <https://github.com/georust/gdal/pull/468>
+  - Setter: <https://github.com/georust/gdal/pull/486>
+
 
 ## 0.16
 
