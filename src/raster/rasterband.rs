@@ -8,7 +8,7 @@ use gdal_sys::{
     GDALCreateColorRamp, GDALCreateColorTable, GDALDestroyColorTable, GDALGetDefaultHistogramEx,
     GDALGetPaletteInterpretation, GDALGetRasterHistogramEx, GDALGetRasterStatistics,
     GDALMajorObjectH, GDALPaletteInterp, GDALRIOResampleAlg, GDALRWFlag, GDALRasterBandH,
-    GDALRasterIOExtraArg, GDALSetColorEntry, GDALSetRasterColorTable,
+    GDALRasterIOExtraArg, GDALSetColorEntry, GDALSetDefaultHistogramEx, GDALSetRasterColorTable,
 };
 use libc::c_int;
 use std::ffi::CString;
@@ -880,6 +880,32 @@ impl<'a> RasterBand<'a> {
                 counts: HistogramCounts::GdalAllocated(counts, n_buckets as usize),
             })),
             CplErrType::Warning => Ok(None),
+            _ => Err(_last_cpl_err(rv)),
+        }
+    }
+
+    /// Set default raster histogram.
+    ///
+    /// # Arguments
+    ///
+    /// * `min` - Histogram lower bound
+    /// * `max` - Histogram upper bound
+    /// * `n_buckets` - Number of buckets in the histogram
+    /// * `counts` - Histogram values for each bucket
+    pub fn set_default_histogram(&self, min: f64, max: f64, counts: &mut [u64]) -> Result<()> {
+        let n_buckets = counts.len();
+        let rv = unsafe {
+            GDALSetDefaultHistogramEx(
+                self.c_rasterband,
+                min,
+                max,
+                n_buckets as i32,
+                counts.as_mut_ptr(),
+            )
+        };
+
+        match CplErrType::from(rv) {
+            CplErrType::None => Ok(()),
             _ => Err(_last_cpl_err(rv)),
         }
     }
