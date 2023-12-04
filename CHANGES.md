@@ -2,9 +2,13 @@
 
 ## Unreleased
 
+- Added `Geometry::difference`.
+
+   - <https://github.com/georust/gdal/pull/487>
+
 - Added support for digital elevation model raster processing: `aspect`, `color_relief`, `hillshade`, `roughness`, `slope`, `terrain_ruggedness_index`, `topographic_position_index`.
 
-   - <https://github.com/georust/gdal/pull/456> 
+   - <https://github.com/georust/gdal/pull/456>
 
 - Added pre-built bindings for GDAL 3.8
 
