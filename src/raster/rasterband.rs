@@ -890,10 +890,14 @@ impl<'a> RasterBand<'a> {
     ///
     /// * `min` - Histogram lower bound
     /// * `max` - Histogram upper bound
-    /// * `n_buckets` - Number of buckets in the histogram
     /// * `counts` - Histogram values for each bucket
+    ///
+    /// # Panics
+    /// Panics if the `counts.len()` is greater than `i32::MAX`.
     pub fn set_default_histogram(&self, min: f64, max: f64, counts: &mut [u64]) -> Result<()> {
         let n_buckets = counts.len();
+        assert!(n_buckets <= i32::MAX as usize);
+
         let rv = unsafe {
             GDALSetDefaultHistogramEx(
                 self.c_rasterband,
@@ -932,6 +936,8 @@ impl<'a> RasterBand<'a> {
                 "n_buckets should be > 0".to_string(),
             ));
         }
+
+        assert!(n_buckets <= i32::MAX as usize);
 
         let mut counts = vec![0; n_buckets];
 
