@@ -530,7 +530,30 @@ impl<'a> RasterBand<'a> {
     /// * `block_index` - the block index
     ///
     /// # Notes
-    /// The Matrix shape is (rows, cols) and raster shape is (cols in x-axis, rows in y-axis).
+    /// Blocks indexes start from 0 and are of form (x, y), where x grows in the horizontal direction.
+    ///
+    /// The matrix shape is (rows, cols) and raster shape is (cols in x-axis, rows in y-axis).
+    ///
+    /// The block size of the band can be determined using [`RasterBand::block_size`].
+    /// The last blocks in both directions can be smaller.
+    /// [`RasterBand::actual_block_size`] will report the correct dimensions of a block.
+    ///
+    /// # Errors
+    /// If the block index is not valid, GDAL will return an error.
+    ///
+    /// # Example
+    ///
+    /// ```rust, no_run
+    /// # fn main() -> gdal::errors::Result<()> {
+    /// use gdal::Dataset;
+    ///
+    /// let dataset = Dataset::open("fixtures/m_3607824_se_17_1_20160620_sub.tif")?;
+    /// let band1 = dataset.rasterband(1)?;
+    /// let arr = band1.read_block::<u8>((0, 0))?;
+    /// assert_eq!(arr.shape(), &[300, 6]);
+    /// # Ok(())
+    /// # }
+    /// ```
     pub fn read_block<T: Copy + GdalType>(&self, block_index: (usize, usize)) -> Result<Array2<T>> {
         if T::gdal_ordinal() != self.band_type() as u32 {
             return Err(GdalError::BadArgument(
@@ -560,6 +583,88 @@ impl<'a> RasterBand<'a> {
         };
 
         Array2::from_shape_vec((size.1, size.0), data).map_err(Into::into)
+    }
+
+    #[cfg(feature = "ndarray")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "array")))]
+    /// Write a [`Array2<T>`] from a [`Dataset`] block, where `T` implements [`GdalType`].
+    ///
+    /// # Arguments
+    /// * `block_index` - the block index
+    ///
+    /// # Notes
+    /// Blocks indexes start from 0 and are of form (x, y), where x grows in the horizontal direction.
+    ///
+    /// The matrix shape is (rows, cols) and raster shape is (cols in x-axis, rows in y-axis).
+    ///
+    /// The block size of the band can be determined using [`RasterBand::block_size`].
+    /// The last blocks in both directions can be smaller.
+    /// [`RasterBand::actual_block_size`] will report the correct dimensions of a block.
+    ///
+    /// # Errors
+    /// If the block index is not valid, GDAL will return an error.
+    ///
+    /// # Example
+    ///
+    /// ```rust, no_run
+    /// # fn main() -> gdal::errors::Result<()> {
+    /// use gdal::DriverManager;
+    /// use gdal::raster::RasterCreationOption;
+    /// use ndarray::Array2;
+    ///
+    /// let driver = DriverManager::get_driver_by_name("GTiff").unwrap();
+    /// let options = [
+    ///     RasterCreationOption {
+    ///         key: "TILED",
+    ///         value: "YES",
+    ///     },
+    ///     RasterCreationOption {
+    ///         key: "BLOCKXSIZE",
+    ///         value: "16",
+    ///     },
+    ///     RasterCreationOption {
+    ///         key: "BLOCKYSIZE",
+    ///         value: "16",
+    ///     },
+    /// ];
+    /// let dataset = driver
+    ///     .create_with_band_type_with_options::<u16, _>(
+    ///         "/vsimem/test_write_block.tif",
+    ///         32,
+    ///         32,
+    ///         1,
+    ///         &options,
+    ///     )?;
+    /// let mut band1 = dataset.rasterband(1)?;
+    /// let arr = Array2::from_shape_fn((16, 16), |(y, x)| y as u16 * 16 + x as u16);
+    /// band1.write_block((0, 0), arr)?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub fn write_block<T: Copy + GdalType>(
+        &mut self,
+        block_index: (usize, usize),
+        block: Array2<T>,
+    ) -> Result<()> {
+        if T::gdal_ordinal() != self.band_type() as u32 {
+            return Err(GdalError::BadArgument(
+                "array type must match band data type".to_string(),
+            ));
+        }
+
+        let mut data = block.into_raw_vec();
+        let rv = unsafe {
+            gdal_sys::GDALWriteBlock(
+                self.c_rasterband,
+                block_index.0 as c_int,
+                block_index.1 as c_int,
+                data.as_mut_ptr() as GDALRasterBandH,
+            )
+        };
+        if rv != CPLErr::CE_None {
+            return Err(_last_cpl_err(rv));
+        }
+        Ok(())
     }
 
     /// Write a [`Buffer<T>`] into a [`Dataset`].

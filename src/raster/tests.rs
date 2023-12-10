@@ -12,7 +12,7 @@ use std::path::Path;
 use std::str::FromStr;
 
 #[cfg(feature = "ndarray")]
-use ndarray::arr2;
+use ndarray::{arr2, Array2, Axis};
 
 #[test]
 fn test_open() {
@@ -391,6 +391,55 @@ fn test_read_block_data() {
     assert_eq!(array[[0, 1]], 9);
     assert_eq!(array[[0, 98]], 24);
     assert_eq!(array[[0, 99]], 51);
+}
+
+#[test]
+#[cfg(feature = "ndarray")]
+fn test_write_block() {
+    let driver = DriverManager::get_driver_by_name("GTiff").unwrap();
+    let options = [
+        RasterCreationOption {
+            key: "TILED",
+            value: "YES",
+        },
+        RasterCreationOption {
+            key: "BLOCKXSIZE",
+            value: "16",
+        },
+        RasterCreationOption {
+            key: "BLOCKYSIZE",
+            value: "16",
+        },
+    ];
+    let dataset = driver
+        .create_with_band_type_with_options::<u16, _>(
+            "/vsimem/test_write_block.tif",
+            32,
+            32,
+            1,
+            &options,
+        )
+        .unwrap();
+
+    let mut block_11 = Array2::from_shape_fn((16, 16), |(y, x)| y as u16 * 16 + x as u16 + 1000u16);
+    let mut block_12 = Array2::from_shape_fn((16, 16), |(y, x)| y as u16 * 16 + x as u16 + 3000u16);
+    let block_21 = Array2::from_shape_fn((16, 16), |(y, x)| y as u16 * 16 + x as u16 + 2000u16);
+    let block_22 = Array2::from_shape_fn((16, 16), |(y, x)| y as u16 * 16 + x as u16 + 4000u16);
+
+    let mut band = dataset.rasterband(1).unwrap();
+    band.write_block((0, 0), block_11.clone()).unwrap();
+    band.write_block((0, 1), block_12.clone()).unwrap();
+    block_11.append(Axis(1), block_21.view()).unwrap();
+    band.write_block((1, 0), block_21).unwrap();
+    block_12.append(Axis(1), block_22.view()).unwrap();
+    band.write_block((1, 1), block_22).unwrap();
+    block_11.append(Axis(0), block_12.view()).unwrap();
+
+    let buf = band
+        .read_as::<u16>((0, 0), (32, 32), (32, 32), None)
+        .unwrap();
+    let arr = ndarray::Array2::from_shape_vec((32, 32), buf.data).unwrap();
+    assert_eq!(arr, block_11);
 }
 
 #[test]
