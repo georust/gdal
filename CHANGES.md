@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- `RasterBand::read_block` now checks that the requested type matches the band type.
+
+   - <https://github.com/georust/gdal/pull/489>
+
 - Added `Geometry::difference`.
 
    - <https://github.com/georust/gdal/pull/487>
