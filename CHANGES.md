@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added `RasterBand::write_block`.
+
+   - <https://github.com/georust/gdal/pull/490>
+
 - `RasterBand::read_block` now checks that the requested type matches the band type.
 
    - <https://github.com/georust/gdal/pull/489>
