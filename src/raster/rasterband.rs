@@ -532,6 +532,12 @@ impl<'a> RasterBand<'a> {
     /// # Notes
     /// The Matrix shape is (rows, cols) and raster shape is (cols in x-axis, rows in y-axis).
     pub fn read_block<T: Copy + GdalType>(&self, block_index: (usize, usize)) -> Result<Array2<T>> {
+        if T::gdal_ordinal() != self.band_type() as u32 {
+            return Err(GdalError::BadArgument(
+                "result array type must match band data type".to_string(),
+            ));
+        }
+
         let size = self.block_size();
         let pixels = size.0 * size.1;
         let mut data: Vec<T> = Vec::with_capacity(pixels);
