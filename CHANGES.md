@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Defers the gdal_i.lib missing message until after the pkg-config check and outputs pkg-config metadata in case of a static build.
+
+   - <https://github.com/georust/gdal/pull/492>
+
 - Added `RasterBand::write_block`.
 
    - <https://github.com/georust/gdal/pull/490>
