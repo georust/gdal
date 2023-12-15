@@ -140,10 +140,6 @@ fn main() {
             }
         }
         if !found {
-            if cfg!(target_env = "msvc") {
-                panic!("windows-msvc requires gdal_i.lib to be present in either $GDAL_LIB_DIR or $GDAL_HOME\\lib.");
-            }
-
             // otherwise, look for a gdalxxx.dll in $GDAL_HOME/bin
             // works in windows-gnu
             if let Some(ref home_dir) = home_dir {
@@ -201,6 +197,10 @@ fn main() {
         .statik(prefer_static)
         .cargo_metadata(need_metadata)
         .probe("gdal");
+
+    if !found && cfg!(target_env = "msvc") && gdal_pkg_config.is_err() {
+        panic!("windows-msvc requires gdal_i.lib to be present in either $GDAL_LIB_DIR or $GDAL_HOME\\lib.");
+    }
 
     if let Ok(gdal) = &gdal_pkg_config {
         for dir in &gdal.include_paths {
