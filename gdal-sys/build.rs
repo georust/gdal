@@ -185,7 +185,9 @@ fn main() {
         println!("cargo:rustc-link-lib={link_type}={lib_name}");
         println!("cargo:rustc-link-search={}", lib_dir.to_str().unwrap());
 
-        need_metadata = false;
+        if !prefer_static {
+            need_metadata = false;
+        }
     }
 
     let mut include_paths = Vec::new();
