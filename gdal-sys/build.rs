@@ -102,6 +102,11 @@ fn main() {
     println!("cargo:rerun-if-env-changed=GDAL_HOME");
     println!("cargo:rerun-if-env-changed=GDAL_VERSION");
 
+    if cfg!(windows) {
+        println!("cargo:rerun-if-env-changed=GDAL_VCPKG");
+        println!("cargo:rerun-if-env-changed=GDAL_VCPKG_TRIPLET");
+    }
+
     let mut need_metadata = true;
     let mut lib_name = String::from("gdal");
 
@@ -114,41 +119,109 @@ fn main() {
     let mut version = env::var_os("GDAL_VERSION")
         .map(|vs| vs.to_string_lossy().to_string())
         .and_then(|vs| Version::parse(vs.trim()).ok());
+    let use_vcpkg = if cfg!(windows) {
+        env::var_os("GDAL_VCPKG").is_some()
+    } else {
+        false
+    };
 
     let mut found = false;
     if cfg!(windows) {
-        // first, look for a static library in $GDAL_LIB_DIR or $GDAL_HOME/lib
-        // works in windows-msvc and windows-gnu
-        if let Some(ref lib_dir) = lib_dir {
-            let lib_path = lib_dir.join("gdal_i.lib");
-            if lib_path.exists() {
-                prefer_static = true;
-                lib_name = String::from("gdal_i");
-                found = true;
+        if use_vcpkg {
+            let vcpkg_root = env_dir("VCPKG_ROOT");
+            let vcpkg_triplet = env::var("GDAL_VCPKG_TRIPLET");
+
+            if vcpkg_root.is_none() {
+                panic!("GDAL_VCPKG requires VCPKG_ROOT to be set.");
             }
-        }
-        if !found {
-            if let Some(ref home_dir) = home_dir {
-                let home_lib_dir = home_dir.join("lib");
-                let lib_path = home_lib_dir.join("gdal_i.lib");
+
+            if vcpkg_triplet.is_err() {
+                panic!("GDAL_VCPKG requires GDAL_VCPKG_TRIPLET to be set.");
+            }
+
+            let vcpkg_root = vcpkg_root.unwrap();
+            let vcpkg_triplet = vcpkg_triplet.unwrap();
+            prefer_static = vcpkg_triplet.ends_with("-static");
+
+            let vcpkg_install_dir = vcpkg_root.join("installed").join(vcpkg_triplet.clone());
+
+            let pkg_config = env::var("PKG_CONFIG");
+            let pkg_config_path = env::var("PKG_CONFIG_PATH");
+
+            let required_pkg_config = vcpkg_install_dir
+                .join("tools")
+                .join("pkgconf")
+                .join("pkgconf.exe")
+                .to_str()
+                .unwrap()
+                .to_owned();
+            let required_pkg_config_path = vcpkg_install_dir
+                .join("lib")
+                .join("pkgconfig")
+                .to_str()
+                .unwrap()
+                .to_owned();
+
+            let valid_pkg_config = match pkg_config {
+                Ok(pkg_config) => pkg_config == required_pkg_config,
+                Err(_) => false,
+            };
+
+            if !valid_pkg_config {
+                panic!("GDAL_VCPKG requires PKG_CONFIG to be set to '{required_pkg_config}'.");
+            }
+
+            let valid_pkg_config_path = match pkg_config_path {
+                Ok(pkg_config_path) => pkg_config_path == required_pkg_config_path,
+                Err(_) => false,
+            };
+
+            if !valid_pkg_config_path {
+                panic!("GDAL_VCPKG requires PKG_CONFIG_PATH to be set to '{required_pkg_config_path}'.",);
+            }
+
+            let lib_path = vcpkg_install_dir.join("lib");
+
+            if !lib_path.join("gdal.lib").exists() {
+                panic!("GDAL_VCPKG requires that gdal is installed for '{vcpkg_triplet}' triplet.");
+            }
+
+            lib_dir = Some(lib_path);
+            lib_name = String::from("gdal");
+        } else {
+            // first, look for a static library in $GDAL_LIB_DIR or $GDAL_HOME/lib
+            // works in windows-msvc and windows-gnu
+            if let Some(ref lib_dir) = lib_dir {
+                let lib_path = lib_dir.join("gdal_i.lib");
                 if lib_path.exists() {
                     prefer_static = true;
                     lib_name = String::from("gdal_i");
-                    lib_dir = Some(home_lib_dir);
                     found = true;
                 }
             }
-        }
-        if !found {
-            // otherwise, look for a gdalxxx.dll in $GDAL_HOME/bin
-            // works in windows-gnu
-            if let Some(ref home_dir) = home_dir {
-                let bin_dir = home_dir.join("bin");
-                if bin_dir.exists() {
-                    if let Some(name) = find_gdal_dll(&bin_dir).unwrap() {
-                        prefer_static = false;
-                        lib_dir = Some(bin_dir);
-                        lib_name = name;
+            if !found {
+                if let Some(ref home_dir) = home_dir {
+                    let home_lib_dir = home_dir.join("lib");
+                    let lib_path = home_lib_dir.join("gdal_i.lib");
+                    if lib_path.exists() {
+                        prefer_static = true;
+                        lib_name = String::from("gdal_i");
+                        lib_dir = Some(home_lib_dir);
+                        found = true;
+                    }
+                }
+            }
+            if !found {
+                // otherwise, look for a gdalxxx.dll in $GDAL_HOME/bin
+                // works in windows-gnu
+                if let Some(ref home_dir) = home_dir {
+                    let bin_dir = home_dir.join("bin");
+                    if bin_dir.exists() {
+                        if let Some(name) = find_gdal_dll(&bin_dir).unwrap() {
+                            prefer_static = false;
+                            lib_dir = Some(bin_dir);
+                            lib_name = name;
+                        }
                     }
                 }
             }
@@ -182,8 +255,8 @@ fn main() {
     if let Some(lib_dir) = lib_dir {
         let link_type = if prefer_static { "static" } else { "dylib" };
 
-        println!("cargo:rustc-link-lib={link_type}={lib_name}");
         println!("cargo:rustc-link-search={}", lib_dir.to_str().unwrap());
+        println!("cargo:rustc-link-lib={link_type}={lib_name}");
 
         if !prefer_static {
             need_metadata = false;
@@ -208,6 +281,18 @@ fn main() {
         for dir in &gdal.include_paths {
             include_paths.push(dir.to_str().unwrap().to_string());
         }
+
+        if cfg!(windows) && prefer_static && use_vcpkg {
+            for lib in &gdal.link_files {
+                let lib_name = lib.file_stem().unwrap().to_str().unwrap();
+                println!("cargo:rustc-link-lib=static={lib_name}");
+            }
+            println!("cargo:rustc-link-lib=crypt32");
+            println!("cargo:rustc-link-lib=Secur32");
+            println!("cargo:rustc-link-lib=Wbemuuid");
+            println!("cargo:rustc-link-lib=Wldap32");
+        }
+
         if version.is_none() {
             // development GDAL versions look like 3.7.2dev, which is not valid semver
             let mut version_string = gdal.version.trim().to_string();

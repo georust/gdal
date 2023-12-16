@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added support for VCPKG. Set `GDAL_VCPKG` environment variable to `1` to enable VCPKG support. Set `GDAL_VCPKG_TRIPLET` to the desired triplet (e.g. `x64-windows-static`). `VCPKG_ROOT` must point to the VCPKG root directory. Install GDAL with `vcpkg install gdal:x64-windows-static` (or the desired triplet). Install pkgconf with `vcpkg install pkgconf:x64-windows-static`, set `PKG_CONFIG` to the pkgconf executable (e.g. `%VCPKG_ROOT%\installed\x64-windows-static\tools\pkgconf\pkgconf.exe`) and `PKG_CONFIG_PATH` to `%VCPKG_ROOT%\installed\x64-windows-static\lib\pkgconfig`. When building non-static version, copy missing dlls from `%VCPKG_ROOT%\installed\x64-windows\bin` to the executable directory.
+
+  - <https://github.com/georust/gdal/pull/493>
+
 - Defers the gdal_i.lib missing message until after the pkg-config check and outputs pkg-config metadata in case of a static build.
 
    - <https://github.com/georust/gdal/pull/492>
