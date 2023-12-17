@@ -338,7 +338,7 @@ fn test_read_raster_as_array() {
     let dataset = Dataset::open(fixture("tinymarble.tif")).unwrap();
     let rb = dataset.rasterband(band_index).unwrap();
     let values = rb
-        .read_as_array::<u8>(
+        .read_as::<u8>(
             (left, top),
             (window_size_x, window_size_y),
             (array_size_x, array_size_y),
@@ -353,7 +353,7 @@ fn test_read_raster_as_array() {
         [171, 189, 192],
     ]);
 
-    assert_eq!(values, data);
+    assert_eq!(values.to_array().unwrap(), data);
     assert_eq!(rb.band_type(), GdalDataType::UInt8);
 }
 
@@ -364,7 +364,7 @@ fn test_read_block_as_array() {
     let block_index = (0, 0);
     let dataset = Dataset::open(fixture("tinymarble.tif")).unwrap();
     let rasterband = dataset.rasterband(band_index).unwrap();
-    let result = rasterband.read_block_as_array::<u8>(block_index);
+    let result = rasterband.read_block::<u8>(block_index);
     assert!(result.is_ok());
 }
 
@@ -375,8 +375,8 @@ fn test_read_block_dimension() {
     let block = (0, 0);
     let dataset = Dataset::open(fixture("tinymarble.tif")).unwrap();
     let rasterband = dataset.rasterband(band_index).unwrap();
-    let array = rasterband.read_block_as_array::<u8>(block).unwrap();
-    assert_eq!(array.dim(), (27, 100));
+    let buff = rasterband.read_block::<u8>(block).unwrap();
+    assert_eq!(buff.size, (100, 27));
 }
 
 #[test]
@@ -386,11 +386,11 @@ fn test_read_block_data() {
     let block = (0, 0);
     let dataset = Dataset::open(fixture("tinymarble.tif")).unwrap();
     let rasterband = dataset.rasterband(band_index).unwrap();
-    let array = rasterband.read_block_as_array::<u8>(block).unwrap();
-    assert_eq!(array[[0, 0]], 0);
-    assert_eq!(array[[0, 1]], 9);
-    assert_eq!(array[[0, 98]], 24);
-    assert_eq!(array[[0, 99]], 51);
+    let buf = rasterband.read_block::<u8>(block).unwrap();
+    assert_eq!(buf.data[0], 0);
+    assert_eq!(buf.data[1], 9);
+    assert_eq!(buf.data[98], 24);
+    assert_eq!(buf.data[99], 51);
 }
 
 #[test]
@@ -427,12 +427,12 @@ fn test_write_block() {
     let block_22 = Array2::from_shape_fn((16, 16), |(y, x)| y as u16 * 16 + x as u16 + 4000u16);
 
     let mut band = dataset.rasterband(1).unwrap();
-    band.write_block((0, 0), block_11.clone()).unwrap();
-    band.write_block((0, 1), block_12.clone()).unwrap();
+    band.write_block((0, 0), &block_11.clone().into()).unwrap();
+    band.write_block((0, 1), &block_12.clone().into()).unwrap();
     block_11.append(Axis(1), block_21.view()).unwrap();
-    band.write_block((1, 0), block_21).unwrap();
+    band.write_block((1, 0), &block_21.into()).unwrap();
     block_12.append(Axis(1), block_22.view()).unwrap();
-    band.write_block((1, 1), block_22).unwrap();
+    band.write_block((1, 1), &block_22.into()).unwrap();
     block_11.append(Axis(0), block_12.view()).unwrap();
 
     let buf = band

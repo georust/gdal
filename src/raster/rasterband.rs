@@ -11,15 +11,13 @@ use gdal_sys::{
     GDALRasterIOExtraArg, GDALSetColorEntry, GDALSetDefaultHistogramEx, GDALSetRasterColorTable,
 };
 use libc::c_int;
-use std::ffi::CString;
+use std::ffi::{c_void, CString};
 use std::fmt::{Debug, Display, Formatter};
 use std::marker::PhantomData;
 use std::str::FromStr;
 
-#[cfg(feature = "ndarray")]
-use ndarray::Array2;
-
 use crate::errors::*;
+use crate::raster::buffer::Buffer;
 use crate::raster::ResampleAlg::{
     Average, Bilinear, Cubic, CubicSpline, Gauss, Lanczos, Mode, NearestNeighbour,
 };
@@ -395,7 +393,7 @@ impl<'a> RasterBand<'a> {
                 window.1 as c_int,
                 window_size.0 as c_int,
                 window_size.1 as c_int,
-                buffer.as_mut_ptr() as GDALRasterBandH,
+                buffer.as_mut_ptr() as *mut c_void,
                 size.0 as c_int,
                 size.1 as c_int,
                 T::gdal_ordinal(),
@@ -468,7 +466,7 @@ impl<'a> RasterBand<'a> {
                 window.1 as c_int,
                 window_size.0 as c_int,
                 window_size.1 as c_int,
-                data.as_mut_ptr() as GDALRasterBandH,
+                data.as_mut_ptr() as *mut c_void,
                 size.0 as c_int,
                 size.1 as c_int,
                 T::gdal_ordinal(),
@@ -486,34 +484,6 @@ impl<'a> RasterBand<'a> {
         };
 
         Ok(Buffer { size, data })
-    }
-
-    #[cfg(feature = "ndarray")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "array")))]
-    /// Read a [`Array2<T>`] from this band, where `T` implements [`GdalType`].
-    ///
-    /// # Arguments
-    /// * `window` - the window position from top left
-    /// * `window_size` - the window size (GDAL will interpolate data if window_size != array_size)
-    /// * `array_size` - the desired size of the 'Array'
-    /// * `e_resample_alg` - the resample algorithm used for the interpolation
-    ///
-    /// # Note
-    /// The Matrix shape is (rows, cols) and raster shape is (cols in x-axis, rows in y-axis).
-    pub fn read_as_array<T: Copy + GdalType>(
-        &self,
-        window: (isize, isize),
-        window_size: (usize, usize),
-        array_size: (usize, usize),
-        e_resample_alg: Option<ResampleAlg>,
-    ) -> Result<Array2<T>> {
-        let data = self.read_as::<T>(window, window_size, array_size, e_resample_alg)?;
-
-        // Matrix shape is (rows, cols) and raster shape is (cols in x-axis, rows in y-axis)
-        Ok(Array2::from_shape_vec(
-            (array_size.1, array_size.0),
-            data.data,
-        )?)
     }
 
     /// Read the full band as a [`Buffer<T>`], where `T` implements [`GdalType`].
@@ -563,13 +533,12 @@ impl<'a> RasterBand<'a> {
         let pixels = size.0 * size.1;
         let mut data: Vec<T> = Vec::with_capacity(pixels);
 
-        //let no_data:
         let rv = unsafe {
             gdal_sys::GDALReadBlock(
                 self.c_rasterband,
                 block_index.0 as c_int,
                 block_index.1 as c_int,
-                data.as_mut_ptr() as GDALRasterBandH,
+                data.as_mut_ptr() as *mut c_void,
             )
         };
         if rv != CPLErr::CE_None {
@@ -583,49 +552,7 @@ impl<'a> RasterBand<'a> {
         Ok(Buffer::new(size, data))
     }
 
-    #[cfg(feature = "ndarray")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "array")))]
-    /// Read a [`Array2<T>`] from a [`Dataset`] block, where `T` implements [`GdalType`].
-    ///
-    /// # Arguments
-    /// * `block_index` - the block index
-    ///
-    /// # Notes
-    /// Blocks indexes start from 0 and are of form (x, y), where x grows in the horizontal direction.
-    ///
-    /// The matrix shape is (rows, cols) and raster shape is (cols in x-axis, rows in y-axis).
-    ///
-    /// The block size of the band can be determined using [`RasterBand::block_size`].
-    /// The last blocks in both directions can be smaller.
-    /// [`RasterBand::actual_block_size`] will report the correct dimensions of a block.
-    ///
-    /// # Errors
-    /// If the block index is not valid, GDAL will return an error.
-    ///
-    /// # Example
-    ///
-    /// ```rust, no_run
-    /// # fn main() -> gdal::errors::Result<()> {
-    /// use gdal::Dataset;
-    ///
-    /// let dataset = Dataset::open("fixtures/m_3607824_se_17_1_20160620_sub.tif")?;
-    /// let band1 = dataset.rasterband(1)?;
-    /// let arr = band1.read_block_as_array::<u8>((0, 0))?;
-    /// assert_eq!(arr.shape(), &[300, 6]);
-    /// # Ok(())
-    /// # }
-    /// ```
-    pub fn read_block_as_array<T: Copy + GdalType>(
-        &self,
-        block_index: (usize, usize),
-    ) -> Result<Array2<T>> {
-        let Buffer { size, data } = self.read_block(block_index)?;
-        Array2::from_shape_vec((size.1, size.0), data).map_err(Into::into)
-    }
-
-    #[cfg(feature = "ndarray")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "array")))]
-    /// Write a [`Array2<T>`] from a [`Dataset`] block, where `T` implements [`GdalType`].
+    /// Write a [`Buffer<T>`] from a [`Dataset`] block, where `T` implements [`GdalType`].
     ///
     /// # Arguments
     /// * `block_index` - the block index
@@ -647,8 +574,7 @@ impl<'a> RasterBand<'a> {
     /// ```rust, no_run
     /// # fn main() -> gdal::errors::Result<()> {
     /// use gdal::DriverManager;
-    /// use gdal::raster::RasterCreationOption;
-    /// use ndarray::Array2;
+    /// use gdal::raster::{Buffer, RasterCreationOption};
     ///
     /// let driver = DriverManager::get_driver_by_name("GTiff").unwrap();
     /// let options = [
@@ -674,15 +600,15 @@ impl<'a> RasterBand<'a> {
     ///         &options,
     ///     )?;
     /// let mut band1 = dataset.rasterband(1)?;
-    /// let arr = Array2::from_shape_fn((16, 16), |(y, x)| y as u16 * 16 + x as u16);
-    /// band1.write_block((0, 0), arr)?;
+    /// let arr = Buffer::new((16, 16), (0..16*16).collect());
+    /// band1.write_block((0, 0), &arr.into())?;
     /// # Ok(())
     /// # }
     /// ```
     pub fn write_block<T: Copy + GdalType>(
         &mut self,
         block_index: (usize, usize),
-        block: Array2<T>,
+        block: &Buffer<T>,
     ) -> Result<()> {
         if T::gdal_ordinal() != self.band_type() as u32 {
             return Err(GdalError::BadArgument(
@@ -690,13 +616,16 @@ impl<'a> RasterBand<'a> {
             ));
         }
 
-        let mut data = block.into_raw_vec();
         let rv = unsafe {
             gdal_sys::GDALWriteBlock(
                 self.c_rasterband,
                 block_index.0 as c_int,
                 block_index.1 as c_int,
-                data.as_mut_ptr() as GDALRasterBandH,
+                // This parameter is marked as `* mut c_void` because the C/C++ API for some reason
+                // doesn't mark it as `const void *`. From code inspection starting at the link
+                // below, it appears to be a read-only array.
+                // https://github.com/OSGeo/gdal/blob/b5d004fb9e3fb576b3ccf5f9740531b0bfa87ef4/gcore/gdalrasterband.cpp#L688
+                block.data.as_ptr() as *mut c_void,
             )
         };
         if rv != CPLErr::CE_None {
@@ -727,7 +656,7 @@ impl<'a> RasterBand<'a> {
                 window.1 as c_int,
                 window_size.0 as c_int,
                 window_size.1 as c_int,
-                buffer.data.as_ptr() as GDALRasterBandH,
+                buffer.data.as_ptr() as *mut c_void,
                 buffer.size.0 as c_int,
                 buffer.size.1 as c_int,
                 T::gdal_ordinal(),
@@ -1212,19 +1141,6 @@ impl<'a> MajorObject for RasterBand<'a> {
 }
 
 impl<'a> Metadata for RasterBand<'a> {}
-
-pub struct Buffer<T: GdalType> {
-    pub size: (usize, usize),
-    pub data: Vec<T>,
-}
-
-impl<T: GdalType> Buffer<T> {
-    pub fn new(size: (usize, usize), data: Vec<T>) -> Buffer<T> {
-        Buffer { size, data }
-    }
-}
-
-pub type ByteBuffer = Buffer<u8>;
 
 /// Represents a color interpretation of a RasterBand
 #[derive(Debug, PartialEq, Eq)]

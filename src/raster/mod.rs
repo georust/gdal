@@ -74,26 +74,29 @@
 //!     ...
 //! ```
 
-#[cfg(all(major_ge_3, minor_ge_1))]
-mod mdarray;
-pub mod processing;
-mod rasterband;
-mod rasterize;
-mod types;
-mod warp;
-
+pub use buffer::{Buffer, ByteBuffer};
 #[cfg(all(major_ge_3, minor_ge_1))]
 pub use mdarray::{
     Attribute, Dimension, ExtendedDataType, ExtendedDataTypeClass, Group, MDArray, MdStatisticsAll,
 };
 pub use rasterband::{
-    Buffer, ByteBuffer, CmykEntry, ColorEntry, ColorInterpretation, ColorTable, GrayEntry,
-    Histogram, HlsEntry, PaletteInterpretation, RasterBand, ResampleAlg, RgbaEntry, StatisticsAll,
-    StatisticsMinMax,
+    CmykEntry, ColorEntry, ColorInterpretation, ColorTable, GrayEntry, Histogram, HlsEntry,
+    PaletteInterpretation, RasterBand, ResampleAlg, RgbaEntry, StatisticsAll, StatisticsMinMax,
 };
 pub use rasterize::{rasterize, BurnSource, MergeAlgorithm, OptimizeMode, RasterizeOptions};
 pub use types::{AdjustedValue, GdalDataType, GdalType};
 pub use warp::reproject;
+
+mod buffer;
+#[cfg(all(major_ge_3, minor_ge_1))]
+mod mdarray;
+pub mod processing;
+mod rasterband;
+mod rasterize;
+#[cfg(test)]
+mod tests;
+mod types;
+mod warp;
 
 /// Key/value pair for passing driver-specific creation options to
 /// [`Driver::create_with_band_type_wth_options`](crate::Driver::create_with_band_type_with_options`).
@@ -104,6 +107,3 @@ pub struct RasterCreationOption<'a> {
     pub key: &'a str,
     pub value: &'a str,
 }
-
-#[cfg(test)]
-mod tests;

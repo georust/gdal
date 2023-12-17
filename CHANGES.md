@@ -2,9 +2,9 @@
 
 ## Unreleased
 
-- **Breaking**: `Rasterband::read_block` renamed `Rasterband::read_block_as_array` to be consistent with `read_as` vs. `read_as_array`.
-- Implemented `RasterBand::read_block` using the `Buffer` API, enabling block reading without `array` feature. 
-
+- Added ability to convert between `Buffer<T>` and `ndarray::Array2<T>`. 
+- **Breaking**: Removed `Rasterband::read_as_array`, changed signature of `Rasterband::read_block` to return a `Buffer<T>`. 
+- **Breaking**: `Rasterband::write_block` now takes a `&Buffer<T>`.
    - <https://github.com/georust/gdal/pull/494>
 
 - Defers the gdal_i.lib missing message until after the pkg-config check and outputs pkg-config metadata in case of a static build.
