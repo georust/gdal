@@ -248,7 +248,7 @@ impl<'a> MDArray<'a> {
 
     #[cfg(feature = "ndarray")]
     #[cfg_attr(docsrs, doc(cfg(feature = "array")))]
-    /// Read a 'Array2<T>' from this band. T implements 'GdalType'.
+    /// Read a [`ArrayD<T>`] from this band. T implements [`GdalType`].
     ///
     /// # Arguments
     /// * `window` - the window position from top left

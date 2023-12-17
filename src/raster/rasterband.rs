@@ -522,9 +522,7 @@ impl<'a> RasterBand<'a> {
         self.read_as::<T>((0, 0), (size.0, size.1), (size.0, size.1), None)
     }
 
-    #[cfg(feature = "ndarray")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "array")))]
-    /// Read a [`Array2<T>`] from a [`Dataset`] block, where `T` implements [`GdalType`].
+    /// Read a [`Buffer<T>`] from a [`Dataset`] block, where `T` implements [`GdalType`].
     ///
     /// # Arguments
     /// * `block_index` - the block index
@@ -550,11 +548,11 @@ impl<'a> RasterBand<'a> {
     /// let dataset = Dataset::open("fixtures/m_3607824_se_17_1_20160620_sub.tif")?;
     /// let band1 = dataset.rasterband(1)?;
     /// let arr = band1.read_block::<u8>((0, 0))?;
-    /// assert_eq!(arr.shape(), &[300, 6]);
+    /// assert_eq!(arr.size, (300, 6));
     /// # Ok(())
     /// # }
     /// ```
-    pub fn read_block<T: Copy + GdalType>(&self, block_index: (usize, usize)) -> Result<Array2<T>> {
+    pub fn read_block<T: Copy + GdalType>(&self, block_index: (usize, usize)) -> Result<Buffer<T>> {
         if T::gdal_ordinal() != self.band_type() as u32 {
             return Err(GdalError::BadArgument(
                 "result array type must match band data type".to_string(),
@@ -582,6 +580,46 @@ impl<'a> RasterBand<'a> {
             data.set_len(pixels);
         };
 
+        Ok(Buffer::new(size, data))
+    }
+
+    #[cfg(feature = "ndarray")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "array")))]
+    /// Read a [`Array2<T>`] from a [`Dataset`] block, where `T` implements [`GdalType`].
+    ///
+    /// # Arguments
+    /// * `block_index` - the block index
+    ///
+    /// # Notes
+    /// Blocks indexes start from 0 and are of form (x, y), where x grows in the horizontal direction.
+    ///
+    /// The matrix shape is (rows, cols) and raster shape is (cols in x-axis, rows in y-axis).
+    ///
+    /// The block size of the band can be determined using [`RasterBand::block_size`].
+    /// The last blocks in both directions can be smaller.
+    /// [`RasterBand::actual_block_size`] will report the correct dimensions of a block.
+    ///
+    /// # Errors
+    /// If the block index is not valid, GDAL will return an error.
+    ///
+    /// # Example
+    ///
+    /// ```rust, no_run
+    /// # fn main() -> gdal::errors::Result<()> {
+    /// use gdal::Dataset;
+    ///
+    /// let dataset = Dataset::open("fixtures/m_3607824_se_17_1_20160620_sub.tif")?;
+    /// let band1 = dataset.rasterband(1)?;
+    /// let arr = band1.read_block_as_array::<u8>((0, 0))?;
+    /// assert_eq!(arr.shape(), &[300, 6]);
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub fn read_block_as_array<T: Copy + GdalType>(
+        &self,
+        block_index: (usize, usize),
+    ) -> Result<Array2<T>> {
+        let Buffer { size, data } = self.read_block(block_index)?;
         Array2::from_shape_vec((size.1, size.0), data).map_err(Into::into)
     }
 

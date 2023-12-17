@@ -364,7 +364,7 @@ fn test_read_block_as_array() {
     let block_index = (0, 0);
     let dataset = Dataset::open(fixture("tinymarble.tif")).unwrap();
     let rasterband = dataset.rasterband(band_index).unwrap();
-    let result = rasterband.read_block::<u8>(block_index);
+    let result = rasterband.read_block_as_array::<u8>(block_index);
     assert!(result.is_ok());
 }
 
@@ -375,7 +375,7 @@ fn test_read_block_dimension() {
     let block = (0, 0);
     let dataset = Dataset::open(fixture("tinymarble.tif")).unwrap();
     let rasterband = dataset.rasterband(band_index).unwrap();
-    let array = rasterband.read_block::<u8>(block).unwrap();
+    let array = rasterband.read_block_as_array::<u8>(block).unwrap();
     assert_eq!(array.dim(), (27, 100));
 }
 
@@ -386,7 +386,7 @@ fn test_read_block_data() {
     let block = (0, 0);
     let dataset = Dataset::open(fixture("tinymarble.tif")).unwrap();
     let rasterband = dataset.rasterband(band_index).unwrap();
-    let array = rasterband.read_block::<u8>(block).unwrap();
+    let array = rasterband.read_block_as_array::<u8>(block).unwrap();
     assert_eq!(array[[0, 0]], 0);
     assert_eq!(array[[0, 1]], 9);
     assert_eq!(array[[0, 98]], 24);
