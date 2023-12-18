@@ -4,7 +4,7 @@ use crate::raster::GdalType;
 use ndarray::Array2;
 
 /// A 2-D array backed by it's `size` (cols, rows) and a row-major `Vec<T>` and it's dimensions.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
 pub struct Buffer<T> {
     pub size: (usize, usize),
     pub data: Vec<T>,
@@ -13,11 +13,12 @@ pub struct Buffer<T> {
 impl<T: GdalType> Buffer<T> {
     /// Construct a new buffer from `size` (`(cols, rows)`) and `Vec<T>`.
     ///
-    /// # Notes
-    /// Assumes `size.0 * size.1 == data.len()`.
-    pub fn new(size: (usize, usize), data: Vec<T>) -> Buffer<T> {
-        debug_assert!(
-            size.0 * size.1 == data.len(),
+    /// # Panic
+    /// Will panic if `size.0 * size.1 != data.len()`.
+    pub fn new(size: (usize, usize), data: Vec<T>) -> Self {
+        assert_eq!(
+            size.0 * size.1,
+            data.len(),
             "size {:?} does not match length {}",
             size,
             data.len()
@@ -51,14 +52,14 @@ impl<T: GdalType> TryFrom<Buffer<T>> for Array2<T> {
 impl<T: GdalType + Copy> From<Array2<T>> for Buffer<T> {
     fn from(value: Array2<T>) -> Self {
         // Array2 shape is (rows, cols) and Buffer shape is (cols in x-axis, rows in y-axis)
-        let shape = value.shape().to_vec();
-        let data: Vec<T> = if value.is_standard_layout() {
-            value.into_raw_vec()
-        } else {
-            value.iter().copied().collect()
-        };
-
-        Buffer::new((shape[1], shape[0]), data)
+        let shape = value.shape();
+        let (rows, cols) = (shape[0], shape[1]);
+        let data = value
+            .as_standard_layout()
+            .iter()
+            .copied()
+            .collect::<Vec<T>>();
+        Buffer::new((cols, rows), data)
     }
 }
 

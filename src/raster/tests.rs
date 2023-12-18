@@ -102,15 +102,15 @@ fn test_write_raster() {
     let dataset = driver.create("", 20, 10, 1).unwrap();
 
     // create a 2x1 raster
-    let raster = ByteBuffer {
+    let mut raster = ByteBuffer {
         size: (2, 1),
         data: vec![50u8, 20u8],
     };
 
-    // epand it to fill the image (20x10)
+    // expand it to fill the image (20x10)
     let mut rb = dataset.rasterband(1).unwrap();
 
-    let res = rb.write((0, 0), (20, 10), &raster);
+    let res = rb.write((0, 0), (20, 10), &mut raster);
 
     assert!(res.is_ok());
 
@@ -427,12 +427,14 @@ fn test_write_block() {
     let block_22 = Array2::from_shape_fn((16, 16), |(y, x)| y as u16 * 16 + x as u16 + 4000u16);
 
     let mut band = dataset.rasterband(1).unwrap();
-    band.write_block((0, 0), &block_11.clone().into()).unwrap();
-    band.write_block((0, 1), &block_12.clone().into()).unwrap();
+    band.write_block((0, 0), &mut block_11.clone().into())
+        .unwrap();
+    band.write_block((0, 1), &mut block_12.clone().into())
+        .unwrap();
     block_11.append(Axis(1), block_21.view()).unwrap();
-    band.write_block((1, 0), &block_21.into()).unwrap();
+    band.write_block((1, 0), &mut block_21.into()).unwrap();
     block_12.append(Axis(1), block_22.view()).unwrap();
-    band.write_block((1, 1), &block_22.into()).unwrap();
+    band.write_block((1, 1), &mut block_22.into()).unwrap();
     block_11.append(Axis(0), block_12.view()).unwrap();
 
     let buf = band

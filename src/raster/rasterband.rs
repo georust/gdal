@@ -556,6 +556,7 @@ impl<'a> RasterBand<'a> {
     ///
     /// # Arguments
     /// * `block_index` - the block index
+    /// * `block` - Data buffer to write to block.
     ///
     /// # Notes
     /// Blocks indexes start from 0 and are of form (x, y), where x grows in the horizontal direction.
@@ -565,6 +566,10 @@ impl<'a> RasterBand<'a> {
     /// The block size of the band can be determined using [`RasterBand::block_size`].
     /// The last blocks in both directions can be smaller.
     /// [`RasterBand::actual_block_size`] will report the correct dimensions of a block.
+    ///
+    /// While drivers make sure that the content of the `block` buffer before and after the call
+    /// is equal, some drivers might temporarily modify it, e.g. to do byte swapping. Therefore
+    /// a `&mut` parameter is required.
     ///
     /// # Errors
     /// If the block index is not valid, GDAL will return an error.
@@ -601,14 +606,14 @@ impl<'a> RasterBand<'a> {
     ///     )?;
     /// let mut band1 = dataset.rasterband(1)?;
     /// let arr = Buffer::new((16, 16), (0..16*16).collect());
-    /// band1.write_block((0, 0), &arr.into())?;
+    /// band1.write_block((0, 0), &mut arr.into())?;
     /// # Ok(())
     /// # }
     /// ```
     pub fn write_block<T: Copy + GdalType>(
         &mut self,
         block_index: (usize, usize),
-        block: &Buffer<T>,
+        block: &mut Buffer<T>,
     ) -> Result<()> {
         if T::gdal_ordinal() != self.band_type() as u32 {
             return Err(GdalError::BadArgument(
@@ -621,11 +626,7 @@ impl<'a> RasterBand<'a> {
                 self.c_rasterband,
                 block_index.0 as c_int,
                 block_index.1 as c_int,
-                // This parameter is marked as `* mut c_void` because the C/C++ API for some reason
-                // doesn't mark it as `const void *`. From code inspection starting at the link
-                // below, it appears to be a read-only array.
-                // https://github.com/OSGeo/gdal/blob/b5d004fb9e3fb576b3ccf5f9740531b0bfa87ef4/gcore/gdalrasterband.cpp#L688
-                block.data.as_ptr() as *mut c_void,
+                block.data.as_mut_ptr() as *mut c_void,
             )
         };
         if rv != CPLErr::CE_None {
@@ -641,11 +642,16 @@ impl<'a> RasterBand<'a> {
     /// * `window_size` - the window size (GDAL will interpolate data if window_size != Buffer.size)
     /// * `buffer` - the data to write into the window
     ///
+    /// # Notes
+    ///
+    /// While drivers make sure that the content of the `block` buffer before and after the call
+    /// is equal, some drivers might temporarily modify it, e.g. to do byte swapping. Therefore
+    /// a `&mut` parameter is required.
     pub fn write<T: GdalType + Copy>(
         &mut self,
         window: (isize, isize),
         window_size: (usize, usize),
-        buffer: &Buffer<T>,
+        buffer: &mut Buffer<T>,
     ) -> Result<()> {
         assert_eq!(buffer.data.len(), buffer.size.0 * buffer.size.1);
         let rv = unsafe {
@@ -656,7 +662,7 @@ impl<'a> RasterBand<'a> {
                 window.1 as c_int,
                 window_size.0 as c_int,
                 window_size.1 as c_int,
-                buffer.data.as_ptr() as *mut c_void,
+                buffer.data.as_mut_ptr() as *mut c_void,
                 buffer.size.0 as c_int,
                 buffer.size.1 as c_int,
                 T::gdal_ordinal(),
