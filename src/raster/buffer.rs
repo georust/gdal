@@ -15,6 +15,9 @@ pub struct Buffer<T> {
 impl<T: GdalType> Buffer<T> {
     /// Construct a new buffer from `size` (`(cols, rows)`) and `Vec<T>`.
     ///
+    /// # Notes
+    /// The elements of `shape` are in reverse order from what is used in `ndarray`.
+    ///
     /// # Panics
     /// Will panic if `size.0 * size.1 != data.len()`.
     pub fn new(shape: (usize, usize), data: Vec<T>) -> Self {
@@ -28,14 +31,17 @@ impl<T: GdalType> Buffer<T> {
         Buffer { shape, data }
     }
 
-    /// Destructures `self` into constituent parts.
+    /// De-structures `self` into constituent parts.
     pub fn into_shape_and_vec(self) -> ((usize, usize), Vec<T>) {
         (self.shape, self.data)
     }
 
     /// Gets the 2-d shape of the buffer.
-    ///
+    //
     /// Returns `(cols, rows)`
+    ///
+    /// # Notes
+    /// The elements of `shape` are in reverse order from what is used in `ndarray`.
     pub fn shape(&self) -> (usize, usize) {
         self.shape
     }
@@ -142,22 +148,46 @@ impl<T: GdalType + Copy> From<Array2<T>> for Buffer<T> {
 #[cfg(test)]
 mod tests {
     use crate::raster::Buffer;
-    use ndarray::Array2;
+    use ndarray::{Array2, ShapeBuilder};
 
     #[test]
     fn convert_to() {
         let b = Buffer::new((5, 10), (0..5 * 10).collect());
         let a = b.clone().to_array().unwrap();
+        let expected = Array2::from_shape_fn((10, 5), |(row, col)| row as i32 * 5 + col as i32);
+        assert_eq!(a, expected);
         let b2: Buffer<_> = a.into();
         assert_eq!(b, b2);
     }
 
     #[test]
     fn convert_from() {
-        let a = Array2::from_shape_fn((10, 5), |(y, x)| y as i32 * 10 + x as i32);
+        let a = Array2::from_shape_fn((10, 5), |(row, col)| row as i32 * 5 + col as i32);
         let b: Buffer<_> = a.clone().into();
+        let expected = Buffer::new((5, 10), (0..5 * 10).collect());
+        assert_eq!(b, expected);
+
         let a2 = b.to_array().unwrap();
         assert_eq!(a, a2);
+    }
+
+    #[test]
+    fn shapes() {
+        let s1 = (10, 5).into_shape().set_f(true);
+        let s2 = (10, 5).into_shape().set_f(false);
+
+        let a1 = Array2::from_shape_fn(s1, |(y, x)| y as i32 * 5 + x as i32);
+        let a2 = Array2::from_shape_fn(s2, |(y, x)| y as i32 * 5 + x as i32);
+
+        let expected = Buffer::new((5, 10), (0..5 * 10).collect());
+
+        assert_eq!(a1, expected.clone().to_array().unwrap());
+
+        let b1: Buffer<_> = a1.into();
+        let b2: Buffer<_> = a2.into();
+
+        assert_eq!(b1, expected);
+        assert_eq!(b2, expected);
     }
 
     #[test]
@@ -185,7 +215,7 @@ mod tests {
 
     #[test]
     #[should_panic]
-    fn index_bounds() {
+    fn index_bounds_panic() {
         let b = Buffer::new((5, 7), (0..5 * 7).collect());
         let _ = b[(5, 0)];
     }
