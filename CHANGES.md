@@ -3,11 +3,15 @@
 ## Unreleased
 
 - Added ability to convert between `Buffer<T>` and `ndarray::Array2<T>`. 
+- Implemented `IntoIterator`, `Index` and `IndexMut` for `Buffer<T>`. 
+- **Breaking**: `Buffer<T>::size` is now private and accessed via `Buffer<T>::shape().
+- **Breaking**: `Buffer<T>::data` is now private and accessed via `Buffer<T>::data(). 
 - **Breaking**: Removed `Rasterband::read_as_array`, changed signature of `Rasterband::read_block` to return a `Buffer<T>`. 
-- **Breaking**: `Rasterband::write_block` now takes a `&Buffer<T>`.
+- **Breaking**: `Rasterband::write` and `Rasterband::write_block` now require a `&mut Buffer<T>` to handle possible case of drivers temporarily mutating input buffer.
+
    - <https://github.com/georust/gdal/pull/494>
 
-- Defers the gdal_i.lib missing message until after the pkg-config check and outputs pkg-config metadata in case of a static build.
+- Defers the `gdal_i.lib` missing message until after the `pkg-config` check and outputs `pkg-config` metadata in case of a static build.
 
    - <https://github.com/georust/gdal/pull/492>
 

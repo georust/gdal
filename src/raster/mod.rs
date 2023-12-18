@@ -50,8 +50,8 @@
 //!     let rv = band.read_as::<u8>(window, window_size, size, resample_alg)?;
 //!     // `Rasterband::read_as` returns a `Buffer` struct, which contains the shape of the output
 //!     // `(cols, rows)` and a `Vec<_>` containing the pixel values.
-//!     println!("    Data size: {:?}", rv.size);
-//!     println!("    Data values: {:?}", rv.data);
+//!     println!("    Data size: {:?}", rv.shape());
+//!     println!("    Data values: {:?}", rv.data());
 //! }
 //! # Ok(())
 //! # }

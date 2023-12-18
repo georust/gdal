@@ -105,7 +105,7 @@ impl Dataset {
 /// // Down-sample a image using cubic-spline interpolation
 /// let buf = band1.read_as::<f64>((0, 0), ds.raster_size(), (2, 2), Some(ResampleAlg::CubicSpline))?;
 /// // In this particular image, resulting data should be close to the overall average.
-/// assert!(buf.data.iter().all(|c| (c - stats.mean).abs() < stats.std_dev / 2.0));
+/// assert!(buf.data().iter().all(|c| (c - stats.mean).abs() < stats.std_dev / 2.0));
 /// # Ok(())
 /// # }
 /// ```
@@ -428,8 +428,8 @@ impl<'a> RasterBand<'a> {
     /// assert_eq!(band1.band_type(), GdalDataType::UInt8);
     /// let size = 4;
     /// let buf = band1.read_as::<u8>((0, 0), band1.size(), (size, size), Some(ResampleAlg::Bilinear))?;
-    /// assert_eq!(buf.size, (size, size));
-    /// assert_eq!(buf.data, [101u8, 119, 94, 87, 92, 110, 92, 87, 91, 90, 89, 87, 92, 91, 88, 88]);
+    /// assert_eq!(buf.shape(), (size, size));
+    /// assert_eq!(buf.data(), [101u8, 119, 94, 87, 92, 110, 92, 87, 91, 90, 89, 87, 92, 91, 88, 88]);
     /// # Ok(())
     /// # }
     /// ```
@@ -437,10 +437,10 @@ impl<'a> RasterBand<'a> {
         &self,
         window: (isize, isize),
         window_size: (usize, usize),
-        size: (usize, usize),
+        shape: (usize, usize),
         e_resample_alg: Option<ResampleAlg>,
     ) -> Result<Buffer<T>> {
-        let pixels = size.0 * size.1;
+        let pixels = shape.0 * shape.1;
         let mut data: Vec<T> = Vec::with_capacity(pixels);
 
         let resample_alg = e_resample_alg.unwrap_or(ResampleAlg::NearestNeighbour);
@@ -467,8 +467,8 @@ impl<'a> RasterBand<'a> {
                 window_size.0 as c_int,
                 window_size.1 as c_int,
                 data.as_mut_ptr() as *mut c_void,
-                size.0 as c_int,
-                size.1 as c_int,
+                shape.0 as c_int,
+                shape.1 as c_int,
                 T::gdal_ordinal(),
                 0,
                 0,
@@ -483,7 +483,7 @@ impl<'a> RasterBand<'a> {
             data.set_len(pixels);
         };
 
-        Ok(Buffer { size, data })
+        Ok(Buffer::new(shape, data))
     }
 
     /// Read the full band as a [`Buffer<T>`], where `T` implements [`GdalType`].
@@ -518,7 +518,7 @@ impl<'a> RasterBand<'a> {
     /// let dataset = Dataset::open("fixtures/m_3607824_se_17_1_20160620_sub.tif")?;
     /// let band1 = dataset.rasterband(1)?;
     /// let arr = band1.read_block::<u8>((0, 0))?;
-    /// assert_eq!(arr.size, (300, 6));
+    /// assert_eq!(arr.shape(), (300, 6));
     /// # Ok(())
     /// # }
     /// ```
@@ -626,7 +626,7 @@ impl<'a> RasterBand<'a> {
                 self.c_rasterband,
                 block_index.0 as c_int,
                 block_index.1 as c_int,
-                block.data.as_mut_ptr() as *mut c_void,
+                block.data_mut().as_mut_ptr() as *mut c_void,
             )
         };
         if rv != CPLErr::CE_None {
@@ -653,7 +653,7 @@ impl<'a> RasterBand<'a> {
         window_size: (usize, usize),
         buffer: &mut Buffer<T>,
     ) -> Result<()> {
-        assert_eq!(buffer.data.len(), buffer.size.0 * buffer.size.1);
+        let shape = buffer.shape();
         let rv = unsafe {
             gdal_sys::GDALRasterIO(
                 self.c_rasterband,
@@ -662,9 +662,9 @@ impl<'a> RasterBand<'a> {
                 window.1 as c_int,
                 window_size.0 as c_int,
                 window_size.1 as c_int,
-                buffer.data.as_mut_ptr() as *mut c_void,
-                buffer.size.0 as c_int,
-                buffer.size.1 as c_int,
+                buffer.data_mut().as_mut_ptr() as *mut c_void,
+                shape.0 as c_int,
+                shape.1 as c_int,
                 T::gdal_ordinal(),
                 0,
                 0,

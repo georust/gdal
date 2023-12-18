@@ -53,14 +53,14 @@ fn test_read_raster() {
     let dataset = Dataset::open(fixture("tinymarble.tif")).unwrap();
     let rb = dataset.rasterband(1).unwrap();
     let rv = rb.read_as::<u8>((20, 30), (2, 3), (2, 3), None).unwrap();
-    assert_eq!(rv.size.0, 2);
-    assert_eq!(rv.size.1, 3);
-    assert_eq!(rv.data, vec!(7, 7, 7, 10, 8, 12));
+    assert_eq!(rv.shape().0, 2);
+    assert_eq!(rv.shape().1, 3);
+    assert_eq!(rv.data(), vec!(7, 7, 7, 10, 8, 12));
 
     let mut buf = rv;
-    rb.read_into_slice((20, 30), (2, 3), (2, 3), &mut buf.data, None)
+    rb.read_into_slice((20, 30), (2, 3), (2, 3), buf.data_mut(), None)
         .unwrap();
-    assert_eq!(buf.data, vec!(7, 7, 7, 10, 8, 12));
+    assert_eq!(buf.data(), vec!(7, 7, 7, 10, 8, 12));
 }
 
 #[test]
@@ -68,14 +68,13 @@ fn test_read_raster_with_default_resample() {
     let dataset = Dataset::open(fixture("tinymarble.tif")).unwrap();
     let rb = dataset.rasterband(1).unwrap();
     let rv = rb.read_as::<u8>((20, 30), (4, 4), (2, 2), None).unwrap();
-    assert_eq!(rv.size.0, 2);
-    assert_eq!(rv.size.1, 2);
-    assert_eq!(rv.data, vec!(8, 7, 8, 11));
+    assert_eq!(rv.shape(), (2, 2));
+    assert_eq!(rv.data(), vec!(8, 7, 8, 11));
 
     let mut buf = rv;
-    rb.read_into_slice((20, 30), (4, 4), (2, 2), &mut buf.data, None)
+    rb.read_into_slice((20, 30), (4, 4), (2, 2), buf.data_mut(), None)
         .unwrap();
-    assert_eq!(buf.data, vec!(8, 7, 8, 11));
+    assert_eq!(buf.data(), vec!(8, 7, 8, 11));
 }
 
 #[test]
@@ -86,14 +85,13 @@ fn test_read_raster_with_average_resample() {
     let rv = rb
         .read_as::<u8>((20, 30), (4, 4), (2, 2), Some(resample_alg))
         .unwrap();
-    assert_eq!(rv.size.0, 2);
-    assert_eq!(rv.size.1, 2);
-    assert_eq!(rv.data, vec!(8, 7, 8, 11));
+    assert_eq!(rv.shape(), (2, 2));
+    assert_eq!(rv.data(), vec!(8, 7, 8, 11));
 
     let mut buf = rv;
-    rb.read_into_slice((20, 30), (4, 4), (2, 2), &mut buf.data, Some(resample_alg))
+    rb.read_into_slice((20, 30), (4, 4), (2, 2), buf.data_mut(), Some(resample_alg))
         .unwrap();
-    assert_eq!(buf.data, vec!(8, 7, 8, 11));
+    assert_eq!(buf.data(), vec!(8, 7, 8, 11));
 }
 
 #[test]
@@ -102,10 +100,7 @@ fn test_write_raster() {
     let dataset = driver.create("", 20, 10, 1).unwrap();
 
     // create a 2x1 raster
-    let mut raster = ByteBuffer {
-        size: (2, 1),
-        data: vec![50u8, 20u8],
-    };
+    let mut raster = ByteBuffer::new((2, 1), vec![50u8, 20u8]);
 
     // expand it to fill the image (20x10)
     let mut rb = dataset.rasterband(1).unwrap();
@@ -116,11 +111,11 @@ fn test_write_raster() {
 
     // read a pixel from the left side
     let left = rb.read_as::<u8>((5, 5), (1, 1), (1, 1), None).unwrap();
-    assert_eq!(left.data[0], 50u8);
+    assert_eq!(left.data()[0], 50u8);
 
     // read a pixel from the right side
     let right = rb.read_as::<u8>((15, 5), (1, 1), (1, 1), None).unwrap();
-    assert_eq!(right.data[0], 20u8);
+    assert_eq!(right.data()[0], 20u8);
 }
 
 #[test]
@@ -290,9 +285,8 @@ fn test_read_raster_as() {
     let dataset = Dataset::open(fixture("tinymarble.tif")).unwrap();
     let rb = dataset.rasterband(1).unwrap();
     let rv = rb.read_as::<u8>((20, 30), (2, 3), (2, 3), None).unwrap();
-    assert_eq!(rv.data, vec!(7, 7, 7, 10, 8, 12));
-    assert_eq!(rv.size.0, 2);
-    assert_eq!(rv.size.1, 3);
+    assert_eq!(rv.data(), vec!(7, 7, 7, 10, 8, 12));
+    assert_eq!(rv.shape(), (2, 3));
     assert_eq!(rb.band_type(), GdalDataType::UInt8);
 }
 
@@ -313,7 +307,7 @@ fn open_mask_band() {
     let rb = dataset.rasterband(1).unwrap();
     let mb = rb.open_mask_band().unwrap();
     let mask_values = mb.read_as::<u8>((20, 30), (2, 3), (2, 3), None).unwrap();
-    assert_eq!(mask_values.data, [255u8; 6])
+    assert_eq!(mask_values.data(), [255u8; 6])
 }
 
 #[test]
@@ -325,7 +319,7 @@ fn create_mask_band() {
 
     let mb = rb.open_mask_band().unwrap();
     let mask_values = mb.read_as::<u8>((0, 0), (20, 10), (20, 10), None).unwrap();
-    assert_eq!(mask_values.data, [0; 200])
+    assert_eq!(mask_values.data(), [0; 200])
 }
 
 #[test]
@@ -376,7 +370,7 @@ fn test_read_block_dimension() {
     let dataset = Dataset::open(fixture("tinymarble.tif")).unwrap();
     let rasterband = dataset.rasterband(band_index).unwrap();
     let buff = rasterband.read_block::<u8>(block).unwrap();
-    assert_eq!(buff.size, (100, 27));
+    assert_eq!(buff.shape(), (100, 27));
 }
 
 #[test]
@@ -387,10 +381,10 @@ fn test_read_block_data() {
     let dataset = Dataset::open(fixture("tinymarble.tif")).unwrap();
     let rasterband = dataset.rasterband(band_index).unwrap();
     let buf = rasterband.read_block::<u8>(block).unwrap();
-    assert_eq!(buf.data[0], 0);
-    assert_eq!(buf.data[1], 9);
-    assert_eq!(buf.data[98], 24);
-    assert_eq!(buf.data[99], 51);
+    assert_eq!(buf.data()[0], 0);
+    assert_eq!(buf.data()[1], 9);
+    assert_eq!(buf.data()[98], 24);
+    assert_eq!(buf.data()[99], 51);
 }
 
 #[test]
@@ -440,7 +434,7 @@ fn test_write_block() {
     let buf = band
         .read_as::<u16>((0, 0), (32, 32), (32, 32), None)
         .unwrap();
-    let arr = ndarray::Array2::from_shape_vec((32, 32), buf.data).unwrap();
+    let arr = buf.to_array().unwrap();
     assert_eq!(arr, block_11);
 }
 
@@ -659,7 +653,7 @@ fn test_rasterize() {
     let rb = dataset.rasterband(1).unwrap();
     let values = rb.read_as::<u8>((0, 0), (5, 5), (5, 5), None).unwrap();
     assert_eq!(
-        values.data,
+        values.data(),
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0,]
     );
 }
