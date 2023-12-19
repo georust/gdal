@@ -283,7 +283,7 @@ impl TryFrom<u32> for GdalDataType {
                 "Complex data types are not available".into(),
             )),
             o => Err(GdalError::BadArgument(format!(
-                "unknown GDALDataType ordinal '{o}'"
+                "unknown GDALDataType ordinal `{o}`"
             ))),
         }
     }
