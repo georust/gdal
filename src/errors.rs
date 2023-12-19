@@ -1,6 +1,7 @@
 //! GDAL Error Types
 
 use libc::c_int;
+use std::num::TryFromIntError;
 use thiserror::Error;
 
 use gdal_sys::{CPLErr, OGRErr, OGRFieldType, OGRwkbGeometryType};
@@ -82,6 +83,8 @@ pub enum GdalError {
         data_type: crate::raster::ExtendedDataTypeClass,
         method_name: &'static str,
     },
+    #[error(transparent)]
+    IntConversionError(#[from] TryFromIntError),
 }
 
 /// A wrapper for [`CPLErr::Type`] that reflects it as an enum

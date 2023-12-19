@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- **Breaking**: Changed a number of APIs using `isize` when `usize` is semantically more appropriate: `Driver::create.*`, `Rasterband::overview`, `Dataset::{layer|into_layer|layer_count}`.  
+
+  - <https://github.com/georust/gdal/pull/497>
+
 - Defers the gdal_i.lib missing message until after the pkg-config check and outputs pkg-config metadata in case of a static build.
 
    - <https://github.com/georust/gdal/pull/492>

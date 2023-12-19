@@ -105,9 +105,9 @@ impl Driver {
     pub fn create<P: AsRef<Path>>(
         &self,
         filename: P,
-        size_x: isize,
-        size_y: isize,
-        bands: isize,
+        size_x: usize,
+        size_y: usize,
+        bands: usize,
     ) -> Result<Dataset> {
         self.create_with_band_type::<u8, _>(filename, size_x, size_y, bands)
     }
@@ -134,9 +134,9 @@ impl Driver {
     pub fn create_with_band_type<T: GdalType, P: AsRef<Path>>(
         &self,
         filename: P,
-        size_x: isize,
-        size_y: isize,
-        bands: isize,
+        size_x: usize,
+        size_y: usize,
+        bands: usize,
     ) -> Result<Dataset> {
         let options = [];
         self.create_with_band_type_with_options::<T, _>(filename, size_x, size_y, bands, &options)
@@ -176,9 +176,9 @@ impl Driver {
     pub fn create_with_band_type_with_options<T: GdalType, P: AsRef<Path>>(
         &self,
         filename: P,
-        size_x: isize,
-        size_y: isize,
-        bands: isize,
+        size_x: usize,
+        size_y: usize,
+        bands: usize,
         options: &[RasterCreationOption],
     ) -> Result<Dataset> {
         Self::_create_with_band_type_with_options(
@@ -195,9 +195,9 @@ impl Driver {
     fn _create_with_band_type_with_options(
         &self,
         filename: &Path,
-        size_x: isize,
-        size_y: isize,
-        bands: isize,
+        size_x: usize,
+        size_y: usize,
+        bands: usize,
         data_type: GdalDataType,
         options: &[RasterCreationOption],
     ) -> Result<Dataset> {
@@ -205,6 +205,9 @@ impl Driver {
         for option in options {
             options_c.set_name_value(option.key, option.value)?;
         }
+
+        let size_x = i32::try_from(size_x)?;
+        let size_y = i32::try_from(size_y)?;
 
         let c_filename = _path_to_c_string(filename)?;
         let c_dataset = unsafe {

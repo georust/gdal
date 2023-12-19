@@ -835,7 +835,9 @@ impl<'a> RasterBand<'a> {
         unsafe { Ok(gdal_sys::GDALGetOverviewCount(self.c_rasterband)) }
     }
 
-    pub fn overview(&self, overview_index: isize) -> Result<RasterBand<'a>> {
+    pub fn overview(&self, overview_index: usize) -> Result<RasterBand<'a>> {
+        let overview_index = i32::try_from(overview_index)?;
+
         unsafe {
             let c_band = self.c_rasterband;
             let overview = gdal_sys::GDALGetOverview(c_band, overview_index as libc::c_int);
