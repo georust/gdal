@@ -24,8 +24,10 @@ impl<T: GdalType> Buffer<T> {
         assert_eq!(
             shape.0 * shape.1,
             data.len(),
-            "size {:?} does not match length {}",
-            shape,
+            "shape {}*{}={} does not match length {}",
+            shape.0,
+            shape.1,
+            shape.0 * shape.1,
             data.len()
         );
         Buffer { shape, data }
