@@ -607,8 +607,8 @@ impl Dataset {
     /// Applies to vector datasets, and fetches by the given
     /// _0-based_ index.
     pub fn layer(&self, idx: usize) -> Result<Layer> {
-        let idx = i32::try_from(idx)?;
-        let c_layer = unsafe { gdal_sys::OGR_DS_GetLayer(self.c_dataset(), idx as c_int) };
+        let idx = libc::c_int::try_from(idx)?;
+        let c_layer = unsafe { gdal_sys::OGR_DS_GetLayer(self.c_dataset(), idx) };
         if c_layer.is_null() {
             return Err(_last_null_pointer_err("OGR_DS_GetLayer"));
         }
@@ -620,8 +620,8 @@ impl Dataset {
     /// Applies to vector datasets, and fetches by the given
     /// _0-based_ index.
     pub fn into_layer(self, idx: usize) -> Result<OwnedLayer> {
-        let idx = i32::try_from(idx)?;
-        let c_layer = unsafe { gdal_sys::OGR_DS_GetLayer(self.c_dataset(), idx as c_int) };
+        let idx = libc::c_int::try_from(idx)?;
+        let c_layer = unsafe { gdal_sys::OGR_DS_GetLayer(self.c_dataset(), idx) };
         if c_layer.is_null() {
             return Err(_last_null_pointer_err("OGR_DS_GetLayer"));
         }
