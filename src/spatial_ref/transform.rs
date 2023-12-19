@@ -205,6 +205,7 @@ impl CoordTransform {
 mod tests {
     use super::*;
     use crate::assert_almost_eq;
+    use crate::spatial_ref::srs::AxisMappingStrategy;
     use crate::vector::Geometry;
 
     #[cfg(all(major_ge_3, minor_ge_4))]
@@ -244,9 +245,7 @@ mod tests {
         assert_almost_eq(out_bounds[3], bounds[3]);
 
         // force EPSG:4326 into x,y order to match source SpatialRef
-        spatial_ref2.set_axis_mapping_strategy(
-            gdal_sys::OSRAxisMappingStrategy::OAMS_TRADITIONAL_GIS_ORDER,
-        );
+        spatial_ref2.set_axis_mapping_strategy(AxisMappingStrategy::TraditionalGisOrder);
         transform = CoordTransform::new(&spatial_ref1, &spatial_ref2).unwrap();
         out_bounds = transform.transform_bounds(&bounds, 21).unwrap();
         assert_almost_eq(out_bounds[0], bounds[0]);
@@ -277,13 +276,9 @@ mod tests {
 
         // TODO: handle axis order in tests
         #[cfg(major_ge_3)]
-        spatial_ref1.set_axis_mapping_strategy(
-            gdal_sys::OSRAxisMappingStrategy::OAMS_TRADITIONAL_GIS_ORDER,
-        );
+        spatial_ref1.set_axis_mapping_strategy(AxisMappingStrategy::TraditionalGisOrder);
         #[cfg(major_ge_3)]
-        spatial_ref2.set_axis_mapping_strategy(
-            gdal_sys::OSRAxisMappingStrategy::OAMS_TRADITIONAL_GIS_ORDER,
-        );
+        spatial_ref2.set_axis_mapping_strategy(AxisMappingStrategy::TraditionalGisOrder);
 
         let transform = CoordTransform::new(&spatial_ref1, &spatial_ref2).unwrap();
         let mut xs = [23.43, 23.50];
@@ -314,13 +309,9 @@ mod tests {
 
         // TODO: handle axis order in tests
         #[cfg(major_ge_3)]
-        spatial_ref1.set_axis_mapping_strategy(
-            gdal_sys::OSRAxisMappingStrategy::OAMS_TRADITIONAL_GIS_ORDER,
-        );
+        spatial_ref1.set_axis_mapping_strategy(AxisMappingStrategy::TraditionalGisOrder);
         #[cfg(major_ge_3)]
-        spatial_ref2.set_axis_mapping_strategy(
-            gdal_sys::OSRAxisMappingStrategy::OAMS_TRADITIONAL_GIS_ORDER,
-        );
+        spatial_ref2.set_axis_mapping_strategy(AxisMappingStrategy::TraditionalGisOrder);
 
         let htransform = CoordTransform::new(&spatial_ref2, &spatial_ref1).unwrap();
         geom.transform_inplace(&htransform).unwrap();
@@ -334,13 +325,9 @@ mod tests {
 
         // TODO: handle axis order in tests
         #[cfg(major_ge_3)]
-        wgs84.set_axis_mapping_strategy(
-            gdal_sys::OSRAxisMappingStrategy::OAMS_TRADITIONAL_GIS_ORDER,
-        );
+        wgs84.set_axis_mapping_strategy(AxisMappingStrategy::TraditionalGisOrder);
         #[cfg(major_ge_3)]
-        dhd_2.set_axis_mapping_strategy(
-            gdal_sys::OSRAxisMappingStrategy::OAMS_TRADITIONAL_GIS_ORDER,
-        );
+        dhd_2.set_axis_mapping_strategy(AxisMappingStrategy::TraditionalGisOrder);
 
         let mut x = [1979105.06, 0.0];
         let mut y = [5694052.67, 0.0];
@@ -355,13 +342,9 @@ mod tests {
 
         // TODO: handle axis order in tests
         #[cfg(major_ge_3)]
-        wgs84.set_axis_mapping_strategy(
-            gdal_sys::OSRAxisMappingStrategy::OAMS_TRADITIONAL_GIS_ORDER,
-        );
+        wgs84.set_axis_mapping_strategy(AxisMappingStrategy::TraditionalGisOrder);
         #[cfg(major_ge_3)]
-        webmercator.set_axis_mapping_strategy(
-            gdal_sys::OSRAxisMappingStrategy::OAMS_TRADITIONAL_GIS_ORDER,
-        );
+        webmercator.set_axis_mapping_strategy(AxisMappingStrategy::TraditionalGisOrder);
 
         let mut x = [1000000.0];
         let mut y = [1000000.0];
