@@ -1,5 +1,5 @@
 use crate::utils::{_last_null_pointer_err, _string};
-use gdal_sys::{self, OGRErr};
+use gdal_sys::{self, OGRErr, OSRAxisMappingStrategy};
 use std::ffi::{CStr, CString};
 use std::ptr::{self};
 use std::str::FromStr;
@@ -403,21 +403,30 @@ impl SpatialRef {
     }
 
     #[cfg(major_ge_3)]
-    pub fn set_axis_mapping_strategy(&mut self, strategy: gdal_sys::OSRAxisMappingStrategy::Type) {
+    /// Set the data axis to CRS axis mapping strategy.
+    ///
+    /// # Notes
+    ///
+    /// Starting with GDAL 3.5, the `OSR_DEFAULT_AXIS_MAPPING_STRATEGY` configuration option can be
+    /// set to `"TRADITIONAL_GIS_ORDER"` or `"AUTHORITY_COMPLIANT"` (the later being the default
+    /// value when the option is not set) to control the value of the data axis to CRS axis
+    /// mapping strategy when a [`SpatialRef`] object is created.
+    /// Calling [`set_axis_mapping_strategy`][Self::set_axis_mapping_strategy] will override this default value.
+    ///
+    /// See: [`OSRSetAxisMappingStrategy`](https://gdal.org/api/ogrspatialref.html#_CPPv4N19OGRSpatialReference22SetAxisMappingStrategyE22OSRAxisMappingStrategy)
+    pub fn set_axis_mapping_strategy(&mut self, strategy: AxisMappingStrategy) {
         unsafe {
-            gdal_sys::OSRSetAxisMappingStrategy(self.0, strategy);
+            gdal_sys::OSRSetAxisMappingStrategy(self.0, strategy.gdal_ordinal());
         }
     }
 
     #[cfg(major_ge_3)]
-    #[deprecated(note = "use `axis_mapping_strategy` instead")]
-    pub fn get_axis_mapping_strategy(&self) -> gdal_sys::OSRAxisMappingStrategy::Type {
-        self.axis_mapping_strategy()
-    }
-
-    #[cfg(major_ge_3)]
-    pub fn axis_mapping_strategy(&self) -> gdal_sys::OSRAxisMappingStrategy::Type {
-        unsafe { gdal_sys::OSRGetAxisMappingStrategy(self.0) }
+    /// Return the data axis to CRS axis mapping strategy.
+    ///
+    /// See: [`OSRGetAxisMappingStrategy`](https://gdal.org/api/ogrspatialref.html#_CPPv4NK19OGRSpatialReference22GetAxisMappingStrategyEv)
+    pub fn axis_mapping_strategy(&self) -> AxisMappingStrategy {
+        let id = unsafe { gdal_sys::OSRGetAxisMappingStrategy(self.0) };
+        id.try_into().expect("valid enumeration ordinal from GDAL")
     }
 
     #[cfg(major_ge_3)]
@@ -606,6 +615,47 @@ pub struct AreaOfUse {
     pub name: String,
 }
 
+#[cfg(major_ge_3)]
+/// Data axis to CRS axis mapping strategy.
+///
+/// See: [`OSRGetAxisMappingStrategy`](https://gdal.org/api/ogrspatialref.html#_CPPv4NK19OGRSpatialReference22GetAxisMappingStrategyEv)
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
+#[repr(u32)]
+pub enum AxisMappingStrategy {
+    /// For geographic CRS with lat/long order, the data will still be long/lat ordered.
+    /// Similarly for a projected CRS with northing/easting order, the data will still
+    /// be easting/northing ordered.
+    TraditionalGisOrder = OSRAxisMappingStrategy::OAMS_TRADITIONAL_GIS_ORDER,
+    /// The data axis will be identical to the CRS axis.
+    AuthorityCompliant = OSRAxisMappingStrategy::OAMS_AUTHORITY_COMPLIANT,
+    /// The data axes are custom-defined via [`gdal_sys::OSRSetDataAxisToSRSAxisMapping`].
+    Custom = OSRAxisMappingStrategy::OAMS_CUSTOM,
+}
+
+impl AxisMappingStrategy {
+    #[inline]
+    pub(crate) fn gdal_ordinal(&self) -> OSRAxisMappingStrategy::Type {
+        *self as OSRAxisMappingStrategy::Type
+    }
+}
+
+impl TryFrom<u32> for AxisMappingStrategy {
+    type Error = GdalError;
+
+    fn try_from(value: u32) -> std::result::Result<Self, Self::Error> {
+        use OSRAxisMappingStrategy::*;
+
+        match value {
+            OAMS_TRADITIONAL_GIS_ORDER => Ok(Self::TraditionalGisOrder),
+            OAMS_AUTHORITY_COMPLIANT => Ok(Self::AuthorityCompliant),
+            OAMS_CUSTOM => Ok(Self::Custom),
+            o => Err(GdalError::BadArgument(format!(
+                "unknown OSRAxisMappingStrategy ordinal '{o}'"
+            ))),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -751,14 +801,12 @@ mod tests {
         let mut spatial_ref = SpatialRef::from_epsg(4326).unwrap();
         assert_eq!(
             spatial_ref.axis_mapping_strategy(),
-            gdal_sys::OSRAxisMappingStrategy::OAMS_AUTHORITY_COMPLIANT
+            AxisMappingStrategy::AuthorityCompliant
         );
-        spatial_ref.set_axis_mapping_strategy(
-            gdal_sys::OSRAxisMappingStrategy::OAMS_TRADITIONAL_GIS_ORDER,
-        );
+        spatial_ref.set_axis_mapping_strategy(AxisMappingStrategy::TraditionalGisOrder);
         assert_eq!(
             spatial_ref.axis_mapping_strategy(),
-            gdal_sys::OSRAxisMappingStrategy::OAMS_TRADITIONAL_GIS_ORDER
+            AxisMappingStrategy::TraditionalGisOrder
         );
     }
 

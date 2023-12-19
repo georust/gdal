@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Created `enum AxisMappingStrategy` for `OSRAxisMappingStrategy` ordinals.
+- **Breaking**: `SpatialRef::{set_}axis_mapping_strategy` use `AxisMappingStrategy` instead of `gdal_sys::OSRAxisMappingStrategy::Type`.
+
+   - <https://github.com/georust/gdal/pull/498>
+
 - Defers the gdal_i.lib missing message until after the pkg-config check and outputs pkg-config metadata in case of a static build.
 
    - <https://github.com/georust/gdal/pull/492>
