@@ -648,6 +648,21 @@ impl<'a> Feature<'a> {
         }
     }
 
+    pub fn set_field_null(&self, field_name: &str) -> Result<()> {
+        let c_str_field_name = CString::new(field_name)?;
+        let field_id =
+            unsafe { gdal_sys::OGR_F_GetFieldIndex(self.c_feature(), c_str_field_name.as_ptr()) };
+        if field_id == -1 {
+            return Err(GdalError::InvalidFieldName {
+                field_name: field_name.to_string(),
+                method_name: "OGR_F_GetFieldIndex",
+            });
+        }
+
+        unsafe { gdal_sys::OGR_F_SetFieldNull(self.c_feature(), field_id) };
+        Ok(())
+    }
+
     pub fn set_geometry(&mut self, geom: Geometry) -> Result<()> {
         let rv = unsafe { gdal_sys::OGR_F_SetGeometry(self.c_feature, geom.c_geometry()) };
         if rv != OGRErr::OGRERR_NONE {
@@ -911,9 +926,30 @@ pub fn field_type_to_name(ty: OGRFieldType::Type) -> String {
     _string(rv)
 }
 
-#[test]
-pub fn test_field_type_to_name() {
-    assert_eq!(field_type_to_name(OGRFieldType::OFTReal), "Real");
-    // We don't care what it returns when passed an invalid value, just that it doesn't crash.
-    field_type_to_name(4372521);
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::test_utils::fixture;
+    use crate::Dataset;
+
+    #[test]
+    fn test_field_type_to_name() {
+        assert_eq!(field_type_to_name(OGRFieldType::OFTReal), "Real");
+        // We don't care what it returns when passed an invalid value, just that it doesn't crash.
+        field_type_to_name(4372521);
+    }
+
+    #[test]
+    fn test_field_set_null() {
+        let ds = Dataset::open(fixture("roads.geojson")).unwrap();
+
+        let mut layer = ds.layers().next().expect("layer");
+        let feature = layer.features().next().expect("feature");
+        for (field_name, field_value) in feature.fields() {
+            if let Some(_value) = field_value {
+                feature.set_field_null(&field_name).unwrap();
+                assert!(feature.field(&field_name).unwrap().is_none());
+            }
+        }
+    }
 }
