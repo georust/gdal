@@ -32,9 +32,6 @@ impl Dataset {
     ///
     /// # Errors
     /// Returns an error if the band cannot be read, including in the case the index is 0.
-    ///
-    /// # Panics
-    /// Panics if the band index is greater than `c_int::MAX`.
     pub fn rasterband(&self, band_index: usize) -> Result<RasterBand> {
         let band_index = libc::c_int::try_from(band_index)?;
 
@@ -675,7 +672,6 @@ impl<'a> RasterBand<'a> {
     /// * `window` - the window position from top left
     /// * `window_size` - the window size (GDAL will interpolate data if window_size != Buffer.size)
     /// * `buffer` - the data to write into the window
-    ///
     pub fn write<T: GdalType + Copy>(
         &mut self,
         window: (isize, isize),
@@ -1012,9 +1008,6 @@ impl<'a> RasterBand<'a> {
     /// * `min` - Histogram lower bound
     /// * `max` - Histogram upper bound
     /// * `counts` - Histogram values for each bucket
-    ///
-    /// # Panics
-    /// Panics if the `counts.len()` is greater than `i32::MAX`.
     pub fn set_default_histogram(&self, min: f64, max: f64, counts: &mut [u64]) -> Result<()> {
         let n_buckets = libc::c_int::try_from(counts.len())?;
 
