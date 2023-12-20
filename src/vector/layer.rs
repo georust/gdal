@@ -9,7 +9,7 @@ use libc::c_int;
 use std::ffi::NulError;
 use std::mem::MaybeUninit;
 use std::ptr::null_mut;
-use std::{convert::TryInto, ffi::CString, marker::PhantomData};
+use std::{ffi::CString, marker::PhantomData};
 
 use crate::errors::*;
 use crate::vector::feature::{FeatureIterator, OwnedFeatureIterator};
@@ -507,8 +507,8 @@ pub trait LayerAccess: Sized {
 
 pub struct LayerIterator<'a> {
     dataset: &'a Dataset,
-    idx: isize,
-    count: isize,
+    idx: usize,
+    count: usize,
 }
 
 impl<'a> Iterator for LayerIterator<'a> {
@@ -530,10 +530,8 @@ impl<'a> Iterator for LayerIterator<'a> {
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        match Some(self.count).and_then(|s| s.try_into().ok()) {
-            Some(size) => (size, Some(size)),
-            None => (0, None),
-        }
+        let size = self.count;
+        (size, Some(size))
     }
 }
 
@@ -600,16 +598,17 @@ impl Dataset {
     }
 
     /// Get the number of layers in this dataset.
-    pub fn layer_count(&self) -> isize {
-        (unsafe { gdal_sys::OGR_DS_GetLayerCount(self.c_dataset()) }) as isize
+    pub fn layer_count(&self) -> usize {
+        (unsafe { gdal_sys::OGR_DS_GetLayerCount(self.c_dataset()) }) as usize
     }
 
     /// Fetch a layer by index.
     ///
     /// Applies to vector datasets, and fetches by the given
     /// _0-based_ index.
-    pub fn layer(&self, idx: isize) -> Result<Layer> {
-        let c_layer = unsafe { gdal_sys::OGR_DS_GetLayer(self.c_dataset(), idx as c_int) };
+    pub fn layer(&self, idx: usize) -> Result<Layer> {
+        let idx = libc::c_int::try_from(idx)?;
+        let c_layer = unsafe { gdal_sys::OGR_DS_GetLayer(self.c_dataset(), idx) };
         if c_layer.is_null() {
             return Err(_last_null_pointer_err("OGR_DS_GetLayer"));
         }
@@ -620,8 +619,9 @@ impl Dataset {
     ///
     /// Applies to vector datasets, and fetches by the given
     /// _0-based_ index.
-    pub fn into_layer(self, idx: isize) -> Result<OwnedLayer> {
-        let c_layer = unsafe { gdal_sys::OGR_DS_GetLayer(self.c_dataset(), idx as c_int) };
+    pub fn into_layer(self, idx: usize) -> Result<OwnedLayer> {
+        let idx = libc::c_int::try_from(idx)?;
+        let c_layer = unsafe { gdal_sys::OGR_DS_GetLayer(self.c_dataset(), idx) };
         if c_layer.is_null() {
             return Err(_last_null_pointer_err("OGR_DS_GetLayer"));
         }
@@ -732,6 +732,7 @@ impl Dataset {
 mod tests {
     use super::{LayerCaps::*, *};
     use crate::options::DatasetOptions;
+    use crate::spatial_ref::AxisMappingStrategy;
     use crate::test_utils::{fixture, open_gpkg_for_update, SuppressGDALErrorLog, TempFixture};
     use crate::vector::feature::FeatureIterator;
     use crate::{assert_almost_eq, Dataset, DriverManager, GdalOpenFlags};
@@ -1470,7 +1471,7 @@ mod tests {
         let geom_field = layer.defn().geom_fields().next().unwrap();
         let mut spatial_ref2 = SpatialRef::from_epsg(4326).unwrap();
         #[cfg(major_ge_3)]
-        spatial_ref2.set_axis_mapping_strategy(0);
+        spatial_ref2.set_axis_mapping_strategy(AxisMappingStrategy::TraditionalGisOrder);
 
         assert_eq!(geom_field.spatial_ref().unwrap(), spatial_ref2);
     }
