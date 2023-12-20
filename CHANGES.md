@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Implemented `Feature::set_field_null`
+
+  - <https://github.com/georust/gdal/pull/501>
+
 - **Breaking**: Changed a number of APIs using `isize` when `usize` is semantically more appropriate: `Driver::create.*`, `Rasterband::overview`, `Dataset::{layer|into_layer|layer_count}`.  
 
   - <https://github.com/georust/gdal/pull/497>
