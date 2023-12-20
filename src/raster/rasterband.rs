@@ -32,14 +32,11 @@ impl Dataset {
     ///
     /// # Errors
     /// Returns an error if the band cannot be read, including in the case the index is 0.
-    ///
-    /// # Panics
-    /// Panics if the band index is greater than `c_int::MAX`.
     pub fn rasterband(&self, band_index: usize) -> Result<RasterBand> {
-        assert!(band_index <= c_int::MAX as usize);
+        let band_index = libc::c_int::try_from(band_index)?;
 
         unsafe {
-            let c_band = gdal_sys::GDALGetRasterBand(self.c_dataset(), band_index as c_int);
+            let c_band = gdal_sys::GDALGetRasterBand(self.c_dataset(), band_index);
             if c_band.is_null() {
                 return Err(_last_null_pointer_err("GDALGetRasterBand"));
             }
@@ -375,7 +372,9 @@ impl<'a> RasterBand<'a> {
         e_resample_alg: Option<ResampleAlg>,
     ) -> Result<()> {
         let pixels = size.0 * size.1;
-        assert_eq!(buffer.len(), pixels);
+        if buffer.len() != pixels {
+            return Err(GdalError::BufferSizeMismatch(buffer.len(), size));
+        }
 
         let resample_alg = e_resample_alg.unwrap_or(ResampleAlg::NearestNeighbour);
 
@@ -673,14 +672,19 @@ impl<'a> RasterBand<'a> {
     /// * `window` - the window position from top left
     /// * `window_size` - the window size (GDAL will interpolate data if window_size != Buffer.size)
     /// * `buffer` - the data to write into the window
-    ///
     pub fn write<T: GdalType + Copy>(
         &mut self,
         window: (isize, isize),
         window_size: (usize, usize),
         buffer: &Buffer<T>,
     ) -> Result<()> {
-        assert_eq!(buffer.data.len(), buffer.size.0 * buffer.size.1);
+        if buffer.data.len() != buffer.size.0 * buffer.size.1 {
+            return Err(GdalError::BufferSizeMismatch(
+                buffer.data.len(),
+                buffer.size,
+            ));
+        }
+
         let rv = unsafe {
             gdal_sys::GDALRasterIO(
                 self.c_rasterband,
@@ -835,10 +839,12 @@ impl<'a> RasterBand<'a> {
         unsafe { Ok(gdal_sys::GDALGetOverviewCount(self.c_rasterband)) }
     }
 
-    pub fn overview(&self, overview_index: isize) -> Result<RasterBand<'a>> {
+    pub fn overview(&self, overview_index: usize) -> Result<RasterBand<'a>> {
+        let overview_index = libc::c_int::try_from(overview_index)?;
+
         unsafe {
             let c_band = self.c_rasterband;
-            let overview = gdal_sys::GDALGetOverview(c_band, overview_index as libc::c_int);
+            let overview = gdal_sys::GDALGetOverview(c_band, overview_index);
             if overview.is_null() {
                 return Err(_last_null_pointer_err("GDALGetOverview"));
             }
@@ -1002,21 +1008,11 @@ impl<'a> RasterBand<'a> {
     /// * `min` - Histogram lower bound
     /// * `max` - Histogram upper bound
     /// * `counts` - Histogram values for each bucket
-    ///
-    /// # Panics
-    /// Panics if the `counts.len()` is greater than `i32::MAX`.
     pub fn set_default_histogram(&self, min: f64, max: f64, counts: &mut [u64]) -> Result<()> {
-        let n_buckets = counts.len();
-        assert!(n_buckets <= i32::MAX as usize);
+        let n_buckets = libc::c_int::try_from(counts.len())?;
 
         let rv = unsafe {
-            GDALSetDefaultHistogramEx(
-                self.c_rasterband,
-                min,
-                max,
-                n_buckets as i32,
-                counts.as_mut_ptr(),
-            )
+            GDALSetDefaultHistogramEx(self.c_rasterband, min, max, n_buckets, counts.as_mut_ptr())
         };
 
         match CplErrType::from(rv) {
@@ -1048,16 +1044,15 @@ impl<'a> RasterBand<'a> {
             ));
         }
 
-        assert!(n_buckets <= i32::MAX as usize);
-
-        let mut counts = vec![0; n_buckets];
+        let n_buckets = libc::c_int::try_from(n_buckets)?;
+        let mut counts = vec![0; n_buckets as usize];
 
         let rv = unsafe {
             GDALGetRasterHistogramEx(
                 self.c_rasterband,
                 min,
                 max,
-                n_buckets as i32,
+                n_buckets,
                 counts.as_mut_ptr(),
                 libc::c_int::from(include_out_of_range),
                 libc::c_int::from(is_approx_ok),

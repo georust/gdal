@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- **Breaking**: Changed a number of APIs using `isize` when `usize` is semantically more appropriate: `Driver::create.*`, `Rasterband::overview`, `Dataset::{layer|into_layer|layer_count}`.  
+
+  - <https://github.com/georust/gdal/pull/497>
+
 - Created `enum AxisMappingStrategy` for `OSRAxisMappingStrategy` ordinals.
 - **Breaking**: `SpatialRef::{set_}axis_mapping_strategy` use `AxisMappingStrategy` instead of `gdal_sys::OSRAxisMappingStrategy::Type`.
 
