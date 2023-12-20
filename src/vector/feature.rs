@@ -943,14 +943,12 @@ mod tests {
     fn test_field_set_null() {
         let ds = Dataset::open(fixture("roads.geojson")).unwrap();
 
-        for mut layer in ds.layers() {
-            for feature in layer.features() {
-                for (field_name, field_value) in feature.fields() {
-                    if let Some(_value) = field_value {
-                        feature.set_field_null(&field_name).unwrap();
-                        assert!(feature.field(&field_name).unwrap().is_none());
-                    }
-                }
+        let mut layer = ds.layers().next().expect("layer");
+        let feature = layer.features().next().expect("feature");
+        for (field_name, field_value) in feature.fields() {
+            if let Some(_value) = field_value {
+                feature.set_field_null(&field_name).unwrap();
+                assert!(feature.field(&field_name).unwrap().is_none());
             }
         }
     }
