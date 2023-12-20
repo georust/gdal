@@ -1,6 +1,7 @@
 use crate::raster::GdalType;
 use std::ops::{Index, IndexMut};
-use std::slice::Iter;
+use std::slice::{Iter, IterMut};
+use std::vec::IntoIter;
 
 #[cfg(feature = "ndarray")]
 use ndarray::Array2;
@@ -33,7 +34,7 @@ impl<T: GdalType> Buffer<T> {
         Buffer { shape, data }
     }
 
-    /// De-structures `self` into constituent parts.
+    /// Destructures `self` into constituent parts.
     pub fn into_shape_and_vec(self) -> ((usize, usize), Vec<T>) {
         (self.shape, self.data)
     }
@@ -79,7 +80,7 @@ impl<T: GdalType> Buffer<T> {
     }
 
     #[inline]
-    pub(self) fn vec_index_for(&self, coord: (usize, usize)) -> usize {
+    fn vec_index_for(&self, coord: (usize, usize)) -> usize {
         if coord.0 >= self.shape.0 {
             panic!(
                 "index out of bounds: buffer has {} columns but row {} was requested",
@@ -110,12 +111,30 @@ impl<T: GdalType> IndexMut<(usize, usize)> for Buffer<T> {
     }
 }
 
+impl<T: GdalType> IntoIterator for Buffer<T> {
+    type Item = T;
+    type IntoIter = IntoIter<T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.data.into_iter()
+    }
+}
+
 impl<'a, T: GdalType> IntoIterator for &'a Buffer<T> {
     type Item = &'a T;
     type IntoIter = Iter<'a, T>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.data.iter()
+    }
+}
+
+impl<'a, T: GdalType> IntoIterator for &'a mut Buffer<T> {
+    type Item = &'a mut T;
+    type IntoIter = IterMut<'a, T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.data.iter_mut()
     }
 }
 
@@ -156,7 +175,7 @@ mod tests {
     fn convert_to() {
         let b = Buffer::new((5, 10), (0..5 * 10).collect());
         let a = b.clone().to_array().unwrap();
-        let expected = Array2::from_shape_fn((10, 5), |(row, col)| row as i32 * 5 + col as i32);
+        let expected = Array2::from_shape_fn((10, 5), |(y, x)| y as i32 * 5 + x as i32);
         assert_eq!(a, expected);
         let b2: Buffer<_> = a.into();
         assert_eq!(b, b2);
@@ -164,7 +183,7 @@ mod tests {
 
     #[test]
     fn convert_from() {
-        let a = Array2::from_shape_fn((10, 5), |(row, col)| row as i32 * 5 + col as i32);
+        let a = Array2::from_shape_fn((10, 5), |(y, x)| y as i32 * 5 + x as i32);
         let b: Buffer<_> = a.clone().into();
         let expected = Buffer::new((5, 10), (0..5 * 10).collect());
         assert_eq!(b, expected);
@@ -208,11 +227,27 @@ mod tests {
 
     #[test]
     fn iter() {
+        // Iter on ref
         let b = Buffer::new((5, 7), (0..5 * 7).collect());
-        let mut iter = b.into_iter();
+        let mut iter = (&b).into_iter();
         let _ = iter.next().unwrap();
         let v = iter.next().unwrap();
         assert_eq!(*v, b[(0, 1)]);
+
+        // Iter on owned
+        let mut iter = b.clone().into_iter();
+        let _ = iter.next().unwrap();
+        let v = iter.next().unwrap();
+        assert_eq!(v, b[(0, 1)]);
+
+        // Iter on mut
+        let mut b = b;
+        let mut iter = (&mut b).into_iter();
+        let _ = iter.next().unwrap();
+        let v = iter.next().unwrap();
+        *v = 99;
+
+        assert_eq!(99, b[(0, 1)]);
     }
 
     #[test]
