@@ -135,7 +135,7 @@ impl<T: GdalType + Copy> From<Array2<T>> for Buffer<T> {
     fn from(value: Array2<T>) -> Self {
         // Array2 shape is (rows, cols) and Buffer shape is (cols in x-axis, rows in y-axis)
         let shape = value.shape();
-        let (rows, cols) = (shape[0], shape[1]);
+        let (cols, rows) = (shape[1], shape[0]);
         let data: Vec<T> = if value.is_standard_layout() {
             value.into_raw_vec()
         } else {
