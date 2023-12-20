@@ -85,6 +85,8 @@ pub enum GdalError {
     },
     #[error(transparent)]
     IntConversionError(#[from] TryFromIntError),
+    #[error("Buffer length {0} does not match raster size {1:?}")]
+    BufferSizeMismatch(usize, (usize, usize)),
 }
 
 /// A wrapper for [`CPLErr::Type`] that reflects it as an enum
