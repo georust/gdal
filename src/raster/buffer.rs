@@ -125,19 +125,20 @@ impl<T: GdalType> Buffer<T> {
         )?)
     }
 
+    #[cold]
+    #[inline(never)]
+    #[track_caller]
+    fn panic_bad_index(shape: (usize, usize), coord: (usize, usize)) -> ! {
+        panic!(
+        "index out of bounds: buffer has shape `{shape:?}` but coordinate `{coord:?}` was requested",
+    );
+    }
+
     #[inline]
+    #[track_caller]
     fn vec_index_for(&self, coord: (usize, usize)) -> usize {
-        if coord.0 >= self.shape.0 {
-            panic!(
-                "index out of bounds: buffer has {} columns but row {} was requested",
-                self.shape.0, coord.0
-            );
-        }
-        if coord.1 >= self.shape.1 {
-            panic!(
-                "index out of bounds: buffer has {} rows but row {} was requested",
-                self.shape.1, coord.1
-            );
+        if coord.0 >= self.shape.0 || coord.1 >= self.shape.1 {
+            Self::panic_bad_index(self.shape, coord);
         }
         coord.0 * self.shape.0 + coord.1
     }
