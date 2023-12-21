@@ -80,12 +80,3 @@ pub fn _path_to_c_string(path: &Path) -> Result<CString> {
     let path_str = path.to_string_lossy();
     CString::new(path_str.as_ref()).map_err(Into::into)
 }
-
-#[inline]
-pub(crate) fn coerce_size_tuple<T>(s: (T, T)) -> Result<(libc::c_int, libc::c_int)>
-where
-    T: TryInto<libc::c_int>,
-    GdalError: From<<T as TryInto<i32>>::Error>,
-{
-    Ok((s.0.try_into()?, s.1.try_into()?))
-}
