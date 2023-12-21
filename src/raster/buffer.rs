@@ -6,7 +6,52 @@ use std::vec::IntoIter;
 #[cfg(feature = "ndarray")]
 use ndarray::Array2;
 
-/// A 2-D array backed by it's `size` (cols, rows) and a row-major `Vec<T>` and it's dimensions.
+/// `Buffer<T>` manages cell values in in raster I/O operations.
+///
+/// It conceptually represents a 2-D array backed by a `Vec<T>` with row-major organization
+/// to represent `shape` (cols, rows).
+///
+/// 2-D indexing is available through `Index<(usize, usize)>` and `IndexMut<(usize, usize)>`
+/// implementations. The underlying data can be accessed linearly via [`Buffer<T>::data()`]
+/// and [`Buffer<T>::data_mut()`]. [`IntoIterator`] is also provided.
+///
+/// If the `ndarray` feature is enabled, a `Buffer<T>` can be converted (without copy)
+/// to an `Array2<T>` via [`Buffer<T>::to_array()`].
+///
+/// # Example
+///
+/// ```rust, no_run
+/// # fn main() -> gdal::errors::Result<()> {
+/// use gdal::Dataset;
+/// use gdal::raster::Buffer;
+/// // Read the band:
+/// let ds = Dataset::open("fixtures/dem-hills.tiff")?;
+/// let band = ds.rasterband(1)?;
+/// let buf: Buffer<f64> = band.read_band_as()?;
+///
+/// // Read cell in the middle:
+/// let size = ds.raster_size();
+/// let center = (size.0/2, size.1/2);
+/// let center_value = buf[center];
+/// assert_eq!(center_value.round(), 166.0);
+///
+/// // Gather basic statistics:
+/// fn min_max(b: &Buffer<f64>) -> (f64, f64) {
+///     b.into_iter().fold((f64::MAX, f64::MIN), | a, v | (v.min(a.0), v.max(a.1)))
+/// }
+/// let (min, max) = min_max(&buf);
+/// assert_eq!(min, -999999.0); // <--- data has a sentinel value
+/// assert_eq!(max.round(), 168.0);
+///
+/// // Mutate the buffer and observe the difference:
+/// let mut buf = buf;
+/// buf[center] = 1e10;
+/// let (min, max) = min_max(&buf);
+/// assert_eq!(max, 1e10);
+///
+/// # Ok(())
+/// # }
+/// ```
 #[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
 pub struct Buffer<T> {
     shape: (usize, usize),
@@ -70,7 +115,8 @@ impl<T: GdalType> Buffer<T> {
     }
 
     #[cfg(feature = "ndarray")]
-    /// Convert `self` into an [`ndarray::Array2`].
+    #[cfg_attr(docsrs, doc(cfg(feature = "ndarray")))]
+    /// Convert `self` into an [`ndarray::Array2<T>`].
     pub fn to_array(self) -> crate::errors::Result<Array2<T>> {
         // Array2 shape is (rows, cols) and Buffer shape is (cols in x-axis, rows in y-axis)
         Ok(Array2::from_shape_vec(
