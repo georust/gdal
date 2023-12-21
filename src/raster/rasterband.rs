@@ -2,7 +2,7 @@ use crate::dataset::Dataset;
 use crate::gdal_major_object::MajorObject;
 use crate::metadata::Metadata;
 use crate::raster::{GdalDataType, GdalType};
-use crate::utils::{_last_cpl_err, _last_null_pointer_err, _string};
+use crate::utils::{_last_cpl_err, _last_null_pointer_err, _string, coerce_size_tuple};
 use gdal_sys::{
     self, CPLErr, GDALColorEntry, GDALColorInterp, GDALColorTableH, GDALComputeRasterMinMax,
     GDALCreateColorRamp, GDALCreateColorTable, GDALDestroyColorTable, GDALGetDefaultHistogramEx,
@@ -374,6 +374,10 @@ impl<'a> RasterBand<'a> {
             return Err(GdalError::BufferSizeMismatch(buffer.len(), size));
         }
 
+        let window = coerce_size_tuple(window)?;
+        let window_size = coerce_size_tuple(window_size)?;
+        let size = coerce_size_tuple(size)?;
+
         let resample_alg = e_resample_alg.unwrap_or(ResampleAlg::NearestNeighbour);
 
         let mut options: GDALRasterIOExtraArg = RasterIOExtraArg {
@@ -388,13 +392,13 @@ impl<'a> RasterBand<'a> {
             gdal_sys::GDALRasterIOEx(
                 self.c_rasterband,
                 GDALRWFlag::GF_Read,
-                window.0 as c_int,
-                window.1 as c_int,
-                window_size.0 as c_int,
-                window_size.1 as c_int,
+                window.0,
+                window.1,
+                window_size.0,
+                window_size.1,
                 buffer.as_mut_ptr() as *mut c_void,
-                size.0 as c_int,
-                size.1 as c_int,
+                size.0,
+                size.1,
                 T::gdal_ordinal(),
                 0,
                 0,
@@ -439,7 +443,11 @@ impl<'a> RasterBand<'a> {
         shape: (usize, usize),
         e_resample_alg: Option<ResampleAlg>,
     ) -> Result<Buffer<T>> {
+        let window = coerce_size_tuple(window)?;
+        let window_size = coerce_size_tuple(window_size)?;
+
         let pixels = shape.0 * shape.1;
+        let c_shape = coerce_size_tuple(shape)?;
         let mut data: Vec<T> = Vec::with_capacity(pixels);
 
         let resample_alg = e_resample_alg.unwrap_or(ResampleAlg::NearestNeighbour);
@@ -461,13 +469,13 @@ impl<'a> RasterBand<'a> {
             gdal_sys::GDALRasterIOEx(
                 self.c_rasterband,
                 GDALRWFlag::GF_Read,
-                window.0 as c_int,
-                window.1 as c_int,
-                window_size.0 as c_int,
-                window_size.1 as c_int,
+                window.0,
+                window.1,
+                window_size.0,
+                window_size.1,
                 data.as_mut_ptr() as *mut c_void,
-                shape.0 as c_int,
-                shape.1 as c_int,
+                c_shape.0,
+                c_shape.1,
                 T::gdal_ordinal(),
                 0,
                 0,
@@ -488,7 +496,7 @@ impl<'a> RasterBand<'a> {
     /// Read the full band as a [`Buffer<T>`], where `T` implements [`GdalType`].
     pub fn read_band_as<T: Copy + GdalType>(&self) -> Result<Buffer<T>> {
         let size = self.size();
-        self.read_as::<T>((0, 0), (size.0, size.1), (size.0, size.1), None)
+        self.read_as::<T>((0, 0), size, size, None)
     }
 
     /// Read a [`Buffer<T>`] from a [`Dataset`] block, where `T` implements [`GdalType`].
@@ -532,11 +540,13 @@ impl<'a> RasterBand<'a> {
         let pixels = size.0 * size.1;
         let mut data: Vec<T> = Vec::with_capacity(pixels);
 
+        let block_index = coerce_size_tuple(block_index)?;
+
         let rv = unsafe {
             gdal_sys::GDALReadBlock(
                 self.c_rasterband,
-                block_index.0 as c_int,
-                block_index.1 as c_int,
+                block_index.0,
+                block_index.1,
                 data.as_mut_ptr() as *mut c_void,
             )
         };
@@ -620,11 +630,13 @@ impl<'a> RasterBand<'a> {
             ));
         }
 
+        let block_index = coerce_size_tuple(block_index)?;
+
         let rv = unsafe {
             gdal_sys::GDALWriteBlock(
                 self.c_rasterband,
-                block_index.0 as c_int,
-                block_index.1 as c_int,
+                block_index.0,
+                block_index.1,
                 block.data_mut().as_mut_ptr() as *mut c_void,
             )
         };
@@ -657,17 +669,21 @@ impl<'a> RasterBand<'a> {
             return Err(GdalError::BufferSizeMismatch(buffer.len(), shape));
         }
 
+        let shape = coerce_size_tuple(shape)?;
+        let window = coerce_size_tuple(window)?;
+        let window_size = coerce_size_tuple(window_size)?;
+
         let rv = unsafe {
             gdal_sys::GDALRasterIO(
                 self.c_rasterband,
                 GDALRWFlag::GF_Write,
-                window.0 as c_int,
-                window.1 as c_int,
-                window_size.0 as c_int,
-                window_size.1 as c_int,
+                window.0,
+                window.1,
+                window_size.0,
+                window_size.1,
                 buffer.data_mut().as_mut_ptr() as *mut c_void,
-                shape.0 as c_int,
-                shape.1 as c_int,
+                shape.0,
+                shape.1,
                 T::gdal_ordinal(),
                 0,
                 0,
@@ -1149,7 +1165,7 @@ pub enum ColorInterpretation {
     Undefined,
     /// Grayscale
     GrayIndex,
-    /// Paletted (see associated color table)
+    /// Palette (see associated color table)
     PaletteIndex,
     /// Red band of RGBA image
     RedBand,
