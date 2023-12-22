@@ -1149,7 +1149,7 @@ pub enum ColorInterpretation {
     Undefined,
     /// Grayscale
     GrayIndex,
-    /// Palette (see associated color table)
+    /// Paletted (see associated color table)
     PaletteIndex,
     /// Red band of RGBA image
     RedBand,

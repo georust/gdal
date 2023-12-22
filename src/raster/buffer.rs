@@ -37,7 +37,7 @@ use ndarray::Array2;
 ///
 /// // Gather basic statistics:
 /// fn min_max(b: &Buffer<f64>) -> (f64, f64) {
-///     b.into_iter().fold((f64::MAX, f64::MIN), | a, v | (v.min(a.0), v.max(a.1)))
+///     b.into_iter().fold((f64::MAX, f64::MIN), |a, v| (v.min(a.0), v.max(a.1)))
 /// }
 /// let (min, max) = min_max(&buf);
 /// assert_eq!(min, -999999.0); // <--- data has a sentinel value
@@ -129,9 +129,7 @@ impl<T: GdalType> Buffer<T> {
     #[inline(never)]
     #[track_caller]
     fn panic_bad_index(shape: (usize, usize), coord: (usize, usize)) -> ! {
-        panic!(
-        "index out of bounds: buffer has shape `{shape:?}` but coordinate `{coord:?}` was requested",
-    );
+        panic!("index out of bounds: buffer has shape `{shape:?}` but coordinate `{coord:?}` was requested");
     }
 
     #[inline]
