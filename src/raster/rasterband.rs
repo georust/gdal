@@ -11,15 +11,13 @@ use gdal_sys::{
     GDALRasterIOExtraArg, GDALSetColorEntry, GDALSetDefaultHistogramEx, GDALSetRasterColorTable,
 };
 use libc::c_int;
-use std::ffi::CString;
+use std::ffi::{c_void, CString};
 use std::fmt::{Debug, Display, Formatter};
 use std::marker::PhantomData;
 use std::str::FromStr;
 
-#[cfg(feature = "ndarray")]
-use ndarray::Array2;
-
 use crate::errors::*;
+use crate::raster::buffer::Buffer;
 use crate::raster::ResampleAlg::{
     Average, Bilinear, Cubic, CubicSpline, Gauss, Lanczos, Mode, NearestNeighbour,
 };
@@ -104,7 +102,7 @@ impl Dataset {
 /// // Down-sample a image using cubic-spline interpolation
 /// let buf = band1.read_as::<f64>((0, 0), ds.raster_size(), (2, 2), Some(ResampleAlg::CubicSpline))?;
 /// // In this particular image, resulting data should be close to the overall average.
-/// assert!(buf.data.iter().all(|c| (c - stats.mean).abs() < stats.std_dev / 2.0));
+/// assert!(buf.data().iter().all(|c| (c - stats.mean).abs() < stats.std_dev / 2.0));
 /// # Ok(())
 /// # }
 /// ```
@@ -390,13 +388,13 @@ impl<'a> RasterBand<'a> {
             gdal_sys::GDALRasterIOEx(
                 self.c_rasterband,
                 GDALRWFlag::GF_Read,
-                window.0 as c_int,
-                window.1 as c_int,
-                window_size.0 as c_int,
-                window_size.1 as c_int,
-                buffer.as_mut_ptr() as GDALRasterBandH,
-                size.0 as c_int,
-                size.1 as c_int,
+                window.0.try_into()?,
+                window.1.try_into()?,
+                window_size.0.try_into()?,
+                window_size.1.try_into()?,
+                buffer.as_mut_ptr() as *mut c_void,
+                size.0.try_into()?,
+                size.1.try_into()?,
                 T::gdal_ordinal(),
                 0,
                 0,
@@ -429,8 +427,8 @@ impl<'a> RasterBand<'a> {
     /// assert_eq!(band1.band_type(), GdalDataType::UInt8);
     /// let size = 4;
     /// let buf = band1.read_as::<u8>((0, 0), band1.size(), (size, size), Some(ResampleAlg::Bilinear))?;
-    /// assert_eq!(buf.size, (size, size));
-    /// assert_eq!(buf.data, [101u8, 119, 94, 87, 92, 110, 92, 87, 91, 90, 89, 87, 92, 91, 88, 88]);
+    /// assert_eq!(buf.shape(), (size, size));
+    /// assert_eq!(buf.data(), [101u8, 119, 94, 87, 92, 110, 92, 87, 91, 90, 89, 87, 92, 91, 88, 88]);
     /// # Ok(())
     /// # }
     /// ```
@@ -438,10 +436,10 @@ impl<'a> RasterBand<'a> {
         &self,
         window: (isize, isize),
         window_size: (usize, usize),
-        size: (usize, usize),
+        shape: (usize, usize),
         e_resample_alg: Option<ResampleAlg>,
     ) -> Result<Buffer<T>> {
-        let pixels = size.0 * size.1;
+        let pixels = shape.0 * shape.1;
         let mut data: Vec<T> = Vec::with_capacity(pixels);
 
         let resample_alg = e_resample_alg.unwrap_or(ResampleAlg::NearestNeighbour);
@@ -463,13 +461,13 @@ impl<'a> RasterBand<'a> {
             gdal_sys::GDALRasterIOEx(
                 self.c_rasterband,
                 GDALRWFlag::GF_Read,
-                window.0 as c_int,
-                window.1 as c_int,
-                window_size.0 as c_int,
-                window_size.1 as c_int,
-                data.as_mut_ptr() as GDALRasterBandH,
-                size.0 as c_int,
-                size.1 as c_int,
+                window.0.try_into()?,
+                window.1.try_into()?,
+                window_size.0.try_into()?,
+                window_size.1.try_into()?,
+                data.as_mut_ptr() as *mut c_void,
+                shape.0.try_into()?,
+                shape.1.try_into()?,
                 T::gdal_ordinal(),
                 0,
                 0,
@@ -484,46 +482,16 @@ impl<'a> RasterBand<'a> {
             data.set_len(pixels);
         };
 
-        Ok(Buffer { size, data })
-    }
-
-    #[cfg(feature = "ndarray")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "array")))]
-    /// Read a [`Array2<T>`] from this band, where `T` implements [`GdalType`].
-    ///
-    /// # Arguments
-    /// * `window` - the window position from top left
-    /// * `window_size` - the window size (GDAL will interpolate data if window_size != array_size)
-    /// * `array_size` - the desired size of the 'Array'
-    /// * `e_resample_alg` - the resample algorithm used for the interpolation
-    ///
-    /// # Note
-    /// The Matrix shape is (rows, cols) and raster shape is (cols in x-axis, rows in y-axis).
-    pub fn read_as_array<T: Copy + GdalType>(
-        &self,
-        window: (isize, isize),
-        window_size: (usize, usize),
-        array_size: (usize, usize),
-        e_resample_alg: Option<ResampleAlg>,
-    ) -> Result<Array2<T>> {
-        let data = self.read_as::<T>(window, window_size, array_size, e_resample_alg)?;
-
-        // Matrix shape is (rows, cols) and raster shape is (cols in x-axis, rows in y-axis)
-        Ok(Array2::from_shape_vec(
-            (array_size.1, array_size.0),
-            data.data,
-        )?)
+        Ok(Buffer::new(shape, data))
     }
 
     /// Read the full band as a [`Buffer<T>`], where `T` implements [`GdalType`].
     pub fn read_band_as<T: Copy + GdalType>(&self) -> Result<Buffer<T>> {
         let size = self.size();
-        self.read_as::<T>((0, 0), (size.0, size.1), (size.0, size.1), None)
+        self.read_as::<T>((0, 0), size, size, None)
     }
 
-    #[cfg(feature = "ndarray")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "array")))]
-    /// Read a [`Array2<T>`] from a [`Dataset`] block, where `T` implements [`GdalType`].
+    /// Read a [`Buffer<T>`] from a [`Dataset`] block, where `T` implements [`GdalType`].
     ///
     /// # Arguments
     /// * `block_index` - the block index
@@ -549,11 +517,11 @@ impl<'a> RasterBand<'a> {
     /// let dataset = Dataset::open("fixtures/m_3607824_se_17_1_20160620_sub.tif")?;
     /// let band1 = dataset.rasterband(1)?;
     /// let arr = band1.read_block::<u8>((0, 0))?;
-    /// assert_eq!(arr.shape(), &[300, 6]);
+    /// assert_eq!(arr.shape(), (300, 6));
     /// # Ok(())
     /// # }
     /// ```
-    pub fn read_block<T: Copy + GdalType>(&self, block_index: (usize, usize)) -> Result<Array2<T>> {
+    pub fn read_block<T: Copy + GdalType>(&self, block_index: (usize, usize)) -> Result<Buffer<T>> {
         if T::gdal_ordinal() != self.band_type() as u32 {
             return Err(GdalError::BadArgument(
                 "result array type must match band data type".to_string(),
@@ -564,13 +532,12 @@ impl<'a> RasterBand<'a> {
         let pixels = size.0 * size.1;
         let mut data: Vec<T> = Vec::with_capacity(pixels);
 
-        //let no_data:
         let rv = unsafe {
             gdal_sys::GDALReadBlock(
                 self.c_rasterband,
-                block_index.0 as c_int,
-                block_index.1 as c_int,
-                data.as_mut_ptr() as GDALRasterBandH,
+                block_index.0.try_into()?,
+                block_index.1.try_into()?,
+                data.as_mut_ptr() as *mut c_void,
             )
         };
         if rv != CPLErr::CE_None {
@@ -581,15 +548,14 @@ impl<'a> RasterBand<'a> {
             data.set_len(pixels);
         };
 
-        Array2::from_shape_vec((size.1, size.0), data).map_err(Into::into)
+        Ok(Buffer::new(size, data))
     }
 
-    #[cfg(feature = "ndarray")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "array")))]
-    /// Write a [`Array2<T>`] from a [`Dataset`] block, where `T` implements [`GdalType`].
+    /// Write a [`Buffer<T>`] from a [`Dataset`] block, where `T` implements [`GdalType`].
     ///
     /// # Arguments
     /// * `block_index` - the block index
+    /// * `block` - Data buffer to write to block.
     ///
     /// # Notes
     /// Blocks indexes start from 0 and are of form (x, y), where x grows in the horizontal direction.
@@ -600,6 +566,10 @@ impl<'a> RasterBand<'a> {
     /// The last blocks in both directions can be smaller.
     /// [`RasterBand::actual_block_size`] will report the correct dimensions of a block.
     ///
+    /// While drivers make sure that the content of the `block` buffer before and after the call
+    /// is equal, some drivers might temporarily modify it, e.g. to do byte swapping. Therefore
+    /// a `&mut` parameter is required.
+    ///
     /// # Errors
     /// If the block index is not valid, GDAL will return an error.
     ///
@@ -608,8 +578,7 @@ impl<'a> RasterBand<'a> {
     /// ```rust, no_run
     /// # fn main() -> gdal::errors::Result<()> {
     /// use gdal::DriverManager;
-    /// use gdal::raster::RasterCreationOption;
-    /// use ndarray::Array2;
+    /// use gdal::raster::{Buffer, RasterCreationOption};
     ///
     /// let driver = DriverManager::get_driver_by_name("GTiff").unwrap();
     /// let options = [
@@ -635,15 +604,15 @@ impl<'a> RasterBand<'a> {
     ///         &options,
     ///     )?;
     /// let mut band1 = dataset.rasterband(1)?;
-    /// let arr = Array2::from_shape_fn((16, 16), |(y, x)| y as u16 * 16 + x as u16);
-    /// band1.write_block((0, 0), arr)?;
+    /// let arr = Buffer::new((16, 16), (0..16*16).collect());
+    /// band1.write_block((0, 0), &mut arr.into())?;
     /// # Ok(())
     /// # }
     /// ```
     pub fn write_block<T: Copy + GdalType>(
         &mut self,
         block_index: (usize, usize),
-        block: Array2<T>,
+        block: &mut Buffer<T>,
     ) -> Result<()> {
         if T::gdal_ordinal() != self.band_type() as u32 {
             return Err(GdalError::BadArgument(
@@ -651,13 +620,12 @@ impl<'a> RasterBand<'a> {
             ));
         }
 
-        let mut data = block.into_raw_vec();
         let rv = unsafe {
             gdal_sys::GDALWriteBlock(
                 self.c_rasterband,
-                block_index.0 as c_int,
-                block_index.1 as c_int,
-                data.as_mut_ptr() as GDALRasterBandH,
+                block_index.0.try_into()?,
+                block_index.1.try_into()?,
+                block.data_mut().as_mut_ptr() as *mut c_void,
             )
         };
         if rv != CPLErr::CE_None {
@@ -672,30 +640,34 @@ impl<'a> RasterBand<'a> {
     /// * `window` - the window position from top left
     /// * `window_size` - the window size (GDAL will interpolate data if window_size != Buffer.size)
     /// * `buffer` - the data to write into the window
+    ///
+    /// # Notes
+    ///
+    /// While drivers make sure that the content of the `block` buffer before and after the call
+    /// is equal, some drivers might temporarily modify it, e.g. to do byte swapping. Therefore
+    /// a `&mut` parameter is required.
     pub fn write<T: GdalType + Copy>(
         &mut self,
         window: (isize, isize),
         window_size: (usize, usize),
-        buffer: &Buffer<T>,
+        buffer: &mut Buffer<T>,
     ) -> Result<()> {
-        if buffer.data.len() != buffer.size.0 * buffer.size.1 {
-            return Err(GdalError::BufferSizeMismatch(
-                buffer.data.len(),
-                buffer.size,
-            ));
+        let shape = buffer.shape();
+        if buffer.len() != shape.0 * shape.1 {
+            return Err(GdalError::BufferSizeMismatch(buffer.len(), shape));
         }
 
         let rv = unsafe {
             gdal_sys::GDALRasterIO(
                 self.c_rasterband,
                 GDALRWFlag::GF_Write,
-                window.0 as c_int,
-                window.1 as c_int,
-                window_size.0 as c_int,
-                window_size.1 as c_int,
-                buffer.data.as_ptr() as GDALRasterBandH,
-                buffer.size.0 as c_int,
-                buffer.size.1 as c_int,
+                window.0.try_into()?,
+                window.1.try_into()?,
+                window_size.0.try_into()?,
+                window_size.1.try_into()?,
+                buffer.data_mut().as_mut_ptr() as *mut c_void,
+                shape.0.try_into()?,
+                shape.1.try_into()?,
                 T::gdal_ordinal(),
                 0,
                 0,
@@ -1169,19 +1141,6 @@ impl<'a> MajorObject for RasterBand<'a> {
 }
 
 impl<'a> Metadata for RasterBand<'a> {}
-
-pub struct Buffer<T: GdalType> {
-    pub size: (usize, usize),
-    pub data: Vec<T>,
-}
-
-impl<T: GdalType> Buffer<T> {
-    pub fn new(size: (usize, usize), data: Vec<T>) -> Buffer<T> {
-        Buffer { size, data }
-    }
-}
-
-pub type ByteBuffer = Buffer<u8>;
 
 /// Represents a color interpretation of a RasterBand
 #[derive(Debug, PartialEq, Eq)]
