@@ -648,9 +648,25 @@ impl<'a> Feature<'a> {
         }
     }
 
+    /// Clear a field, marking it as null.
+    ///
+    /// See: [`OGRFeature::SetFieldNull`][SetFieldNull]
+    ///
+    /// [SetFieldNull]: https://gdal.org/api/ogrfeature_cpp.html#_CPPv4N10OGRFeature12SetFieldNullEi
     pub fn set_field_null(&self, field_name: &str) -> Result<()> {
         let idx = self.field_idx_from_name(field_name)?;
         unsafe { gdal_sys::OGR_F_SetFieldNull(self.c_feature(), idx) };
+        Ok(())
+    }
+
+    /// Clear a field, marking it as unset.
+    ///
+    /// See: [`OGRFeature::UnsetField`][UnsetField]
+    ///
+    /// [UnsetField]: https://gdal.org/api/ogrfeature_cpp.html#_CPPv4N10OGRFeature10UnsetFieldEi
+    pub fn unset_field(&self, field_name: &str) -> Result<()> {
+        let idx = self.field_idx_from_name(field_name)?;
+        unsafe { gdal_sys::OGR_F_UnsetField(self.c_feature(), idx) };
         Ok(())
     }
 
@@ -941,6 +957,17 @@ mod tests {
                 feature.set_field_null(&field_name).unwrap();
                 assert!(feature.field(&field_name).unwrap().is_none());
             }
+        }
+    }
+
+    #[test]
+    fn test_field_unset() {
+        let ds = Dataset::open(fixture("roads.geojson")).unwrap();
+
+        let mut layer = ds.layers().next().expect("layer");
+        let feature = layer.features().next().expect("feature");
+        for (field_name, _) in feature.fields() {
+            feature.unset_field(&field_name).unwrap();
         }
     }
 }
