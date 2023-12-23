@@ -4,7 +4,7 @@
 
 - **Breaking**: Drop support for GDAL 2.x
 
-   - <https://github.com/georust/gdal/pull/504>
+  - <https://github.com/georust/gdal/pull/504>
 
 - Added `Feature::unset_field`
 
