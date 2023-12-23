@@ -20,11 +20,9 @@ fn main() {
 
     println!("cargo:rustc-cfg=gdal_{major}");
     println!("cargo:rustc-cfg=gdal_{major}_{minor}");
-    println!("cargo:rustc-cfg=gdal_{major}_{minor}_{patch}");
 
     println!("cargo:rustc-cfg=major_is_{major}");
     println!("cargo:rustc-cfg=minor_is_{minor}");
-    println!("cargo:rustc-cfg=patch_is_{patch}");
 
     for major in 3..=major {
         println!("cargo:rustc-cfg=major_ge_{major}");
@@ -32,9 +30,5 @@ fn main() {
 
     for minor in 0..=minor {
         println!("cargo:rustc-cfg=minor_ge_{minor}");
-    }
-
-    for patch in 0..=patch {
-        println!("cargo:rustc-cfg=patch_ge_{patch}");
     }
 }
