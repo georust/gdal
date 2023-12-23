@@ -14,8 +14,8 @@ fn main() {
     let minor = (gdal_version - major * 1000000) / 10000;
     let patch = (gdal_version - major * 1000000 - minor * 10000) / 100;
 
-    if major < 2 {
-        panic!("The GDAL crate requires a GDAL version >= 2.0.0. Found {major}.{minor}.{patch}");
+    if major < 3 {
+        panic!("The GDAL crate requires a GDAL version >= 3.0.0. Found {major}.{minor}.{patch}");
     }
 
     println!("cargo:rustc-cfg=gdal_{major}");
@@ -26,8 +26,7 @@ fn main() {
     println!("cargo:rustc-cfg=minor_is_{minor}");
     println!("cargo:rustc-cfg=patch_is_{patch}");
 
-    // we only support GDAL >= 2.0.
-    for major in 2..=major {
+    for major in 3..=major {
         println!("cargo:rustc-cfg=major_ge_{major}");
     }
 

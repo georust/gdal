@@ -12,7 +12,6 @@ pub struct DatasetOptions<'a> {
 }
 
 // These are skipped by bindgen and manually updated.
-#[cfg(major_ge_2)]
 bitflags! {
     /// GDal extended open flags used by [`Dataset::open_ex`].
     ///
@@ -39,7 +38,6 @@ bitflags! {
         /// Allow vector drivers to be used.
         const GDAL_OF_VECTOR = 0x04;
         /// Allow gnm drivers to be used.
-        #[cfg(any( all(major_ge_2,minor_ge_1), major_ge_3 ))]
         const GDAL_OF_GNM = 0x08;
         /// Allow multidimensional raster drivers to be used.
         #[cfg(all(major_ge_3,minor_ge_1))]
@@ -52,15 +50,12 @@ bitflags! {
         const GDAL_OF_INTERNAL = 0x80;
 
         /// Default strategy for cached blocks.
-        #[cfg(any( all(major_ge_2,minor_ge_1), major_ge_3 ))]
         const GDAL_OF_DEFAULT_BLOCK_ACCESS = 0;
 
         /// Array based strategy for cached blocks.
-        #[cfg(any( all(major_ge_2,minor_ge_1), major_ge_3 ))]
         const GDAL_OF_ARRAY_BLOCK_ACCESS = 0x100;
 
         /// Hashset based strategy for cached blocks.
-        #[cfg(any( all(major_ge_2,minor_ge_1), major_ge_3 ))]
         const GDAL_OF_HASHSET_BLOCK_ACCESS = 0x200;
     }
 }

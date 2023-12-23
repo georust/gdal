@@ -4,7 +4,12 @@
 - **Breaking**: `Feature::set_field_xxx` now take `&mut self`
   - <https://github.com/georust/gdal/pull/505>
 
+- **Breaking**: Drop support for GDAL 2.x
+
+   - <https://github.com/georust/gdal/pull/504>
+
 - Added `Feature::unset_field`
+
   - <https://github.com/georust/gdal/pull/503>
 
 - Added ability to convert between `Buffer<T>` and `ndarray::Array2<T>`.

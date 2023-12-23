@@ -28,9 +28,6 @@ pub struct Dataset {
 
 // GDAL Docs state: The returned dataset should only be accessed by one thread at a time.
 // See: https://gdal.org/api/raster_c_api.html#_CPPv48GDALOpenPKc10GDALAccess
-// Additionally, VRT Datasets are not safe before GDAL 2.3.
-// See: https://gdal.org/drivers/raster/vrt.html#multi-threading-issues
-#[cfg(any(all(major_is_2, minor_ge_3), major_ge_3))]
 unsafe impl Send for Dataset {}
 
 /// Core dataset methods
