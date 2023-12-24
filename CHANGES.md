@@ -1,6 +1,8 @@
 # Changes
 
 ## Unreleased
+- **Breaking**: `Feature::set_field_xxx` now take `&mut self`
+  - <https://github.com/georust/gdal/pull/505>
 
 - Added `Feature::unset_field`
   - <https://github.com/georust/gdal/pull/503>
@@ -12,7 +14,7 @@
 - **Breaking**: Removed `Rasterband::read_as_array`, changed signature of `Rasterband::read_block` to return a `Buffer<T>`.
 - **Breaking**: `Rasterband::write` and `Rasterband::write_block` now require a `&mut Buffer<T>` to handle possible case of drivers temporarily mutating input buffer.
 
-   - <https://github.com/georust/gdal/pull/494>
+  - <https://github.com/georust/gdal/pull/494>
 
 - Implemented `Feature::set_field_null`
 

@@ -984,7 +984,7 @@ mod tests {
     #[test]
     fn test_set_string_list_field() {
         with_features("soundg.json", |mut features| {
-            let feature = features.next().unwrap();
+            let mut feature = features.next().unwrap();
             let value = FieldValue::StringListValue(vec![
                 String::from("the"),
                 String::from("new"),
@@ -1181,7 +1181,7 @@ mod tests {
     #[test]
     fn test_set_int_list_field() {
         with_features("soundg.json", |mut features| {
-            let feature = features.next().unwrap();
+            let mut feature = features.next().unwrap();
             let value = FieldValue::IntegerListValue(vec![3, 4, 5]);
             feature.set_field("an_int_list", &value).unwrap();
             assert_eq!(feature.field("an_int_list").unwrap().unwrap(), value);
@@ -1202,7 +1202,7 @@ mod tests {
     #[test]
     fn test_set_real_list_field() {
         with_features("soundg.json", |mut features| {
-            let feature = features.next().unwrap();
+            let mut feature = features.next().unwrap();
             let value = FieldValue::RealListValue(vec![2.5, 3.0, 4.75]);
             feature.set_field("a_real_list", &value).unwrap();
             assert_eq!(feature.field("a_real_list").unwrap().unwrap(), value);
@@ -1223,7 +1223,7 @@ mod tests {
     #[test]
     fn test_set_long_list_field() {
         with_features("soundg.json", |mut features| {
-            let feature = features.next().unwrap();
+            let mut feature = features.next().unwrap();
             let value = FieldValue::Integer64ListValue(vec![7000000000, 8000000000]);
             feature.set_field("a_long_list", &value).unwrap();
             assert_eq!(feature.field("a_long_list").unwrap().unwrap(), value);
@@ -1415,7 +1415,7 @@ mod tests {
         let ds = Dataset::open_ex(&tmp_file, ds_options).unwrap();
         let mut layer = ds.layer(0).unwrap();
         let fids: Vec<u64> = layer.features().map(|f| f.fid().unwrap()).collect();
-        let feature = layer.feature(fids[0]).unwrap();
+        let mut feature = layer.feature(fids[0]).unwrap();
         // to original value of the id field in fid 0 is null; we will set it to 1.
         feature.set_field_integer("id", 1).ok();
         layer.set_feature(feature).ok();

@@ -505,14 +505,14 @@ impl<'a> Feature<'a> {
         Ok(())
     }
 
-    pub fn set_field_string(&self, field_name: &str, value: &str) -> Result<()> {
+    pub fn set_field_string(&mut self, field_name: &str, value: &str) -> Result<()> {
         let c_str_value = CString::new(value)?;
         let idx = self.field_idx_from_name(field_name)?;
         unsafe { gdal_sys::OGR_F_SetFieldString(self.c_feature, idx, c_str_value.as_ptr()) };
         Ok(())
     }
 
-    pub fn set_field_string_list(&self, field_name: &str, value: &[&str]) -> Result<()> {
+    pub fn set_field_string_list(&mut self, field_name: &str, value: &[&str]) -> Result<()> {
         let c_strings = value
             .iter()
             .map(|&value| CString::new(value))
@@ -530,13 +530,13 @@ impl<'a> Feature<'a> {
         Ok(())
     }
 
-    pub fn set_field_double(&self, field_name: &str, value: f64) -> Result<()> {
+    pub fn set_field_double(&mut self, field_name: &str, value: f64) -> Result<()> {
         let idx = self.field_idx_from_name(field_name)?;
         unsafe { gdal_sys::OGR_F_SetFieldDouble(self.c_feature, idx, value as c_double) };
         Ok(())
     }
 
-    pub fn set_field_double_list(&self, field_name: &str, value: &[f64]) -> Result<()> {
+    pub fn set_field_double_list(&mut self, field_name: &str, value: &[f64]) -> Result<()> {
         let idx = self.field_idx_from_name(field_name)?;
         unsafe {
             gdal_sys::OGR_F_SetFieldDoubleList(
@@ -549,13 +549,13 @@ impl<'a> Feature<'a> {
         Ok(())
     }
 
-    pub fn set_field_integer(&self, field_name: &str, value: i32) -> Result<()> {
+    pub fn set_field_integer(&mut self, field_name: &str, value: i32) -> Result<()> {
         let idx = self.field_idx_from_name(field_name)?;
         unsafe { gdal_sys::OGR_F_SetFieldInteger(self.c_feature, idx, value as c_int) };
         Ok(())
     }
 
-    pub fn set_field_integer_list(&self, field_name: &str, value: &[i32]) -> Result<()> {
+    pub fn set_field_integer_list(&mut self, field_name: &str, value: &[i32]) -> Result<()> {
         let idx = self.field_idx_from_name(field_name)?;
         unsafe {
             gdal_sys::OGR_F_SetFieldIntegerList(
@@ -568,13 +568,13 @@ impl<'a> Feature<'a> {
         Ok(())
     }
 
-    pub fn set_field_integer64(&self, field_name: &str, value: i64) -> Result<()> {
+    pub fn set_field_integer64(&mut self, field_name: &str, value: i64) -> Result<()> {
         let idx = self.field_idx_from_name(field_name)?;
         unsafe { gdal_sys::OGR_F_SetFieldInteger64(self.c_feature, idx, value as c_longlong) };
         Ok(())
     }
 
-    pub fn set_field_integer64_list(&self, field_name: &str, value: &[i64]) -> Result<()> {
+    pub fn set_field_integer64_list(&mut self, field_name: &str, value: &[i64]) -> Result<()> {
         let idx = self.field_idx_from_name(field_name)?;
         unsafe {
             gdal_sys::OGR_F_SetFieldInteger64List(
@@ -587,7 +587,11 @@ impl<'a> Feature<'a> {
         Ok(())
     }
 
-    pub fn set_field_datetime(&self, field_name: &str, value: DateTime<FixedOffset>) -> Result<()> {
+    pub fn set_field_datetime(
+        &mut self,
+        field_name: &str,
+        value: DateTime<FixedOffset>,
+    ) -> Result<()> {
         let idx = self.field_idx_from_name(field_name)?;
 
         let year = value.year() as c_int;
@@ -618,7 +622,7 @@ impl<'a> Feature<'a> {
         Ok(())
     }
 
-    pub fn set_field(&self, field_name: &str, value: &FieldValue) -> Result<()> {
+    pub fn set_field(&mut self, field_name: &str, value: &FieldValue) -> Result<()> {
         match value {
             FieldValue::IntegerValue(value) => self.set_field_integer(field_name, *value),
             FieldValue::IntegerListValue(value) => self.set_field_integer_list(field_name, value),
@@ -653,7 +657,7 @@ impl<'a> Feature<'a> {
     /// See: [`OGRFeature::SetFieldNull`][SetFieldNull]
     ///
     /// [SetFieldNull]: https://gdal.org/api/ogrfeature_cpp.html#_CPPv4N10OGRFeature12SetFieldNullEi
-    pub fn set_field_null(&self, field_name: &str) -> Result<()> {
+    pub fn set_field_null(&mut self, field_name: &str) -> Result<()> {
         let idx = self.field_idx_from_name(field_name)?;
         unsafe { gdal_sys::OGR_F_SetFieldNull(self.c_feature(), idx) };
         Ok(())
@@ -664,7 +668,7 @@ impl<'a> Feature<'a> {
     /// See: [`OGRFeature::UnsetField`][UnsetField]
     ///
     /// [UnsetField]: https://gdal.org/api/ogrfeature_cpp.html#_CPPv4N10OGRFeature10UnsetFieldEi
-    pub fn unset_field(&self, field_name: &str) -> Result<()> {
+    pub fn unset_field(&mut self, field_name: &str) -> Result<()> {
         let idx = self.field_idx_from_name(field_name)?;
         unsafe { gdal_sys::OGR_F_UnsetField(self.c_feature(), idx) };
         Ok(())
@@ -681,6 +685,7 @@ impl<'a> Feature<'a> {
         self.geometry[0] = geom;
         Ok(())
     }
+
     pub fn field_count(&self) -> i32 {
         unsafe { gdal_sys::OGR_F_GetFieldCount(self.c_feature) }
     }
@@ -951,13 +956,9 @@ mod tests {
         let ds = Dataset::open(fixture("roads.geojson")).unwrap();
 
         let mut layer = ds.layers().next().expect("layer");
-        let feature = layer.features().next().expect("feature");
-        for (field_name, field_value) in feature.fields() {
-            if let Some(_value) = field_value {
-                feature.set_field_null(&field_name).unwrap();
-                assert!(feature.field(&field_name).unwrap().is_none());
-            }
-        }
+        let mut feature = layer.features().next().expect("feature");
+        feature.set_field_null("highway").unwrap();
+        assert!(feature.field("highway").unwrap().is_none());
     }
 
     #[test]
@@ -965,9 +966,7 @@ mod tests {
         let ds = Dataset::open(fixture("roads.geojson")).unwrap();
 
         let mut layer = ds.layers().next().expect("layer");
-        let feature = layer.features().next().expect("feature");
-        for (field_name, _) in feature.fields() {
-            feature.unset_field(&field_name).unwrap();
-        }
+        let mut feature = layer.features().next().expect("feature");
+        feature.unset_field("highway").unwrap();
     }
 }
