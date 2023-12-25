@@ -11,7 +11,7 @@ use crate::metadata::Metadata;
 use crate::raster::{GdalDataType, GdalType, RasterCreationOption};
 use crate::utils::{_last_cpl_err, _last_null_pointer_err, _path_to_c_string, _string};
 
-use crate::errors::*;
+use crate::{errors::*, GdalOpenFlags};
 
 static START: Once = Once::new();
 
@@ -410,6 +410,73 @@ impl DriverManager {
         Ok(Driver { c_driver })
     }
 
+    /// Get the Driver based on the file extension
+    ///
+    /// Searches for the available extensions in the registered
+    /// drivers and returns the first match
+    // it's not a good implementation but should work for now
+    pub fn get_drivers_for_filename(filename: &str, options: &GdalOpenFlags) -> Vec<Driver> {
+        let ext = {
+            let filename = filename.to_ascii_lowercase();
+            if let Some(mut ext) = Path::new(&filename).extension().and_then(|s| s.to_str()) {
+                if ext == "zip" {
+                    // doing .ends_with on the &Path filename doesn't work
+                    if filename.ends_with(".shp.zip") {
+                        ext = "shp.zip";
+                    } else if filename.ends_with(".gpkg.zip") {
+                        ext = "gpkg.zip";
+                    }
+                }
+                ext.to_string()
+            } else {
+                "".to_string()
+            }
+        };
+
+        let mut drivers: Vec<Driver> = Vec::new();
+        for i in 0..DriverManager::count() {
+            let d = DriverManager::get_driver(i).expect("Index for this loop should be valid");
+            let mut supports = false;
+            if (d.metadata_item("DCAP_CREATE", "").is_some()
+                || d.metadata_item("DCAP_CREATECOPY", "").is_some())
+                && ((options.contains(GdalOpenFlags::GDAL_OF_VECTOR)
+                    && d.metadata_item("DCAP_VECTOR", "").is_some())
+                    || (options.contains(GdalOpenFlags::GDAL_OF_RASTER)
+                        && d.metadata_item("DCAP_RASTER", "").is_some()))
+            {
+                supports = true;
+            } else if options.contains(GdalOpenFlags::GDAL_OF_VECTOR)
+                && d.metadata_item("DCAP_VECTOR_TRANSLATE_FROM", "").is_some()
+            {
+                supports = true;
+            }
+            if !supports {
+                continue;
+            }
+
+            if let Some(e) = &d.metadata_item("DMD_EXTENSION", "") {
+                if *e == ext {
+                    drivers.push(d);
+                    continue;
+                }
+            }
+            if let Some(e) = d.metadata_item("DMD_EXTENSIONS", "") {
+                if e.split(" ").collect::<Vec<&str>>().contains(&ext.as_str()) {
+                    drivers.push(d);
+                    continue;
+                }
+            }
+
+            if let Some(pre) = d.metadata_item("DMD_CONNECTION_PREFIX", "") {
+                if filename.starts_with(&pre) {
+                    drivers.push(d);
+                }
+            }
+        }
+
+        return drivers;
+    }
+
     /// Register a driver for use.
     ///
     /// Wraps [`GDALRegisterDriver()`](https://gdal.org/api/raster_c_api.html#_CPPv418GDALRegisterDriver11GDALDriverH)
@@ -465,5 +532,29 @@ mod tests {
 
         assert!(DriverManager::count() > 0);
         assert!(DriverManager::get_driver(0).is_ok());
+    }
+
+    #[test]
+    fn test_driver_extension() {
+        // convert the driver into short_name for testing purposes
+        let drivers = |filename, isvec| {
+            DriverManager::get_drivers_for_filename(
+                filename,
+                if isvec {
+                    &GdalOpenFlags::GDAL_OF_VECTOR
+                } else {
+                    &GdalOpenFlags::GDAL_OF_RASTER
+                },
+            )
+            .iter()
+            .map(|d| d.short_name())
+            .collect::<Vec<String>>()
+        };
+
+        assert_eq!(drivers("test.gpkg", true), vec!["GPKG"]);
+        assert_eq!(drivers("test.gpkg.zip", true), vec!["GPKG"]);
+        assert_eq!(drivers("test.tiff", false), vec!["GTiff", "COG"]);
+        assert_eq!(drivers("test.nc", false), vec!["netCDF"]);
+        assert_eq!(drivers("ES:test", true), vec!["Elasticsearch"]);
     }
 }
