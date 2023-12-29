@@ -438,7 +438,7 @@ impl DriverManager {
     pub fn get_drivers_for_filename(filename: &str, options: &GdalOpenFlags) -> Vec<Driver> {
         let ext = {
             let filename = filename.to_ascii_lowercase();
-            let e = match filename.rsplit_once(".") {
+            let e = match filename.rsplit_once('.') {
                 Some(("", _)) => "", // hidden file no ext
                 Some((f, "zip")) => {
                     // zip files could be zipped shp or gpkg
@@ -460,16 +460,14 @@ impl DriverManager {
         for i in 0..DriverManager::count() {
             let d = DriverManager::get_driver(i).expect("Index for this loop should be valid");
             let mut supports = false;
-            if (d.metadata_item("DCAP_CREATE", "").is_some()
+            if ((d.metadata_item("DCAP_CREATE", "").is_some()
                 || d.metadata_item("DCAP_CREATECOPY", "").is_some())
                 && ((options.contains(GdalOpenFlags::GDAL_OF_VECTOR)
                     && d.metadata_item("DCAP_VECTOR", "").is_some())
                     || (options.contains(GdalOpenFlags::GDAL_OF_RASTER)
-                        && d.metadata_item("DCAP_RASTER", "").is_some()))
-            {
-                supports = true;
-            } else if options.contains(GdalOpenFlags::GDAL_OF_VECTOR)
-                && d.metadata_item("DCAP_VECTOR_TRANSLATE_FROM", "").is_some()
+                        && d.metadata_item("DCAP_RASTER", "").is_some())))
+                || (options.contains(GdalOpenFlags::GDAL_OF_VECTOR)
+                    && d.metadata_item("DCAP_VECTOR_TRANSLATE_FROM", "").is_some())
             {
                 supports = true;
             }
@@ -484,7 +482,7 @@ impl DriverManager {
                 }
             }
             if let Some(e) = d.metadata_item("DMD_EXTENSIONS", "") {
-                if e.split(" ").collect::<Vec<&str>>().contains(&ext.as_str()) {
+                if e.split(' ').collect::<Vec<&str>>().contains(&ext.as_str()) {
                     drivers.push(d);
                     continue;
                 }
@@ -497,7 +495,7 @@ impl DriverManager {
             }
         }
 
-        return drivers;
+        drivers
     }
 
     /// Register a driver for use.
