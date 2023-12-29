@@ -116,37 +116,6 @@ impl TryFrom<RasterizeOptions> for CslStringList {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use std::convert::TryFrom;
-
-    use crate::cpl::CslStringList;
-
-    use super::RasterizeOptions;
-
-    #[test]
-    fn test_rasterizeoptions_as_ptr() {
-        let c_options = CslStringList::try_from(RasterizeOptions::default()).unwrap();
-        assert_eq!(
-            c_options.fetch_name_value("ALL_TOUCHED"),
-            Some("FALSE".to_string())
-        );
-        assert_eq!(c_options.fetch_name_value("BURN_VALUE_FROM"), None);
-        assert_eq!(
-            c_options.fetch_name_value("MERGE_ALG"),
-            Some("REPLACE".to_string())
-        );
-        assert_eq!(
-            c_options.fetch_name_value("CHUNKYSIZE"),
-            Some("0".to_string())
-        );
-        assert_eq!(
-            c_options.fetch_name_value("OPTIM"),
-            Some("AUTO".to_string())
-        );
-    }
-}
-
 /// Burn geometries into raster.
 ///
 /// Rasterize a sequence of `gdal::vector::Geometry` onto some
@@ -228,4 +197,35 @@ pub fn rasterize(
         }
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use std::convert::TryFrom;
+
+    use crate::cpl::CslStringList;
+
+    use super::RasterizeOptions;
+
+    #[test]
+    fn test_rasterizeoptions_as_ptr() {
+        let c_options = CslStringList::try_from(RasterizeOptions::default()).unwrap();
+        assert_eq!(
+            c_options.fetch_name_value("ALL_TOUCHED"),
+            Some("FALSE".to_string())
+        );
+        assert_eq!(c_options.fetch_name_value("BURN_VALUE_FROM"), None);
+        assert_eq!(
+            c_options.fetch_name_value("MERGE_ALG"),
+            Some("REPLACE".to_string())
+        );
+        assert_eq!(
+            c_options.fetch_name_value("CHUNKYSIZE"),
+            Some("0".to_string())
+        );
+        assert_eq!(
+            c_options.fetch_name_value("OPTIM"),
+            Some("AUTO".to_string())
+        );
+    }
 }
