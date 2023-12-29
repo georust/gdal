@@ -410,27 +410,50 @@ impl DriverManager {
         Ok(Driver { c_driver })
     }
 
-    /// Get the Driver based on the file extension
+    /// Get the Driver based on the file extension from filename
     ///
     /// Searches for the available extensions in the registered
-    /// drivers and returns the first match
-    // it's not a good implementation but should work for now
+    /// drivers and returns the matches, the `options:&GdalOpenFlags`
+    /// is only used for determining vector or raster type.
+    ///
+    /// See also: [`get_driver_by_name`](Self::get_driver_by_name)
+    ///
+    /// # Example
+    ///
+    /// ```rust, no_run
+    /// use gdal::{DriverManager,GdalOpenFlags};
+    /// # fn main() -> gdal::errors::Result<()> {
+    /// let compatible_drivers =
+    ///     DriverManager::get_drivers_for_filename("test.gpkg", &GdalOpenFlags::GDAL_OF_VECTOR)
+    ///         .iter()
+    ///         .map(|d| d.short_name())
+    ///         .collect::<Vec<String>>();
+    /// println!("{:?}", compatible_drivers);
+    /// # Ok(())
+    /// # }
+    /// ```
+    /// ```text
+    /// ["GPKG"]
+    /// ```
     pub fn get_drivers_for_filename(filename: &str, options: &GdalOpenFlags) -> Vec<Driver> {
         let ext = {
             let filename = filename.to_ascii_lowercase();
-            if let Some(mut ext) = Path::new(&filename).extension().and_then(|s| s.to_str()) {
-                if ext == "zip" {
-                    // doing .ends_with on the &Path filename doesn't work
-                    if filename.ends_with(".shp.zip") {
-                        ext = "shp.zip";
-                    } else if filename.ends_with(".gpkg.zip") {
-                        ext = "gpkg.zip";
+            let e = match filename.rsplit_once(".") {
+                Some(("", _)) => "", // hidden file no ext
+                Some((f, "zip")) => {
+                    // zip files could be zipped shp or gpkg
+                    if f.ends_with(".shp") {
+                        "shp.zip"
+                    } else if f.ends_with(".gpkg") {
+                        "gpkg.zip"
+                    } else {
+                        "zip"
                     }
                 }
-                ext.to_string()
-            } else {
-                "".to_string()
-            }
+                Some((_, e)) => e, // normal file with ext
+                None => "",
+            };
+            e.to_string()
         };
 
         let mut drivers: Vec<Driver> = Vec::new();
@@ -550,7 +573,6 @@ mod tests {
             .map(|d| d.short_name())
             .collect::<Vec<String>>()
         };
-
         assert_eq!(drivers("test.gpkg", true), vec!["GPKG"]);
         assert_eq!(drivers("test.gpkg.zip", true), vec!["GPKG"]);
         assert_eq!(drivers("test.tiff", false), vec!["GTiff", "COG"]);
