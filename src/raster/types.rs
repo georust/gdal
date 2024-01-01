@@ -210,6 +210,8 @@ impl GdalDataType {
         use GdalDataType::*;
         [
             UInt8,
+            #[cfg(any(all(major_ge_3, minor_ge_7), major_ge_4))]
+            Int8,
             UInt16,
             Int16,
             UInt32,
@@ -432,6 +434,11 @@ mod tests {
                     assert!(t.is_integer(), "{}", &name);
                     assert!(!t.is_floating(), "{}", &name);
                 }
+                #[cfg(any(all(major_ge_3, minor_ge_7), major_ge_4))]
+                GDT_Int8 => {
+                    assert!(t.is_integer(), "{}", &name);
+                    assert!(!t.is_floating(), "{}", &name);
+                }
                 #[cfg(all(major_ge_3, minor_ge_5))]
                 GDT_UInt64 | GDT_Int64 => {
                     assert!(t.is_integer(), "{}", &name);
@@ -451,6 +458,10 @@ mod tests {
                 #[cfg(all(major_ge_3, minor_ge_5))]
                 GDT_UInt64 => {
                     assert!(!t.is_signed(), "{}", &name);
+                }
+                #[cfg(any(all(major_ge_3, minor_ge_7), major_ge_4))]
+                GDT_Int8 => {
+                    assert!(t.is_signed(), "{}", &name);
                 }
                 GDT_Int16 | GDT_Int32 | GDT_Float32 | GDT_Float64 => {
                     assert!(t.is_signed(), "{}", &name);
