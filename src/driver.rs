@@ -414,7 +414,10 @@ impl DriverManager {
     ///
     /// Searches for the available extensions in the registered
     /// drivers and returns the matches, the `options:&GdalOpenFlags`
-    /// is only used for determining vector or raster type.
+    /// is only used for determining vector or raster type. The
+    /// determined driver is checked for writing capabilities as
+    /// [`Dataset::open`](Dataset::open) can already open datasets
+    /// with just path.
     ///
     /// See also: [`get_driver_by_name`](Self::get_driver_by_name)
     ///
@@ -459,19 +462,15 @@ impl DriverManager {
         let mut drivers: Vec<Driver> = Vec::new();
         for i in 0..DriverManager::count() {
             let d = DriverManager::get_driver(i).expect("Index for this loop should be valid");
-            let mut supports = false;
-            if ((d.metadata_item("DCAP_CREATE", "").is_some()
-                || d.metadata_item("DCAP_CREATECOPY", "").is_some())
-                && ((options.contains(GdalOpenFlags::GDAL_OF_VECTOR)
-                    && d.metadata_item("DCAP_VECTOR", "").is_some())
-                    || (options.contains(GdalOpenFlags::GDAL_OF_RASTER)
-                        && d.metadata_item("DCAP_RASTER", "").is_some())))
-                || (options.contains(GdalOpenFlags::GDAL_OF_VECTOR)
-                    && d.metadata_item("DCAP_VECTOR_TRANSLATE_FROM", "").is_some())
-            {
-                supports = true;
-            }
-            if !supports {
+            let can_create = d.metadata_item("DCAP_CREATE", "").is_some()
+                || d.metadata_item("DCAP_CREATECOPY", "").is_some();
+            let check_vector = options.contains(GdalOpenFlags::GDAL_OF_VECTOR)
+                && d.metadata_item("DCAP_VECTOR", "").is_some();
+            let check_raster = options.contains(GdalOpenFlags::GDAL_OF_RASTER)
+                && d.metadata_item("DCAP_RASTER", "").is_some();
+            let check_vector_translate = options.contains(GdalOpenFlags::GDAL_OF_VECTOR)
+                && d.metadata_item("DCAP_VECTOR_TRANSLATE_FROM", "").is_some();
+            if !((can_create && (check_vector || check_raster)) || (check_vector_translate)) {
                 continue;
             }
 
