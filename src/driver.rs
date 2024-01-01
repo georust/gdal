@@ -572,6 +572,10 @@ mod tests {
             .map(|d| d.short_name())
             .collect::<HashSet<String>>()
         };
+        if DriverManager::get_driver_by_name("ESRI Shapefile").is_ok() {
+            assert!(drivers("test.shp", true).contains("ESRI Shapefile"));
+            assert!(drivers("test.shp.zip", true).contains("ESRI Shapefile"));
+        }
         if DriverManager::get_driver_by_name("GPKG").is_ok() {
             assert!(drivers("test.gpkg", true).contains("GPKG"));
             assert!(drivers("test.gpkg.zip", true).contains("GPKG"));
