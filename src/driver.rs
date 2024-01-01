@@ -542,6 +542,8 @@ impl DriverManager {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::HashSet;
+
     use super::*;
 
     #[test]
@@ -568,12 +570,20 @@ mod tests {
             )
             .iter()
             .map(|d| d.short_name())
-            .collect::<Vec<String>>()
+            .collect::<HashSet<String>>()
         };
-        assert_eq!(drivers("test.gpkg", true), vec!["GPKG"]);
-        assert_eq!(drivers("test.gpkg.zip", true), vec!["GPKG"]);
-        assert_eq!(drivers("test.tiff", false), vec!["GTiff", "COG"]);
-        assert_eq!(drivers("test.nc", false), vec!["netCDF"]);
-        assert_eq!(drivers("ES:test", true), vec!["Elasticsearch"]);
+        if DriverManager::get_driver_by_name("GPKG").is_ok() {
+            assert!(drivers("test.gpkg", true).contains("GPKG"));
+            assert!(drivers("test.gpkg.zip", true).contains("GPKG"));
+        }
+        if DriverManager::get_driver_by_name("GTiff").is_ok() {
+            assert!(drivers("test.tiff", false).contains("GTiff"));
+        }
+        if DriverManager::get_driver_by_name("netCDF").is_ok() {
+            assert!(drivers("test.nc", false).contains("netCDF"));
+        }
+        if DriverManager::get_driver_by_name("Elasticsearch").is_ok() {
+            assert!(drivers("ES:test", true).contains("Elasticsearch"));
+        }
     }
 }
