@@ -11,7 +11,7 @@ use crate::metadata::Metadata;
 use crate::raster::{GdalDataType, GdalType, RasterCreationOption};
 use crate::utils::{_last_cpl_err, _last_null_pointer_err, _path_to_c_string, _string};
 
-use crate::{errors::*, GdalOpenFlags};
+use crate::errors::*;
 
 static START: Once = Once::new();
 
@@ -413,9 +413,8 @@ impl DriverManager {
     /// Get the Driver based on the file extension from filename
     ///
     /// Searches for the available extensions in the registered
-    /// drivers and returns the matches, the `options:&GdalOpenFlags`
-    /// is only used for determining vector or raster type. The
-    /// determined driver is checked for writing capabilities as
+    /// drivers and returns the matches. The determined driver is
+    /// checked for writing capabilities as
     /// [`Dataset::open`](Dataset::open) can already open datasets
     /// with just path.
     ///
@@ -424,10 +423,10 @@ impl DriverManager {
     /// # Example
     ///
     /// ```rust, no_run
-    /// use gdal::{DriverManager,GdalOpenFlags};
+    /// use gdal::DriverManager;
     /// # fn main() -> gdal::errors::Result<()> {
     /// let compatible_drivers =
-    ///     DriverManager::get_drivers_for_filename("test.gpkg", &GdalOpenFlags::GDAL_OF_VECTOR)
+    ///     DriverManager::get_drivers_for_filename("test.gpkg", true)
     ///         .iter()
     ///         .map(|d| d.short_name())
     ///         .collect::<Vec<String>>();
@@ -438,7 +437,7 @@ impl DriverManager {
     /// ```text
     /// ["GPKG"]
     /// ```
-    pub fn get_drivers_for_filename(filename: &str, options: &GdalOpenFlags) -> Vec<Driver> {
+    pub fn get_drivers_for_filename(filename: &str, is_vector: bool) -> Vec<Driver> {
         let ext = {
             let filename = filename.to_ascii_lowercase();
             let e = match filename.rsplit_once('.') {
@@ -464,12 +463,10 @@ impl DriverManager {
             let d = DriverManager::get_driver(i).expect("Index for this loop should be valid");
             let can_create = d.metadata_item("DCAP_CREATE", "").is_some()
                 || d.metadata_item("DCAP_CREATECOPY", "").is_some();
-            let check_vector = options.contains(GdalOpenFlags::GDAL_OF_VECTOR)
-                && d.metadata_item("DCAP_VECTOR", "").is_some();
-            let check_raster = options.contains(GdalOpenFlags::GDAL_OF_RASTER)
-                && d.metadata_item("DCAP_RASTER", "").is_some();
-            let check_vector_translate = options.contains(GdalOpenFlags::GDAL_OF_VECTOR)
-                && d.metadata_item("DCAP_VECTOR_TRANSLATE_FROM", "").is_some();
+            let check_vector = is_vector && d.metadata_item("DCAP_VECTOR", "").is_some();
+            let check_raster = !is_vector && d.metadata_item("DCAP_RASTER", "").is_some();
+            let check_vector_translate =
+                is_vector && d.metadata_item("DCAP_VECTOR_TRANSLATE_FROM", "").is_some();
             if !((can_create && (check_vector || check_raster)) || (check_vector_translate)) {
                 continue;
             }
@@ -559,18 +556,11 @@ mod tests {
     #[test]
     fn test_driver_extension() {
         // convert the driver into short_name for testing purposes
-        let drivers = |filename, isvec| {
-            DriverManager::get_drivers_for_filename(
-                filename,
-                if isvec {
-                    &GdalOpenFlags::GDAL_OF_VECTOR
-                } else {
-                    &GdalOpenFlags::GDAL_OF_RASTER
-                },
-            )
-            .iter()
-            .map(|d| d.short_name())
-            .collect::<HashSet<String>>()
+        let drivers = |filename, is_vector| {
+            DriverManager::get_drivers_for_filename(filename, is_vector)
+                .iter()
+                .map(|d| d.short_name())
+                .collect::<HashSet<String>>()
         };
         if DriverManager::get_driver_by_name("ESRI Shapefile").is_ok() {
             assert!(drivers("test.shp", true).contains("ESRI Shapefile"));
