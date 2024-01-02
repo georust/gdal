@@ -568,7 +568,12 @@ mod tests {
         }
         if DriverManager::get_driver_by_name("GPKG").is_ok() {
             assert!(drivers("test.gpkg", true).contains("GPKG"));
-            assert!(drivers("test.gpkg.zip", true).contains("GPKG"));
+            // `gpkg.zip` only supported from gdal version 3.7
+            // https://gdal.org/drivers/vector/gpkg.html#compressed-files
+            let gdal_version: i64 = crate::version::version_info("VERSION_NUM").parse().unwrap();
+            if gdal_version >= 3070000 {
+                assert!(drivers("test.gpkg.zip", true).contains("GPKG"));
+            }
         }
         if DriverManager::get_driver_by_name("GTiff").is_ok() {
             assert!(drivers("test.tiff", false).contains("GTiff"));
