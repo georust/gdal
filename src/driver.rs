@@ -562,15 +562,19 @@ mod tests {
                 .map(|d| d.short_name())
                 .collect::<HashSet<String>>()
         };
+        let gdal_version: i64 = crate::version::version_info("VERSION_NUM").parse().unwrap();
         if DriverManager::get_driver_by_name("ESRI Shapefile").is_ok() {
             assert!(drivers("test.shp", true).contains("ESRI Shapefile"));
-            assert!(drivers("test.shp.zip", true).contains("ESRI Shapefile"));
+            // `shp.zip` only supported from gdal version 3.1
+            // https://gdal.org/drivers/vector/shapefile.html#compressed-files
+            if gdal_version >= 3010000 {
+                assert!(drivers("test.shp.zip", true).contains("ESRI Shapefile"));
+            }
         }
         if DriverManager::get_driver_by_name("GPKG").is_ok() {
             assert!(drivers("test.gpkg", true).contains("GPKG"));
             // `gpkg.zip` only supported from gdal version 3.7
             // https://gdal.org/drivers/vector/gpkg.html#compressed-files
-            let gdal_version: i64 = crate::version::version_info("VERSION_NUM").parse().unwrap();
             if gdal_version >= 3070000 {
                 assert!(drivers("test.gpkg.zip", true).contains("GPKG"));
             }
