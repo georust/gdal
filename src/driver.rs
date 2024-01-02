@@ -586,7 +586,12 @@ mod tests {
             assert!(drivers("test.nc", false).contains("netCDF"));
         }
         if DriverManager::get_driver_by_name("Elasticsearch").is_ok() {
-            assert!(drivers("ES:test", true).contains("Elasticsearch"));
+            // Elasticsearch short name was ElasticSearch in older versions
+            if gdal_version >= 3010000 {
+                assert!(drivers("ES:test", true).contains("Elasticsearch"));
+            } else {
+                assert!(drivers("ES:test", true).contains("ElasticSearch"));
+            }
         }
     }
 }
