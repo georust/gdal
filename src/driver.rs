@@ -426,7 +426,7 @@ impl DriverManager {
     /// use gdal::DriverManager;
     /// # fn main() -> gdal::errors::Result<()> {
     /// let compatible_drivers =
-    ///     DriverManager::get_drivers_for_filename("test.gpkg", true)
+    ///     DriverManager::guess_drivers_for_write("test.gpkg", true)
     ///         .iter()
     ///         .map(|d| d.short_name())
     ///         .collect::<Vec<String>>();
@@ -437,7 +437,7 @@ impl DriverManager {
     /// ```text
     /// ["GPKG"]
     /// ```
-    pub fn get_drivers_for_filename(filename: &str, is_vector: bool) -> Vec<Driver> {
+    pub fn guess_drivers_for_write(filename: &str, is_vector: bool) -> Vec<Driver> {
         let ext = {
             let filename = filename.to_ascii_lowercase();
             let e = match filename.rsplit_once('.') {
@@ -557,7 +557,7 @@ mod tests {
     fn test_driver_extension() {
         // convert the driver into short_name for testing purposes
         let drivers = |filename, is_vector| {
-            DriverManager::get_drivers_for_filename(filename, is_vector)
+            DriverManager::guess_drivers_for_write(filename, is_vector)
                 .iter()
                 .map(|d| d.short_name())
                 .collect::<HashSet<String>>()
@@ -565,33 +565,33 @@ mod tests {
         let gdal_version: i64 = crate::version::version_info("VERSION_NUM").parse().unwrap();
         if DriverManager::get_driver_by_name("ESRI Shapefile").is_ok() {
             assert!(drivers("test.shp", true).contains("ESRI Shapefile"));
+            assert!(drivers("my.test.shp", true).contains("ESRI Shapefile"));
             // `shp.zip` only supported from gdal version 3.1
             // https://gdal.org/drivers/vector/shapefile.html#compressed-files
             if gdal_version >= 3010000 {
                 assert!(drivers("test.shp.zip", true).contains("ESRI Shapefile"));
+                assert!(drivers("my.test.shp.zip", true).contains("ESRI Shapefile"));
             }
         }
         if DriverManager::get_driver_by_name("GPKG").is_ok() {
             assert!(drivers("test.gpkg", true).contains("GPKG"));
+            assert!(drivers("my.test.gpkg", true).contains("GPKG"));
             // `gpkg.zip` only supported from gdal version 3.7
             // https://gdal.org/drivers/vector/gpkg.html#compressed-files
             if gdal_version >= 3070000 {
                 assert!(drivers("test.gpkg.zip", true).contains("GPKG"));
+                assert!(drivers("my.test.gpkg.zip", true).contains("GPKG"));
             }
         }
         if DriverManager::get_driver_by_name("GTiff").is_ok() {
             assert!(drivers("test.tiff", false).contains("GTiff"));
+            assert!(drivers("my.test.tiff", false).contains("GTiff"));
         }
         if DriverManager::get_driver_by_name("netCDF").is_ok() {
             assert!(drivers("test.nc", false).contains("netCDF"));
         }
-        if DriverManager::get_driver_by_name("Elasticsearch").is_ok() {
-            // Elasticsearch short name was ElasticSearch in older versions
-            if gdal_version >= 3010000 {
-                assert!(drivers("ES:test", true).contains("Elasticsearch"));
-            } else {
-                assert!(drivers("ES:test", true).contains("ElasticSearch"));
-            }
+        if DriverManager::get_driver_by_name("PostgreSQL").is_ok() {
+            assert!(drivers("PG:test", true).contains("PostgreSQL"));
         }
     }
 }

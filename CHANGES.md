@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Added `DriverManager::get_drivers_for_filename` for the ability to auto detect compatible `Driver`s for writing data.
+- Added `DriverManager::guess_drivers_for_write` for the ability to auto detect compatible `Driver`s for writing data.
 
 - Added `Feature::unset_field`
   - <https://github.com/georust/gdal/pull/503>
