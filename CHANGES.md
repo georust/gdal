@@ -1,6 +1,8 @@
 # Changes
 
 ## Unreleased
+- Add `DriverIterator` format to iterate through drivers, as well as `DriverManager::all()` method that provides the iterator.
+
 - **Breaking**: `Feature::set_field_xxx` now take `&mut self`
   - <https://github.com/georust/gdal/pull/505>
 
