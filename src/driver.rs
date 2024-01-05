@@ -452,24 +452,18 @@ impl DriverManager {
         }
     }
 
-    /// Get an `Iterator` for all the drivers.
+    /// Get an `Iterator` over for all the loaded drivers.
     ///
-    /// Warning: Adding or removing drivers while comsuming the
-    /// Iterator can have unexpected results.
+    /// Warning: Adding or removing drivers while consuming the
+    /// iterator is safe, but can produce less useful results.
     pub fn all() -> DriverIterator {
-        DriverIterator::new()
-    }
-}
-
-/// Iterator for the registered `Driver`s in `DriverManager`
-pub struct DriverIterator {
-    current: usize,
-}
-
-impl DriverIterator {
-    pub fn new() -> Self {
         DriverIterator { current: 0 }
     }
+}
+
+/// Iterator for the registered [`Driver`]s in [`DriverManager`]
+pub struct DriverIterator {
+    current: usize,
 }
 
 impl Iterator for DriverIterator {
@@ -504,7 +498,6 @@ mod tests {
 
     #[test]
     fn test_driver_iterator() {
-        assert_eq!(DriverManager::count(), DriverIterator::new().count());
         assert_eq!(DriverManager::count(), DriverManager::all().count());
 
         let drivers: HashSet<String> = DriverManager::all().map(|d| d.short_name()).collect();
