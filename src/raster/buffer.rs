@@ -6,6 +6,7 @@ use std::vec::IntoIter;
 #[cfg(feature = "ndarray")]
 use ndarray::Array2;
 
+#[cfg_attr(not(feature = "ndarray"), allow(rustdoc::broken_intra_doc_links))]
 /// `Buffer<T>` manages cell values in in raster I/O operations.
 ///
 /// It conceptually represents a 2-D array backed by a `Vec<T>` with row-major organization
