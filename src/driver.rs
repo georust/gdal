@@ -427,7 +427,6 @@ impl DriverManager {
     /// # fn main() -> gdal::errors::Result<()> {
     /// let compatible_drivers =
     ///     DriverManager::guess_drivers_for_write("test.gpkg", true)
-    ///         .iter()
     ///         .map(|d| d.short_name())
     ///         .collect::<Vec<String>>();
     /// println!("{:?}", compatible_drivers);
@@ -437,7 +436,10 @@ impl DriverManager {
     /// ```text
     /// ["GPKG"]
     /// ```
-    pub fn guess_drivers_for_write(filename: &str, is_vector: bool) -> Vec<Driver> {
+    pub fn guess_drivers_for_write(
+        filename: &str,
+        is_vector: bool,
+    ) -> impl Iterator<Item = Driver> + '_ {
         let ext = {
             let filename = filename.to_ascii_lowercase();
             let e = match filename.rsplit_once('.') {
@@ -458,37 +460,35 @@ impl DriverManager {
             e.to_string()
         };
 
-        let mut drivers: Vec<Driver> = Vec::new();
-        for d in DriverManager::all().filter(|d| {
-            let can_create = d.metadata_item("DCAP_CREATE", "").is_some()
-                || d.metadata_item("DCAP_CREATECOPY", "").is_some();
-            let check_vector = is_vector && d.metadata_item("DCAP_VECTOR", "").is_some();
-            let check_raster = !is_vector && d.metadata_item("DCAP_RASTER", "").is_some();
-            let check_vector_translate =
-                is_vector && d.metadata_item("DCAP_VECTOR_TRANSLATE_FROM", "").is_some();
-            (can_create && (check_vector || check_raster)) || (check_vector_translate)
-        }) {
-            if let Some(e) = &d.metadata_item("DMD_EXTENSION", "") {
-                if *e == ext {
-                    drivers.push(d);
-                    continue;
+        DriverManager::all()
+            .filter(move |d| {
+                let can_create = d.metadata_item("DCAP_CREATE", "").is_some()
+                    || d.metadata_item("DCAP_CREATECOPY", "").is_some();
+                let check_vector = is_vector && d.metadata_item("DCAP_VECTOR", "").is_some();
+                let check_raster = !is_vector && d.metadata_item("DCAP_RASTER", "").is_some();
+                let check_vector_translate =
+                    is_vector && d.metadata_item("DCAP_VECTOR_TRANSLATE_FROM", "").is_some();
+                (can_create && (check_vector || check_raster)) || (check_vector_translate)
+            })
+            .filter(move |d| {
+                if let Some(e) = &d.metadata_item("DMD_EXTENSION", "") {
+                    if *e == ext {
+                        return true;
+                    }
                 }
-            }
-            if let Some(e) = d.metadata_item("DMD_EXTENSIONS", "") {
-                if e.split(' ').collect::<Vec<&str>>().contains(&ext.as_str()) {
-                    drivers.push(d);
-                    continue;
+                if let Some(e) = d.metadata_item("DMD_EXTENSIONS", "") {
+                    if e.split(' ').collect::<Vec<&str>>().contains(&ext.as_str()) {
+                        return true;
+                    }
                 }
-            }
 
-            if let Some(pre) = d.metadata_item("DMD_CONNECTION_PREFIX", "") {
-                if filename.starts_with(&pre) {
-                    drivers.push(d);
+                if let Some(pre) = d.metadata_item("DMD_CONNECTION_PREFIX", "") {
+                    if filename.starts_with(&pre) {
+                        return true;
+                    }
                 }
-            }
-        }
-
-        drivers
+                false
+            })
     }
 
     /// Register a driver for use.
@@ -582,7 +582,6 @@ mod tests {
         // convert the driver into short_name for testing purposes
         let drivers = |filename, is_vector| {
             DriverManager::guess_drivers_for_write(filename, is_vector)
-                .iter()
                 .map(|d| d.short_name())
                 .collect::<HashSet<String>>()
         };
