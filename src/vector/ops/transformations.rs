@@ -80,7 +80,6 @@ impl Geometry {
         Ok(unsafe { Geometry::with_c_geometry(c_geom, true) })
     }
 
-    #[cfg(any(all(major_is_2, minor_ge_1), major_ge_3))]
     /// Return a [Delaunay triangulation of][dt] the vertices of the geometry.
     ///
     /// # Arguments
@@ -229,7 +228,6 @@ mod tests {
     }
 
     #[test]
-    #[cfg(any(all(major_is_2, minor_ge_1), major_ge_3))]
     fn test_delaunay_triangulation() -> Result<()> {
         let square = Geometry::from_wkt("POLYGON ((0 1,1 1,1 0,0 0,0 1))")?;
         let triangles = Geometry::from_wkt(

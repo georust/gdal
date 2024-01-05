@@ -786,7 +786,6 @@ impl<'a> RasterBand<'a> {
 
     /// Get actual block size (at the edges) when block size
     /// does not divide band size.
-    #[cfg(any(all(major_is_2, minor_ge_2), major_ge_3))] // GDAL 2.2 .. 2.x or >= 3
     pub fn actual_block_size(&self, x: usize, y: usize) -> Result<(usize, usize)> {
         let offset_x = x.try_into().expect("`x` offset must fit in `c_int`");
         let offset_y = y.try_into().expect("`y` offset must fit in `c_int`");

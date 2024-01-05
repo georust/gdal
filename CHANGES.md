@@ -1,10 +1,19 @@
 # Changes
 
 ## Unreleased
+- Add `DriverIterator` format to iterate through drivers, as well as `DriverManager::all()` method that provides the iterator.
+
+- **Breaking**: `Feature::set_field_xxx` now take `&mut self`
+  - <https://github.com/georust/gdal/pull/505>
+
+- **Breaking**: Drop support for GDAL 2.x
+
+  - <https://github.com/georust/gdal/pull/504>
 
 - Added `DriverManager::guess_drivers_for_write` for the ability to auto detect compatible `Driver`s for writing data.
 
 - Added `Feature::unset_field`
+
   - <https://github.com/georust/gdal/pull/503>
 
 - Added ability to convert between `Buffer<T>` and `ndarray::Array2<T>`.
@@ -14,7 +23,7 @@
 - **Breaking**: Removed `Rasterband::read_as_array`, changed signature of `Rasterband::read_block` to return a `Buffer<T>`.
 - **Breaking**: `Rasterband::write` and `Rasterband::write_block` now require a `&mut Buffer<T>` to handle possible case of drivers temporarily mutating input buffer.
 
-   - <https://github.com/georust/gdal/pull/494>
+  - <https://github.com/georust/gdal/pull/494>
 
 - Implemented `Feature::set_field_null`
 
