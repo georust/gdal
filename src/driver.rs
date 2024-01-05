@@ -451,10 +451,45 @@ impl DriverManager {
             gdal_sys::GDALDestroyDriverManager();
         }
     }
+
+    /// Get an `Iterator` for all the drivers.
+    ///
+    /// Warning: Adding or removing drivers while comsuming the
+    /// Iterator can have unexpected results.
+    pub fn all() -> DriverIterator {
+        DriverIterator::new()
+    }
+}
+
+/// Iterator for the registered `Driver`s in `DriverManager`
+pub struct DriverIterator {
+    current: usize,
+}
+
+impl DriverIterator {
+    pub fn new() -> Self {
+        DriverIterator { current: 0 }
+    }
+}
+
+impl Iterator for DriverIterator {
+    type Item = Driver;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match DriverManager::get_driver(self.current) {
+            Ok(d) => {
+                self.current += 1;
+                Some(d)
+            }
+            Err(_) => None,
+        }
+    }
 }
 
 #[cfg(test)]
 mod tests {
+    use std::collections::HashSet;
+
     use super::*;
 
     #[test]
@@ -465,5 +500,16 @@ mod tests {
 
         assert!(DriverManager::count() > 0);
         assert!(DriverManager::get_driver(0).is_ok());
+    }
+
+    #[test]
+    fn test_driver_iterator() {
+        assert_eq!(DriverManager::count(), DriverIterator::new().count());
+        assert_eq!(DriverManager::count(), DriverManager::all().count());
+
+        let drivers: HashSet<String> = DriverManager::all().map(|d| d.short_name()).collect();
+        for i in 0..DriverManager::count() {
+            assert!(drivers.contains(&DriverManager::get_driver(i).unwrap().short_name()))
+        }
     }
 }
