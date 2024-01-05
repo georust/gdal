@@ -459,18 +459,15 @@ impl DriverManager {
         };
 
         let mut drivers: Vec<Driver> = Vec::new();
-        for i in 0..DriverManager::count() {
-            let d = DriverManager::get_driver(i).expect("Index for this loop should be valid");
+        for d in DriverManager::all().filter(|d| {
             let can_create = d.metadata_item("DCAP_CREATE", "").is_some()
                 || d.metadata_item("DCAP_CREATECOPY", "").is_some();
             let check_vector = is_vector && d.metadata_item("DCAP_VECTOR", "").is_some();
             let check_raster = !is_vector && d.metadata_item("DCAP_RASTER", "").is_some();
             let check_vector_translate =
                 is_vector && d.metadata_item("DCAP_VECTOR_TRANSLATE_FROM", "").is_some();
-            if !((can_create && (check_vector || check_raster)) || (check_vector_translate)) {
-                continue;
-            }
-
+            (can_create && (check_vector || check_raster)) || (check_vector_translate)
+        }) {
             if let Some(e) = &d.metadata_item("DMD_EXTENSION", "") {
                 if *e == ext {
                     drivers.push(d);
