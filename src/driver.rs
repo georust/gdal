@@ -410,7 +410,7 @@ impl DriverManager {
         Ok(Driver { c_driver })
     }
 
-    /// Get the Driver based on the file extension from filename
+    /// Get a Driver based on the file extension from filename
     ///
     /// Searches for the available extensions in the registered
     /// drivers and returns the matches. The determined driver is
@@ -423,10 +423,49 @@ impl DriverManager {
     /// # Example
     ///
     /// ```rust, no_run
-    /// use gdal::DriverManager;
+    /// use gdal::{DriverManager,DriverProperties};
+    /// # fn main() -> gdal::errors::Result<()> {
+    /// let compatible_driver =
+    ///     DriverManager::guess_driver_for_write("test.gpkg", DriverProperties::Vector).unwrap();
+    /// println!("{}", compatible_driver.short_name());
+    /// # Ok(())
+    /// # }
+    /// ```
+    /// ```text
+    /// "GPKG"
+    /// ```
+    pub fn guess_driver_for_write(filename: &str, properties: DriverProperties) -> Option<Driver> {
+        let mut drivers = Self::guess_drivers_for_write(filename, properties);
+        drivers
+            .next()
+            .map(|d| match d.short_name().to_uppercase().as_str() {
+                "GMT" => drivers
+                    .find(|d| d.short_name().to_lowercase() == "netcdf")
+                    .unwrap_or(d),
+
+                "COG" => drivers
+                    .find(|d| d.short_name().to_lowercase() == "gtiff")
+                    .unwrap_or(d),
+                _ => d,
+            })
+    }
+    /// Get the supported Drivers based on the file extension from filename
+    ///
+    /// Searches for the available extensions in the registered
+    /// drivers and returns the matches. The determined driver is
+    /// checked for writing capabilities as
+    /// [`Dataset::open`](Dataset::open) can already open datasets
+    /// with just path.
+    ///
+    /// See also: [`get_driver_by_name`](Self::get_driver_by_name)
+    ///
+    /// # Example
+    ///
+    /// ```rust, no_run
+    /// use gdal::{DriverManager,DriverProperties};
     /// # fn main() -> gdal::errors::Result<()> {
     /// let compatible_drivers =
-    ///     DriverManager::guess_drivers_for_write("test.gpkg", true)
+    ///     DriverManager::guess_drivers_for_write("test.gpkg", DriverProperties::Vector)
     ///         .map(|d| d.short_name())
     ///         .collect::<Vec<String>>();
     /// println!("{:?}", compatible_drivers);
@@ -438,11 +477,11 @@ impl DriverManager {
     /// ```
     pub fn guess_drivers_for_write(
         filename: &str,
-        is_vector: bool,
+        properties: DriverProperties,
     ) -> impl Iterator<Item = Driver> + '_ {
         let ext = {
             let filename = filename.to_ascii_lowercase();
-            let e = match filename.rsplit_once('.') {
+            match filename.rsplit_once('.') {
                 Some(("", _)) => "", // hidden file no ext
                 Some((f, "zip")) => {
                     // zip files could be zipped shp or gpkg
@@ -456,19 +495,23 @@ impl DriverManager {
                 }
                 Some((_, e)) => e, // normal file with ext
                 None => "",
-            };
-            e.to_string()
+            }
+            .to_string()
         };
 
         DriverManager::all()
             .filter(move |d| {
                 let can_create = d.metadata_item("DCAP_CREATE", "").is_some()
                     || d.metadata_item("DCAP_CREATECOPY", "").is_some();
-                let check_vector = is_vector && d.metadata_item("DCAP_VECTOR", "").is_some();
-                let check_raster = !is_vector && d.metadata_item("DCAP_RASTER", "").is_some();
-                let check_vector_translate =
-                    is_vector && d.metadata_item("DCAP_VECTOR_TRANSLATE_FROM", "").is_some();
-                (can_create && (check_vector || check_raster)) || (check_vector_translate)
+                match properties {
+                    DriverProperties::Raster => {
+                        can_create && d.metadata_item("DCAP_RASTER", "").is_some()
+                    }
+                    DriverProperties::Vector => {
+                        (can_create && d.metadata_item("DCAP_VECTOR", "").is_some())
+                            || d.metadata_item("DCAP_VECTOR_TRANSLATE_FROM", "").is_some()
+                    }
+                }
             })
             .filter(move |d| {
                 if let Some(e) = &d.metadata_item("DMD_EXTENSION", "") {
@@ -477,7 +520,7 @@ impl DriverManager {
                     }
                 }
                 if let Some(e) = d.metadata_item("DMD_EXTENSIONS", "") {
-                    if e.split(' ').collect::<Vec<&str>>().contains(&ext.as_str()) {
+                    if e.split(' ').any(|s| s == ext) {
                         return true;
                     }
                 }
@@ -542,6 +585,11 @@ impl DriverManager {
     }
 }
 
+pub enum DriverProperties {
+    Vector,
+    Raster,
+}
+
 /// Iterator for the registered [`Driver`]s in [`DriverManager`]
 pub struct DriverIterator {
     current: usize,
@@ -578,20 +626,57 @@ mod tests {
     }
 
     #[test]
-    fn test_driver_extension() {
+    fn test_driver_by_extension() {
+        fn test_driver(d: &Driver, filename: &str, properties: DriverProperties) {
+            assert_eq!(
+                DriverManager::guess_driver_for_write(filename, properties)
+                    .unwrap()
+                    .short_name(),
+                d.short_name()
+            );
+        }
+
+        if let Ok(d) = DriverManager::get_driver_by_name("ESRI Shapefile") {
+            test_driver(&d, "test.shp", DriverProperties::Vector);
+            test_driver(&d, "my.test.shp", DriverProperties::Vector);
+            // `shp.zip` only supported from gdal version 3.1
+            // https://gdal.org/drivers/vector/shapefile.html#compressed-files
+            if cfg!(all(major_ge_3, minor_ge_1)) {
+                test_driver(&d, "test.shp.zip", DriverProperties::Vector);
+                test_driver(&d, "my.test.shp.zip", DriverProperties::Vector);
+            }
+        }
+
+        if let Ok(d) = DriverManager::get_driver_by_name("GTiff") {
+            test_driver(&d, "test.tiff", DriverProperties::Raster);
+            test_driver(&d, "my.test.tiff", DriverProperties::Raster);
+        }
+        if let Ok(d) = DriverManager::get_driver_by_name("netCDF") {
+            test_driver(&d, "test.nc", DriverProperties::Raster);
+        }
+    }
+
+    #[test]
+    fn test_drivers_by_extension() {
         // convert the driver into short_name for testing purposes
         let drivers = |filename, is_vector| {
-            DriverManager::guess_drivers_for_write(filename, is_vector)
-                .map(|d| d.short_name())
-                .collect::<HashSet<String>>()
+            DriverManager::guess_drivers_for_write(
+                filename,
+                if is_vector {
+                    DriverProperties::Vector
+                } else {
+                    DriverProperties::Raster
+                },
+            )
+            .map(|d| d.short_name())
+            .collect::<HashSet<String>>()
         };
-        let gdal_version: i64 = crate::version::version_info("VERSION_NUM").parse().unwrap();
         if DriverManager::get_driver_by_name("ESRI Shapefile").is_ok() {
             assert!(drivers("test.shp", true).contains("ESRI Shapefile"));
             assert!(drivers("my.test.shp", true).contains("ESRI Shapefile"));
             // `shp.zip` only supported from gdal version 3.1
             // https://gdal.org/drivers/vector/shapefile.html#compressed-files
-            if gdal_version >= 3010000 {
+            if cfg!(all(major_ge_3, minor_ge_1)) {
                 assert!(drivers("test.shp.zip", true).contains("ESRI Shapefile"));
                 assert!(drivers("my.test.shp.zip", true).contains("ESRI Shapefile"));
             }
@@ -601,7 +686,7 @@ mod tests {
             assert!(drivers("my.test.gpkg", true).contains("GPKG"));
             // `gpkg.zip` only supported from gdal version 3.7
             // https://gdal.org/drivers/vector/gpkg.html#compressed-files
-            if gdal_version >= 3070000 {
+            if cfg!(all(major_ge_3, minor_ge_7)) {
                 assert!(drivers("test.gpkg.zip", true).contains("GPKG"));
                 assert!(drivers("my.test.gpkg.zip", true).contains("GPKG"));
             }
