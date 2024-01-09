@@ -434,8 +434,11 @@ impl DriverManager {
     /// ```text
     /// "GPKG"
     /// ```
-    pub fn guess_driver_for_write(filename: &str, properties: DriverProperties) -> Option<Driver> {
-        let mut drivers = Self::guess_drivers_for_write(filename, properties);
+    pub fn guess_driver_for_write<P: AsRef<Path>>(
+        filepath: P,
+        properties: DriverProperties,
+    ) -> Option<Driver> {
+        let mut drivers = Self::guess_drivers_for_write(filepath, properties);
         drivers
             .next()
             .map(|d| match d.short_name().to_uppercase().as_str() {
@@ -475,25 +478,30 @@ impl DriverManager {
     /// ```text
     /// ["GPKG"]
     /// ```
-    pub fn guess_drivers_for_write(
-        filename: &str,
+    pub fn guess_drivers_for_write<P: AsRef<Path>>(
+        filepath: P,
         properties: DriverProperties,
-    ) -> impl Iterator<Item = Driver> + '_ {
+    ) -> impl Iterator<Item = Driver> {
         let ext = {
-            let filename = filename.to_ascii_lowercase();
-            match filename.rsplit_once('.') {
-                Some(("", _)) => "", // hidden file no ext
-                Some((f, "zip")) => {
+            let ext = filepath
+                .as_ref()
+                .extension()
+                .map(|e| e.to_string_lossy().to_string().to_ascii_lowercase());
+            match ext.as_deref() {
+                Some("zip") => {
                     // zip files could be zipped shp or gpkg
-                    if f.ends_with(".shp") {
-                        "shp.zip"
-                    } else if f.ends_with(".gpkg") {
-                        "gpkg.zip"
-                    } else {
-                        "zip"
+                    let iext = filepath
+                        .as_ref()
+                        .with_extension("")
+                        .extension()
+                        .map(|f| f.to_string_lossy().to_string());
+                    match iext.as_deref() {
+                        Some("shp") => "shp.zip",
+                        Some("gpkg") => "gpkg.zip",
+                        _ => "zip",
                     }
                 }
-                Some((_, e)) => e, // normal file with ext
+                Some(e) => e, // normal file with ext
                 None => "",
             }
             .to_string()
@@ -526,7 +534,7 @@ impl DriverManager {
                 }
 
                 if let Some(pre) = d.metadata_item("DMD_CONNECTION_PREFIX", "") {
-                    if filename.starts_with(&pre) {
+                    if filepath.as_ref().to_string_lossy().starts_with(&pre) {
                         return true;
                     }
                 }
