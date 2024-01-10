@@ -441,12 +441,7 @@ impl DriverManager {
         filepath: P,
         properties: DriverProperties,
     ) -> Option<Driver> {
-        let drivers = Self::get_output_drivers_for_name(filepath, properties);
-        let drivers = drivers.collect::<Vec<_>>();
-        for d in &drivers {
-            dbg!(d.short_name());
-        }
-        let mut drivers = drivers.into_iter();
+        let mut drivers = Self::get_output_drivers_for_name(filepath, properties);
         drivers.next().map(|d| match d.short_name().as_str() {
             "GMT" => drivers.find(|d| d.short_name() == "netCDF").unwrap_or(d),
             "COG" => drivers.find(|d| d.short_name() == "GTiff").unwrap_or(d),
