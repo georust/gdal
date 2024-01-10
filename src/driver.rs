@@ -441,7 +441,12 @@ impl DriverManager {
         filepath: P,
         properties: DriverProperties,
     ) -> Option<Driver> {
-        let mut drivers = Self::get_output_drivers_for_name(filepath, properties);
+        let drivers = Self::get_output_drivers_for_name(filepath, properties);
+        let drivers = drivers.collect::<Vec<_>>();
+        for d in &drivers {
+            dbg!(d.short_name());
+        }
+        let mut drivers = drivers.into_iter();
         drivers.next().map(|d| match d.short_name().as_str() {
             "GMT" => drivers.find(|d| d.short_name() == "netCDF").unwrap_or(d),
             "COG" => drivers.find(|d| d.short_name() == "GTiff").unwrap_or(d),
@@ -702,7 +707,7 @@ mod tests {
             assert!(drivers("test.nc", false).contains("netCDF"));
         }
         if DriverManager::get_driver_by_name("PostgreSQL").is_ok() {
-            assert!(dbg!(drivers("PG:test", true)).contains("PostgreSQL"));
+            assert!(drivers("PG:test", true).contains("PostgreSQL"));
         }
     }
 
