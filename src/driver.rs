@@ -410,15 +410,18 @@ impl DriverManager {
         Ok(Driver { c_driver })
     }
 
-    /// Get a Driver based on the file extension from filename
+    /// Get one [`Driver`] that can create a file with the given name.
     ///
-    /// Searches for the available extensions in the registered
-    /// drivers and returns the matches. The determined driver is
-    /// checked for writing capabilities as
-    /// [`Dataset::open`](Dataset::open) can already open datasets
-    /// with just path.
+    /// Searches for registered drivers that can create files and support
+    /// the file extension or the connection prefix.
     ///
     /// See also: [`get_driver_by_name`](Self::get_driver_by_name)
+    /// and [`Dataset::open`](Dataset::open).
+    ///
+    /// # Note
+    ///
+    /// This functionality is implemented natively in GDAL 3.9, but this crate
+    /// emulates it in previous versions.
     ///
     /// # Example
     ///
@@ -426,7 +429,7 @@ impl DriverManager {
     /// use gdal::{DriverManager,DriverProperties};
     /// # fn main() -> gdal::errors::Result<()> {
     /// let compatible_driver =
-    ///     DriverManager::guess_driver_for_write("test.gpkg", DriverProperties::Vector).unwrap();
+    ///     DriverManager::get_output_driver_for_name("test.gpkg", DriverProperties::Vector).unwrap();
     /// println!("{}", compatible_driver.short_name());
     /// # Ok(())
     /// # }
@@ -434,33 +437,33 @@ impl DriverManager {
     /// ```text
     /// "GPKG"
     /// ```
-    pub fn guess_driver_for_write<P: AsRef<Path>>(
+    pub fn get_output_driver_for_name<P: AsRef<Path>>(
         filepath: P,
         properties: DriverProperties,
     ) -> Option<Driver> {
-        let mut drivers = Self::guess_drivers_for_write(filepath, properties);
-        drivers
-            .next()
-            .map(|d| match d.short_name().to_uppercase().as_str() {
-                "GMT" => drivers
-                    .find(|d| d.short_name().to_lowercase() == "netcdf")
-                    .unwrap_or(d),
+        let mut drivers = Self::get_output_drivers_for_name(filepath, properties);
+        drivers.next().map(|d| match d.short_name().as_str() {
+            "GMT" => drivers
+                .find(|d| d.short_name().to_lowercase() == "NETCDF")
+                .unwrap_or(d),
 
-                "COG" => drivers
-                    .find(|d| d.short_name().to_lowercase() == "gtiff")
-                    .unwrap_or(d),
-                _ => d,
-            })
+            "COG" => drivers.find(|d| d.short_name() == "GTiff").unwrap_or(d),
+            _ => d,
+        })
     }
-    /// Get the supported Drivers based on the file extension from filename
+
+    /// Get the [`Driver`]s that can create a file with the given name.
     ///
-    /// Searches for the available extensions in the registered
-    /// drivers and returns the matches. The determined driver is
-    /// checked for writing capabilities as
-    /// [`Dataset::open`](Dataset::open) can already open datasets
-    /// with just path.
+    /// Searches for registered drivers that can create files and support
+    /// the file extension or the connection prefix.
     ///
     /// See also: [`get_driver_by_name`](Self::get_driver_by_name)
+    /// and [`Dataset::open`](Dataset::open).
+    ///
+    /// # Note
+    ///
+    /// This functionality is implemented natively in GDAL 3.9, but this crate
+    /// emulates it in previous versions.
     ///
     /// # Example
     ///
@@ -468,7 +471,7 @@ impl DriverManager {
     /// use gdal::{DriverManager,DriverProperties};
     /// # fn main() -> gdal::errors::Result<()> {
     /// let compatible_drivers =
-    ///     DriverManager::guess_drivers_for_write("test.gpkg", DriverProperties::Vector)
+    ///     DriverManager::get_output_drivers_for_name("test.gpkg", DriverProperties::Vector)
     ///         .map(|d| d.short_name())
     ///         .collect::<Vec<String>>();
     /// println!("{:?}", compatible_drivers);
@@ -478,33 +481,28 @@ impl DriverManager {
     /// ```text
     /// ["GPKG"]
     /// ```
-    pub fn guess_drivers_for_write<P: AsRef<Path>>(
-        filepath: P,
+    pub fn get_output_drivers_for_name<P: AsRef<Path>>(
+        path: P,
         properties: DriverProperties,
     ) -> impl Iterator<Item = Driver> {
-        let ext = {
-            let ext = filepath
-                .as_ref()
-                .extension()
-                .map(|e| e.to_string_lossy().to_string().to_ascii_lowercase());
-            match ext.as_deref() {
-                Some("zip") => {
-                    // zip files could be zipped shp or gpkg
-                    let iext = filepath
-                        .as_ref()
-                        .with_extension("")
-                        .extension()
-                        .map(|f| f.to_string_lossy().to_string());
-                    match iext.as_deref() {
-                        Some("shp") => "shp.zip",
-                        Some("gpkg") => "gpkg.zip",
-                        _ => "zip",
-                    }
-                }
-                Some(e) => e, // normal file with ext
-                None => "",
+        let path = path.as_ref();
+        let path_lower = path.to_string_lossy().to_ascii_lowercase();
+
+        // NOTE: this isn't exactly correct for e.g. `.gpkg.zip`
+        // (which is not a GPKG), but this code is going away.
+        let ext = if path_lower.ends_with(".zip") {
+            if path_lower.ends_with(".shp.zip") {
+                "shp.zip".to_string()
+            } else if path_lower.ends_with(".gpkg.zip") {
+                "gpkg.zip".to_string()
+            } else {
+                "zip".to_string()
             }
-            .to_string()
+        } else {
+            Path::new(&path_lower)
+                .extension()
+                .map(|e| e.to_string_lossy().into_owned())
+                .unwrap_or_default()
         };
 
         DriverManager::all()
@@ -534,7 +532,7 @@ impl DriverManager {
                 }
 
                 if let Some(pre) = d.metadata_item("DMD_CONNECTION_PREFIX", "") {
-                    if filepath.as_ref().to_string_lossy().starts_with(&pre) {
+                    if path_lower.starts_with(&pre.to_ascii_lowercase()) {
                         return true;
                     }
                 }
@@ -637,7 +635,7 @@ mod tests {
     fn test_driver_by_extension() {
         fn test_driver(d: &Driver, filename: &str, properties: DriverProperties) {
             assert_eq!(
-                DriverManager::guess_driver_for_write(filename, properties)
+                DriverManager::get_output_driver_for_name(filename, properties)
                     .unwrap()
                     .short_name(),
                 d.short_name()
@@ -668,7 +666,7 @@ mod tests {
     fn test_drivers_by_extension() {
         // convert the driver into short_name for testing purposes
         let drivers = |filename, is_vector| {
-            DriverManager::guess_drivers_for_write(
+            DriverManager::get_output_drivers_for_name(
                 filename,
                 if is_vector {
                     DriverProperties::Vector
@@ -707,7 +705,7 @@ mod tests {
             assert!(drivers("test.nc", false).contains("netCDF"));
         }
         if DriverManager::get_driver_by_name("PostgreSQL").is_ok() {
-            assert!(drivers("PG:test", true).contains("PostgreSQL"));
+            assert!(dbg!(drivers("PG:test", true)).contains("PostgreSQL"));
         }
     }
 
