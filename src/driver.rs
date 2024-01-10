@@ -443,10 +443,7 @@ impl DriverManager {
     ) -> Option<Driver> {
         let mut drivers = Self::get_output_drivers_for_name(filepath, properties);
         drivers.next().map(|d| match d.short_name().as_str() {
-            "GMT" => drivers
-                .find(|d| d.short_name().to_lowercase() == "NETCDF")
-                .unwrap_or(d),
-
+            "GMT" => drivers.find(|d| d.short_name() == "netCDF").unwrap_or(d),
             "COG" => drivers.find(|d| d.short_name() == "GTiff").unwrap_or(d),
             _ => d,
         })
