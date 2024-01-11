@@ -426,10 +426,10 @@ impl DriverManager {
     /// # Example
     ///
     /// ```rust, no_run
-    /// use gdal::{DriverManager,DriverProperties};
+    /// use gdal::{DriverManager, DriverProperties};
     /// # fn main() -> gdal::errors::Result<()> {
     /// let compatible_driver =
-    ///     DriverManager::get_output_driver_for_name("test.gpkg", DriverProperties::Vector).unwrap();
+    ///     DriverManager::get_output_driver_for_dataset_name("test.gpkg", DriverProperties::Vector).unwrap();
     /// println!("{}", compatible_driver.short_name());
     /// # Ok(())
     /// # }
@@ -437,14 +437,18 @@ impl DriverManager {
     /// ```text
     /// "GPKG"
     /// ```
-    pub fn get_output_driver_for_name<P: AsRef<Path>>(
+    pub fn get_output_driver_for_dataset_name<P: AsRef<Path>>(
         filepath: P,
         properties: DriverProperties,
     ) -> Option<Driver> {
-        let mut drivers = Self::get_output_drivers_for_name(filepath, properties);
+        let mut drivers = Self::get_output_drivers_for_dataset_name(filepath, properties);
         drivers.next().map(|d| match d.short_name().as_str() {
-            "GMT" => drivers.find(|d| d.short_name() == "netCDF").unwrap_or(d),
-            "COG" => drivers.find(|d| d.short_name() == "GTiff").unwrap_or(d),
+            "GMT" => drivers
+                .find(|d| d.short_name().eq_ignore_ascii_case("netCDF"))
+                .unwrap_or(d),
+            "COG" => drivers
+                .find(|d| d.short_name().eq_ignore_ascii_case("GTiff"))
+                .unwrap_or(d),
             _ => d,
         })
     }
@@ -465,10 +469,10 @@ impl DriverManager {
     /// # Example
     ///
     /// ```rust, no_run
-    /// use gdal::{DriverManager,DriverProperties};
+    /// use gdal::{DriverManager, DriverProperties};
     /// # fn main() -> gdal::errors::Result<()> {
     /// let compatible_drivers =
-    ///     DriverManager::get_output_drivers_for_name("test.gpkg", DriverProperties::Vector)
+    ///     DriverManager::get_output_drivers_for_dataset_name("test.gpkg", DriverProperties::Vector)
     ///         .map(|d| d.short_name())
     ///         .collect::<Vec<String>>();
     /// println!("{:?}", compatible_drivers);
@@ -478,7 +482,7 @@ impl DriverManager {
     /// ```text
     /// ["GPKG"]
     /// ```
-    pub fn get_output_drivers_for_name<P: AsRef<Path>>(
+    pub fn get_output_drivers_for_dataset_name<P: AsRef<Path>>(
         path: P,
         properties: DriverProperties,
     ) -> impl Iterator<Item = Driver> {
@@ -632,7 +636,7 @@ mod tests {
     fn test_driver_by_extension() {
         fn test_driver(d: &Driver, filename: &str, properties: DriverProperties) {
             assert_eq!(
-                DriverManager::get_output_driver_for_name(filename, properties)
+                DriverManager::get_output_driver_for_dataset_name(filename, properties)
                     .unwrap()
                     .short_name(),
                 d.short_name()
@@ -663,7 +667,7 @@ mod tests {
     fn test_drivers_by_extension() {
         // convert the driver into short_name for testing purposes
         let drivers = |filename, is_vector| {
-            DriverManager::get_output_drivers_for_name(
+            DriverManager::get_output_drivers_for_dataset_name(
                 filename,
                 if is_vector {
                     DriverProperties::Vector
