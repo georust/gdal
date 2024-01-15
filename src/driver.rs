@@ -410,6 +410,137 @@ impl DriverManager {
         Ok(Driver { c_driver })
     }
 
+    /// Get one [`Driver`] that can create a file with the given name.
+    ///
+    /// Searches for registered drivers that can create files and support
+    /// the file extension or the connection prefix.
+    ///
+    /// See also: [`get_driver_by_name`](Self::get_driver_by_name)
+    /// and [`Dataset::open`](Dataset::open).
+    ///
+    /// # Note
+    ///
+    /// This functionality is implemented natively in GDAL 3.9, but this crate
+    /// emulates it in previous versions.
+    ///
+    /// # Example
+    ///
+    /// ```rust, no_run
+    /// use gdal::{DriverManager, DriverType};
+    /// # fn main() -> gdal::errors::Result<()> {
+    /// let compatible_driver =
+    ///     DriverManager::get_output_driver_for_dataset_name("test.gpkg", DriverType::Vector).unwrap();
+    /// println!("{}", compatible_driver.short_name());
+    /// # Ok(())
+    /// # }
+    /// ```
+    /// ```text
+    /// "GPKG"
+    /// ```
+    pub fn get_output_driver_for_dataset_name<P: AsRef<Path>>(
+        filepath: P,
+        properties: DriverType,
+    ) -> Option<Driver> {
+        let mut drivers = Self::get_output_drivers_for_dataset_name(filepath, properties);
+        drivers.next().map(|d| match d.short_name().as_str() {
+            "GMT" => drivers
+                .find(|d| d.short_name().eq_ignore_ascii_case("netCDF"))
+                .unwrap_or(d),
+            "COG" => drivers
+                .find(|d| d.short_name().eq_ignore_ascii_case("GTiff"))
+                .unwrap_or(d),
+            _ => d,
+        })
+    }
+
+    /// Get the [`Driver`]s that can create a file with the given name.
+    ///
+    /// Searches for registered drivers that can create files and support
+    /// the file extension or the connection prefix.
+    ///
+    /// See also: [`get_driver_by_name`](Self::get_driver_by_name)
+    /// and [`Dataset::open`](Dataset::open).
+    ///
+    /// # Note
+    ///
+    /// This functionality is implemented natively in GDAL 3.9, but this crate
+    /// emulates it in previous versions.
+    ///
+    /// # Example
+    ///
+    /// ```rust, no_run
+    /// use gdal::{DriverManager, DriverType};
+    /// # fn main() -> gdal::errors::Result<()> {
+    /// let compatible_drivers =
+    ///     DriverManager::get_output_drivers_for_dataset_name("test.gpkg", DriverType::Vector)
+    ///         .map(|d| d.short_name())
+    ///         .collect::<Vec<String>>();
+    /// println!("{:?}", compatible_drivers);
+    /// # Ok(())
+    /// # }
+    /// ```
+    /// ```text
+    /// ["GPKG"]
+    /// ```
+    pub fn get_output_drivers_for_dataset_name<P: AsRef<Path>>(
+        path: P,
+        properties: DriverType,
+    ) -> impl Iterator<Item = Driver> {
+        let path = path.as_ref();
+        let path_lower = path.to_string_lossy().to_ascii_lowercase();
+
+        // NOTE: this isn't exactly correct for e.g. `.gpkg.zip`
+        // (which is not a GPKG), but this code is going away.
+        let ext = if path_lower.ends_with(".zip") {
+            if path_lower.ends_with(".shp.zip") {
+                "shp.zip".to_string()
+            } else if path_lower.ends_with(".gpkg.zip") {
+                "gpkg.zip".to_string()
+            } else {
+                "zip".to_string()
+            }
+        } else {
+            Path::new(&path_lower)
+                .extension()
+                .map(|e| e.to_string_lossy().into_owned())
+                .unwrap_or_default()
+        };
+
+        DriverManager::all()
+            .filter(move |d| {
+                let can_create = d.metadata_item("DCAP_CREATE", "").is_some()
+                    || d.metadata_item("DCAP_CREATECOPY", "").is_some();
+                match properties {
+                    DriverType::Raster => {
+                        can_create && d.metadata_item("DCAP_RASTER", "").is_some()
+                    }
+                    DriverType::Vector => {
+                        (can_create && d.metadata_item("DCAP_VECTOR", "").is_some())
+                            || d.metadata_item("DCAP_VECTOR_TRANSLATE_FROM", "").is_some()
+                    }
+                }
+            })
+            .filter(move |d| {
+                if let Some(e) = &d.metadata_item("DMD_EXTENSION", "") {
+                    if *e == ext {
+                        return true;
+                    }
+                }
+                if let Some(e) = d.metadata_item("DMD_EXTENSIONS", "") {
+                    if e.split(' ').any(|s| s == ext) {
+                        return true;
+                    }
+                }
+
+                if let Some(pre) = d.metadata_item("DMD_CONNECTION_PREFIX", "") {
+                    if path_lower.starts_with(&pre.to_ascii_lowercase()) {
+                        return true;
+                    }
+                }
+                false
+            })
+    }
+
     /// Register a driver for use.
     ///
     /// Wraps [`GDALRegisterDriver()`](https://gdal.org/api/raster_c_api.html#_CPPv418GDALRegisterDriver11GDALDriverH)
@@ -461,6 +592,11 @@ impl DriverManager {
     }
 }
 
+pub enum DriverType {
+    Vector,
+    Raster,
+}
+
 /// Iterator for the registered [`Driver`]s in [`DriverManager`]
 pub struct DriverIterator {
     current: usize,
@@ -494,6 +630,84 @@ mod tests {
 
         assert!(DriverManager::count() > 0);
         assert!(DriverManager::get_driver(0).is_ok());
+    }
+
+    #[test]
+    fn test_driver_by_extension() {
+        fn test_driver(d: &Driver, filename: &str, properties: DriverType) {
+            assert_eq!(
+                DriverManager::get_output_driver_for_dataset_name(filename, properties)
+                    .unwrap()
+                    .short_name(),
+                d.short_name()
+            );
+        }
+
+        if let Ok(d) = DriverManager::get_driver_by_name("ESRI Shapefile") {
+            test_driver(&d, "test.shp", DriverType::Vector);
+            test_driver(&d, "my.test.shp", DriverType::Vector);
+            // `shp.zip` only supported from gdal version 3.1
+            // https://gdal.org/drivers/vector/shapefile.html#compressed-files
+            if cfg!(all(major_ge_3, minor_ge_1)) {
+                test_driver(&d, "test.shp.zip", DriverType::Vector);
+                test_driver(&d, "my.test.shp.zip", DriverType::Vector);
+            }
+        }
+
+        if let Ok(d) = DriverManager::get_driver_by_name("GTiff") {
+            test_driver(&d, "test.tiff", DriverType::Raster);
+            test_driver(&d, "my.test.tiff", DriverType::Raster);
+        }
+        if let Ok(d) = DriverManager::get_driver_by_name("netCDF") {
+            test_driver(&d, "test.nc", DriverType::Raster);
+        }
+    }
+
+    #[test]
+    fn test_drivers_by_extension() {
+        // convert the driver into short_name for testing purposes
+        let drivers = |filename, is_vector| {
+            DriverManager::get_output_drivers_for_dataset_name(
+                filename,
+                if is_vector {
+                    DriverType::Vector
+                } else {
+                    DriverType::Raster
+                },
+            )
+            .map(|d| d.short_name())
+            .collect::<HashSet<String>>()
+        };
+        if DriverManager::get_driver_by_name("ESRI Shapefile").is_ok() {
+            assert!(drivers("test.shp", true).contains("ESRI Shapefile"));
+            assert!(drivers("my.test.shp", true).contains("ESRI Shapefile"));
+            // `shp.zip` only supported from gdal version 3.1
+            // https://gdal.org/drivers/vector/shapefile.html#compressed-files
+            if cfg!(all(major_ge_3, minor_ge_1)) {
+                assert!(drivers("test.shp.zip", true).contains("ESRI Shapefile"));
+                assert!(drivers("my.test.shp.zip", true).contains("ESRI Shapefile"));
+            }
+        }
+        if DriverManager::get_driver_by_name("GPKG").is_ok() {
+            assert!(drivers("test.gpkg", true).contains("GPKG"));
+            assert!(drivers("my.test.gpkg", true).contains("GPKG"));
+            // `gpkg.zip` only supported from gdal version 3.7
+            // https://gdal.org/drivers/vector/gpkg.html#compressed-files
+            if cfg!(all(major_ge_3, minor_ge_7)) {
+                assert!(drivers("test.gpkg.zip", true).contains("GPKG"));
+                assert!(drivers("my.test.gpkg.zip", true).contains("GPKG"));
+            }
+        }
+        if DriverManager::get_driver_by_name("GTiff").is_ok() {
+            assert!(drivers("test.tiff", false).contains("GTiff"));
+            assert!(drivers("my.test.tiff", false).contains("GTiff"));
+        }
+        if DriverManager::get_driver_by_name("netCDF").is_ok() {
+            assert!(drivers("test.nc", false).contains("netCDF"));
+        }
+        if DriverManager::get_driver_by_name("PostgreSQL").is_ok() {
+            assert!(drivers("PG:test", true).contains("PostgreSQL"));
+        }
     }
 
     #[test]

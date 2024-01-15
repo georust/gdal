@@ -2,6 +2,7 @@
 
 ## Unreleased
 - Add `DriverIterator` format to iterate through drivers, as well as `DriverManager::all()` method that provides the iterator.
+  - <https://github.com/georust/gdal/pull/512>
 
 - **Breaking**: `Feature::set_field_xxx` now take `&mut self`
   - <https://github.com/georust/gdal/pull/505>
@@ -9,6 +10,9 @@
 - **Breaking**: Drop support for GDAL 2.x
 
   - <https://github.com/georust/gdal/pull/504>
+
+- Added `DriverManager::get_output_driver_for_dataset_name` and `DriverManager::get_output_drivers_for_dataset_name` for the ability to auto detect compatible `Driver`(s) for writing data.
+  - <https://github.com/georust/gdal/pull/510>
 
 - Added `Feature::unset_field`
 
