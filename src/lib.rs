@@ -129,7 +129,7 @@ pub use dataset::Dataset;
 pub use geo_transform::{GeoTransform, GeoTransformEx};
 pub use options::{DatasetOptions, GdalOpenFlags};
 
-pub use driver::{Driver, DriverManager, DriverProperties};
+pub use driver::{Driver, DriverManager, DriverType};
 pub use gcp::{Gcp, GcpRef};
 #[cfg(any(major_ge_4, all(major_is_3, minor_ge_6)))]
 pub use gdal_sys::ArrowArrayStream;

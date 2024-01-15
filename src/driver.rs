@@ -426,10 +426,10 @@ impl DriverManager {
     /// # Example
     ///
     /// ```rust, no_run
-    /// use gdal::{DriverManager, DriverProperties};
+    /// use gdal::{DriverManager, DriverType};
     /// # fn main() -> gdal::errors::Result<()> {
     /// let compatible_driver =
-    ///     DriverManager::get_output_driver_for_dataset_name("test.gpkg", DriverProperties::Vector).unwrap();
+    ///     DriverManager::get_output_driver_for_dataset_name("test.gpkg", DriverType::Vector).unwrap();
     /// println!("{}", compatible_driver.short_name());
     /// # Ok(())
     /// # }
@@ -439,7 +439,7 @@ impl DriverManager {
     /// ```
     pub fn get_output_driver_for_dataset_name<P: AsRef<Path>>(
         filepath: P,
-        properties: DriverProperties,
+        properties: DriverType,
     ) -> Option<Driver> {
         let mut drivers = Self::get_output_drivers_for_dataset_name(filepath, properties);
         drivers.next().map(|d| match d.short_name().as_str() {
@@ -469,10 +469,10 @@ impl DriverManager {
     /// # Example
     ///
     /// ```rust, no_run
-    /// use gdal::{DriverManager, DriverProperties};
+    /// use gdal::{DriverManager, DriverType};
     /// # fn main() -> gdal::errors::Result<()> {
     /// let compatible_drivers =
-    ///     DriverManager::get_output_drivers_for_dataset_name("test.gpkg", DriverProperties::Vector)
+    ///     DriverManager::get_output_drivers_for_dataset_name("test.gpkg", DriverType::Vector)
     ///         .map(|d| d.short_name())
     ///         .collect::<Vec<String>>();
     /// println!("{:?}", compatible_drivers);
@@ -484,7 +484,7 @@ impl DriverManager {
     /// ```
     pub fn get_output_drivers_for_dataset_name<P: AsRef<Path>>(
         path: P,
-        properties: DriverProperties,
+        properties: DriverType,
     ) -> impl Iterator<Item = Driver> {
         let path = path.as_ref();
         let path_lower = path.to_string_lossy().to_ascii_lowercase();
@@ -511,10 +511,10 @@ impl DriverManager {
                 let can_create = d.metadata_item("DCAP_CREATE", "").is_some()
                     || d.metadata_item("DCAP_CREATECOPY", "").is_some();
                 match properties {
-                    DriverProperties::Raster => {
+                    DriverType::Raster => {
                         can_create && d.metadata_item("DCAP_RASTER", "").is_some()
                     }
-                    DriverProperties::Vector => {
+                    DriverType::Vector => {
                         (can_create && d.metadata_item("DCAP_VECTOR", "").is_some())
                             || d.metadata_item("DCAP_VECTOR_TRANSLATE_FROM", "").is_some()
                     }
@@ -592,7 +592,7 @@ impl DriverManager {
     }
 }
 
-pub enum DriverProperties {
+pub enum DriverType {
     Vector,
     Raster,
 }
@@ -634,7 +634,7 @@ mod tests {
 
     #[test]
     fn test_driver_by_extension() {
-        fn test_driver(d: &Driver, filename: &str, properties: DriverProperties) {
+        fn test_driver(d: &Driver, filename: &str, properties: DriverType) {
             assert_eq!(
                 DriverManager::get_output_driver_for_dataset_name(filename, properties)
                     .unwrap()
@@ -644,22 +644,22 @@ mod tests {
         }
 
         if let Ok(d) = DriverManager::get_driver_by_name("ESRI Shapefile") {
-            test_driver(&d, "test.shp", DriverProperties::Vector);
-            test_driver(&d, "my.test.shp", DriverProperties::Vector);
+            test_driver(&d, "test.shp", DriverType::Vector);
+            test_driver(&d, "my.test.shp", DriverType::Vector);
             // `shp.zip` only supported from gdal version 3.1
             // https://gdal.org/drivers/vector/shapefile.html#compressed-files
             if cfg!(all(major_ge_3, minor_ge_1)) {
-                test_driver(&d, "test.shp.zip", DriverProperties::Vector);
-                test_driver(&d, "my.test.shp.zip", DriverProperties::Vector);
+                test_driver(&d, "test.shp.zip", DriverType::Vector);
+                test_driver(&d, "my.test.shp.zip", DriverType::Vector);
             }
         }
 
         if let Ok(d) = DriverManager::get_driver_by_name("GTiff") {
-            test_driver(&d, "test.tiff", DriverProperties::Raster);
-            test_driver(&d, "my.test.tiff", DriverProperties::Raster);
+            test_driver(&d, "test.tiff", DriverType::Raster);
+            test_driver(&d, "my.test.tiff", DriverType::Raster);
         }
         if let Ok(d) = DriverManager::get_driver_by_name("netCDF") {
-            test_driver(&d, "test.nc", DriverProperties::Raster);
+            test_driver(&d, "test.nc", DriverType::Raster);
         }
     }
 
@@ -670,9 +670,9 @@ mod tests {
             DriverManager::get_output_drivers_for_dataset_name(
                 filename,
                 if is_vector {
-                    DriverProperties::Vector
+                    DriverType::Vector
                 } else {
-                    DriverProperties::Raster
+                    DriverType::Raster
                 },
             )
             .map(|d| d.short_name())
