@@ -36,7 +36,7 @@ tempfile = "3.8"
 arrow = { version = "52.0", default-features = false, features = ["ffi"] }
 
 [workspace]
-members = ["gdal-sys"]
+members = ["gdal-src", "gdal-sys"]
 
 # docs.rs-specific configuration
 [package.metadata.docs.rs]
@@ -44,3 +44,7 @@ members = ["gdal-sys"]
 features = ["array"]
 # define attribute `docsrs` for feature badges
 rustdoc-args = ["--cfg", "docsrs"]
+
+
+[patch.crates-io]
+proj-sys = { git = "https://github.com/GiGainfosystems/proj", rev = "dc67b5afc17bc7d330371e4406dffd65cf9321cd" }
