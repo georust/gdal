@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add a `bundled` feature for `gdal-sys` that allows to build and statically link a minimal bundled version of gdal during `cargo build`
+
 ## 0.17.1
 
 ### Added
