@@ -4,4 +4,7 @@
 #![allow(clippy::upper_case_acronyms)]
 #![allow(rustdoc::bare_urls)]
 
+#[cfg(feature = "bundled")]
+extern crate gdal_src;
+
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));

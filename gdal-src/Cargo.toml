@@ -1,0 +1,329 @@
+[package]
+name = "gdal-src"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+link-cplusplus = "1.0"
+proj-sys = { version = "0.23.2", features = ["bundled_proj"] }
+libsqlite3-sys = { version = "0.28.0", features = ["bundled"], optional = true }
+hdf5-src = { version = "0.8.1", optional = true, features = ["hl"] }
+hdf5-sys = { version = "0.8.1", optional = true, features = ["static"] }
+netcdf-src = { version = "0.3.2", optional = true }
+pq-src = { version = "0.1.1", optional = true }
+curl-sys = { version = "0.4.70", features = ["static-curl"], optional = true }
+libz-sys = { version = "1.1.15", features = ["static"], optional = true }
+geos-src = { version = "0.2.1", optional = true }
+geos-sys = { version = "2", optional = true }
+
+
+[build-dependencies]
+cmake = "0.1.50"
+
+[features]
+default = []
+enable_all_drivers = [
+        "enable_all_internal",
+        "DRIVER_SQLITE",
+        "DRIVER_GPKG",
+        "DRIVER_VFK",
+        "DRIVER_HDF5",
+        "DRIVER_NETCDF",
+        "DRIVER_AMIGOCLOUD",
+        "DRIVER_CARTO",
+        "DRIVER_DAAS",
+        "DRIVER_EEDA",
+        "DRIVER_ELASTIC",
+        "DRIVER_NGW",
+        "DRIVER_OGCAPI",
+        "DRIVER_PLMOSAIC",
+        "DRIVER_WCS",
+        "DRIVER_WMS",
+        "DRIVER_WMTS",
+        "DRIVER_PG",
+        "DRIVER_POSTGIS_RASTER",
+]
+
+# note that libgeos is LGPL licenced
+# enabling this feature will means
+# that you statically link libgeos and
+# therefore makes your binary fall under
+# LGPL as well
+geos_static = ["geos-src", "geos"]
+# as long as the `geos_static` feature
+# is not enabled that will only
+# dynamically link geos
+geos = ["geos-sys"]
+
+enable_all_internal = [
+    # ogr internal,
+    "DRIVER_AVC",
+    "DRIVER_CAD",
+    "DRIVER_CSV",
+    "DRIVER_DGN",
+    "DRIVER_DXF",
+    "DRIVER_EDIGEO",
+    "DRIVER_FLATGEOBUF",
+    "DRIVER_GEOCONCEPT",
+    "DRIVER_GEOJSON",
+    "DRIVER_GMT",
+    "DRIVER_GTFS",
+    "DRIVER_JSONFG",
+    "DRIVER_MAPML",
+    "DRIVER_OPENFILEGDB",
+    "DRIVER_PGDUMP",
+    "DRIVER_NTF",
+    "DRIVER_S57",
+    "DRIVER_SELAFIN",
+    "DRIVER_SHAPE",
+    "DRIVER_SXF",
+    "DRIVER_TAB",
+    "DRIVER_TIGER",
+    "DRIVER_VDV",
+    "DRIVER_WASP",
+    # gdal internal
+    "DRIVER_AAIGRID",
+    "DRIVER_ADRG",
+    "DRIVER_AIGRID",
+    "DRIVER_AIRSAR",
+    "DRIVER_BLX",
+    "DRIVER_BMP",
+    "DRIVER_BSB",
+    "DRIVER_CALS",
+    "DRIVER_CEOS",
+    "DRIVER_COASP",
+    "DRIVER_COSAR",
+    "DRIVER_CTG",
+    "DRIVER_DIMAP",
+    "DRIVER_DTED",
+    "DRIVER_ELAS",
+    "DRIVER_ENVISAT",
+    "DRIVER_ERS",
+    "DRIVER_FIT",
+    "DRIVER_GFF",
+    "DRIVER_GIF",
+    "DRIVER_GRIB",
+    "DRIVER_GSG",
+    "DRIVER_GTIFF",
+    "DRIVER_GXF",
+    "DRIVER_HF2",
+    "DRIVER_HFA",
+    "DRIVER_ILWIS",
+    "DRIVER_IRIS",
+    "DRIVER_JAXAPALSAR",
+    "DRIVER_JDEM",
+    "DRIVER_JPEG",
+    "DRIVER_KMLSUPEROVERLAY",
+    "DRIVER_L1B",
+    "DRIVER_LEVELLER",
+    "DRIVER_MAP",
+    "DRIVER_MRF",
+    "DRIVER_MSGN",
+    "DRIVER_NGSGEOID",
+    "DRIVER_NIFT",
+    "DRIVER_NORTHWOOD",
+    "DRIVER_OZI",
+    "DRIVER_PCIDSK",
+    "DRIVER_PCRASTER",
+    "DRIVER_PNG",
+    "DRIVER_PRF",
+    "DRIVER_R",
+    "DRIVER_RAW",
+    "DRIVER_RIK",
+    "DRIVER_RMF",
+    "DRIVER_RS2",
+    "DRIVER_SAFE",
+    "DRIVER_SAGA",
+    "DRIVER_SAR_CEOS",
+    "DRIVER_SENTINEL2",
+    "DRIVER_SGI",
+    "DRIVER_SIGDEM",
+    "DRIVER_SRTMHGT",
+    "DRIVER_STACIT",
+    "DRIVER_STACTA",
+    "DRIVER_TERRAGEN",
+    "DRIVER_TGA",
+    "DRIVER_TIL",
+    "DRIVER_TSX",
+    "DRIVER_USGSDEM",
+    "DRIVER_XPM",
+    "DRIVER_XYZ",
+    "DRIVER_ZMAP",
+
+    # ogr and gdal
+    "DRIVER_IDRISI",
+    "DRIVER_PDS",
+    "DRIVER_SDTS",
+    "DRIVER_VRT",
+    "DRIVER_MEM",
+]
+
+# ogr internal
+DRIVER_AVC = []
+DRIVER_CAD = []
+DRIVER_CSV = []
+DRIVER_DGN = []
+DRIVER_DXF = []
+DRIVER_EDIGEO = []
+DRIVER_FLATGEOBUF = []
+DRIVER_GEOCONCEPT = []
+DRIVER_GEOJSON = []
+DRIVER_GMT = []
+DRIVER_GTFS = []
+DRIVER_JSONFG = []
+DRIVER_MAPML = []
+DRIVER_OPENFILEGDB = []
+DRIVER_PGDUMP = []
+DRIVER_NTF = []
+DRIVER_S57 = []
+DRIVER_SELAFIN = []
+DRIVER_SHAPE = []
+DRIVER_SXF = []
+DRIVER_TAB = []
+DRIVER_TIGER = []
+DRIVER_VDV = []
+DRIVER_WASP = []
+
+#gdal internal
+DRIVER_AAIGRID = []
+DRIVER_ADRG = []
+DRIVER_AIGRID = []
+DRIVER_AIRSAR = []
+DRIVER_BLX = []
+DRIVER_BMP = []
+DRIVER_BSB = []
+DRIVER_CALS = []
+DRIVER_CEOS = []
+DRIVER_COASP = []
+DRIVER_COSAR = []
+DRIVER_CTG = []
+DRIVER_DIMAP = []
+DRIVER_DTED = []
+DRIVER_ELAS = []
+DRIVER_ENVISAT =[]
+DRIVER_ERS = []
+DRIVER_FIT = []
+DRIVER_GFF = []
+DRIVER_GIF = []
+DRIVER_GRIB = []
+DRIVER_GSG = []
+DRIVER_GTIFF = []
+DRIVER_GXF = []
+DRIVER_HF2 = []
+DRIVER_HFA = []
+DRIVER_ILWIS = []
+DRIVER_IRIS = []
+DRIVER_JAXAPALSAR = []
+DRIVER_JDEM = []
+DRIVER_JPEG = []
+DRIVER_KMLSUPEROVERLAY = []
+DRIVER_L1B = []
+DRIVER_LEVELLER = []
+DRIVER_MAP = []
+DRIVER_MRF = []
+DRIVER_MSGN = []
+DRIVER_NGSGEOID = []
+DRIVER_NIFT = []
+DRIVER_NORTHWOOD = []
+DRIVER_OZI = []
+DRIVER_PCIDSK = []
+DRIVER_PCRASTER = []
+DRIVER_PNG = []
+DRIVER_PRF = []
+DRIVER_R = []
+DRIVER_RAW = []
+DRIVER_RIK = []
+DRIVER_RMF = []
+DRIVER_RS2 = []
+DRIVER_SAFE = []
+DRIVER_SAGA = []
+DRIVER_SAR_CEOS = []
+DRIVER_SENTINEL2 = []
+DRIVER_SGI = []
+DRIVER_SIGDEM = []
+DRIVER_SRTMHGT = []
+DRIVER_STACIT = []
+DRIVER_STACTA = []
+DRIVER_TERRAGEN = []
+DRIVER_TGA = []
+DRIVER_TIL = []
+DRIVER_TSX = []
+DRIVER_USGSDEM = []
+DRIVER_XPM = []
+DRIVER_XYZ = []
+DRIVER_ZMAP = []
+
+# ogr and gdal
+DRIVER_IDRISI = []
+DRIVER_PDS = []
+DRIVER_SDTS = []
+DRIVER_VRT = []
+DRIVER_MEM = []
+
+# external
+
+# sqlite
+DRIVER_SQLITE = ["dep:libsqlite3-sys"]
+DRIVER_GPKG = ["DRIVER_SQLITE"]
+DRIVER_VFK = ["DRIVER_SQLITE"]
+DRIVER_RASTERLITE = [] # unclear how to handle that
+
+# curl
+DRIVER_AMIGOCLOUD = ["curl-sys"]
+DRIVER_CARTO = ["curl-sys"]
+DRIVER_DAAS = ["curl-sys"]
+DRIVER_EEDA = ["curl-sys"]
+DRIVER_ELASTIC = ["curl-sys"]
+DRIVER_NGW = ["curl-sys"]
+
+DRIVER_OGCAPI = ["curl-sys"]
+DRIVER_PLMOSAIC = ["curl-sys"]
+DRIVER_WCS = ["curl-sys"]
+DRIVER_WMS = ["curl-sys"]
+DRIVER_WMTS = ["curl-sys"]
+
+# libexpat
+# (there exists no expat-sys crate)
+# DRIVER_GEORSS = []
+# DRIVER_GML = []
+# DRIVER_GPSBABEL = []
+# DRIVER_GPX = []
+# DRIVER_JML = []
+# DRIVER_KML = []
+# DRIVER_LVBAG = []
+# DRIVER_ODS = []
+# DRIVER_SVG = []
+# DRIVER_XLSX = []
+
+# libmysqlclient
+# (there is currently no bundling support in libmysqlclient)
+# DRIVER_MYSQL = []
+
+# libpq
+DRIVER_PG = ["dep:pq-src"]
+DRIVER_POSTGIS_RASTER = ["DRIVER_PG"]
+
+# libhdf5
+DRIVER_HDF5 = ["dep:hdf5-src", "dep:libz-sys"]
+
+# libnetcdf
+DRIVER_NETCDF = ["dep:netcdf-src", "DRIVER_HDF5", "dep:hdf5-sys"]
+
+# poppler
+#DRIVER_PDF = []
+
+# combined
+# these miss at least one dependency
+# DRIVER_MVT = [] # requires sqlite + geos
+# DRIVER_OSM = [] # requires sqlite + libexpat
+# DRIVER_ZARR = [] # requires liblz4, libxz, libzstd and libblocs
+# DRIVER_MBTILES = ["DRIVER_SQLITE", "DRIVER_MVT"] # also requires mvt (so geos)
+# DRIVER_PMTILES = ["DRIVER_MVT"]  # depends on driver_mvt
+# DRIVER_CSW = ["curl-sys", "DRIVER_GML"]  # depends on gml driver
+# DRIVER_WFS = ["curl-sys", "DRIVER_GML"]
+
+# unclear
+DRIVER_HTTP = []
+DRIVER_ARG = []
