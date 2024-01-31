@@ -1,4 +1,5 @@
 use std::fmt::{Debug, Display, Formatter};
+use std::ptr;
 use std::ptr::NonNull;
 
 use crate::cpl::CslStringList;
@@ -9,9 +10,9 @@ use crate::utils::_last_null_pointer_err;
 use crate::xml::GdalXmlNode;
 use gdal_sys::{
     GDALCloneWarpOptions, GDALCreateWarpOptions, GDALDeserializeWarpOptions,
-    GDALDestroyWarpOptions, GDALSerializeWarpOptions, GDALWarpInitDefaultBandMapping,
-    GDALWarpInitDstNoDataReal, GDALWarpInitSrcNoDataReal, GDALWarpOptions,
-    GDALWarpResolveWorkingDataType,
+    GDALDestroyWarpOptions, GDALSerializeWarpOptions, GDALWarpAppOptions, GDALWarpAppOptionsFree,
+    GDALWarpAppOptionsNew, GDALWarpInitDefaultBandMapping, GDALWarpInitDstNoDataReal,
+    GDALWarpInitSrcNoDataReal, GDALWarpOptions, GDALWarpResolveWorkingDataType,
 };
 use libc::c_char;
 
@@ -243,6 +244,47 @@ impl Debug for GdalWarpOptions {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let xml = self.to_xml().map_err(|_| std::fmt::Error)?;
         Debug::fmt(&xml, f)
+    }
+}
+
+#[derive(Debug)]
+pub struct GdalWarpAppOptions(NonNull<GDALWarpAppOptions>);
+
+impl GdalWarpAppOptions {
+    /// Instatiate and empty set of warp options.
+    pub fn new() -> Self {
+        unsafe { Self::from_ptr(GDALWarpAppOptionsNew(ptr::null_mut(), ptr::null_mut())) }
+    }
+
+    /// Create Self from a raw pointer.
+    ///
+    /// # Safety
+    /// Caller is responsible for ensuring `ptr` is not null, and
+    /// ownership of `ptr` is properly transferred
+    pub unsafe fn from_ptr(ptr: *mut GDALWarpAppOptions) -> Self {
+        Self(NonNull::new_unchecked(ptr))
+    }
+
+    /// Get a immutable pointer to C API options.
+    pub fn as_ptr(&self) -> *const GDALWarpAppOptions {
+        self.0.as_ptr()
+    }
+
+    /// Get a mutable pointer to C API options.
+    pub fn as_ptr_mut(&mut self) -> *mut GDALWarpAppOptions {
+        self.0.as_ptr()
+    }
+}
+
+impl Drop for GdalWarpAppOptions {
+    fn drop(&mut self) {
+        unsafe { GDALWarpAppOptionsFree(self.as_ptr_mut()) }
+    }
+}
+
+impl Default for GdalWarpAppOptions {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

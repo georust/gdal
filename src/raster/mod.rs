@@ -75,6 +75,7 @@
 //! ```
 
 pub use buffer::{Buffer, ByteBuffer};
+pub use create_options::RasterCreationOptions;
 #[cfg(all(major_ge_3, minor_ge_1))]
 pub use mdarray::{
     Attribute, Dimension, ExtendedDataType, ExtendedDataTypeClass, Group, MDArray, MdStatisticsAll,
@@ -87,6 +88,7 @@ pub use rasterize::{rasterize, BurnSource, MergeAlgorithm, OptimizeMode, Rasteri
 pub use types::{AdjustedValue, GdalDataType, GdalType};
 
 mod buffer;
+mod create_options;
 pub mod dem;
 #[cfg(all(major_ge_3, minor_ge_1))]
 mod mdarray;
@@ -96,13 +98,3 @@ mod rasterize;
 mod tests;
 mod types;
 pub mod warp;
-
-/// Key/value pair for passing driver-specific creation options to
-/// [`Driver::create_with_band_type_wth_options`](crate::Driver::create_with_band_type_with_options`).
-///
-/// See `papszOptions` in [GDAL's `Create(...)` API documentation](https://gdal.org/api/gdaldriver_cpp.html#_CPPv4N10GDALDriver6CreateEPKciii12GDALDataType12CSLConstList).
-#[derive(Debug)]
-pub struct RasterCreationOption<'a> {
-    pub key: &'a str,
-    pub value: &'a str,
-}

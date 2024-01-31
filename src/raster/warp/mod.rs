@@ -9,11 +9,11 @@ mod reproject_options;
 mod resample;
 mod warp_options;
 
-use gdal_sys::CPLErr;
+use gdal_sys::{CPLErr, GDALDatasetH, GDALWarp};
 pub use reproject_options::*;
 pub use resample::*;
 use std::ffi::CString;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::ptr;
 pub use warp_options::*;
 
@@ -22,7 +22,7 @@ use crate::DriverManager;
 
 use crate::errors::*;
 use crate::spatial_ref::SpatialRef;
-use crate::utils::{_last_cpl_err, _path_to_c_string};
+use crate::utils::{_last_cpl_err, _last_null_pointer_err, _path_to_c_string};
 
 /// Reproject raster dataset into the given [`SpatialRef`] and save result to `dst_file`.
 pub fn create_and_reproject<P: AsRef<Path>>(
@@ -163,6 +163,79 @@ pub fn reproject_into(
     Ok(())
 }
 
+pub fn warp<D>(source: &Dataset, dest: D, options: &GdalWarpOptions) -> Result<Dataset>
+where
+    D: Into<WarpDestination>,
+{
+    warp_multiple(&[source], dest, options)
+}
+
+pub fn warp_multiple<D>(source: &[&Dataset], dest: D, options: &GdalWarpOptions) -> Result<Dataset>
+where
+    D: Into<WarpDestination>,
+{
+    let app_opts = GdalWarpAppOptions::default();
+
+    if true {
+        todo!("how the hell do you go from {options:?} to GdalWarpAppOptions?");
+    }
+
+    let mut source = source.iter().map(|ds| ds.c_dataset()).collect::<Vec<_>>();
+
+    let dest = dest.into();
+    match dest {
+        WarpDestination::Dataset(ds) => {
+            let ds_c = unsafe {
+                GDALWarp(
+                    ptr::null_mut(),
+                    ds.c_dataset(),
+                    source.len() as libc::c_int,
+                    source.as_mut_ptr(),
+                    app_opts.as_ptr(),
+                    ptr::null_mut(),
+                )
+            };
+            if ds_c.is_null() {
+                Err(_last_null_pointer_err("GDALWarp"))
+            } else {
+                Ok(ds)
+            }
+        }
+        WarpDestination::Path(p) => {
+            let path = _path_to_c_string(&p)?;
+            let ds_c = unsafe {
+                GDALWarp(
+                    path.as_ptr(),
+                    ptr::null_mut(),
+                    source.len() as libc::c_int,
+                    source.as_ptr() as *mut GDALDatasetH,
+                    app_opts.as_ptr(),
+                    ptr::null_mut(),
+                )
+            };
+            Ok(unsafe { Dataset::from_c_dataset(ds_c) })
+        }
+    }
+}
+
+#[derive(Debug)]
+pub enum WarpDestination {
+    Dataset(Dataset),
+    Path(PathBuf),
+}
+
+impl From<Dataset> for WarpDestination {
+    fn from(ds: Dataset) -> Self {
+        WarpDestination::Dataset(ds)
+    }
+}
+
+impl From<PathBuf> for WarpDestination {
+    fn from(path: PathBuf) -> Self {
+        WarpDestination::Path(path)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -249,6 +322,23 @@ mod tests {
         let expected_stats = erb.get_statistics(true, false)?.unwrap();
         assert_near!(StatisticsAll, result_stats, expected_stats, epsilon = 1e-2);
 
+        Ok(())
+    }
+
+    #[test]
+    #[ignore]
+    fn test_warp() -> Result<()> {
+        let source = TempFixture::fixture("labels.tif");
+        let source_ds = Dataset::open(&source)?;
+        let dest = Path::new("target").join("labels-warp.tif");
+
+        let mut options = GdalWarpOptions::default();
+        options
+            .with_band_count(source_ds.raster_count())
+            .with_initial_value(InitValue::NoData)
+            .with_resampling_alg(WarpResampleAlg::NearestNeighbour);
+
+        warp(&source_ds, dest, &options)?;
         Ok(())
     }
 }
