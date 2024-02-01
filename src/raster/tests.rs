@@ -480,13 +480,13 @@ fn test_no_data_value_i64() -> Result<()> {
         let ds = driver.create_with_band_type::<i64, _>(&path, 1, 1, 1)?;
         let mut rasterband = ds.rasterband(1)?;
         assert_eq!(rasterband.no_data_value_i64(), None);
-        rasterband.set_no_data_value_i64(Some(255i64))?;
+        rasterband.set_no_data_value_i64(Some(i64::MIN))?;
     }
 
     let ds = Dataset::open(&path)?;
     let rasterband = ds.rasterband(1)?;
 
-    assert_eq!(rasterband.no_data_value_i64(), Some(255i64));
+    assert_eq!(rasterband.no_data_value_i64(), Some(i64::MIN));
 
     Ok(())
 }
@@ -500,13 +500,13 @@ fn test_no_data_value_u64() -> Result<()> {
         let ds = driver.create_with_band_type::<u64, _>(&path, 1, 1, 1)?;
         let mut rasterband = ds.rasterband(1)?;
         assert_eq!(rasterband.no_data_value_u64(), None);
-        rasterband.set_no_data_value_u64(Some(255u64))?;
+        rasterband.set_no_data_value_u64(Some(u64::MAX))?;
     }
 
     let ds = Dataset::open(&path)?;
     let rasterband = ds.rasterband(1)?;
 
-    assert_eq!(rasterband.no_data_value_u64(), Some(255u64));
+    assert_eq!(rasterband.no_data_value_u64(), Some(u64::MAX));
 
     Ok(())
 }
