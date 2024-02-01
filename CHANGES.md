@@ -1,7 +1,7 @@
 # Changes
 
 ## Unreleased
-- Added bindings for `GetNoDataValueAsInt64` and `GetNoDataValueAsUInt64`
+- Added `no_data_value_u64`, `set_no_data_value_u64`, `no_data_value_i64` and `set_no_data_value_i64` to `RasterBand`.
   - <https://github.com/georust/gdal/pull/520>
 
 - Add `DriverIterator` format to iterate through drivers, as well as `DriverManager::all()` method that provides the iterator.

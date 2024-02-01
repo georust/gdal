@@ -1,4 +1,5 @@
 use crate::dataset::Dataset;
+use crate::errors::Result;
 use crate::metadata::Metadata;
 use crate::raster::rasterband::ResampleAlg;
 use crate::raster::{
@@ -457,32 +458,57 @@ fn test_get_rasterband() {
 }
 
 #[test]
-fn test_get_no_data_value() {
-    let dataset = Dataset::open(fixture("tinymarble.tif")).unwrap();
-    let rasterband = dataset.rasterband(1).unwrap();
+fn test_get_no_data_value() -> Result<()> {
+    let dataset = Dataset::open(fixture("tinymarble.tif"))?;
+    let rasterband = dataset.rasterband(1)?;
     let no_data_value = rasterband.no_data_value();
     assert!(no_data_value.is_none());
 
-    let dataset = Dataset::open(fixture("labels.tif")).unwrap();
-    let rasterband = dataset.rasterband(1).unwrap();
+    let dataset = Dataset::open(fixture("labels.tif"))?;
+    let rasterband = dataset.rasterband(1)?;
     let no_data_value = rasterband.no_data_value();
     assert_eq!(no_data_value, Some(255.0));
+    Ok(())
 }
 
 #[test]
 #[cfg(all(major_ge_3, minor_ge_5))]
-fn test_get_no_data_value_i64() {
-    let dataset = Dataset::open(fixture("labels_i64.tif")).unwrap();
-    let rasterband = dataset.rasterband(1).unwrap();
+fn test_no_data_value_i64() -> Result<()> {
+    let path = TempFixture::empty("test_no_data_value_i64.tiff");
+    {
+        let driver = DriverManager::get_driver_by_name("GTiff")?;
+        let ds = driver.create_with_band_type::<i64, _>(&path, 1, 1, 1)?;
+        let mut rasterband = ds.rasterband(1)?;
+        assert_eq!(rasterband.no_data_value_i64(), None);
+        rasterband.set_no_data_value_i64(Some(255i64))?;
+    }
+
+    let ds = Dataset::open(&path)?;
+    let rasterband = ds.rasterband(1)?;
+
     assert_eq!(rasterband.no_data_value_i64(), Some(255i64));
+
+    Ok(())
 }
 
 #[test]
 #[cfg(all(major_ge_3, minor_ge_5))]
-fn test_get_no_data_value_u64() {
-    let dataset = Dataset::open(fixture("labels_u64.tif")).unwrap();
-    let rasterband = dataset.rasterband(1).unwrap();
+fn test_no_data_value_u64() -> Result<()> {
+    let path = TempFixture::empty("test_no_data_value_u64.tiff");
+    {
+        let driver = DriverManager::get_driver_by_name("GTiff")?;
+        let ds = driver.create_with_band_type::<u64, _>(&path, 1, 1, 1)?;
+        let mut rasterband = ds.rasterband(1)?;
+        assert_eq!(rasterband.no_data_value_u64(), None);
+        rasterband.set_no_data_value_u64(Some(255u64))?;
+    }
+
+    let ds = Dataset::open(&path)?;
+    let rasterband = ds.rasterband(1)?;
+
     assert_eq!(rasterband.no_data_value_u64(), Some(255u64));
+
+    Ok(())
 }
 
 #[test]
