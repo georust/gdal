@@ -1,8 +1,13 @@
 # Changes
 
 ## Unreleased
+
 - Added `no_data_value_u64`, `set_no_data_value_u64`, `no_data_value_i64` and `set_no_data_value_i64` to `RasterBand`.
   - <https://github.com/georust/gdal/pull/520>
+
+- **Breaking** Removed `RasterCreationOption`and replaced usages of `[RasterCreationOption]` with `RasterCreationOptions`, a type alias for `CplStringList`.
+
+  - <https://github.com/georust/gdal/pull/519>
 
 - Add `DriverIterator` format to iterate through drivers, as well as `DriverManager::all()` method that provides the iterator.
   - <https://github.com/georust/gdal/pull/512>

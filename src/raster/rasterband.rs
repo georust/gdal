@@ -578,23 +578,12 @@ impl<'a> RasterBand<'a> {
     /// ```rust, no_run
     /// # fn main() -> gdal::errors::Result<()> {
     /// use gdal::DriverManager;
-    /// use gdal::raster::{Buffer, RasterCreationOption};
+    /// use gdal::raster::{Buffer, RasterCreationOptions };
     ///
     /// let driver = DriverManager::get_driver_by_name("GTiff").unwrap();
-    /// let options = [
-    ///     RasterCreationOption {
-    ///         key: "TILED",
-    ///         value: "YES",
-    ///     },
-    ///     RasterCreationOption {
-    ///         key: "BLOCKXSIZE",
-    ///         value: "16",
-    ///     },
-    ///     RasterCreationOption {
-    ///         key: "BLOCKYSIZE",
-    ///         value: "16",
-    ///     },
-    /// ];
+    /// let options = RasterCreationOptions::from_iter([
+    ///    "TILED=YES", "BLOCKXSIZE=16", "BLOCKYSIZE=16"
+    /// ]);
     /// let dataset = driver
     ///     .create_with_band_type_with_options::<u16, _>(
     ///         "/vsimem/test_write_block.tif",
@@ -1529,7 +1518,7 @@ impl Debug for ColorEntry {
 ///
 /// // Create in-memory copy to mutate
 /// let mem_driver = DriverManager::get_driver_by_name("MEM")?;
-/// let ds = ds.create_copy(&mem_driver, "<mem>", &[])?;
+/// let ds = ds.create_copy(&mem_driver, "<mem>", &Default::default())?;
 /// let mut band = ds.rasterband(1)?;
 /// assert!(band.color_table().is_none());
 ///
@@ -1543,7 +1532,7 @@ impl Debug for ColorEntry {
 ///
 /// // Render a PNG
 /// let png_driver = DriverManager::get_driver_by_name("PNG")?;
-/// ds.create_copy(&png_driver, "/tmp/labels.png", &[])?;
+/// ds.create_copy(&png_driver, "/tmp/labels.png", &Default::default())?;
 ///
 /// # Ok(())
 /// # }
