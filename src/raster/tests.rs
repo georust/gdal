@@ -463,10 +463,26 @@ fn test_get_no_data_value() {
     let no_data_value = rasterband.no_data_value();
     assert!(no_data_value.is_none());
 
-    // let dataset = Dataset::open(fixture!("bluemarble.tif")).unwrap();
-    // let rasterband = dataset.get_rasterband(1).unwrap();
-    // let no_data_value = rasterband.get_no_data_value();
-    // assert_eq!(no_data_value, Some(0.0));
+    let dataset = Dataset::open(fixture("labels.tif")).unwrap();
+    let rasterband = dataset.rasterband(1).unwrap();
+    let no_data_value = rasterband.no_data_value();
+    assert_eq!(no_data_value, Some(255.0));
+}
+
+#[test]
+#[cfg(all(major_ge_3, minor_ge_5))]
+fn test_get_no_data_value_i64() {
+    let dataset = Dataset::open(fixture("labels_i64.tif")).unwrap();
+    let rasterband = dataset.rasterband(1).unwrap();
+    assert_eq!(rasterband.no_data_value_i64(), Some(255i64));
+}
+
+#[test]
+#[cfg(all(major_ge_3, minor_ge_5))]
+fn test_get_no_data_value_u64() {
+    let dataset = Dataset::open(fixture("labels_u64.tif")).unwrap();
+    let rasterband = dataset.rasterband(1).unwrap();
+    assert_eq!(rasterband.no_data_value_u64(), Some(255u64));
 }
 
 #[test]

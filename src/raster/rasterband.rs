@@ -696,7 +696,61 @@ impl<'a> RasterBand<'a> {
         None
     }
 
-    /// Set the no data value of this band.
+    /// Fetch the no-data value for this band.
+    ///
+    /// This method should ONLY be called on rasters whose data type is `UInt64`.
+    ///
+    /// If there is no no-data value, an out of range value will generally be returned.
+    /// The no-data value for a band is generally a special marker value used to mark pixels that are not valid data.
+    /// Such pixels should generally not be displayed, nor contribute to analysis operations.
+    ///
+    /// The no data value returned is 'raw', meaning that it has no offset and scale applied.
+    ///
+    /// # Returns
+    /// No-data value as `Some(i64)` if no-data value exists, `None` otherwise.
+    ///
+    /// # Notes
+    /// See also: [`GDALGetRasterNoDataValueAsUInt64`](https://gdal.org/api/raster_c_api.html#_CPPv432GDALGetRasterNoDataValueAsUInt6415GDALRasterBandHPi)
+    #[cfg(all(major_ge_3, minor_ge_5))]
+    pub fn no_data_value_u64(&self) -> Option<u64> {
+        let mut pb_success = 1;
+        let no_data = unsafe {
+            gdal_sys::GDALGetRasterNoDataValueAsUInt64(self.c_rasterband, &mut pb_success)
+        };
+        if pb_success == 1 {
+            return Some(no_data);
+        }
+        None
+    }
+
+    /// Fetch the no data value for this band.
+    ///
+    /// This method should ONLY be called on rasters whose data type is `Int64`.
+    ///
+    /// If there is no out of data value, an out of range value will generally be returned.
+    /// The no-data value for a band is generally a special marker value used to mark pixels that are not valid data.
+    /// Such pixels should generally not be displayed, nor contribute to analysis operations.
+    ///
+    /// The no data value returned is 'raw', meaning that it has no offset and scale applied.
+    ///
+    /// # Returns
+    /// No-data value as `Some(i64)` if no-data value exists, `None` otherwise.
+    ///
+    /// # Notes
+    /// See also: [`GDALGetRasterNoDataValueAsInt64`](https://gdal.org/api/gdalrasterband_cpp.html#_CPPv4N14GDALRasterBand21GetNoDataValueAsInt64EPi)
+    #[cfg(all(major_ge_3, minor_ge_5))]
+    pub fn no_data_value_i64(&self) -> Option<i64> {
+        let mut pb_success = 1;
+        let no_data = unsafe {
+            gdal_sys::GDALGetRasterNoDataValueAsInt64(self.c_rasterband, &mut pb_success)
+        };
+        if pb_success == 1 {
+            return Some(no_data);
+        }
+        None
+    }
+
+    /// Sets the no-data value of this band.
     ///
     /// If `no_data` is `None`, any existing no-data value is deleted.
     pub fn set_no_data_value(&mut self, no_data: Option<f64>) -> Result<()> {

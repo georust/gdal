@@ -1,6 +1,9 @@
 # Changes
 
 ## Unreleased
+- Added bindings for `GetNoDataValueAsInt64` and `GetNoDataValueAsUInt64`
+  - <https://github.com/georust/gdal/pull/520>
+
 - Add `DriverIterator` format to iterate through drivers, as well as `DriverManager::all()` method that provides the iterator.
   - <https://github.com/georust/gdal/pull/512>
 
