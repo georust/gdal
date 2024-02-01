@@ -2,7 +2,7 @@ use crate::dataset::Dataset;
 use crate::metadata::Metadata;
 use crate::raster::rasterband::ResampleAlg;
 use crate::raster::{
-    ByteBuffer, ColorEntry, ColorInterpretation, ColorTable, GdalDataType, RasterCreationOption,
+    ByteBuffer, ColorEntry, ColorInterpretation, ColorTable, GdalDataType, RasterCreationOptions,
     StatisticsAll, StatisticsMinMax,
 };
 use crate::test_utils::{fixture, TempFixture};
@@ -127,7 +127,9 @@ fn test_rename_remove_raster() {
 
     let driver = DriverManager::get_driver_by_name("GTiff").unwrap();
 
-    dataset.create_copy(&driver, mem_file_path_a, &[]).unwrap();
+    dataset
+        .create_copy(&driver, mem_file_path_a, &Default::default())
+        .unwrap();
 
     driver.rename(mem_file_path_b, mem_file_path_a).unwrap();
 
@@ -166,28 +168,13 @@ fn test_create_with_band_type() {
 #[test]
 fn test_create_with_band_type_with_options() {
     let driver = DriverManager::get_driver_by_name("GTiff").unwrap();
-    let options = [
-        RasterCreationOption {
-            key: "TILED",
-            value: "YES",
-        },
-        RasterCreationOption {
-            key: "BLOCKXSIZE",
-            value: "128",
-        },
-        RasterCreationOption {
-            key: "BLOCKYSIZE",
-            value: "64",
-        },
-        RasterCreationOption {
-            key: "COMPRESS",
-            value: "LZW",
-        },
-        RasterCreationOption {
-            key: "INTERLEAVE",
-            value: "BAND",
-        },
-    ];
+    let options = RasterCreationOptions::from_iter([
+        "TILED=YES",
+        "BLOCKXSIZE=128",
+        "BLOCKYSIZE=64",
+        "COMPRESS=LZW",
+        "INTERLEAVE=BAND",
+    ]);
 
     let tmp_filename = TempFixture::empty("test.tif");
     {
@@ -214,7 +201,9 @@ fn test_create_with_band_type_with_options() {
 fn test_create_copy() {
     let driver = DriverManager::get_driver_by_name("MEM").unwrap();
     let dataset = Dataset::open(fixture("tinymarble.tif")).unwrap();
-    let copy = dataset.create_copy(&driver, "", &[]).unwrap();
+    let copy = dataset
+        .create_copy(&driver, "", &Default::default())
+        .unwrap();
     assert_eq!(copy.raster_size(), (100, 50));
     assert_eq!(copy.raster_count(), 3);
 }
@@ -234,16 +223,7 @@ fn test_create_copy_with_options() {
         .create_copy(
             &DriverManager::get_driver_by_name("GTiff").unwrap(),
             mem_file_path,
-            &[
-                RasterCreationOption {
-                    key: "INTERLEAVE",
-                    value: "BAND",
-                },
-                RasterCreationOption {
-                    key: "COMPRESS",
-                    value: "LZW",
-                },
-            ],
+            &RasterCreationOptions::from_iter(["INTERLEAVE=BAND", "COMPRESS=LZW"]),
         )
         .unwrap();
 
@@ -391,20 +371,7 @@ fn test_read_block_data() {
 #[cfg(feature = "ndarray")]
 fn test_write_block() {
     let driver = DriverManager::get_driver_by_name("GTiff").unwrap();
-    let options = [
-        RasterCreationOption {
-            key: "TILED",
-            value: "YES",
-        },
-        RasterCreationOption {
-            key: "BLOCKXSIZE",
-            value: "16",
-        },
-        RasterCreationOption {
-            key: "BLOCKYSIZE",
-            value: "16",
-        },
-    ];
+    let options = RasterCreationOptions::from_iter(["TILED=YES", "BLOCKXSIZE=16", "BLOCKYSIZE=16"]);
     let dataset = driver
         .create_with_band_type_with_options::<u16, _>(
             "/vsimem/test_write_block.tif",
@@ -724,7 +691,7 @@ fn test_create_color_table() {
 
         // Create a new file to put color table in
         let dataset = dataset
-            .create_copy(&dataset.driver(), &outfile, &[])
+            .create_copy(&dataset.driver(), &outfile, &Default::default())
             .unwrap();
         dataset
             .rasterband(1)

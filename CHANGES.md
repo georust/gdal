@@ -1,6 +1,11 @@
 # Changes
 
 ## Unreleased
+
+- **Breaking** Removed `RasterCreationOption`and replaced usages of `[RasterCreationOption]` with `RasterCreationOptions`, a type alias for `CplStringList`.
+
+  - <https://github.com/georust/gdal/pull/519>
+
 - Add `DriverIterator` format to iterate through drivers, as well as `DriverManager::all()` method that provides the iterator.
   - <https://github.com/georust/gdal/pull/512>
 

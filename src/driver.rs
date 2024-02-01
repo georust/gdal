@@ -4,11 +4,10 @@ use std::sync::Once;
 
 use gdal_sys::{self, CPLErr, GDALDriverH, GDALMajorObjectH};
 
-use crate::cpl::CslStringList;
 use crate::dataset::Dataset;
 use crate::gdal_major_object::MajorObject;
 use crate::metadata::Metadata;
-use crate::raster::{GdalDataType, GdalType, RasterCreationOption};
+use crate::raster::{GdalDataType, GdalType, RasterCreationOptions};
 use crate::utils::{_last_cpl_err, _last_null_pointer_err, _path_to_c_string, _string};
 
 use crate::errors::*;
@@ -137,7 +136,7 @@ impl Driver {
         size_y: usize,
         bands: usize,
     ) -> Result<Dataset> {
-        let options = [];
+        let options = Default::default();
         self.create_with_band_type_with_options::<T, _>(filename, size_x, size_y, bands, &options)
     }
 
@@ -153,16 +152,11 @@ impl Driver {
     /// ```rust, no_run
     /// # fn main() -> gdal::errors::Result<()> {
     /// use gdal::DriverManager;
-    /// use gdal::raster::RasterCreationOption;
+    /// use gdal::raster::RasterCreationOptions;
     /// use gdal::raster::GdalDataType;
     /// use gdal::spatial_ref::SpatialRef;
     /// let d = DriverManager::get_driver_by_name("BMP")?;
-    /// let options = [
-    ///     RasterCreationOption {
-    ///         key: "WORLDFILE",
-    ///         value: "YES"
-    ///     }
-    /// ];
+    /// let options = RasterCreationOptions::from_iter(["WORLD_FILE=YES"]);
     /// let mut ds = d.create_with_band_type_with_options::<u8, _>("/tmp/foo.bmp", 64, 64, 1, &options)?;
     /// ds.set_spatial_ref(&SpatialRef::from_epsg(4326)?)?;
     /// assert_eq!(ds.raster_count(), 1);
@@ -178,7 +172,7 @@ impl Driver {
         size_x: usize,
         size_y: usize,
         bands: usize,
-        options: &[RasterCreationOption],
+        options: &RasterCreationOptions,
     ) -> Result<Dataset> {
         Self::_create_with_band_type_with_options(
             self,
@@ -198,13 +192,8 @@ impl Driver {
         size_y: usize,
         bands: usize,
         data_type: GdalDataType,
-        options: &[RasterCreationOption],
+        options: &RasterCreationOptions,
     ) -> Result<Dataset> {
-        let mut options_c = CslStringList::new();
-        for option in options {
-            options_c.set_name_value(option.key, option.value)?;
-        }
-
         let size_x = libc::c_int::try_from(size_x)?;
         let size_y = libc::c_int::try_from(size_y)?;
         let bands = libc::c_int::try_from(bands)?;
@@ -218,7 +207,7 @@ impl Driver {
                 size_y,
                 bands,
                 data_type as u32,
-                options_c.as_ptr(),
+                options.as_ptr(),
             )
         };
 
@@ -232,14 +221,13 @@ impl Driver {
     /// Convenience for creating a vector-only dataset from a compatible driver.
     /// [Details](https://gdal.org/api/gdaldriver_cpp.html#_CPPv4N10GDALDriver6CreateEPKciii12GDALDataType12CSLConstList)
     pub fn create_vector_only<P: AsRef<Path>>(&self, filename: P) -> Result<Dataset> {
-        let options = [];
         self._create_with_band_type_with_options(
             filename.as_ref(),
             0,
             0,
             0,
             GdalDataType::Unknown,
-            &options,
+            &RasterCreationOptions::default(),
         )
     }
 

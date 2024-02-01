@@ -5,7 +5,7 @@ use gdal_sys::{self, CPLErr, GDALDatasetH, GDALMajorObjectH};
 use crate::cpl::CslStringList;
 use crate::errors::*;
 use crate::options::DatasetOptions;
-use crate::raster::RasterCreationOption;
+use crate::raster::RasterCreationOptions;
 use crate::utils::{_last_cpl_err, _last_null_pointer_err, _path_to_c_string, _string};
 use crate::{
     gdal_major_object::MajorObject, spatial_ref::SpatialRef, Driver, GeoTransform, Metadata,
@@ -238,20 +238,15 @@ impl Dataset {
         &self,
         driver: &Driver,
         filename: P,
-        options: &[RasterCreationOption],
+        options: &RasterCreationOptions,
     ) -> Result<Dataset> {
         fn _create_copy(
             ds: &Dataset,
             driver: &Driver,
             filename: &Path,
-            options: &[RasterCreationOption],
+            options: &CslStringList,
         ) -> Result<Dataset> {
             let c_filename = _path_to_c_string(filename)?;
-
-            let mut c_options = CslStringList::new();
-            for option in options {
-                c_options.set_name_value(option.key, option.value)?;
-            }
 
             let c_dataset = unsafe {
                 gdal_sys::GDALCreateCopy(
@@ -259,7 +254,7 @@ impl Dataset {
                     c_filename.as_ptr(),
                     ds.c_dataset,
                     0,
-                    c_options.as_ptr(),
+                    options.as_ptr(),
                     None,
                     ptr::null_mut(),
                 )
