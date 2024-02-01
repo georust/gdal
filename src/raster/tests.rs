@@ -1,4 +1,5 @@
 use crate::dataset::Dataset;
+use crate::errors::Result;
 use crate::metadata::Metadata;
 use crate::raster::rasterband::ResampleAlg;
 use crate::raster::{
@@ -424,16 +425,43 @@ fn test_get_rasterband() {
 }
 
 #[test]
-fn test_get_no_data_value() {
-    let dataset = Dataset::open(fixture("tinymarble.tif")).unwrap();
-    let rasterband = dataset.rasterband(1).unwrap();
+fn test_get_no_data_value() -> Result<()> {
+    let dataset = Dataset::open(fixture("tinymarble.tif"))?;
+    let rasterband = dataset.rasterband(1)?;
     let no_data_value = rasterband.no_data_value();
     assert!(no_data_value.is_none());
 
-    // let dataset = Dataset::open(fixture!("bluemarble.tif")).unwrap();
-    // let rasterband = dataset.get_rasterband(1).unwrap();
-    // let no_data_value = rasterband.get_no_data_value();
-    // assert_eq!(no_data_value, Some(0.0));
+    let dataset = Dataset::open(fixture("labels.tif"))?;
+    let rasterband = dataset.rasterband(1)?;
+    let no_data_value = rasterband.no_data_value();
+    assert_eq!(no_data_value, Some(255.0));
+    Ok(())
+}
+
+#[test]
+#[cfg(all(major_ge_3, minor_ge_5))]
+fn test_no_data_value_i64() -> Result<()> {
+    let driver = DriverManager::get_driver_by_name("MEM")?;
+    let ds = driver.create_with_band_type::<i64, _>("test_no_data_value_i64", 1, 1, 1)?;
+    let mut rasterband = ds.rasterband(1)?;
+    assert_eq!(rasterband.no_data_value_i64(), None);
+    rasterband.set_no_data_value_i64(Some(i64::MIN))?;
+    assert_eq!(rasterband.no_data_value_i64(), Some(i64::MIN));
+
+    Ok(())
+}
+
+#[test]
+#[cfg(all(major_ge_3, minor_ge_5))]
+fn test_no_data_value_u64() -> Result<()> {
+    let driver = DriverManager::get_driver_by_name("MEM")?;
+    let ds = driver.create_with_band_type::<u64, _>("test_no_data_value_u64", 1, 1, 1)?;
+    let mut rasterband = ds.rasterband(1)?;
+    assert_eq!(rasterband.no_data_value_u64(), None);
+    rasterband.set_no_data_value_u64(Some(u64::MAX))?;
+    assert_eq!(rasterband.no_data_value_u64(), Some(u64::MAX));
+
+    Ok(())
 }
 
 #[test]
