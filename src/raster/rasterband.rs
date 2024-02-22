@@ -42,6 +42,24 @@ impl Dataset {
         }
     }
 
+    /// Get the bands of a dataset.
+    ///
+    /// Returns an iterator over the [`RasterBands`]s in the current [`Dataset`].
+    ///
+    /// # Example
+    ///
+    /// ```rust, no_run
+    /// use gdal::Dataset;
+    /// # fn main() -> gdal::errors::Result<()> {
+    /// let ds = Dataset::open("fixtures/tinymarble.tif")?;
+    /// assert_eq!(ds.rasterbands().count(), 3);
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub fn rasterbands(&self) -> impl Iterator<Item = Result<RasterBand>> {
+        (1..=self.raster_count()).map(|idx| self.rasterband(idx))
+    }
+
     /// Builds overviews for the current `Dataset`. See [`GDALBuildOverviews`].
     ///
     /// # Arguments

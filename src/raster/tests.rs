@@ -65,6 +65,12 @@ fn test_read_raster() {
 }
 
 #[test]
+fn test_read_rasterbands() {
+    let dataset = Dataset::open(fixture("tinymarble.tif")).unwrap();
+    assert_eq!(dataset.rasterbands().count(), 3);
+}
+
+#[test]
 fn test_read_raster_with_default_resample() {
     let dataset = Dataset::open(fixture("tinymarble.tif")).unwrap();
     let rb = dataset.rasterband(1).unwrap();
