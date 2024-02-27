@@ -3,7 +3,7 @@ use std::num::NonZeroUsize;
 use super::options::{common_dem_options, CommonOptions};
 use crate::cpl::CslStringList;
 use crate::errors;
-use crate::raster::processing::dem::DemSlopeAlg;
+use crate::raster::dem::DemSlopeAlg;
 
 /// Configuration options for [`aspect()`][super::aspect()].
 #[derive(Debug, Clone, Default)]
@@ -71,7 +71,7 @@ mod tests {
     use crate::assert_near;
     use crate::cpl::CslStringList;
     use crate::errors::Result;
-    use crate::raster::processing::dem::aspect;
+    use crate::raster::dem::aspect;
     use crate::raster::StatisticsAll;
     use crate::test_utils::{fixture, InMemoryFixture};
     use crate::Dataset;

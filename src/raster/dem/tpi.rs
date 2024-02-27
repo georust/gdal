@@ -2,7 +2,7 @@ use std::num::NonZeroUsize;
 
 use crate::cpl::CslStringList;
 use crate::errors;
-use crate::raster::processing::dem::options::common_dem_options;
+use crate::raster::dem::options::common_dem_options;
 
 use super::options::CommonOptions;
 
@@ -34,8 +34,8 @@ mod tests {
     use crate::assert_near;
     use crate::cpl::CslStringList;
     use crate::errors::Result;
-    use crate::raster::processing::dem::topographic_position_index;
-    use crate::raster::processing::dem::tpi::TpiOptions;
+    use crate::raster::dem::topographic_position_index;
+    use crate::raster::dem::tpi::TpiOptions;
     use crate::raster::StatisticsAll;
     use crate::test_utils::{fixture, InMemoryFixture};
     use crate::Dataset;
