@@ -11,5 +11,5 @@ extern crate netcdf_src;
 #[cfg(feature = "DRIVER_PG")]
 extern crate pq_src;
 
-extern crate proj_sys;
 extern crate link_cplusplus;
+extern crate proj_sys;
