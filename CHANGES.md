@@ -1,6 +1,8 @@
 # Changes
 
 ## Unreleased
+- Add a `bundled` feature for `gdal-sys` that allows to build and statically link a minimal bundled version of gdal during `cargo build`
+  - <https://github.com/georust/gdal/pull/517>
 
 - Added `Dataset::rasterbands`.
   - <https://github.com/georust/gdal/pull/523>
@@ -9,7 +11,6 @@
   - <https://github.com/georust/gdal/pull/520>
 
 - **Breaking** Removed `RasterCreationOption`and replaced usages of `[RasterCreationOption]` with `RasterCreationOptions`, a type alias for `CplStringList`.
-
   - <https://github.com/georust/gdal/pull/519>
 
 - Add `DriverIterator` format to iterate through drivers, as well as `DriverManager::all()` method that provides the iterator.
