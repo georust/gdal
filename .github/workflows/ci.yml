@@ -148,16 +148,20 @@ jobs:
           sqlite3 --version
       # use the minimal driver set for clippy as the other
       # drivers do not change the rust code
-      # enable `DRIVER_SQLITE` to force statically linking libsqlite3 for proj
+      # enable `driver_sqlite` to force statically linking libsqlite3 for proj
       - name: Check with Clippy (bundled)
-        run: cargo clippy --all-targets  --features "gdal-sys/bundled gdal-src gdal-src/DRIVER_SQLITE" -- -D warnings
+        run: cargo clippy --all-targets  --features "gdal-sys/bundled gdal-src gdal-src/driver_sqlite" -- -D warnings
       # we only build tests here as we have disabled features
       # that are required for running tests
       - name: Build bundled gdal (minimal features)
         if: runner.os == 'Windows'
-        run: cargo test --features "gdal-sys/bundled gdal-src gdal-src/DRIVER_SQLITE" --no-run
+        # we use cargo test --no-run here because
+        # tests do not pass due to missing libgeos but we want to have a complete build (including linking)
+        run: cargo test --features "gdal-sys/bundled gdal-src gdal-src/driver_sqlite" --no-run
       - name: Build bundled gdal (minimal features)
         if: runner.os != 'Windows'
+        # we use cargo test --no-run here because
+        # tests do not pass due to missing libgeos but we want to have a complete build (including linking)
         run: cargo test --features "gdal-sys/bundled gdal-src" --no-run
       - name: Test bundled (all features)
-        run: cargo test --features "gdal-sys/bundled gdal-src gdal-src/enable_all_drivers gdal-src/geos_static"
+        run: cargo test --features "gdal-sys/bundled gdal-src gdal-src/all_drivers gdal-src/geos_static"
