@@ -1,9 +1,12 @@
 macro_rules! handle_ogr_driver {
     ($config: ident, $driver: literal) => {
         if cfg!(feature = $driver) {
-            $config.define(concat!("OGR_ENABLE_", $driver), "ON");
+            $config.define(format!("OGR_ENABLE_{}", $driver.to_ascii_uppercase()), "ON");
         } else {
-            $config.define(concat!("OGR_ENABLE_", $driver), "OFF");
+            $config.define(
+                format!("OGR_ENABLE_{}", $driver.to_ascii_uppercase()),
+                "OFF",
+            );
         }
     };
 }
@@ -11,9 +14,15 @@ macro_rules! handle_ogr_driver {
 macro_rules! handle_gdal_driver {
     ($config: ident, $driver: literal) => {
         if cfg!(feature = $driver) {
-            $config.define(concat!("GDAL_ENABLE_", $driver), "ON");
+            $config.define(
+                format!("GDAL_ENABLE_{}", $driver.to_ascii_uppercase()),
+                "ON",
+            );
         } else {
-            $config.define(concat!("GDAL_ENABLE_", $driver), "OFF");
+            $config.define(
+                format!("GDAL_ENABLE_{}", $driver.to_ascii_uppercase()),
+                "OFF",
+            );
         }
     };
 }
@@ -79,110 +88,110 @@ fn main() {
     // enable the gpkg driver
 
     // simple drivers without external dependencies
-    handle_ogr_driver!(config, "DRIVER_AVC");
-    handle_ogr_driver!(config, "DRIVER_CAD");
-    handle_ogr_driver!(config, "DRIVER_CSV");
-    handle_ogr_driver!(config, "DRIVER_DGN");
-    handle_ogr_driver!(config, "DRIVER_DXF");
-    handle_ogr_driver!(config, "DRIVER_EDIGEO");
-    handle_ogr_driver!(config, "DRIVER_FLATGEOBUF");
-    handle_ogr_driver!(config, "DRIVER_GEOCONCEPT");
-    handle_ogr_driver!(config, "DRIVER_GEOJSON");
-    handle_ogr_driver!(config, "DRIVER_GMT");
-    handle_ogr_driver!(config, "DRIVER_GTFS");
-    handle_ogr_driver!(config, "DRIVER_JSONFG");
-    handle_ogr_driver!(config, "DRIVER_MAPML");
-    handle_ogr_driver!(config, "DRIVER_OPENFILEGDB");
-    handle_ogr_driver!(config, "DRIVER_PGDUMP");
-    handle_ogr_driver!(config, "DRIVER_NTF");
-    handle_ogr_driver!(config, "DRIVER_S57");
-    handle_ogr_driver!(config, "DRIVER_SELAFIN");
-    handle_ogr_driver!(config, "DRIVER_SHAPE");
-    handle_ogr_driver!(config, "DRIVER_SXF");
-    handle_ogr_driver!(config, "DRIVER_TAB");
-    handle_ogr_driver!(config, "DRIVER_TIGER");
-    handle_ogr_driver!(config, "DRIVER_VDV");
-    handle_ogr_driver!(config, "DRIVER_WASP");
-    handle_ogr_driver!(config, "DRIVER_IDRISI");
-    handle_ogr_driver!(config, "DRIVEr_PDS");
-    handle_ogr_driver!(config, "DRIVER_SDTS");
-    handle_ogr_driver!(config, "DRIVER_VRT");
-    handle_ogr_driver!(config, "DRIVER_MEM");
+    handle_ogr_driver!(config, "driver_avc");
+    handle_ogr_driver!(config, "driver_cad");
+    handle_ogr_driver!(config, "driver_csv");
+    handle_ogr_driver!(config, "driver_dgn");
+    handle_ogr_driver!(config, "driver_dxf");
+    handle_ogr_driver!(config, "driver_edigeo");
+    handle_ogr_driver!(config, "driver_flatgeobuf");
+    handle_ogr_driver!(config, "driver_geoconcept");
+    handle_ogr_driver!(config, "driver_geojson");
+    handle_ogr_driver!(config, "driver_gmt");
+    handle_ogr_driver!(config, "driver_gtfs");
+    handle_ogr_driver!(config, "driver_jsonfg");
+    handle_ogr_driver!(config, "driver_mapml");
+    handle_ogr_driver!(config, "driver_openfilegdb");
+    handle_ogr_driver!(config, "driver_pgdump");
+    handle_ogr_driver!(config, "driver_ntf");
+    handle_ogr_driver!(config, "driver_s57");
+    handle_ogr_driver!(config, "driver_selafin");
+    handle_ogr_driver!(config, "driver_shape");
+    handle_ogr_driver!(config, "driver_sxf");
+    handle_ogr_driver!(config, "driver_tab");
+    handle_ogr_driver!(config, "driver_tiger");
+    handle_ogr_driver!(config, "driver_vdv");
+    handle_ogr_driver!(config, "driver_wasp");
+    handle_ogr_driver!(config, "driver_idrisi");
+    handle_ogr_driver!(config, "driver_pds");
+    handle_ogr_driver!(config, "driver_sdts");
+    handle_ogr_driver!(config, "driver_vrt");
+    handle_ogr_driver!(config, "driver_mem");
 
-    handle_gdal_driver!(config, "DRIVER_AAIGRID");
-    handle_gdal_driver!(config, "DRIVER_ADRG");
-    handle_gdal_driver!(config, "DRIVER_AIGRID");
-    handle_gdal_driver!(config, "DRIVER_AIRSAR");
-    handle_gdal_driver!(config, "DRIVER_BLX");
-    handle_gdal_driver!(config, "DRIVER_BMP");
-    handle_gdal_driver!(config, "DRIVER_BSB");
-    handle_gdal_driver!(config, "DRIVER_CALS");
-    handle_gdal_driver!(config, "DRIVER_CEOS");
-    handle_gdal_driver!(config, "DRIVER_COASP");
-    handle_gdal_driver!(config, "DRIVER_COSAR");
-    handle_gdal_driver!(config, "DRIVER_CTG");
-    handle_gdal_driver!(config, "DRIVER_DIMAP");
-    handle_gdal_driver!(config, "DRIVER_DTED");
-    handle_gdal_driver!(config, "DRIVER_ELAS");
-    handle_gdal_driver!(config, "DRIVER_ENVISAT");
-    handle_gdal_driver!(config, "DRIVER_ERS");
-    handle_gdal_driver!(config, "DRIVER_FIT");
-    handle_gdal_driver!(config, "DRIVER_GFF");
-    handle_gdal_driver!(config, "DRIVER_GIF");
-    handle_gdal_driver!(config, "DRIVER_GRIB");
-    handle_gdal_driver!(config, "DRIVER_GSG");
-    handle_gdal_driver!(config, "DRIVER_GTIFF");
-    handle_gdal_driver!(config, "DRIVER_GXF");
-    handle_gdal_driver!(config, "DRIVER_HF2");
-    handle_gdal_driver!(config, "DRIVER_HFA");
-    handle_gdal_driver!(config, "DRIVER_ILWIS");
-    handle_gdal_driver!(config, "DRIVER_IRIS");
-    handle_gdal_driver!(config, "DRIVER_JAXAPALSAR");
-    handle_gdal_driver!(config, "DRIVER_JDEM");
-    handle_gdal_driver!(config, "DRIVER_JPEG");
-    handle_gdal_driver!(config, "DRIVER_KMLSUPEROVERLAY");
-    handle_gdal_driver!(config, "DRIVER_L1B");
-    handle_gdal_driver!(config, "DRIVER_LEVELLER");
-    handle_gdal_driver!(config, "DRIVER_MAP");
-    handle_gdal_driver!(config, "DRIVER_MRF");
-    handle_gdal_driver!(config, "DRIVER_MSGN");
-    handle_gdal_driver!(config, "DRIVER_NGSGEOID");
-    handle_gdal_driver!(config, "DRIVER_NIFT");
-    handle_gdal_driver!(config, "DRIVER_NORTHWOOD");
-    handle_gdal_driver!(config, "DRIVER_OZI");
-    handle_gdal_driver!(config, "DRIVER_PCIDSK");
-    handle_gdal_driver!(config, "DRIVER_PCRASTER");
-    handle_gdal_driver!(config, "DRIVER_PNG");
-    handle_gdal_driver!(config, "DRIVER_PRF");
-    handle_gdal_driver!(config, "DRIVER_R");
-    handle_gdal_driver!(config, "DRIVER_RAW");
-    handle_gdal_driver!(config, "DRIVER_RIK");
-    handle_gdal_driver!(config, "DRIVER_RMF");
-    handle_gdal_driver!(config, "DRIVER_RS2");
-    handle_gdal_driver!(config, "DRIVER_SAFE");
-    handle_gdal_driver!(config, "DRIVER_SAGA");
-    handle_gdal_driver!(config, "DRIVER_SAR_CEOS");
-    handle_gdal_driver!(config, "DRIVER_SENTINEL2");
-    handle_gdal_driver!(config, "DRIVER_SGI");
-    handle_gdal_driver!(config, "DRIVER_SIGDEM");
-    handle_gdal_driver!(config, "DRIVER_SRTMHGT");
-    handle_gdal_driver!(config, "DRIVER_STACIT");
-    handle_gdal_driver!(config, "DRIVER_STACTA");
-    handle_gdal_driver!(config, "DRIVER_TERRAGEN");
-    handle_gdal_driver!(config, "DRIVER_TGA");
-    handle_gdal_driver!(config, "DRIVER_TIL");
-    handle_gdal_driver!(config, "DRIVER_TSX");
-    handle_gdal_driver!(config, "DRIVER_USGSDEM");
-    handle_gdal_driver!(config, "DRIVER_XPM");
-    handle_gdal_driver!(config, "DRIVER_XYZ");
-    handle_gdal_driver!(config, "DRIVER_ZMAP");
-    handle_gdal_driver!(config, "DRIVER_IDRISI");
-    handle_gdal_driver!(config, "DRIVEr_PDS");
-    handle_gdal_driver!(config, "DRIVER_SDTS");
-    handle_gdal_driver!(config, "DRIVER_VRT");
-    handle_gdal_driver!(config, "DRIVER_MEM");
+    handle_gdal_driver!(config, "driver_aaigrid");
+    handle_gdal_driver!(config, "driver_adrg");
+    handle_gdal_driver!(config, "driver_aigrid");
+    handle_gdal_driver!(config, "driver_airsar");
+    handle_gdal_driver!(config, "driver_blx");
+    handle_gdal_driver!(config, "driver_bmp");
+    handle_gdal_driver!(config, "driver_bsb");
+    handle_gdal_driver!(config, "driver_cals");
+    handle_gdal_driver!(config, "driver_ceos");
+    handle_gdal_driver!(config, "driver_coasp");
+    handle_gdal_driver!(config, "driver_cosar");
+    handle_gdal_driver!(config, "driver_ctg");
+    handle_gdal_driver!(config, "driver_dimap");
+    handle_gdal_driver!(config, "driver_dted");
+    handle_gdal_driver!(config, "driver_elas");
+    handle_gdal_driver!(config, "driver_envisat");
+    handle_gdal_driver!(config, "driver_ers");
+    handle_gdal_driver!(config, "driver_fit");
+    handle_gdal_driver!(config, "driver_gff");
+    handle_gdal_driver!(config, "driver_gif");
+    handle_gdal_driver!(config, "driver_grib");
+    handle_gdal_driver!(config, "driver_gsg");
+    handle_gdal_driver!(config, "driver_gtiff");
+    handle_gdal_driver!(config, "driver_gxf");
+    handle_gdal_driver!(config, "driver_hf2");
+    handle_gdal_driver!(config, "driver_hfa");
+    handle_gdal_driver!(config, "driver_ilwis");
+    handle_gdal_driver!(config, "driver_iris");
+    handle_gdal_driver!(config, "driver_jaxapalsar");
+    handle_gdal_driver!(config, "driver_jdem");
+    handle_gdal_driver!(config, "driver_jpeg");
+    handle_gdal_driver!(config, "driver_kmlsuperoverlay");
+    handle_gdal_driver!(config, "driver_l1b");
+    handle_gdal_driver!(config, "driver_leveller");
+    handle_gdal_driver!(config, "driver_map");
+    handle_gdal_driver!(config, "driver_mrf");
+    handle_gdal_driver!(config, "driver_msgn");
+    handle_gdal_driver!(config, "driver_ngsgeoid");
+    handle_gdal_driver!(config, "driver_nift");
+    handle_gdal_driver!(config, "driver_northwood");
+    handle_gdal_driver!(config, "driver_ozi");
+    handle_gdal_driver!(config, "driver_pcidsk");
+    handle_gdal_driver!(config, "driver_pcraster");
+    handle_gdal_driver!(config, "driver_png");
+    handle_gdal_driver!(config, "driver_prf");
+    handle_gdal_driver!(config, "driver_r");
+    handle_gdal_driver!(config, "driver_raw");
+    handle_gdal_driver!(config, "driver_rik");
+    handle_gdal_driver!(config, "driver_rmf");
+    handle_gdal_driver!(config, "driver_rs2");
+    handle_gdal_driver!(config, "driver_safe");
+    handle_gdal_driver!(config, "driver_saga");
+    handle_gdal_driver!(config, "driver_sar_ceos");
+    handle_gdal_driver!(config, "driver_sentinel2");
+    handle_gdal_driver!(config, "driver_sgi");
+    handle_gdal_driver!(config, "driver_sigdem");
+    handle_gdal_driver!(config, "driver_srtmhgt");
+    handle_gdal_driver!(config, "driver_stacit");
+    handle_gdal_driver!(config, "driver_stacta");
+    handle_gdal_driver!(config, "driver_terragen");
+    handle_gdal_driver!(config, "driver_tga");
+    handle_gdal_driver!(config, "driver_til");
+    handle_gdal_driver!(config, "driver_tsx");
+    handle_gdal_driver!(config, "driver_usgsdem");
+    handle_gdal_driver!(config, "driver_xpm");
+    handle_gdal_driver!(config, "driver_xyz");
+    handle_gdal_driver!(config, "driver_zmap");
+    handle_gdal_driver!(config, "driver_idrisi");
+    handle_gdal_driver!(config, "driver_pds");
+    handle_gdal_driver!(config, "driver_sdts");
+    handle_gdal_driver!(config, "driver_vrt");
+    handle_gdal_driver!(config, "driver_mem");
 
-    if cfg!(feature = "DRIVER_SQLITE") {
+    if cfg!(feature = "driver_sqlite") {
         let sqlite3_include_dir =
             std::env::var("DEP_SQLITE3_INCLUDE").expect("This is set by libsqlite3-sys");
         let sqlite3_lib_dir = std::env::var("DEP_SQLITE3_LIB_DIR").expect("set by libsqlite3-sys");
@@ -196,10 +205,10 @@ fn main() {
         config.define("GDAL_USE_SQLITE3", "OFF");
     }
     // these drivers depend on sqlite
-    handle_ogr_driver!(config, "DRIVER_GPKG");
-    handle_ogr_driver!(config, "DRIVER_VFK");
+    handle_ogr_driver!(config, "driver_gpkg");
+    handle_ogr_driver!(config, "driver_vfk");
 
-    if cfg!(feature = "DRIVER_HDF5") {
+    if cfg!(feature = "driver_hdf5") {
         let hdf5_dir = std::env::var("DEP_HDF5SRC_ROOT").expect("This is set by hdf5-src");
         let hdf5_lib = std::env::var("DEP_HDF5SRC_LIBRARY").expect("This is set by hdf5-src");
         let hdf5_lib_dir = find_library(&hdf5_lib, &hdf5_dir);
@@ -219,7 +228,7 @@ fn main() {
         config.define("GDAL_USE_HDF5", "OFF");
     }
 
-    if cfg!(feature = "DRIVER_NETCDF") {
+    if cfg!(feature = "driver_netcdf") {
         let netcdf_root_dir =
             std::env::var("DEP_NETCDFSRC_ROOT").expect("This is set by netcdf-src");
         let hdf5_dir = std::env::var("DEP_HDF5SRC_ROOT").expect("This is set by hdf5-src");
@@ -265,19 +274,19 @@ fn main() {
         config.define("GDAL_USE_CURL", "OFF");
     }
 
-    handle_ogr_driver!(config, "DRIVER_AMIGOCLOUD");
-    handle_ogr_driver!(config, "DRIVER_CARTO");
-    handle_ogr_driver!(config, "DRIVER_DAAS");
-    handle_ogr_driver!(config, "DRIVER_EEDA");
-    handle_ogr_driver!(config, "DRIVER_ELASTIC");
-    handle_ogr_driver!(config, "DRIVER_NGW");
-    handle_gdal_driver!(config, "DRIVER_OGCAPI");
-    handle_gdal_driver!(config, "DRIVER_PLMOSAIC");
-    handle_gdal_driver!(config, "DRIVER_WCS");
-    handle_gdal_driver!(config, "DRIVER_WMS");
-    handle_gdal_driver!(config, "DRIVER_WMTS");
+    handle_ogr_driver!(config, "driver_amigocloud");
+    handle_ogr_driver!(config, "driver_carto");
+    handle_ogr_driver!(config, "driver_daas");
+    handle_ogr_driver!(config, "driver_eeda");
+    handle_ogr_driver!(config, "driver_elastic");
+    handle_ogr_driver!(config, "driver_ngw");
+    handle_gdal_driver!(config, "driver_ogcapi");
+    handle_gdal_driver!(config, "driver_plmosaic");
+    handle_gdal_driver!(config, "driver_wcs");
+    handle_gdal_driver!(config, "driver_wms");
+    handle_gdal_driver!(config, "driver_wmts");
 
-    if cfg!(feature = "DRIVER_PG") {
+    if cfg!(feature = "driver_pg") {
         let pq_include = std::env::var("DEP_PQ_SYS_SRC_INCLUDE").expect("this is set by pq-src");
         let pq_lib = std::env::var("DEP_PQ_SYS_SRC_LIB_DIR").expect("this is set by pq-src");
         let pq_lib_path = std::path::PathBuf::from(&pq_lib);
@@ -297,7 +306,7 @@ fn main() {
     } else {
         config.define("GDAL_USE_POSTGRESQL", "OFF");
     }
-    handle_gdal_driver!(config, "DRIVER_POSTGIS_RASTER");
+    handle_gdal_driver!(config, "driver_postgis_raster");
 
     if cfg!(feature = "geos") {
         config.define("GDAL_USE_GEOS", "ON");
