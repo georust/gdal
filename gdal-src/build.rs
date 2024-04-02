@@ -113,7 +113,6 @@ fn main() {
     handle_ogr_driver!(config, "driver_vdv");
     handle_ogr_driver!(config, "driver_wasp");
     handle_ogr_driver!(config, "driver_idrisi");
-    handle_ogr_driver!(config, "driver_pds");
     handle_ogr_driver!(config, "driver_sdts");
     handle_ogr_driver!(config, "driver_vrt");
     handle_ogr_driver!(config, "driver_mem");
@@ -290,6 +289,7 @@ fn main() {
         let pq_include = std::env::var("DEP_PQ_SYS_SRC_INCLUDE").expect("this is set by pq-src");
         let pq_lib = std::env::var("DEP_PQ_SYS_SRC_LIB_DIR").expect("this is set by pq-src");
         let pq_lib_path = std::path::PathBuf::from(&pq_lib);
+        println!("cargo:rustc-link-search=native={}", pq_lib_path.display());
         let pq_lib_path = if pq_lib_path.join("libpq.a").exists() {
             pq_lib_path.join("libpq.a").display().to_string()
         } else if pq_lib_path.join("pq.lib").exists() {
@@ -297,6 +297,8 @@ fn main() {
         } else {
             panic!("Libpq not found in {pq_lib}");
         };
+
+        println!("cargo:rustc-link-lib=static=pq");
         config
             .define("GDAL_USE_POSTGRESQL", "ON")
             .define("PostgreSQL_INCLUDE_DIR", pq_include)
