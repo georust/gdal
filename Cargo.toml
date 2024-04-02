@@ -22,6 +22,7 @@ thiserror = "1.0"
 libc = "0.2"
 geo-types = { version = "0.7.11" }
 gdal-sys = { path = "gdal-sys", version = "0.10" }
+gdal-src = { path = "gdal-src", optional = true, default-features = false }
 ndarray = { version = "0.15", optional = true }
 chrono = { version = "0.4.26", default-features = false }
 bitflags = "2.4"
@@ -64,3 +65,4 @@ check-cfg = [
 
 [patch.crates-io]
 proj-sys = { git = "https://github.com/GiGainfosystems/proj", rev = "44a503869709ea793a5f8452bfb9e2a99b7160fc" }
+pq-src = { git = "https://github.com/sgrif/pq-sys", rev = "7300e96574cc0eeb95985881fbbc2cf95886cca2" }

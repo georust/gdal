@@ -15,8 +15,10 @@ netcdf-src = { version = "0.3.2", optional = true }
 pq-src = { version = "0.1.1", optional = true }
 curl-sys = { version = "0.4.70", features = ["static-curl"], optional = true }
 libz-sys = { version = "1.1.15", features = ["static"], optional = true }
-geos-src = { version = "0.2.1", optional = true }
-geos-sys = { version = "2", optional = true }
+geos-sys = { version = "2.0.6", optional = true }
+# we need to depend directly on `geos-src` for the static
+# build as otherwise `DEP_GEOSSRC_ROOT` is not set
+geos-src = { version = "0.2.3", optional = true }
 
 
 [build-dependencies]
@@ -51,7 +53,7 @@ enable_all_drivers = [
 # that you statically link libgeos and
 # therefore makes your binary fall under
 # LGPL as well
-geos_static = ["geos-src", "geos"]
+geos_static = ["geos", "geos-sys/static", "geos-src"]
 # as long as the `geos_static` feature
 # is not enabled that will only
 # dynamically link geos
@@ -315,7 +317,7 @@ DRIVER_NETCDF = ["dep:netcdf-src", "DRIVER_HDF5", "dep:hdf5-sys"]
 #DRIVER_PDF = []
 
 # combined
-# these miss at least one dependency
+# these are missing at least one dependency
 # DRIVER_MVT = [] # requires sqlite + geos
 # DRIVER_OSM = [] # requires sqlite + libexpat
 # DRIVER_ZARR = [] # requires liblz4, libxz, libzstd and libblocs
