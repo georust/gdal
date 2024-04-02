@@ -20,7 +20,6 @@ geos-sys = { version = "2.0.6", optional = true }
 # build as otherwise `DEP_GEOSSRC_ROOT` is not set
 geos-src = { version = "0.2.3", optional = true }
 
-
 [build-dependencies]
 cmake = "0.1.50"
 
@@ -156,7 +155,6 @@ internal_drivers = [
 
     # ogr and gdal
     "driver_idrisi",
-    "driver_pds",
     "driver_sdts",
     "driver_vrt",
     "driver_mem",
@@ -259,7 +257,6 @@ driver_zmap = []
 
 # ogr and gdal
 driver_idrisi = []
-driver_pds = []
 driver_sdts = []
 driver_vrt = []
 driver_mem = []
@@ -325,6 +322,7 @@ driver_netcdf = ["dep:netcdf-src", "driver_hdf5", "dep:hdf5-sys"]
 # driver_pmtiles = ["driver_mvt"]  # depends on driver_mvt
 # driver_csw = ["curl-sys", "driver_gml"]  # depends on gml driver
 # driver_wfs = ["curl-sys", "driver_gml"]
+# driver_pds = ["driver_gml"]
 
 # unclear
 driver_http = []
