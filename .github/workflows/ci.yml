@@ -62,15 +62,15 @@ jobs:
       - name: Check with Clippy
         run: cargo clippy --all-targets -- -D warnings
       - name: Check with Clippy (--all-features)
-        run: cargo clippy --all-targets --all-features -- -D warnings
+        run: cargo clippy --all-targets --features "default bindgen array" -- -D warnings
       - name: Build
         run: cargo build
       - name: Run tests
         run: cargo test
       - name: Build (--all-features)
-        run: cargo build --all-features
+        run: cargo build  --features "default bindgen array"
       - name: Run tests (--all-features)
-        run: cargo test --all-features -- --nocapture
+        run: cargo test  --features "default bindgen array" -- --nocapture
 
   ubuntu_lts:
     name: "ci ubuntu-lts"
@@ -105,18 +105,59 @@ jobs:
       - name: Check with Clippy
         run: cargo clippy --all-targets -- -D warnings
       - name: Check with Clippy (--all-features)
-        run: cargo clippy --all-targets --all-features -- -D warnings
+        run: cargo clippy --all-targets  --features "default bindgen array" -- -D warnings
       - name: Build
         run: cargo build
       - name: Run tests
         run: cargo test
       - name: Build (--all-features)
-        run: cargo build --all-features
+        run: cargo build  --features "default bindgen array"
       - name: Run tests (--all-features)
-        run: cargo test --all-features -- --nocapture
+        run: cargo test  --features "default bindgen array" -- --nocapture
       - name: Install valgrind and cargo-valgrind
         run: |
           sudo apt-get install valgrind -y
           cargo install cargo-valgrind
       - name: Run --lib tests under valgrind
         run: cargo valgrind test --lib
+  gdal_static:
+    name: "ci gdal-static"
+    strategy:
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+          - macos-latest # x86_64
+          - macos-14 # aarch64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: Install stable
+        run: |
+          rustup install --no-self-update --profile minimal stable
+          rustup component add rustfmt clippy
+      # we need to have the sqlite binary in path for building proj from source
+      - name: Install Sqlite (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          choco install sqlite
+          echo "C:\ProgramData\chocolatey\lib\SQLite\tools" >> $GITHUB_PATH
+          sqlite3 --version
+      # use the minimal driver set for clippy as the other
+      # drivers do not change the rust code
+      # enable `DRIVER_SQLITE` to force statically linking libsqlite3 for proj
+      - name: Check with Clippy (bundled)
+        run: cargo clippy --all-targets  --features "gdal-sys/bundled gdal-src gdal-src/DRIVER_SQLITE" -- -D warnings
+      # we only build tests here as we have disabled features
+      # that are required for running tests
+      - name: Build bundled gdal (minimal features)
+        if: runner.os == 'Windows'
+        run: cargo test --features "gdal-sys/bundled gdal-src gdal-src/DRIVER_SQLITE" --no-run
+      - name: Build bundled gdal (minimal features)
+        if: runner.os != 'Windows'
+        run: cargo test --features "gdal-sys/bundled gdal-src" --no-run
+      - name: Test bundled (all features)
+        run: cargo test --features "gdal-sys/bundled gdal-src gdal-src/enable_all_drivers gdal-src/geos_static"
