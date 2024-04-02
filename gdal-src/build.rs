@@ -45,13 +45,13 @@ fn main() {
         std::path::PathBuf::from(std::env::var("DEP_PROJ_ROOT").expect("set by proj-sys"));
     let proj_library = if std::env::var("CARGO_CFG_TARGET_FAMILY").as_deref() == Ok("windows") {
         if proj_root.join("lib").join("proj_d.lib").exists() {
-            proj_root.join("lib").join("proj.lib").display().to_string()
-        } else {
             proj_root
                 .join("lib")
                 .join("proj_d.lib")
                 .display()
                 .to_string()
+        } else {
+            proj_root.join("lib").join("proj.lib").display().to_string()
         }
     } else {
         find_library("proj", &proj_root)
@@ -75,7 +75,6 @@ fn main() {
             format!("{}/include", proj_root.display()),
         )
         .define("PROJ_LIBRARY", proj_library)
-        .pic(true)
         .define("ACCEPT_MISSING_LINUX_FS_HEADER", "ON");
     // enable the gpkg driver
 
@@ -226,7 +225,7 @@ fn main() {
         let hdf5_dir = std::env::var("DEP_HDF5SRC_ROOT").expect("This is set by hdf5-src");
         let hl_library = std::env::var("DEP_HDF5SRC_HL_LIBRARY").expect("This is set by hdf5-src");
         let netcdf_lib = find_library("netcdf", &netcdf_root_dir);
-        let hl_library_path = find_library(&hl_library, &hdf5_dir);
+        let hl_library_path = find_library(&hl_library, hdf5_dir);
         let hl_library_path = std::path::PathBuf::from(hl_library_path);
         let hl_library_path = hl_library_path.parent().unwrap();
 
@@ -308,7 +307,9 @@ fn main() {
 
     if cfg!(feature = "geos_static") {
         let geos_root = std::env::var("DEP_GEOSSRC_ROOT").expect("this is set by geos-src");
-        config.define("GEOS_INCLUDE", format!("{geos_root}/include"));
+        config.define("GEOS_INCLUDE_DIR", format!("{geos_root}/include"));
+        let lib_path = find_library("geos", geos_root);
+        config.define("GEOS_LIBRARY", lib_path);
     }
 
     if cfg!(target_env = "msvc") {

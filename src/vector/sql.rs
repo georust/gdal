@@ -236,6 +236,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(feature = "gdal-src", ignore)]
     fn test_sql_with_dialect() {
         let query = "SELECT * FROM roads WHERE highway = 'pedestrian' and NumPoints(GEOMETRY) = 3";
         let ds = Dataset::open(fixture("roads.geojson")).unwrap();
