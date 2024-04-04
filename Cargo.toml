@@ -65,4 +65,3 @@ check-cfg = [
 
 [patch.crates-io]
 proj-sys = { git = "https://github.com/GiGainfosystems/proj", rev = "44a503869709ea793a5f8452bfb9e2a99b7160fc" }
-pq-src = { git = "https://github.com/sgrif/pq-sys", rev = "3b0b90d9390ad5d53c7e6b2bcd167d8ef2a3a1e4" }
