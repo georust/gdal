@@ -484,6 +484,18 @@ fn test_set_no_data_value() {
 }
 
 #[test]
+fn test_fill() {
+    let driver = DriverManager::get_driver_by_name("MEM").unwrap();
+    let dataset = driver.create("", 5, 5, 1).unwrap();
+    let mut rasterband = dataset.rasterband(1).unwrap();
+    assert!(rasterband.fill(5.4, None).is_ok());
+    let contents = rasterband
+        .read_as::<u8>((0, 0), (5, 5), (5, 5), None)
+        .unwrap();
+    assert!(contents.data().iter().all(|&v| v == 5));
+}
+
+#[test]
 fn test_get_scale() {
     let dataset = Dataset::open(fixture("offset_scaled_tinymarble.tif")).unwrap();
     let rasterband = dataset.rasterband(1).unwrap();

@@ -815,6 +815,28 @@ impl<'a> RasterBand<'a> {
             Ok(())
         }
     }
+
+    /// Fill this band with a constant value.
+    ///
+    /// If `imaginary_value` is `None`, the imaginary component will be set to 0.
+    ///
+    /// # Notes
+    /// See also:
+    /// [`GDALFillRaster`](https://gdal.org/api/gdalrasterband_cpp.html#classGDALRasterBand_1a55bf20527df638dc48bf25e2ff26f353)
+    pub fn fill(&mut self, real_value: f64, imaginary_value: Option<f64>) -> Result<()> {
+        let rv = unsafe {
+            gdal_sys::GDALFillRaster(
+                self.c_rasterband,
+                real_value,
+                imaginary_value.unwrap_or(0.0),
+            )
+        };
+        if rv != CPLErr::CE_None {
+            return Err(_last_cpl_err(rv));
+        }
+        Ok(())
+    }
+
     /// Returns the color interpretation of this band.
     pub fn color_interpretation(&self) -> ColorInterpretation {
         let interp_index = unsafe { gdal_sys::GDALGetRasterColorInterpretation(self.c_rasterband) };
