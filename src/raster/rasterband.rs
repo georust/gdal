@@ -1033,6 +1033,26 @@ impl<'a> RasterBand<'a> {
         }
     }
 
+    /// Set statistics on a band
+    ///
+    /// This method can be used to store min/max/mean/standard deviation statistics on a raster band.
+    ///
+    /// The default implementation stores them as metadata, and will only work on formats that can save arbitrary metadata.
+    /// This method cannot detect whether metadata will be properly saved and so may return `Ok(())` even if the statistics will never be saved.
+    ///
+    /// # Notes
+    /// See also:
+    /// [`GDALSetRasterStatistics`](https://gdal.org/api/gdalrasterband_cpp.html#_CPPv4N14GDALRasterBand13SetStatisticsEdddd)
+    pub fn set_statistics(&mut self, min: f64, max: f64, mean: f64, std_dev: f64) -> Result<()> {
+        let rv = unsafe {
+            gdal_sys::GDALSetRasterStatistics(self.c_rasterband, min, max, mean, std_dev)
+        };
+        if rv != CPLErr::CE_None {
+            return Err(_last_cpl_err(rv));
+        }
+        Ok(())
+    }
+
     /// Compute the min/max values for a band.
     ///
     /// If `is_approx_ok` is `true`, then the band’s GetMinimum()/GetMaximum() will be trusted.
