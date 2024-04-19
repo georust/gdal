@@ -1000,7 +1000,7 @@ impl<'a> RasterBand<'a> {
     /// If approximate statistics are sufficient, the `is_approx_ok` flag can be set to true in which case overviews, or a subset of image tiles may be used in computing the statistics.
     ///
     /// If `force` is `false` results will only be returned if it can be done quickly (i.e. without scanning the data).
-    /// If force` is `false` and results cannot be returned efficiently, the method will return `None`.
+    /// If `force` is `false` and results cannot be returned efficiently, the method will return `None`.
     ///
     /// Note that file formats using PAM (Persistent Auxiliary Metadata) services will generally cache statistics in the .pam file allowing fast fetch after the first request.
     ///
