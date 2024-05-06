@@ -2,3 +2,4 @@
 
 pub mod raster;
 pub mod destination;
+mod vector;
