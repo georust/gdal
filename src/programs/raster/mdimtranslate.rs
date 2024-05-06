@@ -13,6 +13,10 @@ use std::{
     ptr::{null, null_mut},
 };
 
+use crate::programs::destination::DatasetDestination;
+
+type MultiDimTranslateDestination = DatasetDestination;
+
 /// Wraps a [GDALMultiDimTranslateOptions] object.
 ///
 /// [GDALMultiDimTranslateOptions]: https://gdal.org/api/gdal_utils.html#_CPPv428GDALMultiDimTranslateOptions
@@ -80,81 +84,6 @@ impl TryFrom<Vec<&str>> for MultiDimTranslateOptions {
     }
 }
 
-pub enum MultiDimTranslateDestination {
-    Path(CString),
-    Dataset {
-        dataset: ManuallyDrop<Dataset>,
-        drop: bool,
-    },
-}
-
-impl TryFrom<&str> for MultiDimTranslateDestination {
-    type Error = GdalError;
-
-    fn try_from(path: &str) -> Result<Self> {
-        Self::path(path)
-    }
-}
-
-impl TryFrom<&Path> for MultiDimTranslateDestination {
-    type Error = GdalError;
-
-    fn try_from(path: &Path) -> Result<Self> {
-        Self::path(path)
-    }
-}
-
-impl TryFrom<PathBuf> for MultiDimTranslateDestination {
-    type Error = GdalError;
-
-    fn try_from(path: PathBuf) -> Result<Self> {
-        Self::path(path)
-    }
-}
-
-impl From<Dataset> for MultiDimTranslateDestination {
-    fn from(dataset: Dataset) -> Self {
-        Self::dataset(dataset)
-    }
-}
-
-impl Drop for MultiDimTranslateDestination {
-    fn drop(&mut self) {
-        match self {
-            Self::Path(_) => {}
-            Self::Dataset { dataset, drop } => {
-                if *drop {
-                    unsafe {
-                        ManuallyDrop::drop(dataset);
-                    }
-                }
-            }
-        }
-    }
-}
-
-impl MultiDimTranslateDestination {
-    pub fn dataset(dataset: Dataset) -> Self {
-        Self::Dataset {
-            dataset: ManuallyDrop::new(dataset),
-            drop: true,
-        }
-    }
-
-    pub fn path<P: AsRef<Path>>(path: P) -> Result<Self> {
-        let c_path = _path_to_c_string(path.as_ref())?;
-        Ok(Self::Path(c_path))
-    }
-
-    unsafe fn do_no_drop_dataset(&mut self) {
-        match self {
-            Self::Path(_) => {}
-            Self::Dataset { dataset: _, drop } => {
-                *drop = false;
-            }
-        }
-    }
-}
 
 /// Converts raster data between different formats.
 ///
