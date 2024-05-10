@@ -64,4 +64,4 @@ check-cfg = [
 ]
 
 [patch.crates-io]
-proj-sys = { git = "https://github.com/GiGainfosystems/proj", rev = "44a503869709ea793a5f8452bfb9e2a99b7160fc" }
+proj-sys = { git = "https://github.com/georust/proj", rev = "4a0e203" }
