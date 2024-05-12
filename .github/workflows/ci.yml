@@ -16,6 +16,7 @@ jobs:
     strategy:
       matrix:
         version:
+          - 3.9.0
           - 3.8.5
           - 3.7.3
           - 3.6.4
