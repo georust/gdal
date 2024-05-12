@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added pre-built bindings for GDAL 3.9
+
+   - <https://github.com/georust/gdal/pull/539>
+
 - Added `Rasterband::fill`
   - <https://github.com/georust/gdal/pull/528>
 
@@ -78,7 +82,6 @@
 - Added pre-built bindings for GDAL 3.8
 
    - <https://github.com/georust/gdal/pull/466>
-
 
 - Added `{Display|FromStr} for ResampleAlg` and `ResampleAlg::iter`.
 
