@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 macro_rules! handle_ogr_driver {
     ($config: ident, $driver: literal) => {
         if cfg!(feature = $driver) {
@@ -27,23 +29,14 @@ macro_rules! handle_gdal_driver {
     };
 }
 
-fn find_library(lib_name: &str, path: impl Into<std::path::PathBuf>) -> String {
+fn find_library(lib_name: &str, path: impl Into<std::path::PathBuf>) -> PathBuf {
     let path = path.into();
     if path.join("lib64").join(format!("lib{lib_name}.a")).exists() {
-        path.join("lib64")
-            .join(format!("lib{lib_name}.a"))
-            .display()
-            .to_string()
+        path.join("lib64").join(format!("lib{lib_name}.a"))
     } else if path.join("lib").join(format!("lib{lib_name}.a")).exists() {
-        path.join("lib")
-            .join(format!("lib{lib_name}.a"))
-            .display()
-            .to_string()
+        path.join("lib").join(format!("lib{lib_name}.a"))
     } else if path.join("lib").join(format!("{lib_name}.lib")).exists() {
-        path.join("lib")
-            .join(format!("{lib_name}.lib"))
-            .display()
-            .to_string()
+        path.join("lib").join(format!("{lib_name}.lib"))
     } else {
         panic!("{lib_name} not found in {}", path.display());
     }
@@ -54,17 +47,14 @@ fn main() {
         std::path::PathBuf::from(std::env::var("DEP_PROJ_ROOT").expect("set by proj-sys"));
     let proj_library = if std::env::var("CARGO_CFG_TARGET_FAMILY").as_deref() == Ok("windows") {
         if proj_root.join("lib").join("proj_d.lib").exists() {
-            proj_root
-                .join("lib")
-                .join("proj_d.lib")
-                .display()
-                .to_string()
+            proj_root.join("lib").join("proj_d.lib")
         } else {
-            proj_root.join("lib").join("proj.lib").display().to_string()
+            proj_root.join("lib").join("proj.lib")
         }
     } else {
         find_library("proj", &proj_root)
     };
+    let proj_include = proj_root.join("include");
 
     let mut config = cmake::Config::new("source");
 
@@ -79,11 +69,8 @@ fn main() {
         .define("BUILD_DOCS", "OFF")
         .define("BUILD_TESTING", "OFF")
         .define("BUILD_GMOCK", "OFF")
-        .define(
-            "PROJ_INCLUDE_DIR",
-            format!("{}/include", proj_root.display()),
-        )
-        .define("PROJ_LIBRARY", proj_library)
+        .define("PROJ_INCLUDE_DIR", print_path(&proj_include))
+        .define("PROJ_LIBRARY", print_path(&proj_library))
         .define("ACCEPT_MISSING_LINUX_FS_HEADER", "ON");
     // enable the gpkg driver
 
@@ -194,11 +181,14 @@ fn main() {
         let sqlite3_include_dir =
             std::env::var("DEP_SQLITE3_INCLUDE").expect("This is set by libsqlite3-sys");
         let sqlite3_lib_dir = std::env::var("DEP_SQLITE3_LIB_DIR").expect("set by libsqlite3-sys");
+        let mut sqlite3_lib = PathBuf::from(sqlite3_lib_dir);
+        sqlite3_lib.push("libsqlite3.a");
+        let sqlite3_include_dir = PathBuf::from(sqlite3_include_dir);
 
         config
             .define("GDAL_USE_SQLITE3", "ON")
-            .define("SQLite3_INCLUDE_DIR", sqlite3_include_dir)
-            .define("SQLite3_LIBRARY", format!("{sqlite3_lib_dir}/libsqlite3.a"))
+            .define("SQLite3_INCLUDE_DIR", print_path(&sqlite3_include_dir))
+            .define("SQLite3_LIBRARY", print_path(&sqlite3_lib))
             .define("OGR_ENABLE_DRIVER_SQLITE", "ON");
     } else {
         config.define("GDAL_USE_SQLITE3", "OFF");
@@ -211,16 +201,21 @@ fn main() {
         let hdf5_dir = std::env::var("DEP_HDF5SRC_ROOT").expect("This is set by hdf5-src");
         let hdf5_lib = std::env::var("DEP_HDF5SRC_LIBRARY").expect("This is set by hdf5-src");
         let hdf5_lib_dir = find_library(&hdf5_lib, &hdf5_dir);
-        let p = std::path::PathBuf::from(&hdf5_lib_dir);
+        let p = PathBuf::from(&hdf5_lib_dir);
+        let mut hdf5_cc = PathBuf::from(&hdf5_dir);
+        hdf5_cc.push("bin");
+        hdf5_cc.push("h5cc");
+        let mut hdf5_include = PathBuf::from(&hdf5_dir);
+        hdf5_include.push("include");
         let p = p.parent().unwrap();
         println!("cargo:rustc-link-search=native={}", p.display());
         println!("cargo:rustc-link-lib=static={hdf5_lib}");
         config
             .define("GDAL_USE_HDF5", "ON")
-            .define("HDF5_C_COMPILER_EXECUTABLE", format!("{hdf5_dir}/bin/h5cc"))
-            .define("HDF5_C_INCLUDE_DIR", format!("{hdf5_dir}/include"))
-            .define("HDF5_hdf5_LIBRARY_DEBUG", &hdf5_lib_dir)
-            .define("HDF5_hdf5_LIBRARY_RELEASE", &hdf5_lib_dir)
+            .define("HDF5_C_COMPILER_EXECUTABLE", print_path(&hdf5_cc))
+            .define("HDF5_C_INCLUDE_DIR", print_path(&hdf5_include))
+            .define("HDF5_hdf5_LIBRARY_DEBUG", print_path(&hdf5_lib_dir))
+            .define("HDF5_hdf5_LIBRARY_RELEASE", print_path(&hdf5_lib_dir))
             .define("GDAL_ENABLE_DRIVER_HDF5", "ON")
             .define("HDF5_USE_STATIC_LIBRARIES", "ON");
     } else {
@@ -234,11 +229,9 @@ fn main() {
         let hl_library = std::env::var("DEP_HDF5SRC_HL_LIBRARY").expect("This is set by hdf5-src");
         let netcdf_lib = find_library("netcdf", &netcdf_root_dir);
         let hl_library_path = find_library(&hl_library, hdf5_dir);
-        let hl_library_path = std::path::PathBuf::from(hl_library_path);
         let hl_library_path = hl_library_path.parent().unwrap();
 
-        let netcdf_library_path = std::path::PathBuf::from(&netcdf_lib);
-        let netcdf_library_path = netcdf_library_path.parent().unwrap();
+        let netcdf_library_path = netcdf_lib.parent().unwrap();
         println!(
             "cargo:rustc-link-search=native={}",
             netcdf_library_path.display()
@@ -249,10 +242,13 @@ fn main() {
             hl_library_path.display()
         );
         println!("cargo:rustc-link-lib=static={hl_library}");
+
+        let mut netcdf_include = PathBuf::from(netcdf_root_dir);
+        netcdf_include.push("include");
         config
             .define("GDAL_USE_NETCDF", "ON")
-            .define("NETCDF_INCLUDE_DIR", format!("{netcdf_root_dir}/include"))
-            .define("NETCDF_LIBRARY", netcdf_lib)
+            .define("NETCDF_INCLUDE_DIR", print_path(&netcdf_include))
+            .define("NETCDF_LIBRARY", print_path(&netcdf_lib))
             .define("GDAL_ENABLE_DRIVER_NETCDF", "ON");
     } else {
         config.define("GDAL_USE_NETCDF", "OFF");
@@ -260,14 +256,16 @@ fn main() {
 
     if cfg!(feature = "curl-sys") {
         let curl_root = std::env::var("DEP_CURL_ROOT").expect("set from curl-sys");
+        let mut curl_include = PathBuf::from(&curl_root);
+        curl_include.push("include");
+        let mut curl_lib = PathBuf::from(curl_root);
+        curl_lib.push("build");
+        curl_lib.push("libcurl.a");
         config
             .define("GDAL_USE_CURL", "ON")
-            .define("CURL_INCLUDE_DIR", format!("{curl_root}/include"))
-            .define("CURL_LIBRARY_DEBUG", format!("{curl_root}/build/libcurl.a"))
-            .define(
-                "CURL_LIBRARY_RELEASE",
-                format!("{curl_root}/build/libcurl.a"),
-            )
+            .define("CURL_INCLUDE_DIR", print_path(&curl_include))
+            .define("CURL_LIBRARY_DEBUG", print_path(&curl_lib))
+            .define("CURL_LIBRARY_RELEASE", print_path(&curl_lib))
             .define("CURL_USE_STATIC_LIBS", "ON");
     } else {
         config.define("GDAL_USE_CURL", "OFF");
@@ -291,19 +289,19 @@ fn main() {
         let pq_lib_path = std::path::PathBuf::from(&pq_lib);
         println!("cargo:rustc-link-search=native={}", pq_lib_path.display());
         let pq_lib_path = if pq_lib_path.join("libpq.a").exists() {
-            pq_lib_path.join("libpq.a").display().to_string()
+            pq_lib_path.join("libpq.a")
         } else if pq_lib_path.join("pq.lib").exists() {
-            pq_lib_path.join("pq.lib").display().to_string()
+            pq_lib_path.join("pq.lib")
         } else {
             panic!("Libpq not found in {pq_lib}");
         };
-
+        let pq_include = PathBuf::from(pq_include);
         println!("cargo:rustc-link-lib=static=pq");
         config
             .define("GDAL_USE_POSTGRESQL", "ON")
-            .define("PostgreSQL_INCLUDE_DIR", pq_include)
-            .define("PostgreSQL_LIBRARY_DEBUG", &pq_lib_path)
-            .define("PostgreSQL_LIBRARY_RELEASE", &pq_lib_path)
+            .define("PostgreSQL_INCLUDE_DIR", print_path(&pq_include))
+            .define("PostgreSQL_LIBRARY_DEBUG", print_path(&pq_lib_path))
+            .define("PostgreSQL_LIBRARY_RELEASE", print_path(&pq_lib_path))
             .define("OGR_ENABLE_DRIVER_PG", "ON");
     } else {
         config.define("GDAL_USE_POSTGRESQL", "OFF");
@@ -318,9 +316,11 @@ fn main() {
 
     if cfg!(feature = "geos_static") {
         let geos_root = std::env::var("DEP_GEOSSRC_ROOT").expect("this is set by geos-src");
-        config.define("GEOS_INCLUDE_DIR", format!("{geos_root}/include"));
+        let mut geos_include = PathBuf::from(&geos_root);
+        geos_include.push("include");
+        config.define("GEOS_INCLUDE_DIR", print_path(&geos_include));
         let lib_path = find_library("geos", geos_root);
-        config.define("GEOS_LIBRARY", lib_path);
+        config.define("GEOS_LIBRARY", print_path(&lib_path));
     }
 
     if cfg!(target_env = "msvc") {
@@ -348,7 +348,7 @@ fn main() {
         "cargo:rustc-link-search=native={}",
         lib_dir.to_str().unwrap()
     );
-    let lib_dir = res.join("build/lib");
+    let lib_dir = res.join("build").join("lib");
     println!(
         "cargo:rustc-link-search=native={}",
         lib_dir.to_str().unwrap()
@@ -360,4 +360,15 @@ fn main() {
     } else {
         println!("cargo:rustc-link-lib=static=gdal");
     }
+}
+
+// cmake sometimes does not like windows paths like `c:\\whatever\folder`
+// it seems to tread `\` as escape sequence in some cases, therefore
+// we rewrite the path here to always use `/` as seperator
+// https://github.com/OSGeo/gdal/issues/9935
+fn print_path(path: &std::path::Path) -> String {
+    path.components()
+        .map(|c| c.as_os_str().to_str().unwrap())
+        .collect::<Vec<_>>()
+        .join("/")
 }
