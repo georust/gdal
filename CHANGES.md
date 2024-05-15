@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added `Rasterband::set_statistics`
+  - <https://github.com/georust/gdal/pull/529>  
+
 - Added `Rasterband::fill`
   - <https://github.com/georust/gdal/pull/528>
 
