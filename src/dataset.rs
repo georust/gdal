@@ -221,7 +221,17 @@ impl Dataset {
     #[cfg(major_ge_3)]
     /// Get the spatial reference system for this dataset.
     pub fn spatial_ref(&self) -> Result<SpatialRef> {
-        unsafe { SpatialRef::from_c_obj(gdal_sys::GDALGetSpatialRef(self.c_dataset)) }
+        unsafe {
+            let spatial_ref = gdal_sys::GDALGetSpatialRef(self.c_dataset);
+            if spatial_ref.is_null() {
+                Err(GdalError::NullPointer {
+                    method_name: "GDALGetSpatialRef",
+                    msg: "Unable to get a spatial reference".to_string(),
+                })
+            } else {
+                SpatialRef::from_c_obj(spatial_ref)
+            }
+        }
     }
 
     #[cfg(major_ge_3)]
