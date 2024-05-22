@@ -821,7 +821,11 @@ mod tests {
     fn test_layer_try_get_extent() {
         let ds = Dataset::open(fixture("roads.geojson")).unwrap();
         let layer = ds.layer(0).unwrap();
-        assert!(layer.try_get_extent().unwrap().is_none());
+        if cfg!(any(major_ge_4, all(major_is_3, minor_ge_9))) {
+            assert!(layer.try_get_extent().unwrap().is_some());
+        } else {
+            assert!(layer.try_get_extent().unwrap().is_none());
+        }
     }
 
     #[test]
@@ -839,7 +843,11 @@ mod tests {
 
         assert!(!layer.has_capability(OLCFastSpatialFilter));
         assert!(layer.has_capability(OLCFastFeatureCount));
-        assert!(!layer.has_capability(OLCFastGetExtent));
+        if cfg!(any(major_ge_4, all(major_is_3, minor_ge_9))) {
+            assert!(layer.has_capability(OLCFastGetExtent));
+        } else {
+            assert!(!layer.has_capability(OLCFastGetExtent));
+        }
         assert!(layer.has_capability(OLCRandomRead));
         assert!(layer.has_capability(OLCStringsAsUTF8));
     }
