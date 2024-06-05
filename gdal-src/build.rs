@@ -43,6 +43,18 @@ fn find_library(lib_name: &str, path: impl Into<std::path::PathBuf>) -> PathBuf 
 }
 
 fn main() {
+    // gdal doesn't like non clean builds so we remove any artifact from an older build
+    // https://github.com/OSGeo/gdal/issues/10125
+    // This hopefully does not break all the caching as we don't rerun the build script
+    // everytime, just if something changed. In that case we will do always a clean build
+    // and not an incremental rebuild because of the gdal build system seems not to be able
+    // to handle that well
+    let out_dir = std::path::PathBuf::from(std::env::var("OUT_DIR").expect("Set by cargo"));
+    if out_dir.exists() {
+        let _ = std::fs::remove_dir_all(&out_dir);
+        let _ = std::fs::create_dir_all(&out_dir);
+    }
+
     let proj_root =
         std::path::PathBuf::from(std::env::var("DEP_PROJ_ROOT").expect("set by proj-sys"));
     let proj_library = if std::env::var("CARGO_CFG_TARGET_FAMILY").as_deref() == Ok("windows") {
