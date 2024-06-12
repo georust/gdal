@@ -144,6 +144,10 @@ impl Dataset {
     /// See: [`GDALDataset::GetGCPs`](https://gdal.org/api/gdaldataset_cpp.html#_CPPv4N11GDALDataset7GetGCPsEv)
     pub fn gcps(&self) -> &[GcpRef] {
         let len = unsafe { gdal_sys::GDALGetGCPCount(self.c_dataset()) };
+        if len == 0 {
+            return &[];
+        }
+
         let data = unsafe { gdal_sys::GDALGetGCPs(self.c_dataset()) };
         unsafe { std::slice::from_raw_parts(data as *const GcpRef, len as usize) }
     }
