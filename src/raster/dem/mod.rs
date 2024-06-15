@@ -75,7 +75,7 @@ mod tri;
 /// use gdal::Dataset;
 /// # fn main() -> gdal::errors::Result<()> {
 /// use std::path::Path;
-/// use gdal::raster::processing::dem::*;
+/// use gdal::raster::dem::*;
 /// let ds = Dataset::open("fixtures/dem-hills.tiff")?;
 /// let mut opts = AspectOptions::new();
 /// opts
@@ -135,7 +135,7 @@ pub fn aspect<P: AsRef<Path>>(
 /// use gdal::Dataset;
 /// # fn main() -> gdal::errors::Result<()> {
 /// use std::path::Path;
-/// use gdal::raster::processing::dem::*;
+/// use gdal::raster::dem::*;
 /// let ds = Dataset::open("fixtures/dem-hills.tiff")?;
 /// let mut opts = ColorReliefOptions::new("fixtures/color-relief.clr");
 /// opts.with_alpha(true);
@@ -189,7 +189,7 @@ pub fn color_relief<P: AsRef<Path>>(
 ///
 /// ```rust, no_run
 /// use gdal::Dataset;
-/// use gdal::raster::processing::dem::*;
+/// use gdal::raster::dem::*;
 /// # fn main() -> gdal::errors::Result<()> {
 /// use std::path::Path;
 /// let ds = Dataset::open("fixtures/dem-hills.tiff")?;
@@ -247,7 +247,7 @@ pub fn hillshade<P: AsRef<Path>>(
 /// # fn main() -> gdal::errors::Result<()> {
 /// use gdal::Dataset;
 /// use std::path::Path;
-/// use gdal::raster::processing::dem::*;
+/// use gdal::raster::dem::*;
 /// let ds = Dataset::open("fixtures/dem-hills.tiff")?;
 /// let roughness_ds = roughness(&ds, Path::new("target/dem-hills-roughness.tiff"), &RoughnessOptions::default())?;
 /// let stats = roughness_ds.rasterband(1)?.get_statistics(true, false)?.unwrap();
@@ -301,7 +301,7 @@ pub fn roughness<P: AsRef<Path>>(
 /// # fn main() -> gdal::errors::Result<()> {
 /// use std::path::Path;
 /// use gdal::Dataset;
-/// use gdal::raster::processing::dem::*;
+/// use gdal::raster::dem::*;
 /// let ds = Dataset::open("fixtures/dem-hills.tiff")?;
 /// let mut opts = SlopeOptions::new();
 /// opts
@@ -356,7 +356,7 @@ pub fn slope<P: AsRef<Path>>(
 /// # fn main() -> gdal::errors::Result<()> {
 /// use std::path::Path;
 /// use gdal::Dataset;
-/// use gdal::raster::processing::dem::*;
+/// use gdal::raster::dem::*;
 /// let ds = Dataset::open("fixtures/dem-hills.tiff")?;
 /// let tpi_ds = topographic_position_index(&ds, Path::new("target/dem-hills-tpi.tiff"), &TpiOptions::default())?;
 /// let stats = tpi_ds.rasterband(1)?.get_statistics(true, false)?.unwrap();
@@ -404,7 +404,7 @@ pub fn topographic_position_index<P: AsRef<Path>>(
 /// # fn main() -> gdal::errors::Result<()> {
 /// use std::path::Path;
 /// use gdal::Dataset;
-/// use gdal::raster::processing::dem::*;
+/// use gdal::raster::dem::*;
 /// let ds = Dataset::open("fixtures/dem-hills.tiff")?;
 /// let mut opts = TriOptions::new();
 /// opts.with_algorithm(DemTriAlg::Wilson);
