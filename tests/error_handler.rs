@@ -17,7 +17,7 @@ fn test_error_handler() {
 }
 
 fn use_error_handler() {
-    let errors: Arc<Mutex<Vec<(CplErrType, i32, String)>>> = Arc::new(Mutex::new(vec![]));
+    let errors: Arc<Mutex<Vec<(CplErrType, i32, String)>>> = Arc::new(Mutex::new(Vec::new()));
 
     let errors_clone = errors.clone();
 
@@ -25,14 +25,14 @@ fn use_error_handler() {
         errors_clone.lock().unwrap().push((a, b, c.to_string()));
     });
 
+    let msg = CString::new("foo".as_bytes()).unwrap();
     unsafe {
-        let msg = CString::new("foo".as_bytes()).unwrap();
         CPLError(CPLErr::CE_Failure, 42, msg.as_ptr());
     };
 
+    let msg = CString::new("bar".as_bytes()).unwrap();
     unsafe {
-        let msg = CString::new("bar".as_bytes()).unwrap();
-        CPLError(std::mem::transmute(CplErrType::Warning), 1, msg.as_ptr());
+        CPLError(CPLErr::CE_Warning, 1, msg.as_ptr());
     };
 
     config::remove_error_handler();
@@ -63,14 +63,14 @@ fn error_handler_interleaved() {
     // A thread that provokes potential race conditions
     let join_handle = thread::spawn(move || {
         for _ in 0..100 {
+            let msg = CString::new("foo".as_bytes()).unwrap();
             unsafe {
-                let msg = CString::new("foo".as_bytes()).unwrap();
                 CPLError(CPLErr::CE_Failure, 42, msg.as_ptr());
             };
 
+            let msg = CString::new("bar".as_bytes()).unwrap();
             unsafe {
-                let msg = CString::new("bar".as_bytes()).unwrap();
-                CPLError(std::mem::transmute(CplErrType::Warning), 1, msg.as_ptr());
+                CPLError(CPLErr::CE_Warning, 1, msg.as_ptr());
             };
         }
     });
