@@ -25,6 +25,9 @@ cmake = "0.1.50"
 
 [features]
 default = []
+# force not building this crate
+nobuild = ["proj-sys/nobuild"]
+
 all_drivers = [
         "internal_drivers",
         "driver_sqlite",
