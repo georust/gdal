@@ -43,6 +43,9 @@ fn find_library(lib_name: &str, path: impl Into<std::path::PathBuf>) -> PathBuf 
 }
 
 fn main() {
+    if cfg!(feature = "nobuild") {
+        return;
+    }
     // gdal doesn't like non clean builds so we remove any artifact from an older build
     // https://github.com/OSGeo/gdal/issues/10125
     // This hopefully does not break all the caching as we don't rerun the build script
