@@ -2,7 +2,7 @@
 name = "gdal"
 description = "GDAL bindings for Rust"
 license = "MIT"
-version = "0.16.0"
+version = "0.17.0"
 authors = [
     "Alex Morega <alex@grep.ro>",
     "Johannes Drönner <droenner@informatik.uni-marburg.de>",
@@ -21,7 +21,7 @@ array = ["ndarray"]
 thiserror = "1.0"
 libc = "0.2"
 geo-types = { version = "0.7.11" }
-gdal-sys = { path = "gdal-sys", version = "^0.9" }
+gdal-sys = { path = "gdal-sys", version = "0.10" }
 ndarray = { version = "0.15", optional = true }
 chrono = { version = "0.4.26", default-features = false }
 bitflags = "2.4"
