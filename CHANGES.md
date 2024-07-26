@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.17
+
 - Added pre-built bindings for GDAL 3.9
 
    - <https://github.com/georust/gdal/pull/539>
