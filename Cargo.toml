@@ -44,3 +44,20 @@ members = ["gdal-sys"]
 features = ["array"]
 # define attribute `docsrs` for feature badges
 rustdoc-args = ["--cfg", "docsrs"]
+
+[lints.rust.unexpected_cfgs]
+level = "warn"
+check-cfg = [
+    'cfg(major_is_3)',
+    'cfg(major_ge_3)',
+    'cfg(major_ge_4)',
+    'cfg(minor_ge_1)',
+    'cfg(minor_ge_2)',
+    'cfg(minor_ge_3)',
+    'cfg(minor_ge_4)',
+    'cfg(minor_ge_5)',
+    'cfg(minor_ge_6)',
+    'cfg(minor_ge_7)',
+    'cfg(minor_ge_8)',
+    'cfg(minor_ge_9)',
+]
