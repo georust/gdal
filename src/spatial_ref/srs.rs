@@ -13,7 +13,7 @@ use crate::errors::*;
 /// # Notes
 /// * See also: [OGR Coordinate Reference Systems and Coordinate Transformation Tutorial](https://gdal.org/tutorials/osr_api_tut.html)
 /// * Consult the [OGC WKT Coordinate System Issues](https://gdal.org/tutorials/wktproblems.html)
-/// page for implementation details of WKT in OGR.
+///   page for implementation details of WKT in OGR.
 #[derive(Debug)]
 pub struct SpatialRef(gdal_sys::OGRSpatialReferenceH);
 
