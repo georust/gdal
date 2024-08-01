@@ -39,7 +39,7 @@ use std::mem::MaybeUninit;
 /// # Usage
 ///  *  [`apply`](GeoTransformEx::apply): perform a `(P,L) -> (Xp,Yp)` transformation
 ///  *  [`invert`](GeoTransformEx::invert):  construct the inverse transformation coefficients
-/// for computing `(Xp,Yp) -> (P,L)` transformations
+///     for computing `(Xp,Yp) -> (P,L)` transformations
 ///
 /// # Example
 ///

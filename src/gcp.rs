@@ -111,7 +111,7 @@ impl Dataset {
     ///
     /// # Notes
     /// * This is separate and distinct from [`Dataset::spatial_ref`], and only applies to
-    /// the representation of ground control points, when embedded.
+    ///   the representation of ground control points, when embedded.
     ///
     /// See: [`GDALGetGCPSpatialRef`](https://gdal.org/api/raster_c_api.html#_CPPv420GDALGetGCPSpatialRef12GDALDatasetH)
     pub fn gcp_spatial_ref(&self) -> Option<SpatialRef> {
@@ -128,7 +128,7 @@ impl Dataset {
     ///
     /// # Notes
     /// * This is separate and distinct from [`Dataset::projection`], and only applies to
-    /// embedded GCPs.
+    ///   embedded GCPs.
     ///
     ///  See: [`GDALGetGCPProjection`](https://gdal.org/api/raster_c_api.html#gdal_8h_1a85ffa184d3ecb7c0a59a66096b22b2ec)
     pub fn gcp_projection(&self) -> Option<String> {
