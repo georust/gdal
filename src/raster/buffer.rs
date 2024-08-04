@@ -135,7 +135,7 @@ impl<T: GdalType> Buffer<T> {
     #[inline]
     #[track_caller]
     fn vec_index_for(&self, coord: (usize, usize)) -> usize {
-        if coord.0 >= self.shape.0 || coord.1 >= self.shape.1 {
+        if coord.0 >= self.shape.1 || coord.1 >= self.shape.0 {
             Self::panic_bad_index(self.shape, coord);
         }
         coord.0 * self.shape.0 + coord.1
@@ -258,16 +258,34 @@ mod tests {
 
     #[test]
     fn index() {
-        let b = Buffer::new((5, 7), (0..5 * 7).collect());
-        assert_eq!(b[(0, 0)], 0);
-        assert_eq!(b[(1, 1)], 5 + 1);
-        assert_eq!(b[(4, 5)], 4 * 5 + 5);
+        // Tests if there is one-to-one mapping between whole buffer, and whole range of indices
+        fn indices_biject_buffer(cols: usize, rows: usize) {
+            // Empty buffer
+            let mut b = Buffer::new((cols, rows), vec![0; cols * rows]);
 
-        let mut b = b;
-        b[(2, 2)] = 99;
-        assert_eq!(b[(2, 1)], 2 * 5 + 1);
-        assert_eq!(b[(2, 2)], 99);
-        assert_eq!(b[(2, 3)], 2 * 5 + 3);
+            // Tests mapping is injective
+            for x in 0..cols {
+                for y in 0..rows {
+                    if b[(y, x)] == 1 {
+                        panic!();
+                    } else {
+                        b[(y, x)] = 1;
+                    }
+                }
+            }
+
+            // Tests mapping is surjective
+            for x in 0..cols {
+                for y in 0..rows {
+                    if b[(y, x)] == 0 {
+                        panic!();
+                    }
+                }
+            }
+        }
+
+        indices_biject_buffer(5, 7);
+        indices_biject_buffer(7, 5);
     }
 
     #[test]
@@ -299,6 +317,6 @@ mod tests {
     #[should_panic]
     fn index_bounds_panic() {
         let b = Buffer::new((5, 7), (0..5 * 7).collect());
-        let _ = b[(5, 0)];
+        let _ = b[(0, 5)];
     }
 }
