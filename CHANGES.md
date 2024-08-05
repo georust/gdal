@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.17.1
+
+ - Fixed incorrect bounds check in `Buffer<T>` indexing ([#550](https://github.com/georust/gdal/pull/550))
+
 ## 0.17
 
 - Added pre-built bindings for GDAL 3.9
