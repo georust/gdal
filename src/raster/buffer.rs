@@ -6,7 +6,7 @@ use std::vec::IntoIter;
 #[cfg(feature = "ndarray")]
 use ndarray::Array2;
 
-/// `Buffer<T>` manages cell values in in raster I/O operations.
+/// [`Buffer<T>`] manages cell values in in raster I/O operations.
 ///
 /// It conceptually represents a 2-D array backed by a `Vec<T>` with row-major organization
 /// to represent `shape` (cols, rows).
@@ -15,7 +15,14 @@ use ndarray::Array2;
 /// implementations. The underlying data can be accessed linearly via [`Buffer<T>::data()`]
 /// and [`Buffer<T>::data_mut()`]. [`IntoIterator`] is also provided.
 ///
-/// If the `ndarray` feature is enabled, a `Buffer<T>` can be converted (without copy)
+/// <div class="warning">
+///
+/// This struct uses the row-major order for indexing, that is, `(row, col)`.
+/// However, [`Buffer<T>::shape()`] returns `(cols, rows)`.
+///
+/// </div>
+///
+/// If the `ndarray` feature is enabled, a [`Buffer<T>`] can be converted (without copy)
 /// to an `Array2<T>` via [`Buffer<T>::to_array()`].
 ///
 /// # Example
@@ -94,12 +101,12 @@ impl<T: GdalType> Buffer<T> {
         self.shape
     }
 
-    /// Get a slice over the buffer contents.
+    /// Get a slice over the buffer contents, in row-major order.
     pub fn data(&self) -> &[T] {
         self.data.as_slice()
     }
 
-    /// Get a mutable slice over the buffer contents.
+    /// Get a mutable slice over the buffer contents, in row-major order.
     pub fn data_mut(&mut self) -> &mut [T] {
         self.data.as_mut_slice()
     }
