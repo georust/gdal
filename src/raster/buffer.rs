@@ -91,8 +91,20 @@ impl<T: GdalType> Buffer<T> {
         (self.shape, self.data)
     }
 
+    /// Returns the width (number of columns) of the buffer.
+    #[doc(alias = "columns")]
+    pub fn width(&self) -> usize {
+        self.shape.0
+    }
+
+    /// Returns the height (number of rows) of the buffer.
+    #[doc(alias = "rows")]
+    pub fn height(&self) -> usize {
+        self.shape.1
+    }
+
     /// Gets the 2-d shape of the buffer.
-    //
+    ///
     /// Returns `(cols, rows)`
     ///
     /// # Notes
