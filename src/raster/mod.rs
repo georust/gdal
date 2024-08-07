@@ -86,16 +86,15 @@ pub use rasterband::{
 };
 pub use rasterize::{rasterize, BurnSource, MergeAlgorithm, OptimizeMode, RasterizeOptions};
 pub use types::{AdjustedValue, GdalDataType, GdalType};
-pub use warp::reproject;
 
 mod buffer;
 mod create_options;
+pub mod dem;
 #[cfg(all(major_ge_3, minor_ge_1))]
 mod mdarray;
-pub mod processing;
 mod rasterband;
 mod rasterize;
 #[cfg(test)]
 mod tests;
 mod types;
-mod warp;
+pub mod warp;

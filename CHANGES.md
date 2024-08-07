@@ -33,6 +33,12 @@
 
 - Added `DriverManager::get_output_driver_for_dataset_name` and `DriverManager::get_output_drivers_for_dataset_name` for the ability to auto detect compatible `Driver`(s) for writing data.
   - <https://github.com/georust/gdal/pull/510>
+  
+- **Breaking**: Moved `raster::processing::dem` to `raster::dem`
+- **Breaking**: Moved `raster::reproject` to `raster::warp::reproject_into` and added more options
+- Added `raster::warp::create_and_reproject_image`.
+
+  - <https://github.com/georust/gdal/pull/508>
 
 - Added `Feature::unset_field`
 
