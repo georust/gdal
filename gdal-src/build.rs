@@ -84,6 +84,7 @@ fn main() {
         .define("BUILD_DOCS", "OFF")
         .define("BUILD_TESTING", "OFF")
         .define("BUILD_GMOCK", "OFF")
+        .define("GDAL_FIND_PACKAGE_PROJ_MODE", "MODULE")
         .define("PROJ_INCLUDE_DIR", print_path(&proj_include))
         .define("PROJ_LIBRARY", print_path(&proj_library))
         .define("ACCEPT_MISSING_LINUX_FS_HEADER", "ON");
