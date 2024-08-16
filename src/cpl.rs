@@ -96,7 +96,7 @@ impl CslStringList {
     ///
     /// Returns `Err(GdalError::BadArgument)` on invalid value, `Ok(())` otherwise.
     fn check_valid_value(value: &str) -> Result<()> {
-        if value.contains(|c| c == '\n' || c == '\r') {
+        if value.contains(['\n', '\r']) {
             Err(GdalError::BadArgument(format!(
                 "Invalid characters in value: '{value}'"
             )))
