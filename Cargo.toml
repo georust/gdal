@@ -63,5 +63,3 @@ check-cfg = [
     'cfg(minor_ge_9)',
 ]
 
-[patch.crates-io]
-proj-sys = { git = "https://github.com/georust/proj", rev = "57c9e80" }
