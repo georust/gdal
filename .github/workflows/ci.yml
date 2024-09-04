@@ -127,7 +127,7 @@ jobs:
         os:
           - ubuntu-latest
           - windows-latest
-          - macos-latest # x86_64
+          - macos-13 # x86_64
           - macos-14 # aarch64
     runs-on: ${{ matrix.os }}
     steps:
