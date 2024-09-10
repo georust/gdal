@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 0.17.1
+
+### Added
+ - Added `Buffer<T>::width` and `Buffer<T>::height` ([#550](https://github.com/georust/gdal/pull/550))
+
+### Fixed
+ - Fixed incorrect bounds check in `Buffer<T>` indexing ([#550](https://github.com/georust/gdal/pull/550))
+
 ## 0.17
 
 - Added pre-built bindings for GDAL 3.9
