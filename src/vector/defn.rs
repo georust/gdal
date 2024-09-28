@@ -99,16 +99,54 @@ impl<'a> Field<'a> {
         _string(rv)
     }
 
+    /// Get the alternative name (alias) of this field.
+    ///
+    /// This API is new as of GDAL 3.2.
+    #[cfg(any(major_ge_4, all(major_is_3, minor_ge_2)))]
+    pub fn alternative_name(&'a self) -> String {
+        let rv = unsafe { gdal_sys::OGR_Fld_GetAlternativeNameRef(self.c_field_defn) };
+        _string(rv)
+    }
+
+    /// Get the data type of this field.
     pub fn field_type(&'a self) -> OGRFieldType::Type {
         unsafe { gdal_sys::OGR_Fld_GetType(self.c_field_defn) }
     }
 
+    /// Get the formatting width for this field.
+    ///
+    /// Zero means no specified width.
     pub fn width(&'a self) -> i32 {
         unsafe { gdal_sys::OGR_Fld_GetWidth(self.c_field_defn) }
     }
 
+    /// Get the formatting precision for this field.
+    ///
+    /// This should normally be zero for fields of types other than Real.
     pub fn precision(&'a self) -> i32 {
         unsafe { gdal_sys::OGR_Fld_GetPrecision(self.c_field_defn) }
+    }
+
+    /// Return whether this field can receive null values.
+    pub fn is_nullable(&'a self) -> bool {
+        unsafe { gdal_sys::OGR_Fld_IsNullable(self.c_field_defn) != 0 }
+    }
+
+    /// Return whether this field has a unique constraint.
+    ///
+    /// This API is new as of GDAL 3.2.
+    #[cfg(any(major_ge_4, all(major_is_3, minor_ge_2)))]
+    pub fn is_unique(&'a self) -> bool {
+        unsafe { gdal_sys::OGR_Fld_IsUnique(self.c_field_defn) != 0 }
+    }
+
+    /// Get default field value.
+    pub fn default_value(&'a self) -> Option<String> {
+        let rv = unsafe { gdal_sys::OGR_Fld_GetDefault(self.c_field_defn) };
+        if rv.is_null() {
+            return None;
+        }
+        Some(_string(rv))
     }
 }
 
