@@ -1349,6 +1349,10 @@ mod tests {
         {
             let ds = Dataset::open(fixture("output.geojson")).unwrap();
             let mut layer = ds.layer(0).unwrap();
+            assert_eq!(
+                layer.defn.geometry_type(),
+                gdal_sys::OGRwkbGeometryType::wkbPoint
+            );
             let ft = layer.features().next().unwrap();
             assert_eq!(ft.geometry().unwrap().wkt().unwrap(), "POINT (1 2)");
             assert_eq!(
