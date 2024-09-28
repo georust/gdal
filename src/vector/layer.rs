@@ -1459,6 +1459,16 @@ mod tests {
         .map(|s| (s.0.to_string(), s.1))
         .collect::<Vec<_>>();
         assert_eq!(name_list, ok_names_types);
+
+        let field = layer.defn().fields().next().unwrap();
+        #[cfg(any(major_ge_4, all(major_is_3, minor_ge_2)))]
+        assert_eq!(field.alternative_name(), "");
+        assert_eq!(field.width(), 0);
+        assert_eq!(field.precision(), 0);
+        assert!(field.is_nullable());
+        #[cfg(any(major_ge_4, all(major_is_3, minor_ge_2)))]
+        assert!(!field.is_unique());
+        assert_eq!(field.default_value(), None);
     }
 
     #[test]
