@@ -4,6 +4,7 @@
 
 - Add a `bundled` feature for `gdal-sys` that allows to build and statically link a minimal bundled version of gdal during `cargo build`
 - Add methods ``alternative_name``, ``is_nullable``, ``is_unique``, ``default_value`` to ``Field``.
+- Add a `geometry_type` method to Layer.defn
 
 ## 0.17.1
 

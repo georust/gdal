@@ -59,6 +59,11 @@ impl Defn {
         let c_defn = unsafe { gdal_sys::OGR_L_GetLayerDefn(lyr.c_layer()) };
         Defn { c_defn }
     }
+
+    /// Get the geometry type of the first geometry field
+    pub fn geometry_type(&self) -> OGRwkbGeometryType::Type {
+        unsafe { gdal_sys::OGR_FD_GetGeomType(self.c_defn) }
+    }
 }
 
 pub struct FieldIterator<'a> {
