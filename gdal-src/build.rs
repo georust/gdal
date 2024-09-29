@@ -49,7 +49,7 @@ fn main() {
     // gdal doesn't like non clean builds so we remove any artifact from an older build
     // https://github.com/OSGeo/gdal/issues/10125
     // This hopefully does not break all the caching as we don't rerun the build script
-    // everytime, just if something changed. In that case we will do always a clean build
+    // every time, just if something changed. In that case we will do always a clean build
     // and not an incremental rebuild because of the gdal build system seems not to be able
     // to handle that well
     let out_dir = std::path::PathBuf::from(std::env::var("OUT_DIR").expect("Set by cargo"));
@@ -380,7 +380,7 @@ fn main() {
 
 // cmake sometimes does not like windows paths like `c:\\whatever\folder`
 // it seems to tread `\` as escape sequence in some cases, therefore
-// we rewrite the path here to always use `/` as seperator
+// we rewrite the path here to always use `/` as separator
 // https://github.com/OSGeo/gdal/issues/9935
 fn print_path(path: &std::path::Path) -> String {
     path.components()

@@ -516,7 +516,7 @@ impl SpatialRef {
     /// Fetch a projection parameter value.
     ///
     /// Returns:
-    /// * `Ok(Some(value))` - if parameter is sucessfully found,
+    /// * `Ok(Some(value))` - if parameter is successfully found,
     /// * `Ok(None)` - if parameter is not found (C library will return [OGRERR_FAILURE](https://gdal.org/api/vector_c_api.html#c.OGRERR_FAILURE)),
     /// * `Err(_)` - if there is a string conversion error or on other GDAL OGR error.
     ///
@@ -568,7 +568,7 @@ impl SpatialRef {
     /// Fetch indicated attribute of named node.
     ///
     /// Returns:
-    /// * `Ok(Some(value))` - if node and attribute are sucessfully found,
+    /// * `Ok(Some(value))` - if node and attribute are successfully found,
     /// * `Ok(None)` - if node or attribute are not found (C library will return `nullptr`) or attribute contains no value,
     /// * `Err(_)` - if there is a string conversion error.
     ///
@@ -764,7 +764,7 @@ mod tests {
 
     #[test]
     fn auto_identify() {
-        // retreived from https://epsg.io/32632, but deleted the `AUTHORITY["EPSG","32632"]`
+        // retrieved from https://epsg.io/32632, but deleted the `AUTHORITY["EPSG","32632"]`
         let mut spatial_ref = SpatialRef::from_wkt(
             r#"
         PROJCS["WGS 84 / UTM zone 32N",
