@@ -1,0 +1,5 @@
+[files]
+extend-exclude = ["gdal-src", "gdal-sys/prebuilt-bindings"]
+
+[default]
+extend-ignore-re = ["ProjParm"]
