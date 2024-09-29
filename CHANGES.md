@@ -756,7 +756,7 @@ let mut dataset = driver
 - [API extensions](https://github.com/georust/gdal/pull/35)
 - [Extend the existing possibilities of writing ogr datasets](https://github.com/georust/gdal/pull/31)
 - [Allow to transform ogr geometries to other SRS](https://github.com/georust/gdal/pull/29)
-- [Move ffi into a seperate crate](https://github.com/georust/gdal/pull/26)
+- [Move ffi into a separate crate](https://github.com/georust/gdal/pull/26)
 - [Added rasterband.rs and moved all band functions](https://github.com/georust/gdal/pull/24)
 
 ## 0.2.1

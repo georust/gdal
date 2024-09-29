@@ -51,7 +51,7 @@ all_drivers = [
         "driver_postgis_raster",
 ]
 
-# note that libgeos is LGPL licenced
+# note that libgeos is LGPL licensed
 # enabling this feature will means
 # that you statically link libgeos and
 # therefore makes your binary fall under

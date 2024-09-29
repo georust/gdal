@@ -48,7 +48,7 @@ pub fn set_config_option(key: &str, value: &str) -> Result<()> {
 
 /// Get the value of a GDAL library configuration option
 ///
-/// If the config option specified by `key` is not found, the value passed in the `default` paramter is returned.
+/// If the config option specified by `key` is not found, the value passed in the `default` parameter is returned.
 ///
 /// Refer to [GDAL `ConfigOptions`](https://trac.osgeo.org/gdal/wiki/ConfigOptions) for
 /// a full list of options.
@@ -89,7 +89,7 @@ pub fn set_thread_local_config_option(key: &str, value: &str) -> Result<()> {
 /// Get the value of a GDAL library configuration option
 /// with **thread local** scope
 ///
-/// If the config option specified by `key` is not found, the value passed in the `default` paramter is returned.
+/// If the config option specified by `key` is not found, the value passed in the `default` parameter is returned.
 ///
 /// Refer to [GDAL `ConfigOptions`](https://trac.osgeo.org/gdal/wiki/ConfigOptions) for
 /// a full list of options.
@@ -158,7 +158,7 @@ where
 
     let mut callback_lock = match ERROR_CALLBACK.lock() {
         Ok(guard) => guard,
-        // poisoning could only occur on `CPLSetErrorHandler(Ex)` panicing, thus the value must be valid nevertheless
+        // poisoning could only occur on `CPLSetErrorHandler(Ex)` panicking, thus the value must be valid nevertheless
         Err(poison_error) => poison_error.into_inner(),
     };
 
@@ -175,7 +175,7 @@ where
 pub fn remove_error_handler() {
     let mut callback_lock = match ERROR_CALLBACK.lock() {
         Ok(guard) => guard,
-        // poisoning could only occur on `CPLSetErrorHandler(Ex)` panicing, thus the value must be valid nevertheless
+        // poisoning could only occur on `CPLSetErrorHandler(Ex)` panicking, thus the value must be valid nevertheless
         Err(poison_error) => poison_error.into_inner(),
     };
 
@@ -217,7 +217,7 @@ mod tests {
             "128"
         );
         assert_eq!(
-            get_config_option("NON_EXISTANT_OPTION", "DEFAULT_VALUE")
+            get_config_option("NON_EXISTENT_OPTION", "DEFAULT_VALUE")
                 .unwrap_or_else(|_| "".to_string()),
             "DEFAULT_VALUE"
         );
@@ -256,7 +256,7 @@ mod tests {
         );
 
         assert_eq!(
-            get_thread_local_config_option("NON_EXISTANT_OPTION", "DEFAULT_VALUE")
+            get_thread_local_config_option("NON_EXISTENT_OPTION", "DEFAULT_VALUE")
                 .unwrap_or_else(|_| "".to_string()),
             "DEFAULT_VALUE"
         );

@@ -42,7 +42,7 @@ pub fn create_mem_file<P: AsRef<Path>>(file_name: P, data: Vec<u8>) -> Result<()
     fn _create_mem_file(file_name: &Path, data: Vec<u8>) -> Result<()> {
         let file_name = _path_to_c_string(file_name)?;
 
-        // ownership will be given to GDAL, so it should not be automaticly dropped
+        // ownership will be given to GDAL, so it should not be automatically dropped
         let mut data = ManuallyDrop::new(data);
 
         let handle = unsafe {
