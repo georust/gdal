@@ -10,9 +10,8 @@ links = "gdal_src"
 link-cplusplus = "1.0"
 proj-sys = { version = "0.24.0", features = ["bundled_proj"] }
 libsqlite3-sys = { version = "0.28.0", features = ["bundled"], optional = true }
-hdf5-src = { version = "0.8.1", optional = true, features = ["hl"] }
-hdf5-sys = { version = "0.8.1", optional = true, features = ["static"] }
-netcdf-src = { version = "0.3.3", optional = true }
+hdf5-sys = { package = "hdf5-metno-sys", version = "0.9.1", optional = true, features = ["static", "hl", "deprecated"] }
+netcdf-sys = { version = "0.8.1", optional = true, features = ["static"] }
 pq-src = { version = "0.3.2", optional = true, default-features = false }
 curl-sys = { version = "0.4.70", features = ["static-curl"], optional = true }
 libz-sys = { version = "1.1.15", features = ["static"], optional = true }
@@ -310,10 +309,10 @@ driver_pg = ["dep:pq-src"]
 driver_postgis_raster = ["driver_pg"]
 
 # libhdf5
-driver_hdf5 = ["dep:hdf5-src", "dep:libz-sys"]
+driver_hdf5 = ["dep:hdf5-sys", "dep:libz-sys"]
 
 # libnetcdf
-driver_netcdf = ["dep:netcdf-src", "driver_hdf5", "dep:hdf5-sys"]
+driver_netcdf = ["dep:netcdf-sys", "driver_hdf5", "dep:hdf5-sys"]
 
 # poppler
 #driver_pdf = []
