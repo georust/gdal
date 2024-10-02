@@ -214,18 +214,14 @@ fn main() {
     handle_ogr_driver!(config, "driver_vfk");
 
     if cfg!(feature = "driver_hdf5") {
-        let hdf5_dir = std::env::var("DEP_HDF5SRC_ROOT").expect("This is set by hdf5-src");
-        let hdf5_lib = std::env::var("DEP_HDF5SRC_LIBRARY").expect("This is set by hdf5-src");
+        let hdf5_dir = std::env::var("DEP_HDF5_ROOT").expect("This is set by hdf5-sys");
+        let hdf5_lib = std::env::var("DEP_HDF5_LIBRARY").expect("This is set by hdf5-sys");
         let hdf5_lib_dir = find_library(&hdf5_lib, &hdf5_dir);
-        let p = PathBuf::from(&hdf5_lib_dir);
         let mut hdf5_cc = PathBuf::from(&hdf5_dir);
         hdf5_cc.push("bin");
         hdf5_cc.push("h5cc");
-        let mut hdf5_include = PathBuf::from(&hdf5_dir);
-        hdf5_include.push("include");
-        let p = p.parent().unwrap();
-        println!("cargo:rustc-link-search=native={}", p.display());
-        println!("cargo:rustc-link-lib=static={hdf5_lib}");
+        let hdf5_include = std::env::var("DEP_HDF5_INCLUDE").expect("This is set by hdf5-sys");
+        let hdf5_include = PathBuf::from(&hdf5_include);
         config
             .define("GDAL_USE_HDF5", "ON")
             .define("HDF5_C_COMPILER_EXECUTABLE", print_path(&hdf5_cc))
@@ -239,28 +235,14 @@ fn main() {
     }
 
     if cfg!(feature = "driver_netcdf") {
-        let netcdf_root_dir =
-            std::env::var("DEP_NETCDFSRC_ROOT").expect("This is set by netcdf-src");
-        let hdf5_dir = std::env::var("DEP_HDF5SRC_ROOT").expect("This is set by hdf5-src");
-        let hl_library = std::env::var("DEP_HDF5SRC_HL_LIBRARY").expect("This is set by hdf5-src");
-        let netcdf_lib = find_library("netcdf", &netcdf_root_dir);
-        let hl_library_path = find_library(&hl_library, hdf5_dir);
-        let hl_library_path = hl_library_path.parent().unwrap();
+        let netcdf_include =
+            std::env::var("DEP_NETCDF_INCLUDEDIR").expect("This is set by netcdf-sys");
+        let netcdf_root = format!("{netcdf_include}/..");
 
-        let netcdf_library_path = netcdf_lib.parent().unwrap();
-        println!(
-            "cargo:rustc-link-search=native={}",
-            netcdf_library_path.display()
-        );
-        println!("cargo:rustc-link-lib=static=netcdf");
-        println!(
-            "cargo:rustc-link-search=native={}",
-            hl_library_path.display()
-        );
-        println!("cargo:rustc-link-lib=static={hl_library}");
+        let netcdf_include = PathBuf::from(netcdf_include);
+        let netcdf_root = PathBuf::from(netcdf_root);
+        let netcdf_lib = find_library("netcdf", &netcdf_root);
 
-        let mut netcdf_include = PathBuf::from(netcdf_root_dir);
-        netcdf_include.push("include");
         config
             .define("GDAL_USE_NETCDF", "ON")
             .define("NETCDF_INCLUDE_DIR", print_path(&netcdf_include))
