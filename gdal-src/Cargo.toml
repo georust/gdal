@@ -9,7 +9,7 @@ links = "gdal_src"
 [dependencies]
 link-cplusplus = "1.0"
 proj-sys = { version = "0.24.0", features = ["bundled_proj"] }
-libsqlite3-sys = { version = "0.28.0", features = ["bundled"], optional = true }
+libsqlite3-sys = { version = "0.30.1", features = ["bundled"], optional = true }
 hdf5-sys = { package = "hdf5-metno-sys", version = "0.9.1", optional = true, features = ["static", "hl", "deprecated"] }
 netcdf-sys = { version = "0.8.1", optional = true, features = ["static"] }
 pq-src = { version = "0.3.2", optional = true, default-features = false }
