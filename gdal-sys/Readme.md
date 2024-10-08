@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/georust/gdal.png?branch=master)](https://travis-ci.org/georust/gdal)
 
 Low level [GDAL](http://gdal.org/) bindings for [Rust](http://www.rust-lang.org/).
-The build script will try to auto-dectect the installed GDAL version.
+The build script will try to auto-detect the installed GDAL version.
 
 Contains:
 
