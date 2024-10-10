@@ -220,7 +220,8 @@ impl<T: GdalType + Copy> From<Array2<T>> for Buffer<T> {
         let shape = value.shape();
         let (cols, rows) = (shape[1], shape[0]);
         let data: Vec<T> = if value.is_standard_layout() {
-            value.into_raw_vec()
+            let (data, offset) = value.into_raw_vec_and_offset();
+            data.as_slice()[offset.unwrap_or_default()..].to_vec()
         } else {
             value.iter().copied().collect()
         };
@@ -233,7 +234,7 @@ impl<T: GdalType + Copy> From<Array2<T>> for Buffer<T> {
 #[cfg(test)]
 mod tests {
     use crate::raster::Buffer;
-    use ndarray::{Array2, ShapeBuilder};
+    use ndarray::{Array2, ShapeArg, ShapeBuilder};
 
     #[test]
     fn convert_to() {
@@ -258,8 +259,8 @@ mod tests {
 
     #[test]
     fn shapes() {
-        let s1 = (10, 5).into_shape().set_f(true);
-        let s2 = (10, 5).into_shape().set_f(false);
+        let s1 = (10, 5).into_shape_and_order().0.set_f(true);
+        let s2 = (10, 5).into_shape_and_order().0.set_f(false);
 
         let a1 = Array2::from_shape_fn(s1, |(y, x)| y as i32 * 5 + x as i32);
         let a2 = Array2::from_shape_fn(s2, |(y, x)| y as i32 * 5 + x as i32);

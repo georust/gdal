@@ -23,7 +23,7 @@ libc = "0.2"
 geo-types = { version = "0.7.11" }
 gdal-sys = { path = "gdal-sys", version = "0.10" }
 gdal-src = { path = "gdal-src", optional = true, default-features = false }
-ndarray = { version = "0.15", optional = true }
+ndarray = { version = "0.16", optional = true }
 chrono = { version = "0.4.26", default-features = false }
 bitflags = "2.4"
 once_cell = "1.18"
