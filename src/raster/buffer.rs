@@ -220,7 +220,12 @@ impl<T: GdalType + Copy> From<Array2<T>> for Buffer<T> {
         let shape = value.shape();
         let (cols, rows) = (shape[1], shape[0]);
         let data: Vec<T> = if value.is_standard_layout() {
-            value.into_raw_vec_and_offset().0
+            let (data, offset) = value.into_raw_vec_and_offset();
+            if let Some(offset) = offset {
+                data.into_iter().skip(offset).collect()
+            } else {
+                data
+            }
         } else {
             value.iter().copied().collect()
         };
