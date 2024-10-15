@@ -156,6 +156,11 @@ jobs:
           choco install sqlite
           echo "C:\ProgramData\chocolatey\lib\SQLite\tools" >> $GITHUB_PATH
           sqlite3 --version
+      - name: Install Sqlite (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y sqlite3
       # use the minimal driver set for clippy as the other
       # drivers do not change the rust code
       # enable `driver_sqlite` to force statically linking libsqlite3 for proj
@@ -164,14 +169,8 @@ jobs:
       # we only build tests here as we have disabled features
       # that are required for running tests
       - name: Build bundled gdal (minimal features)
-        if: runner.os == 'Windows'
         # we use cargo test --no-run here because
         # tests do not pass due to missing libgeos but we want to have a complete build (including linking)
         run: cargo test --features "gdal-sys/bundled gdal-src gdal-src/driver_sqlite" --no-run
-      - name: Build bundled gdal (minimal features)
-        if: runner.os != 'Windows'
-        # we use cargo test --no-run here because
-        # tests do not pass due to missing libgeos but we want to have a complete build (including linking)
-        run: cargo test --features "gdal-sys/bundled gdal-src" --no-run
       - name: Test bundled (all features)
         run: cargo test --features "gdal-sys/bundled gdal-src gdal-src/all_drivers gdal-src/geos_static"
