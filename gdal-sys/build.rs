@@ -9,14 +9,14 @@ use std::path::{Path, PathBuf};
 #[cfg(feature = "bindgen")]
 pub fn write_bindings(include_paths: Vec<String>, out_path: &Path) {
     // To generate the bindings manually, use
-    // bindgen --constified-enum-module ".*" --ctypes-prefix libc --allowlist-function "(CPL|CSL|GDAL|OGR|OSR|OCT|VSI).*" wrapper.h -- $(pkg-config --cflags-only-I gdal) -fretain-comments-from-system-headers
+    // bindgen --constified-enum-module ".*" --ctypes-prefix ::std::ffi --allowlist-function "(CPL|CSL|GDAL|OGR|OSR|OCT|VSI).*" wrapper.h -- $(pkg-config --cflags-only-I gdal) -fretain-comments-from-system-headers
     // If you add a new pre-built version, make sure to bump the docs.rs version in main.
 
     let mut builder = bindgen::Builder::default()
         .size_t_is_usize(true)
         .header("wrapper.h")
         .constified_enum_module(".*")
-        .ctypes_prefix("libc")
+        .ctypes_prefix("::std::ffi")
         .allowlist_function("CPL.*")
         .allowlist_function("CSL.*")
         .allowlist_function("GDAL.*")
