@@ -82,7 +82,7 @@ fn main() {
         println!("cargo:version_number={}", gdal_version_number_string);
 
         let binding_path = PathBuf::from(format!(
-            "prebuilt-bindings/gdal_{}.{}.rs",
+            "prebuilt-bindings/gdal_{}_{}.rs",
             version.major, version.minor
         ));
 
@@ -243,7 +243,7 @@ fn main() {
             );
 
             let binding_path = PathBuf::from(format!(
-                "prebuilt-bindings/gdal_{}.{}.rs",
+                "prebuilt-bindings/gdal_{}_{}.rs",
                 version.major, version.minor
             ));
             if !binding_path.exists() {

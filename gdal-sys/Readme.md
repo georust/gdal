@@ -45,4 +45,4 @@ building with the `bindgen` feature, and then copying the generated file. For
 example (the hash will differ in your build):
 
     $ cargo build --features bindgen
-    $ cp target/debug/build/gdal-sys-db833e3088b78e57/out/bindings.rs gdal-sys/prebuilt-bindings/gdal_3.6.rs
+    $ cp target/debug/build/gdal-sys-db833e3088b78e57/out/bindings.rs gdal-sys/prebuilt-bindings/gdal_3_6.rs
