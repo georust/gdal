@@ -1,7 +1,8 @@
+use std::ffi::c_double;
+use std::mem::MaybeUninit;
+
 use crate::errors;
 use crate::errors::GdalError;
-use libc::c_double;
-use std::mem::MaybeUninit;
 
 /// An affine transform.
 ///

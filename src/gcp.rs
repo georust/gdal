@@ -161,7 +161,7 @@ impl Dataset {
     ///
     /// # Panics
     ///
-    /// Panics if `gcps` has more than [`libc::c_int::MAX`] elements.
+    /// Panics if `gcps` has more than [`std::ffi::c_int::MAX`] elements.
     pub fn set_gcps(&self, gcps: Vec<Gcp>, spatial_ref: &SpatialRef) -> Result<()> {
         let len = gcps
             .len()

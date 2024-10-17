@@ -1,10 +1,11 @@
+use std::{ffi::c_int, ptr::null_mut};
+
+use gdal_sys::{CPLErr, OGRCoordinateTransformationH};
+
 use crate::errors;
 use crate::errors::GdalError;
 use crate::spatial_ref::{CoordTransformOptions, SpatialRef};
 use crate::utils::{_last_cpl_err, _last_null_pointer_err};
-use gdal_sys::{CPLErr, OGRCoordinateTransformationH};
-use libc::c_int;
-use std::ptr::null_mut;
 
 #[derive(Debug)]
 /// Defines a coordinate transformation from one [`SpatialRef`] to another.

@@ -1,16 +1,17 @@
+use std::{
+    borrow::Borrow,
+    ffi::{c_char, c_int, CString},
+    mem::ManuallyDrop,
+    path::{Path, PathBuf},
+    ptr::{null, null_mut},
+};
+
+use gdal_sys::{GDALMultiDimTranslate, GDALMultiDimTranslateOptions};
+
 use crate::{
     errors::*,
     utils::{_last_null_pointer_err, _path_to_c_string},
     Dataset,
-};
-use gdal_sys::{GDALMultiDimTranslate, GDALMultiDimTranslateOptions};
-use libc::{c_char, c_int};
-use std::{
-    borrow::Borrow,
-    ffi::CString,
-    mem::ManuallyDrop,
-    path::{Path, PathBuf},
-    ptr::{null, null_mut},
 };
 
 /// Wraps a [GDALMultiDimTranslateOptions] object.

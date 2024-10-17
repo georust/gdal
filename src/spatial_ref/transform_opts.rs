@@ -1,6 +1,6 @@
-use std::ffi::CString;
+use std::ffi::{c_int, CString};
 
-use gdal_sys::{self, CPLErr};
+use gdal_sys::CPLErr;
 
 use crate::errors;
 use crate::errors::*;
@@ -113,7 +113,7 @@ impl CoordTransformOptions {
         let ret_val = unsafe {
             gdal_sys::OCTCoordinateTransformationOptionsSetBallparkAllowed(
                 self.inner,
-                ballpark_allowed as libc::c_int,
+                ballpark_allowed as c_int,
             )
         };
         if ret_val == 0 {
@@ -145,7 +145,7 @@ impl CoordTransformOptions {
             gdal_sys::OCTCoordinateTransformationOptionsSetOperation(
                 self.inner,
                 c_co.as_ptr(),
-                reverse as libc::c_int,
+                reverse as c_int,
             )
         };
         if ret_val == 0 {

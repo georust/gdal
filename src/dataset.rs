@@ -1,6 +1,6 @@
 use std::{ffi::CString, ffi::NulError, path::Path, ptr};
 
-use gdal_sys::{self, CPLErr, GDALDatasetH, GDALMajorObjectH};
+use gdal_sys::{CPLErr, GDALDatasetH, GDALMajorObjectH};
 
 use crate::cpl::CslStringList;
 use crate::errors::*;

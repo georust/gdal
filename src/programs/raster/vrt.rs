@@ -1,15 +1,16 @@
+use std::{
+    borrow::Borrow,
+    ffi::{c_char, c_int, CString},
+    path::Path,
+    ptr::{null, null_mut},
+};
+
+use gdal_sys::GDALBuildVRTOptions;
+
 use crate::{
     errors::*,
     utils::{_last_null_pointer_err, _path_to_c_string},
     Dataset,
-};
-use gdal_sys::GDALBuildVRTOptions;
-use libc::{c_char, c_int};
-use std::{
-    borrow::Borrow,
-    ffi::CString,
-    path::Path,
-    ptr::{null, null_mut},
 };
 
 /// Wraps a [GDALBuildVRTOptions] object.

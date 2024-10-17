@@ -1,11 +1,14 @@
+use std::{
+    ffi::{c_char, c_void, CString},
+    ptr::null_mut,
+};
+
+use gdal_sys::OGRErr;
+
 use crate::errors::GdalError;
 use crate::errors::Result;
 use crate::utils::{_last_null_pointer_err, _string};
 use crate::vector::Geometry;
-use gdal_sys::OGRErr;
-use libc::c_char;
-use std::ffi::{c_void, CString};
-use std::ptr::null_mut;
 
 /// Methods supporting translation between GDAL [`Geometry`] and various text representations.
 ///

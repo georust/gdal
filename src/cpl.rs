@@ -3,7 +3,7 @@
 //! This module provides safe access to a subset of the [GDAL CPL functions](https://gdal.org/api/cpl.html).
 //!
 
-use std::ffi::CString;
+use std::ffi::{c_char, c_int, CString};
 use std::fmt::{Debug, Display, Formatter};
 use std::mem::ManuallyDrop;
 use std::ops::Deref;
@@ -15,7 +15,6 @@ use gdal_sys::{
     CSLFindString, CSLFindStringCaseSensitive, CSLGetField, CSLPartialFindString, CSLSetNameValue,
     CSLTokenizeString2,
 };
-use libc::{c_char, c_int};
 
 use crate::errors::{GdalError, Result};
 use crate::utils::_string;
@@ -500,8 +499,8 @@ impl<'a> Iterator for CslStringListIterator<'a> {
         }
 
         let field = unsafe {
-            // Equivalent to, but less traversals than:
-            // CSLGetField(self.list.as_ptr(), self.idx as libc::c_int)
+            // Equivalent to, but fewer traversals than:
+            // CSLGetField(self.list.as_ptr(), self.idx as c_int)
             let slice = std::slice::from_raw_parts(self.list.list_ptr, self.count);
             slice[self.idx]
         };

@@ -1,7 +1,7 @@
 use crate::errors::*;
 use crate::gdal_major_object::MajorObject;
 use crate::utils::{_last_cpl_err, _last_null_pointer_err, _string, _string_array};
-use gdal_sys::{self, CPLErr};
+use gdal_sys::CPLErr;
 use std::ffi::CString;
 
 /// General-Purpose Metadata API

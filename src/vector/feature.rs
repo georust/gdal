@@ -1,16 +1,17 @@
+use std::{
+    convert::TryInto,
+    ffi::{c_char, c_double, c_int, c_longlong, CString, NulError},
+    ptr, slice,
+};
+
+use chrono::{DateTime, Datelike, FixedOffset, LocalResult, NaiveDate, TimeZone, Timelike};
+use gdal_sys::{OGRErr, OGRFeatureH, OGRFieldType, OGRLayerH};
+
 use crate::utils::{_last_null_pointer_err, _string, _string_array};
 use crate::vector::geometry::Geometry;
 use crate::vector::{Defn, LayerAccess, OwnedLayer};
-use gdal_sys::{self, OGRErr, OGRFeatureH, OGRFieldType, OGRLayerH};
-use libc::{c_char, c_double, c_int, c_longlong};
-use std::convert::TryInto;
-use std::ffi::{CString, NulError};
-use std::ptr;
-
-use chrono::{DateTime, Datelike, FixedOffset, LocalResult, NaiveDate, TimeZone, Timelike};
 
 use crate::errors::*;
-use std::slice;
 
 /// OGR Feature
 #[derive(Debug)]

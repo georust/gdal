@@ -1,8 +1,8 @@
-use crate::dataset::Dataset;
-use crate::gdal_major_object::MajorObject;
-use crate::metadata::Metadata;
-use crate::raster::{GdalDataType, GdalType};
-use crate::utils::{_last_cpl_err, _last_null_pointer_err, _string};
+use std::ffi::{c_int, c_void, CString};
+use std::fmt::{Debug, Display, Formatter};
+use std::marker::PhantomData;
+use std::str::FromStr;
+
 use gdal_sys::{
     self, CPLErr, GDALColorEntry, GDALColorInterp, GDALColorTableH, GDALComputeRasterMinMax,
     GDALCreateColorRamp, GDALCreateColorTable, GDALDestroyColorTable, GDALGetDefaultHistogramEx,
@@ -10,17 +10,17 @@ use gdal_sys::{
     GDALMajorObjectH, GDALPaletteInterp, GDALRIOResampleAlg, GDALRWFlag, GDALRasterBandH,
     GDALRasterIOExtraArg, GDALSetColorEntry, GDALSetDefaultHistogramEx, GDALSetRasterColorTable,
 };
-use libc::c_int;
-use std::ffi::{c_void, CString};
-use std::fmt::{Debug, Display, Formatter};
-use std::marker::PhantomData;
-use std::str::FromStr;
 
+use crate::dataset::Dataset;
 use crate::errors::*;
+use crate::gdal_major_object::MajorObject;
+use crate::metadata::Metadata;
 use crate::raster::buffer::Buffer;
 use crate::raster::ResampleAlg::{
     Average, Bilinear, Cubic, CubicSpline, Gauss, Lanczos, Mode, NearestNeighbour,
 };
+use crate::raster::{GdalDataType, GdalType};
+use crate::utils::{_last_cpl_err, _last_null_pointer_err, _string};
 
 /// [Dataset] methods for raster datasets.
 impl Dataset {
@@ -31,7 +31,7 @@ impl Dataset {
     /// # Errors
     /// Returns an error if the band cannot be read, including in the case the index is 0.
     pub fn rasterband(&self, band_index: usize) -> Result<RasterBand> {
-        let band_index = libc::c_int::try_from(band_index)?;
+        let band_index = c_int::try_from(band_index)?;
 
         unsafe {
             let c_band = gdal_sys::GDALGetRasterBand(self.c_dataset(), band_index);
@@ -237,7 +237,7 @@ pub struct RasterIOExtraArg {
     pub n_version: usize,
     pub e_resample_alg: ResampleAlg,
     pub pfn_progress: gdal_sys::GDALProgressFunc,
-    p_progress_data: *mut libc::c_void,
+    p_progress_data: *mut c_void,
     pub b_floating_point_window_validity: usize,
     pub df_x_off: f64,
     pub df_y_off: f64,
@@ -935,7 +935,7 @@ impl<'a> RasterBand<'a> {
     }
 
     pub fn overview(&self, overview_index: usize) -> Result<RasterBand<'a>> {
-        let overview_index = libc::c_int::try_from(overview_index)?;
+        let overview_index = c_int::try_from(overview_index)?;
 
         unsafe {
             let c_band = self.c_rasterband;
@@ -1017,8 +1017,8 @@ impl<'a> RasterBand<'a> {
         let rv = unsafe {
             GDALGetRasterStatistics(
                 self.c_rasterband,
-                libc::c_int::from(is_approx_ok),
-                libc::c_int::from(force),
+                c_int::from(is_approx_ok),
+                c_int::from(force),
                 &mut statistics.min,
                 &mut statistics.max,
                 &mut statistics.mean,
@@ -1050,7 +1050,7 @@ impl<'a> RasterBand<'a> {
         unsafe {
             GDALComputeRasterMinMax(
                 self.c_rasterband,
-                libc::c_int::from(is_approx_ok),
+                c_int::from(is_approx_ok),
                 &mut min_max as *mut f64,
             )
         };
@@ -1079,7 +1079,7 @@ impl<'a> RasterBand<'a> {
                 &mut max,
                 &mut n_buckets,
                 &mut counts as *mut *mut u64,
-                libc::c_int::from(force),
+                c_int::from(force),
                 None,
                 std::ptr::null_mut(),
             )
@@ -1104,7 +1104,7 @@ impl<'a> RasterBand<'a> {
     /// * `max` - Histogram upper bound
     /// * `counts` - Histogram values for each bucket
     pub fn set_default_histogram(&self, min: f64, max: f64, counts: &mut [u64]) -> Result<()> {
-        let n_buckets = libc::c_int::try_from(counts.len())?;
+        let n_buckets = c_int::try_from(counts.len())?;
 
         let rv = unsafe {
             GDALSetDefaultHistogramEx(self.c_rasterband, min, max, n_buckets, counts.as_mut_ptr())
@@ -1139,7 +1139,7 @@ impl<'a> RasterBand<'a> {
             ));
         }
 
-        let n_buckets = libc::c_int::try_from(n_buckets)?;
+        let n_buckets = c_int::try_from(n_buckets)?;
         let mut counts = vec![0; n_buckets as usize];
 
         let rv = unsafe {
@@ -1149,8 +1149,8 @@ impl<'a> RasterBand<'a> {
                 max,
                 n_buckets,
                 counts.as_mut_ptr(),
-                libc::c_int::from(include_out_of_range),
-                libc::c_int::from(is_approx_ok),
+                c_int::from(include_out_of_range),
+                c_int::from(is_approx_ok),
                 None,
                 std::ptr::null_mut(),
             )
@@ -1250,7 +1250,7 @@ impl Drop for HistogramCounts {
     fn drop(&mut self) {
         match self {
             HistogramCounts::GdalAllocated(p, _) => unsafe {
-                gdal_sys::VSIFree(*p as *mut libc::c_void);
+                gdal_sys::VSIFree(*p as *mut c_void);
             },
             HistogramCounts::RustAllocated(_) => {}
         }

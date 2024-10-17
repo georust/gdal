@@ -1,10 +1,13 @@
-use crate::utils::{_last_null_pointer_err, _string};
-use gdal_sys::{self, OGRErr, OSRAxisMappingStrategy};
-use std::ffi::{CStr, CString};
-use std::ptr::{self};
-use std::str::FromStr;
+use std::{
+    ffi::{c_char, c_int, CStr, CString},
+    ptr,
+    str::FromStr,
+};
+
+use gdal_sys::{OGRErr, OSRAxisMappingStrategy};
 
 use crate::errors::*;
+use crate::utils::{_last_null_pointer_err, _string};
 
 /// A OpenGIS Spatial Reference System definition.
 ///
@@ -100,7 +103,7 @@ impl SpatialRef {
     pub fn from_epsg(epsg_code: u32) -> Result<SpatialRef> {
         let null_ptr = ptr::null_mut();
         let c_obj = unsafe { gdal_sys::OSRNewSpatialReference(null_ptr) };
-        let rv = unsafe { gdal_sys::OSRImportFromEPSG(c_obj, epsg_code as libc::c_int) };
+        let rv = unsafe { gdal_sys::OSRImportFromEPSG(c_obj, epsg_code as c_int) };
         if rv != OGRErr::OGRERR_NONE {
             Err(GdalError::OgrError {
                 err: rv,
@@ -128,7 +131,7 @@ impl SpatialRef {
 
     pub fn from_esri(esri_wkt: &str) -> Result<SpatialRef> {
         let c_str = CString::new(esri_wkt)?;
-        let mut ptrs = vec![c_str.as_ptr() as *mut libc::c_char, ptr::null_mut()];
+        let mut ptrs = vec![c_str.as_ptr() as *mut c_char, ptr::null_mut()];
         let null_ptr = ptr::null_mut();
         let c_obj = unsafe { gdal_sys::OSRNewSpatialReference(null_ptr) };
         let rv = unsafe { gdal_sys::OSRImportFromESRI(c_obj, ptrs.as_mut_ptr()) };
@@ -170,8 +173,7 @@ impl SpatialRef {
 
     pub fn to_pretty_wkt(&self) -> Result<String> {
         let mut c_wkt = ptr::null_mut();
-        let rv =
-            unsafe { gdal_sys::OSRExportToPrettyWkt(self.0, &mut c_wkt, false as libc::c_int) };
+        let rv = unsafe { gdal_sys::OSRExportToPrettyWkt(self.0, &mut c_wkt, false as c_int) };
         let res = if rv != OGRErr::OGRERR_NONE {
             Err(GdalError::OgrError {
                 err: rv,
@@ -363,7 +365,7 @@ impl SpatialRef {
             gdal_sys::OSRGetAxis(
                 self.0,
                 CString::new(target_key)?.as_ptr(),
-                axis as libc::c_int,
+                axis as c_int,
                 &mut orientation,
             )
         };
@@ -384,7 +386,7 @@ impl SpatialRef {
             gdal_sys::OSRGetAxis(
                 self.0,
                 CString::new(target_key)?.as_ptr(),
-                axis as libc::c_int,
+                axis as c_int,
                 ptr::null_mut(),
             )
         };
@@ -435,7 +437,7 @@ impl SpatialRef {
     ///
     /// See: [`OSRGetAreaOfUse`](https://gdal.org/api/ogr_srs_api.html#_CPPv415OSRGetAreaOfUse20OGRSpatialReferenceHPdPdPdPdPPKc)
     pub fn area_of_use(&self) -> Option<AreaOfUse> {
-        let mut c_area_name: *const libc::c_char = ptr::null_mut();
+        let mut c_area_name: *const c_char = ptr::null_mut();
         let (mut w_long, mut s_lat, mut e_long, mut n_lat): (f64, f64, f64, f64) =
             (0.0, 0.0, 0.0, 0.0);
         let ret_val = unsafe {
@@ -576,7 +578,7 @@ impl SpatialRef {
     ///
     /// # Panics
     ///
-    /// Panics if `child` is greater than [`libc::c_int::MAX`].
+    /// Panics if `child` is greater than [`std::ffi::c_int::MAX`].
     pub fn get_attr_value(&self, node_path: &str, child: usize) -> Result<Option<String>> {
         let child = child.try_into().expect("`child` must fit in `c_int`");
 

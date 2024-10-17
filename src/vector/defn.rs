@@ -1,10 +1,12 @@
+use std::ffi::c_int;
+
+use gdal_sys::{
+    OGRFeatureDefnH, OGRFieldDefnH, OGRFieldType, OGRGeomFieldDefnH, OGRwkbGeometryType,
+};
+
 use crate::spatial_ref::SpatialRef;
 use crate::utils::{_last_null_pointer_err, _string};
 use crate::vector::LayerAccess;
-use gdal_sys::{
-    self, OGRFeatureDefnH, OGRFieldDefnH, OGRFieldType, OGRGeomFieldDefnH, OGRwkbGeometryType,
-};
-use libc::c_int;
 
 use crate::errors::*;
 
