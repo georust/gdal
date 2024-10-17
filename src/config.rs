@@ -24,10 +24,9 @@
 //! a full list of options.
 
 use std::ffi::{c_char, c_void, CString};
-use std::sync::Mutex;
+use std::sync::{LazyLock, Mutex};
 
 use gdal_sys::{CPLErr, CPLErrorNum, CPLGetErrorHandlerUserData};
-use once_cell::sync::Lazy;
 
 use crate::errors::{CplErrType, Result};
 use crate::utils::_string;
@@ -121,7 +120,8 @@ type ErrorCallbackType = dyn FnMut(CplErrType, i32, &str) + 'static + Send;
 type PinnedErrorCallback = Box<Box<ErrorCallbackType>>;
 
 /// Static variable that holds the current error callback function
-static ERROR_CALLBACK: Lazy<Mutex<Option<PinnedErrorCallback>>> = Lazy::new(Default::default);
+static ERROR_CALLBACK: LazyLock<Mutex<Option<PinnedErrorCallback>>> =
+    LazyLock::new(Default::default);
 
 /// Set a custom error handler for GDAL.
 /// Could be overwritten by setting a thread-local error handler.
