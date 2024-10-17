@@ -22,7 +22,7 @@ pub struct Feature<'a> {
 }
 
 impl<'a> Feature<'a> {
-    pub fn new(defn: &'a Defn) -> Result<Feature> {
+    pub fn new(defn: &'a Defn) -> Result<Feature<'a>> {
         let c_feature = unsafe { gdal_sys::OGR_F_Create(defn.c_defn()) };
         if c_feature.is_null() {
             return Err(_last_null_pointer_err("OGR_F_Create"));
@@ -38,7 +38,7 @@ impl<'a> Feature<'a> {
     ///
     /// # Safety
     /// This method operates on a raw C pointer
-    pub unsafe fn from_c_feature(defn: &'a Defn, c_feature: OGRFeatureH) -> Feature {
+    pub unsafe fn from_c_feature(defn: &'a Defn, c_feature: OGRFeatureH) -> Feature<'a> {
         Feature {
             _defn: defn,
             c_feature,
