@@ -1,7 +1,6 @@
 use std::{
-    ffi::{c_void, CString},
+    ffi::{c_char, c_void, CString},
     fmt::{Debug, Display},
-    os::raw::c_char,
 };
 
 use gdal_sys::{
