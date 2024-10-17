@@ -46,3 +46,9 @@ example (the hash will differ in your build):
 
     $ cargo build --features bindgen
     $ cp target/debug/build/gdal-sys-db833e3088b78e57/out/bindings.rs gdal-sys/prebuilt-bindings/gdal_3_6.rs
+
+If your're not on a rolling distro, the following command might help:
+
+```
+$ podman run --rm -it -v $PWD:$PWD:z -w $PWD ghcr.io/osgeo/gdal:ubuntu-full-3.9.3 bash -c "curl --proto =https --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain stable; . ~/.cargo/env && apt update && apt install -y pkg-config gcc libclang-dev && cargo clean && cargo test --features bindgen && shopt -s globstar && mv target/**/bindings.rs gdal-sys/prebuilt-bindings/gdal_3_9.rs"
+```
