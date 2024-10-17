@@ -25,7 +25,6 @@ gdal-src = { path = "gdal-src", optional = true, default-features = false }
 ndarray = { version = "0.16", optional = true }
 chrono = { version = "0.4.26", default-features = false }
 bitflags = "2.4"
-once_cell = "1.18"
 
 [build-dependencies]
 semver = "1.0"
