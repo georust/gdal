@@ -1,19 +1,37 @@
 # Changes
 
-## Unreleased
+## 0.18 (unreleased)
 
-- Add a `bundled` feature for `gdal-sys` that allows to build and statically link a minimal bundled version of gdal during `cargo build`
-- Add methods ``alternative_name``, ``is_nullable``, ``is_unique``, ``default_value`` to ``Field``.
-- Add a `geometry_type` method to Layer.defn
-- Upgraded `ndarray` dependency to 0.16.
+### Breaking
+
+  - Regenerate the pre-built bindings with `std::ffi` instead of `libc` for C types ([#573](https://github.com/georust/gdal/pull/573))
+  - Upgrade `ndarray` dependency to 0.16 ([#569](https://github.com/georust/gdal/pull/569))
+
+### Added
+
+  - Add a `bundled` feature for `gdal-sys` for building and statically linking a minimal bundled version of GDAL ([#517](https://github.com/georust/gdal/pull/517))
+  - Add pre-built bindings for GDAL 3.10 ([#573](https://github.com/georust/gdal/pull/573))
+  - Add methods `alternative_name`, `is_nullable`, `is_unique`, `default_value` to `Field` ([#561](https://github.com/georust/gdal/pull/561))
+  - Add `Defn::geometry_type` ([#562](https://github.com/georust/gdal/pull/562))
+
+### Fixed
+
+  - Fix conversion from `ndarray` when the data is offsetted from the start of the buffer ([#569](https://github.com/georust/gdal/pull/569))
+
+### Removed
+
+  - Bump MSRV to 1.80 ([#573](https://github.com/georust/gdal/pull/573))
+  - Drop `libc` and `once_cell` and dependencies ([#573](https://github.com/georust/gdal/pull/573))
 
 ## 0.17.1
 
 ### Added
- - Added `Buffer<T>::width` and `Buffer<T>::height` ([#550](https://github.com/georust/gdal/pull/550))
+
+ - Add `Buffer<T>::width` and `Buffer<T>::height` ([#550](https://github.com/georust/gdal/pull/550))
 
 ### Fixed
- - Fixed incorrect bounds check in `Buffer<T>` indexing ([#550](https://github.com/georust/gdal/pull/550))
+
+ - Fix incorrect bounds check in `Buffer<T>` indexing ([#550](https://github.com/georust/gdal/pull/550))
 
 ## 0.17
 
