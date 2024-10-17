@@ -8,10 +8,9 @@ authors = ["Johannes Drönner <droenner@informatik.uni-marburg.de>"]
 categories = ["science::geo", "api-bindings"]
 edition = "2021"
 rust-version = "1.58"
-links="gdal"
+links = "gdal"
 
 [dependencies]
-libc = "0.2"
 gdal-src = { path = "../gdal-src/", optional = true }
 
 [build-dependencies]
