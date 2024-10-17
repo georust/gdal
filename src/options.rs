@@ -1,6 +1,7 @@
+use std::ffi::c_uint;
+
 use bitflags::bitflags;
 use gdal_sys::GDALAccess;
-use libc::c_uint;
 
 /// Open options for [`crate::Dataset`]
 #[derive(Debug, Default)]

@@ -1,12 +1,13 @@
-use std::cell::RefCell;
-use std::fmt::{self, Debug, Formatter};
-use std::marker::PhantomData;
-use std::mem::MaybeUninit;
-use std::ops::{Deref, DerefMut};
+use std::{
+    cell::RefCell,
+    ffi::{c_double, c_int},
+    fmt::{self, Debug, Formatter},
+    marker::PhantomData,
+    mem::MaybeUninit,
+    ops::{Deref, DerefMut},
+};
 
-use libc::{c_double, c_int};
-
-use gdal_sys::{self, OGRErr, OGRGeometryH, OGRwkbGeometryType};
+use gdal_sys::{OGRErr, OGRGeometryH, OGRwkbGeometryType};
 
 use crate::errors::*;
 use crate::spatial_ref::SpatialRef;

@@ -1,8 +1,9 @@
-use super::GdalType;
-use crate::errors::*;
-use crate::spatial_ref::SpatialRef;
-use crate::utils::{_last_cpl_err, _last_null_pointer_err, _string, _string_array};
-use crate::{cpl::CslStringList, Dataset};
+use std::{
+    ffi::{c_void, CString},
+    fmt::{Debug, Display},
+    os::raw::c_char,
+};
+
 use gdal_sys::{
     CPLErr, CSLDestroy, GDALAttributeGetDataType, GDALAttributeGetDimensionsSize, GDALAttributeH,
     GDALAttributeReadAsDouble, GDALAttributeReadAsDoubleArray, GDALAttributeReadAsInt,
@@ -18,13 +19,15 @@ use gdal_sys::{
     GDALMDArrayGetNoDataValueAsDouble, GDALMDArrayGetSpatialRef, GDALMDArrayGetTotalElementsCount,
     GDALMDArrayGetUnit, GDALMDArrayH, GDALMDArrayRelease, OSRDestroySpatialReference, VSIFree,
 };
-use libc::c_void;
-use std::ffi::CString;
-use std::os::raw::c_char;
 
 #[cfg(feature = "ndarray")]
 use ndarray::{ArrayD, IxDyn};
-use std::fmt::{Debug, Display};
+
+use super::GdalType;
+use crate::errors::*;
+use crate::spatial_ref::SpatialRef;
+use crate::utils::{_last_cpl_err, _last_null_pointer_err, _string, _string_array};
+use crate::{cpl::CslStringList, Dataset};
 
 /// Represent an MDArray in a Group
 ///
@@ -415,6 +418,8 @@ impl<'a> MDArray<'a> {
         force: bool,
         is_approx_ok: bool,
     ) -> Result<Option<MdStatisticsAll>> {
+        use std::ffi::c_int;
+
         let mut statistics = MdStatisticsAll {
             min: 0.,
             max: 0.,
@@ -427,8 +432,8 @@ impl<'a> MDArray<'a> {
             gdal_sys::GDALMDArrayGetStatistics(
                 self.c_mdarray,
                 self.c_dataset,
-                libc::c_int::from(is_approx_ok),
-                libc::c_int::from(force),
+                c_int::from(is_approx_ok),
+                c_int::from(force),
                 &mut statistics.min,
                 &mut statistics.max,
                 &mut statistics.mean,

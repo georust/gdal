@@ -23,14 +23,14 @@
 //! Refer to [GDAL `ConfigOptions`](https://trac.osgeo.org/gdal/wiki/ConfigOptions) for
 //! a full list of options.
 
+use std::ffi::{c_char, c_void, CString};
+use std::sync::Mutex;
+
 use gdal_sys::{CPLErr, CPLErrorNum, CPLGetErrorHandlerUserData};
-use libc::{c_char, c_void};
+use once_cell::sync::Lazy;
 
 use crate::errors::{CplErrType, Result};
 use crate::utils::_string;
-use once_cell::sync::Lazy;
-use std::ffi::CString;
-use std::sync::Mutex;
 
 /// Set a GDAL library configuration option
 ///

@@ -1,18 +1,20 @@
+use std::{
+    ffi::{c_char, c_int, CString, NulError},
+    marker::PhantomData,
+    mem::MaybeUninit,
+    ptr::null_mut,
+};
+
+use gdal_sys::{GDALMajorObjectH, OGRErr, OGRFieldDefnH, OGRFieldType, OGRLayerH};
+
+use crate::errors::*;
 use crate::metadata::Metadata;
 use crate::spatial_ref::SpatialRef;
 use crate::utils::{_last_null_pointer_err, _string};
 use crate::vector::defn::Defn;
+use crate::vector::feature::{FeatureIterator, OwnedFeatureIterator};
 use crate::vector::{Envelope, Feature, FieldValue, Geometry, LayerOptions};
 use crate::{dataset::Dataset, gdal_major_object::MajorObject};
-use gdal_sys::{self, GDALMajorObjectH, OGRErr, OGRFieldDefnH, OGRFieldType, OGRLayerH};
-use libc::c_int;
-use std::ffi::NulError;
-use std::mem::MaybeUninit;
-use std::ptr::null_mut;
-use std::{ffi::CString, marker::PhantomData};
-
-use crate::errors::*;
-use crate::vector::feature::{FeatureIterator, OwnedFeatureIterator};
 
 /// Layer capabilities
 #[allow(clippy::upper_case_acronyms)]
@@ -607,7 +609,7 @@ impl Dataset {
     /// Applies to vector datasets, and fetches by the given
     /// _0-based_ index.
     pub fn layer(&self, idx: usize) -> Result<Layer> {
-        let idx = libc::c_int::try_from(idx)?;
+        let idx = c_int::try_from(idx)?;
         let c_layer = unsafe { gdal_sys::OGR_DS_GetLayer(self.c_dataset(), idx) };
         if c_layer.is_null() {
             return Err(_last_null_pointer_err("OGR_DS_GetLayer"));
@@ -620,7 +622,7 @@ impl Dataset {
     /// Applies to vector datasets, and fetches by the given
     /// _0-based_ index.
     pub fn into_layer(self, idx: usize) -> Result<OwnedLayer> {
-        let idx = libc::c_int::try_from(idx)?;
+        let idx = c_int::try_from(idx)?;
         let c_layer = unsafe { gdal_sys::OGR_DS_GetLayer(self.c_dataset(), idx) };
         if c_layer.is_null() {
             return Err(_last_null_pointer_err("OGR_DS_GetLayer"));
@@ -718,7 +720,7 @@ impl Dataset {
                 c_name.as_ptr(),
                 c_srs,
                 options.ty,
-                c_options_ptr as *mut *mut libc::c_char,
+                c_options_ptr as *mut *mut c_char,
             )
         };
         if c_layer.is_null() {

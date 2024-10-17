@@ -1,8 +1,8 @@
-use std::ffi::CString;
+use std::ffi::{c_int, CString};
 use std::path::Path;
 use std::sync::Once;
 
-use gdal_sys::{self, CPLErr, GDALDriverH, GDALMajorObjectH};
+use gdal_sys::{CPLErr, GDALDriverH, GDALMajorObjectH};
 
 use crate::dataset::Dataset;
 use crate::gdal_major_object::MajorObject;
@@ -194,9 +194,9 @@ impl Driver {
         data_type: GdalDataType,
         options: &RasterCreationOptions,
     ) -> Result<Dataset> {
-        let size_x = libc::c_int::try_from(size_x)?;
-        let size_y = libc::c_int::try_from(size_y)?;
-        let bands = libc::c_int::try_from(bands)?;
+        let size_x = c_int::try_from(size_x)?;
+        let size_y = c_int::try_from(size_y)?;
+        let bands = c_int::try_from(bands)?;
 
         let c_filename = _path_to_c_string(filename)?;
         let c_dataset = unsafe {

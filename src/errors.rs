@@ -1,6 +1,6 @@
 //! GDAL Error Types
 
-use libc::c_int;
+use std::ffi::c_int;
 use std::num::TryFromIntError;
 use thiserror::Error;
 

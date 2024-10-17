@@ -1,7 +1,7 @@
-use gdal_sys::{self, CPLErr};
-use libc::c_char;
-use std::ffi::{CStr, CString};
+use std::ffi::{c_char, CStr, CString};
 use std::path::{Path, PathBuf};
+
+use gdal_sys::CPLErr;
 
 use crate::errors::*;
 

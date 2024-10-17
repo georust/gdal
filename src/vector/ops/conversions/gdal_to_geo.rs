@@ -1,6 +1,6 @@
 use std::convert::{TryFrom, TryInto};
 
-use gdal_sys::{self, OGRwkbGeometryType};
+use gdal_sys::OGRwkbGeometryType;
 
 use crate::errors::GdalError;
 use crate::vector::Geometry;
