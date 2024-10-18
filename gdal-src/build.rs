@@ -132,6 +132,7 @@ fn main() {
     handle_gdal_driver!(config, "driver_coasp");
     handle_gdal_driver!(config, "driver_cosar");
     handle_gdal_driver!(config, "driver_ctg");
+    handle_gdal_driver!(config, "driver_derived");
     handle_gdal_driver!(config, "driver_dimap");
     handle_gdal_driver!(config, "driver_dted");
     handle_gdal_driver!(config, "driver_elas");

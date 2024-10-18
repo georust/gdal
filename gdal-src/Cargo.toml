@@ -129,6 +129,7 @@ internal_drivers = [
     "driver_coasp",
     "driver_cosar",
     "driver_ctg",
+    "driver_derived",
     "driver_dimap",
     "driver_dted",
     "driver_elas",
@@ -231,6 +232,7 @@ driver_ceos = []
 driver_coasp = []
 driver_cosar = []
 driver_ctg = []
+driver_derived = []
 driver_dimap = []
 driver_dted = []
 driver_elas = []
