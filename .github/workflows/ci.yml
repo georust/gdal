@@ -78,13 +78,13 @@ jobs:
       - name: Run tests
         run: cargo test
       - name: Build (--all-features)
-        run: cargo build  --features "default bindgen array"
+        run: cargo build --features "default bindgen array"
       - name: Run tests (--all-features)
-        run: cargo test  --features "default bindgen array" -- --nocapture
+        run: cargo test --features "default bindgen array" -- --nocapture
 
   ubuntu_lts:
     name: "ci ubuntu-lts"
-    runs-on: "ubuntu-20.04"
+    runs-on: "ubuntu-22.04"
 
     steps:
       - name: Checkout code
@@ -93,17 +93,9 @@ jobs:
         shell: bash
         run: |
           sudo apt-get update -y
-          sudo apt-get install libgdal-dev gdal-bin build-essential curl pkg-config libclang-dev -y
-          export C_INCLUDE_PATH=/usr/include/gdal:$C_INCLUDE_PATH
-          export CPLUS_INCLUDE_PATH=/usr/include/gdal:$CPLUS_INCLUDE_PATH
-          sudo ldconfig
+          sudo apt-get install libgdal-dev gdal-bin build-essential curl pkg-config libclang-dev valgrind -y
           curl --proto '=https' --tlsv1.2 --retry 10 --retry-connrefused -fsSL "https://sh.rustup.rs" | sh -s -- --profile minimal --default-toolchain none -y
           echo "${CARGO_HOME:-$HOME/.cargo}/bin" >> $GITHUB_PATH
-
-      - name: Setup building
-        run: |
-          export CC="clang-9"
-          export CXX="clang++-9"
 
       - name: Install stable
         run: |
@@ -115,19 +107,17 @@ jobs:
       - name: Check with Clippy
         run: cargo clippy --all-targets -- -D warnings
       - name: Check with Clippy (--all-features)
-        run: cargo clippy --all-targets  --features "default bindgen array" -- -D warnings
+        run: cargo clippy --all-targets --features "default bindgen array" -- -D warnings
       - name: Build
         run: cargo build
       - name: Run tests
         run: cargo test
       - name: Build (--all-features)
-        run: cargo build  --features "default bindgen array"
+        run: cargo build --features "default bindgen array"
       - name: Run tests (--all-features)
-        run: cargo test  --features "default bindgen array" -- --nocapture
-      - name: Install valgrind and cargo-valgrind
-        run: |
-          sudo apt-get install valgrind -y
-          cargo install cargo-valgrind
+        run: cargo test --features "default bindgen array" -- --nocapture
+      - name: Install cargo-valgrind
+        run: cargo install cargo-valgrind
       - name: Run --lib tests under valgrind
         run: cargo valgrind test --lib
 
@@ -166,7 +156,7 @@ jobs:
       # drivers do not change the rust code
       # enable `driver_sqlite` to force statically linking libsqlite3 for proj
       - name: Check with Clippy (bundled)
-        run: cargo clippy --all-targets  --features "gdal-sys/bundled gdal-src gdal-src/driver_sqlite" -- -D warnings
+        run: cargo clippy --all-targets --features "gdal-sys/bundled gdal-src gdal-src/driver_sqlite" -- -D warnings
       # we only build tests here as we have disabled features
       # that are required for running tests
       - name: Build bundled gdal (minimal features)
