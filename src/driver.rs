@@ -634,12 +634,8 @@ mod tests {
         if let Ok(d) = DriverManager::get_driver_by_name("ESRI Shapefile") {
             test_driver(&d, "test.shp", DriverType::Vector);
             test_driver(&d, "my.test.shp", DriverType::Vector);
-            // `shp.zip` only supported from gdal version 3.1
-            // https://gdal.org/drivers/vector/shapefile.html#compressed-files
-            if cfg!(all(major_ge_3, minor_ge_1)) {
-                test_driver(&d, "test.shp.zip", DriverType::Vector);
-                test_driver(&d, "my.test.shp.zip", DriverType::Vector);
-            }
+            test_driver(&d, "test.shp.zip", DriverType::Vector);
+            test_driver(&d, "my.test.shp.zip", DriverType::Vector);
         }
 
         if let Ok(d) = DriverManager::get_driver_by_name("GTiff") {
@@ -669,12 +665,8 @@ mod tests {
         if DriverManager::get_driver_by_name("ESRI Shapefile").is_ok() {
             assert!(drivers("test.shp", true).contains("ESRI Shapefile"));
             assert!(drivers("my.test.shp", true).contains("ESRI Shapefile"));
-            // `shp.zip` only supported from gdal version 3.1
-            // https://gdal.org/drivers/vector/shapefile.html#compressed-files
-            if cfg!(all(major_ge_3, minor_ge_1)) {
-                assert!(drivers("test.shp.zip", true).contains("ESRI Shapefile"));
-                assert!(drivers("my.test.shp.zip", true).contains("ESRI Shapefile"));
-            }
+            assert!(drivers("test.shp.zip", true).contains("ESRI Shapefile"));
+            assert!(drivers("my.test.shp.zip", true).contains("ESRI Shapefile"));
         }
         if DriverManager::get_driver_by_name("GPKG").is_ok() {
             assert!(drivers("test.gpkg", true).contains("GPKG"));
