@@ -88,7 +88,6 @@ impl CoordTransformOptions {
     ///
     /// If this option is specified with PROJ < 8, the `OGR_CT_OP_SELECTION` configuration option
     /// will default to `BEST_ACCURACY`.
-    #[cfg(any(major_ge_4, all(major_ge_3, minor_ge_3)))]
     pub fn desired_accuracy(&mut self, accuracy: f64) -> Result<()> {
         let ret_val = unsafe {
             gdal_sys::OCTCoordinateTransformationOptionsSetDesiredAccuracy(self.inner, accuracy)
@@ -108,7 +107,6 @@ impl CoordTransformOptions {
     ///
     /// If this option is specified with PROJ < 8, the `OGR_CT_OP_SELECTION` configuration option
     /// will default to `BEST_ACCURACY`.
-    #[cfg(any(major_ge_4, all(major_ge_3, minor_ge_3)))]
     pub fn set_ballpark_allowed(&mut self, ballpark_allowed: bool) -> Result<()> {
         let ret_val = unsafe {
             gdal_sys::OCTCoordinateTransformationOptionsSetBallparkAllowed(
@@ -161,7 +159,6 @@ mod tests {
     use crate::spatial_ref::SpatialRef;
 
     #[test]
-    #[cfg(any(major_ge_4, all(major_ge_3, minor_ge_3)))]
     fn invalid_transformation() {
         // This transformation can be constructed only if we allow ballpark transformations (enabled by
         // default).

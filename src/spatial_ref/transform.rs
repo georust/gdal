@@ -79,7 +79,6 @@ impl CoordTransform {
     /// `Err` if there is an error.
     ///
     /// See: [OCTTransformBounds](https://gdal.org/api/ogr_srs_api.html#_CPPv418OCTTransformBounds28OGRCoordinateTransformationHKdKdKdKdPdPdPdPdKi)
-    #[cfg(all(major_ge_3, minor_ge_4))]
     pub fn transform_bounds(
         &self,
         bounds: &[f64; 4],
@@ -209,7 +208,6 @@ mod tests {
     use crate::spatial_ref::srs::AxisMappingStrategy;
     use crate::vector::Geometry;
 
-    #[cfg(all(major_ge_3, minor_ge_4))]
     #[test]
     fn transform_bounds() {
         let bounds: [f64; 4] = [-180., -80., 180., 80.];

@@ -216,7 +216,6 @@ impl SpatialRef {
         res
     }
 
-    #[cfg(any(major_ge_4, all(major_ge_3, minor_ge_1)))]
     pub fn to_projjson(&self) -> Result<String> {
         let mut c_projjsonstr = ptr::null_mut();
         let options = ptr::null();
@@ -325,7 +324,6 @@ impl SpatialRef {
     }
 
     #[inline]
-    #[cfg(all(major_ge_3, minor_ge_1))]
     pub fn is_derived_geographic(&self) -> bool {
         unsafe { gdal_sys::OSRIsDerivedGeographic(self.0) == 1 }
     }
@@ -400,7 +398,6 @@ impl SpatialRef {
         }
     }
 
-    #[cfg(all(major_ge_3, minor_ge_1))]
     pub fn axes_count(&self) -> i32 {
         unsafe { gdal_sys::OSRGetAxesCount(self.0) }
     }
@@ -705,7 +702,6 @@ mod tests {
         assert_eq!("+proj=longlat +datum=WGS84 +no_defs", proj4string.trim());
     }
 
-    #[cfg(any(major_ge_4, all(major_ge_3, minor_ge_1)))]
     #[test]
     fn from_epsg_to_projjson() {
         let spatial_ref = SpatialRef::from_epsg(4326).unwrap();
@@ -860,8 +856,6 @@ mod tests {
         assert!(!spatial_ref_4326.is_compound());
         assert!(!spatial_ref_4326.is_geocentric());
         assert!(!spatial_ref_4326.is_vertical());
-
-        #[cfg(all(major_ge_3, minor_ge_1))]
         assert!(!spatial_ref_4326.is_derived_geographic());
     }
 
@@ -873,8 +867,6 @@ mod tests {
         assert!(spatial_ref_2154.is_projected());
         assert!(!spatial_ref_2154.is_compound());
         assert!(!spatial_ref_2154.is_geocentric());
-
-        #[cfg(all(major_ge_3, minor_ge_1))]
         assert!(!spatial_ref_2154.is_derived_geographic());
     }
 
@@ -884,7 +876,6 @@ mod tests {
     fn crs_axis() {
         let spatial_ref = SpatialRef::from_epsg(4326).unwrap();
 
-        #[cfg(all(major_ge_3, minor_ge_1))]
         assert_eq!(spatial_ref.axes_count(), 2);
 
         let orientation = spatial_ref.axis_orientation("GEOGCS", 0).unwrap();
