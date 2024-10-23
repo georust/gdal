@@ -3,8 +3,21 @@ name = "gdal-src"
 version = "0.1.0"
 edition = "2021"
 links = "gdal_src"
+description ="Build script for compiling GDAL from source."
+license-file = "source/LICENSE.TXT"
+repository = "https://github.com/georust/gdal/"
+include = [
+    "/src/lib.rs",
+    "/build.rs",
+    "/Cargo.toml",
+    "/source/**/*.cpp",
+    "/source/**/*.h",
+    "/source/**/CMakeLists.txt",
+    "/source/LICENSE.TXT",
+]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
 
 [dependencies]
 link-cplusplus = "1.0"
