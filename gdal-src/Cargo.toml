@@ -7,13 +7,29 @@ description ="Build script for compiling GDAL from source."
 license-file = "source/LICENSE.TXT"
 repository = "https://github.com/georust/gdal/"
 include = [
-    "/src/lib.rs",
     "/build.rs",
     "/Cargo.toml",
+    "/source/**/*.c",
     "/source/**/*.cpp",
+    "/source/**/*.h.12",
     "/source/**/*.h",
+    "/source/**/*.hpp",
+    "/source/**/*.in",
+    "/source/**/*.inc",
+    "/source/**/*.y",
     "/source/**/CMakeLists.txt",
+    "/source/apps/data",
+    "/source/cmake",
+    "/source/data",
+    "/source/frmts/drivers.ini",
+    "/source/frmts/vrt/data",
+    "/source/gcore/data",
+    "/source/gdal.cmake",
     "/source/LICENSE.TXT",
+    "/source/ogr/data",
+    "/source/ogr/ogrsf_frmts/vrt/data",
+    "/source/scripts/gdal-bash-completion.sh",
+    "/src/lib.rs",
 ]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
