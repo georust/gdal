@@ -34,10 +34,6 @@ impl TriOptions {
 
         self.store_common_options_to(&mut opts)?;
 
-        // Before 3.3, Wilson is the only algorithm and therefore there's no
-        // selection option.
-        // Callers can still specify Wilson, but we don't pass it along.
-        #[cfg(all(major_is_3, minor_ge_3))]
         if let Some(alg) = self.algorithm {
             opts.add_string("-alg")?;
             opts.add_string(alg.to_gdal_option())?;
@@ -54,14 +50,11 @@ pub enum DemTriAlg {
     /// difference between a central pixel and its surrounding cells.
     /// This is recommended for bathymetric use cases.
     Wilson,
-    #[cfg(all(major_is_3, minor_ge_3))]
     /// The Riley algorithm (see Riley, S.J., De Gloria, S.D., Elliot, R. (1999):
     /// A Terrain Ruggedness that Quantifies Topographic Heterogeneity.
     /// Intermountain Journal of Science, Vol.5, No.1-4, pp.23-27) uses the square root of the
     /// sum of the square of the difference between a central pixel and its surrounding cells.
     /// This is recommended for terrestrial use cases.
-    ///
-    /// Only available in GDAL >= 3.3
     Riley,
 }
 
@@ -70,7 +63,6 @@ impl DemTriAlg {
     fn to_gdal_option(self) -> &'static str {
         match self {
             DemTriAlg::Wilson => "Wilson",
-            #[cfg(all(major_is_3, minor_ge_3))]
             DemTriAlg::Riley => "Riley",
         }
     }
@@ -87,7 +79,6 @@ mod tests {
 
     use super::*;
 
-    #[cfg(all(major_is_3, minor_ge_3))]
     #[test]
     fn test_options() -> Result<()> {
         use crate::cpl::CslStringList;

@@ -411,7 +411,6 @@ impl<'a> MDArray<'a> {
     ///
     /// TODO: add option to pass progress callback (`pfnProgress`)
     ///
-    #[cfg(any(all(major_is_3, minor_ge_2), major_ge_4))]
     pub fn get_statistics(
         &self,
         force: bool,
@@ -831,7 +830,6 @@ impl Dataset {
     /// You must have opened the dataset with the `GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER`
     /// flag in order for it to work.
     ///
-    #[cfg(all(major_ge_3, minor_ge_1))]
     pub fn root_group(&self) -> Result<Group> {
         unsafe {
             let c_group = gdal_sys::GDALDatasetGetRootGroup(self.c_dataset());
@@ -852,8 +850,7 @@ mod tests {
     use crate::{test_utils::TempFixture, Dataset, GdalOpenFlags};
 
     #[test]
-    #[cfg_attr(any(not(all(major_ge_3, minor_ge_4)), feature = "gdal-src"), ignore)]
-    #[cfg(any(all(major_is_3, minor_ge_2), major_ge_4))]
+    #[cfg_attr(feature = "gdal-src", ignore)]
     fn test_root_group_name() {
         let fixture = "/vsizip/fixtures/byte_no_cf.zarr.zip";
 
@@ -870,8 +867,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(any(not(all(major_ge_3, minor_ge_4)), feature = "gdal-src"), ignore)]
-    #[cfg(any(all(major_is_3, minor_ge_2), major_ge_4))]
+    #[cfg_attr(feature = "gdal-src", ignore)]
     fn test_array_names() {
         let fixture = "/vsizip/fixtures/byte_no_cf.zarr.zip";
 
@@ -892,8 +888,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(any(not(all(major_ge_3, minor_ge_4)), feature = "gdal-src"), ignore)]
-    #[cfg(any(all(major_is_3, minor_ge_2), major_ge_4))]
+    #[cfg_attr(feature = "gdal-src", ignore)]
     fn test_n_dimension() {
         let fixture = "/vsizip/fixtures/byte_no_cf.zarr.zip";
 
@@ -913,8 +908,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(any(not(all(major_ge_3, minor_ge_4)), feature = "gdal-src"), ignore)]
-    #[cfg(any(all(major_is_3, minor_ge_2), major_ge_4))]
+    #[cfg_attr(feature = "gdal-src", ignore)]
     fn test_n_elements() {
         let fixture = "/vsizip/fixtures/byte_no_cf.zarr.zip";
 
@@ -934,8 +928,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(any(not(all(major_ge_3, minor_ge_4)), feature = "gdal-src"), ignore)]
-    #[cfg(any(all(major_is_3, minor_ge_2), major_ge_4))]
+    #[cfg_attr(feature = "gdal-src", ignore)]
     fn test_dimension_name() {
         let fixture = "/vsizip/fixtures/byte_no_cf.zarr.zip";
 
@@ -970,8 +963,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(any(not(all(major_ge_3, minor_ge_4)), feature = "gdal-src"), ignore)]
-    #[cfg(any(all(major_is_3, minor_ge_2), major_ge_4))]
+    #[cfg_attr(feature = "gdal-src", ignore)]
     fn test_dimension_size() {
         let fixture = "/vsizip/fixtures/byte_no_cf.zarr.zip";
 
@@ -995,8 +987,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(any(not(all(major_ge_3, minor_ge_4)), feature = "gdal-src"), ignore)]
-    #[cfg(any(all(major_is_3, minor_ge_2), major_ge_4))]
+    #[cfg_attr(feature = "gdal-src", ignore)]
     fn test_read_data() {
         let fixture = "/vsizip/fixtures/byte_no_cf.zarr.zip";
 
@@ -1032,8 +1023,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(any(not(all(major_ge_3, minor_ge_4)), feature = "gdal-src"), ignore)]
-    #[cfg(any(all(major_is_3, minor_ge_1), major_ge_4))]
+    #[cfg_attr(feature = "gdal-src", ignore)]
     fn test_read_string_array() {
         // Beware https://github.com/georust/gdal/issues/299 if you want to reuse this
         // This can't be Zarr because it doesn't support string arrays
@@ -1066,8 +1056,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(any(not(all(major_ge_3, minor_ge_4)), feature = "gdal-src"), ignore)]
-    #[cfg(any(all(major_is_3, minor_ge_2), major_ge_4))]
+    #[cfg_attr(feature = "gdal-src", ignore)]
     fn test_datatype() {
         let fixture = "/vsizip/fixtures/byte_no_cf.zarr.zip";
 
@@ -1093,8 +1082,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(any(not(all(major_ge_3, minor_ge_4)), feature = "gdal-src"), ignore)]
-    #[cfg(any(all(major_is_3, minor_ge_2), major_ge_4))]
+    #[cfg_attr(feature = "gdal-src", ignore)]
     fn test_spatial_ref() {
         let fixture = "/vsizip/fixtures/byte_no_cf.zarr.zip";
 
@@ -1119,8 +1107,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(any(not(all(major_ge_3, minor_ge_4)), feature = "gdal-src"), ignore)]
-    #[cfg(any(all(major_is_3, minor_ge_2), major_ge_4))]
+    #[cfg_attr(feature = "gdal-src", ignore)]
     fn test_no_data_value() {
         let fixture = "/vsizip/fixtures/byte_no_cf.zarr.zip";
 
@@ -1141,8 +1128,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(any(not(all(major_ge_3, minor_ge_4)), feature = "gdal-src"), ignore)]
-    #[cfg(any(all(major_is_3, minor_ge_2), major_ge_4))]
+    #[cfg_attr(feature = "gdal-src", ignore)]
     fn test_attributes() {
         let fixture = "/vsizip/fixtures/cf_nasa_4326.zarr.zip";
 
@@ -1193,8 +1179,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(any(not(all(major_ge_3, minor_ge_4)), feature = "gdal-src"), ignore)]
-    #[cfg(any(all(major_is_3, minor_ge_2), major_ge_4))]
+    #[cfg_attr(feature = "gdal-src", ignore)]
     fn test_unit() {
         let fixture = "/vsizip/fixtures/cf_nasa_4326.zarr.zip";
 
@@ -1234,8 +1219,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(any(not(all(major_ge_3, minor_ge_4)), feature = "gdal-src"), ignore)]
-    #[cfg(any(all(major_is_3, minor_ge_2), major_ge_4))]
+    #[cfg_attr(feature = "gdal-src", ignore)]
     fn test_stats() {
         // make a copy to avoid writing the statistics into the original file
         let fixture = TempFixture::fixture("byte_no_cf.zarr.zip");

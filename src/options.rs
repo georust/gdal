@@ -41,7 +41,6 @@ bitflags! {
         /// Allow gnm drivers to be used.
         const GDAL_OF_GNM = 0x08;
         /// Allow multidimensional raster drivers to be used.
-        #[cfg(all(major_ge_3,minor_ge_1))]
         const GDAL_OF_MULTIDIM_RASTER = 0x10;
         /// Emit error message in case of failed open.
         const GDAL_OF_VERBOSE_ERROR = 0x40;

@@ -107,9 +107,6 @@ impl<'a> Field<'a> {
     }
 
     /// Get the alternative name (alias) of this field.
-    ///
-    /// This API is new as of GDAL 3.2.
-    #[cfg(any(major_ge_4, all(major_is_3, minor_ge_2)))]
     pub fn alternative_name(&'a self) -> String {
         let rv = unsafe { gdal_sys::OGR_Fld_GetAlternativeNameRef(self.c_field_defn) };
         _string(rv)
@@ -140,9 +137,6 @@ impl<'a> Field<'a> {
     }
 
     /// Return whether this field has a unique constraint.
-    ///
-    /// This API is new as of GDAL 3.2.
-    #[cfg(any(major_ge_4, all(major_is_3, minor_ge_2)))]
     pub fn is_unique(&'a self) -> bool {
         unsafe { gdal_sys::OGR_Fld_IsUnique(self.c_field_defn) != 0 }
     }
