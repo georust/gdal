@@ -52,9 +52,9 @@ fn run() -> Result<()> {
         }
 
         // copy each field value of the feature:
-        for fd in &fields_defn {
-            if let Some(value) = feature_a.field(&fd.0)? {
-                ft.set_field(&fd.0, &value)?;
+        for idx in 0..fields_defn.len() {
+            if let Some(value) = feature_a.field(idx)? {
+                ft.set_field(idx, &value)?;
             }
         }
         // Add the feature to the layer:

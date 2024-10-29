@@ -35,10 +35,10 @@ fn run() -> gdal::errors::Result<()> {
             ft.set_geometry(geom.clone())?;
         }
         // copy each field value of the feature:
-        for field in defn.fields() {
+        for (idx, field) in defn.fields().enumerate() {
             ft.set_field(
-                &field.name(),
-                &match feature_a.field(field.name())?.unwrap() {
+                idx,
+                &match feature_a.field(idx)?.unwrap() {
                     // add one day to dates
                     FieldValue::DateValue(value) => {
                         println!("{} = {}", field.name(), value);

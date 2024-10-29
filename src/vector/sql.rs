@@ -83,12 +83,13 @@ impl Dataset {
     /// let ds = Dataset::open(Path::new("fixtures/roads.geojson")).unwrap();
     /// let query = "SELECT kind, is_bridge, highway FROM roads WHERE highway = 'pedestrian'";
     /// let mut result_set = ds.execute_sql(query, None, sql::Dialect::DEFAULT).unwrap().unwrap();
+    /// let highway_idx = result_set.defn().field_index("highway").unwrap();
     ///
     /// assert_eq!(10, result_set.feature_count());
     ///
     /// for feature in result_set.features() {
     ///     let highway = feature
-    ///         .field("highway")
+    ///         .field(highway_idx)
     ///         .unwrap()
     ///         .unwrap()
     ///         .into_string()
@@ -177,6 +178,7 @@ mod tests {
             .execute_sql(query, None, sql::Dialect::DEFAULT)
             .unwrap()
             .unwrap();
+        let highway_idx = result_set.defn().field_index("highway").unwrap();
 
         let field_names: HashSet<_> = result_set
             .defn()
@@ -194,7 +196,7 @@ mod tests {
 
         for feature in result_set.features() {
             let highway = feature
-                .field("highway")
+                .field(highway_idx)
                 .unwrap()
                 .unwrap()
                 .into_string()
@@ -213,6 +215,7 @@ mod tests {
             .execute_sql(query, Some(&bbox), sql::Dialect::DEFAULT)
             .unwrap()
             .unwrap();
+        let highway_idx = result_set.defn().field_index("highway").unwrap();
 
         assert_eq!(2, result_set.feature_count());
         let mut correct_fids = HashSet::new();
@@ -222,7 +225,7 @@ mod tests {
         let mut fids = HashSet::new();
         for feature in result_set.features() {
             let highway = feature
-                .field("highway")
+                .field(highway_idx)
                 .unwrap()
                 .unwrap()
                 .into_string()
@@ -245,12 +248,13 @@ mod tests {
             .execute_sql(query, Some(&bbox), sql::Dialect::SQLITE)
             .unwrap()
             .unwrap();
+        let highway_idx = result_set.defn().field_index("highway").unwrap();
 
         assert_eq!(1, result_set.feature_count());
         let mut features: Vec<_> = result_set.features().collect();
         let feature = features.pop().unwrap();
         let highway = feature
-            .field("highway")
+            .field(highway_idx)
             .unwrap()
             .unwrap()
             .into_string()

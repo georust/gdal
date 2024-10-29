@@ -1,4 +1,4 @@
-use std::ffi::c_int;
+use std::ffi::{c_int, CString};
 
 use gdal_sys::{
     OGRFeatureDefnH, OGRFieldDefnH, OGRFieldType, OGRGeomFieldDefnH, OGRwkbGeometryType,
@@ -65,6 +65,25 @@ impl Defn {
     /// Get the geometry type of the first geometry field
     pub fn geometry_type(&self) -> OGRwkbGeometryType::Type {
         unsafe { gdal_sys::OGR_FD_GetGeomType(self.c_defn) }
+    }
+
+    /// Get the index of a field.
+    ///
+    /// If the field is missing, returns [`GdalError::InvalidFieldName`].
+    ///
+    pub fn field_index<S: AsRef<str>>(&self, field_name: S) -> Result<usize> {
+        let c_str_field_name = CString::new(field_name.as_ref())?;
+        let field_id =
+            unsafe { gdal_sys::OGR_FD_GetFieldIndex(self.c_defn(), c_str_field_name.as_ptr()) };
+        if field_id == -1 {
+            return Err(GdalError::InvalidFieldName {
+                field_name: field_name.as_ref().to_string(),
+                method_name: "OGR_FD_GetFieldIndex",
+            });
+        }
+
+        let idx = field_id.try_into()?;
+        Ok(idx)
     }
 }
 
