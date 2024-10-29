@@ -13,7 +13,7 @@ use crate::spatial_ref::SpatialRef;
 use crate::utils::{_last_null_pointer_err, _string};
 use crate::vector::defn::Defn;
 use crate::vector::feature::{FeatureIterator, OwnedFeatureIterator};
-use crate::vector::{Envelope, Feature, FieldValue, Geometry, LayerOptions};
+use crate::vector::{Envelope, Feature, Geometry, LayerOptions};
 use crate::{dataset::Dataset, gdal_major_object::MajorObject};
 
 /// Layer capabilities
@@ -318,21 +318,6 @@ pub trait LayerAccess: Sized {
                 method_name: "OGR_L_CreateFeature",
             });
         }
-        Ok(())
-    }
-
-    fn create_feature_fields(
-        &mut self,
-        geometry: Geometry,
-        field_names: &[&str],
-        values: &[FieldValue],
-    ) -> Result<()> {
-        let mut ft = Feature::new(self.defn())?;
-        ft.set_geometry(geometry)?;
-        for (fd, val) in field_names.iter().zip(values.iter()) {
-            ft.set_field(fd, val)?;
-        }
-        ft.create(self)?;
         Ok(())
     }
 
@@ -763,6 +748,7 @@ mod tests {
     use crate::spatial_ref::AxisMappingStrategy;
     use crate::test_utils::{fixture, open_gpkg_for_update, SuppressGDALErrorLog, TempFixture};
     use crate::vector::feature::FeatureIterator;
+    use crate::vector::FieldValue;
     use crate::{assert_almost_eq, Dataset, DriverManager, GdalOpenFlags};
     use gdal_sys::OGRwkbGeometryType;
 
@@ -937,7 +923,8 @@ mod tests {
 
         {
             let feature = layer.features().next().unwrap();
-            assert_eq!(feature.field("id").unwrap(), None);
+            let id_idx = feature.field_index("id").unwrap();
+            assert_eq!(feature.field(id_idx).unwrap(), None);
         }
 
         // convert back to dataset
@@ -971,16 +958,18 @@ mod tests {
     #[test]
     fn test_string_field() {
         with_feature("roads.geojson", 236194095, |feature| {
+            let highway_idx = feature.field_index("highway").unwrap();
             assert_eq!(
-                feature.field("highway").unwrap().unwrap().into_string(),
+                feature.field(highway_idx).unwrap().unwrap().into_string(),
                 Some("footway".to_string())
             );
         });
         with_features("roads.geojson", |features| {
             assert_eq!(
                 features
-                    .filter(|field| {
-                        let highway = field.field("highway").unwrap().unwrap().into_string();
+                    .filter(|feature| {
+                        let highway_idx = feature.field_index("highway").unwrap();
+                        let highway = feature.field(highway_idx).unwrap().unwrap().into_string();
                         highway == Some("residential".to_string())
                     })
                     .count(),
@@ -993,11 +982,13 @@ mod tests {
     fn test_null_field() {
         with_features("null_feature_fields.geojson", |mut features| {
             let feature = features.next().unwrap();
+            let some_int_idx = feature.field_index("some_int").unwrap();
+            let some_string_idx = feature.field_index("some_string").unwrap();
             assert_eq!(
-                feature.field("some_int").unwrap(),
+                feature.field(some_int_idx).unwrap(),
                 Some(FieldValue::IntegerValue(0))
             );
-            assert_eq!(feature.field("some_string").unwrap(), None);
+            assert_eq!(feature.field(some_string_idx).unwrap(), None);
         });
     }
 
@@ -1005,8 +996,9 @@ mod tests {
     fn test_string_list_field() {
         with_features("soundg.json", |mut features| {
             let feature = features.next().unwrap();
+            let a_string_list_idx = feature.field_index("a_string_list").unwrap();
             assert_eq!(
-                feature.field("a_string_list").unwrap().unwrap(),
+                feature.field(a_string_list_idx).unwrap().unwrap(),
                 FieldValue::StringListValue(vec![
                     String::from("a"),
                     String::from("list"),
@@ -1021,13 +1013,14 @@ mod tests {
     fn test_set_string_list_field() {
         with_features("soundg.json", |mut features| {
             let mut feature = features.next().unwrap();
+            let a_string_list_idx = feature.field_index("a_string_list").unwrap();
             let value = FieldValue::StringListValue(vec![
                 String::from("the"),
                 String::from("new"),
                 String::from("strings"),
             ]);
-            feature.set_field("a_string_list", &value).unwrap();
-            assert_eq!(feature.field("a_string_list").unwrap().unwrap(), value);
+            feature.set_field(a_string_list_idx, &value).unwrap();
+            assert_eq!(feature.field(a_string_list_idx).unwrap().unwrap(), value);
         });
     }
 
@@ -1037,50 +1030,36 @@ mod tests {
         with_features("roads.geojson", |mut features| {
             let feature = features.next().unwrap();
 
+            let sort_key_idx = feature.field_index("sort_key").unwrap();
+            let highway_idx = feature.field_index("highway").unwrap();
+            let railway_idx = feature.field_index("railway").unwrap();
+
             assert_eq!(
-                feature.field_as_string_by_name("highway").unwrap(),
+                feature.field_as_string(highway_idx).unwrap(),
                 Some("footway".to_owned())
             );
 
             assert_eq!(
-                feature.field_as_string_by_name("sort_key").unwrap(),
+                feature.field_as_string(sort_key_idx).unwrap(),
                 Some("-9".to_owned())
             );
-            assert_eq!(
-                feature.field_as_integer_by_name("sort_key").unwrap(),
-                Some(-9)
-            );
-            assert_eq!(
-                feature.field_as_integer64_by_name("sort_key").unwrap(),
-                Some(-9)
-            );
-            assert_eq!(
-                feature.field_as_double_by_name("sort_key").unwrap(),
-                Some(-9.)
-            );
+            assert_eq!(feature.field_as_integer(sort_key_idx).unwrap(), Some(-9));
+            assert_eq!(feature.field_as_integer64(sort_key_idx).unwrap(), Some(-9));
+            assert_eq!(feature.field_as_double(sort_key_idx).unwrap(), Some(-9.));
 
             // test failed conversions
-            assert_eq!(
-                feature.field_as_integer_by_name("highway").unwrap(),
-                Some(0)
-            );
-            assert_eq!(
-                feature.field_as_integer64_by_name("highway").unwrap(),
-                Some(0)
-            );
-            assert_eq!(
-                feature.field_as_double_by_name("highway").unwrap(),
-                Some(0.)
-            );
+            assert_eq!(feature.field_as_integer(highway_idx).unwrap(), Some(0));
+            assert_eq!(feature.field_as_integer64(highway_idx).unwrap(), Some(0));
+            assert_eq!(feature.field_as_double(highway_idx).unwrap(), Some(0.));
 
             // test nulls
-            assert_eq!(feature.field_as_string_by_name("railway").unwrap(), None);
-            assert_eq!(feature.field_as_integer_by_name("railway").unwrap(), None);
-            assert_eq!(feature.field_as_integer64_by_name("railway").unwrap(), None);
-            assert_eq!(feature.field_as_double_by_name("railway").unwrap(), None);
+            assert_eq!(feature.field_as_string(railway_idx).unwrap(), None);
+            assert_eq!(feature.field_as_integer(railway_idx).unwrap(), None);
+            assert_eq!(feature.field_as_integer64(railway_idx).unwrap(), None);
+            assert_eq!(feature.field_as_double(railway_idx).unwrap(), None);
 
             assert!(matches!(
-                feature.field_as_string_by_name("not_a_field").unwrap_err(),
+                feature.field_index("not_a_field").unwrap_err(),
                 GdalError::InvalidFieldName {
                     field_name,
                     method_name: "OGR_F_GetFieldIndex",
@@ -1157,13 +1136,11 @@ mod tests {
                 .with_ymd_and_hms(2018, 1, 4, 0, 0, 0)
                 .unwrap();
 
-            assert_eq!(feature.field_as_datetime_by_name("dt").unwrap(), Some(dt));
+            let dt_idx = feature.field_index("dt").unwrap();
+            let d_idx = feature.field_index("d").unwrap();
 
-            assert_eq!(feature.field_as_datetime(0).unwrap(), Some(dt));
-
-            assert_eq!(feature.field_as_datetime_by_name("d").unwrap(), Some(d));
-
-            assert_eq!(feature.field_as_datetime(1).unwrap(), Some(d));
+            assert_eq!(feature.field_as_datetime(dt_idx).unwrap(), Some(dt));
+            assert_eq!(feature.field_as_datetime(d_idx).unwrap(), Some(d));
         });
 
         with_features("roads.geojson", |mut features| {
@@ -1172,13 +1149,12 @@ mod tests {
             let railway_field = 5;
 
             // test null
-            assert_eq!(feature.field_as_datetime_by_name("railway").unwrap(), None);
+            assert_eq!(feature.field_as_datetime(railway_field).unwrap(), None);
             assert_eq!(feature.field_as_datetime(railway_field).unwrap(), None);
 
             // test error
             assert!(matches!(
-                feature
-                    .field_as_datetime_by_name("not_a_field")
+                feature.field_index("not_a_field")
                     .unwrap_err(),
                 GdalError::InvalidFieldName {
                     field_name,
@@ -1199,7 +1175,8 @@ mod tests {
     fn test_field_in_layer() {
         ds_with_layer("three_layer_ds.s3db", "layer_0", |mut layer| {
             let feature = layer.features().next().unwrap();
-            assert_eq!(feature.field("id").unwrap(), None);
+            let id_idx = feature.field_index("id").unwrap();
+            assert_eq!(feature.field(id_idx).unwrap(), None);
         });
     }
 
@@ -1207,8 +1184,9 @@ mod tests {
     fn test_int_list_field() {
         with_features("soundg.json", |mut features| {
             let feature = features.next().unwrap();
+            let an_int_list_idx = feature.field_index("an_int_list").unwrap();
             assert_eq!(
-                feature.field("an_int_list").unwrap().unwrap(),
+                feature.field(an_int_list_idx).unwrap().unwrap(),
                 FieldValue::IntegerListValue(vec![1, 2])
             );
         });
@@ -1219,8 +1197,9 @@ mod tests {
         with_features("soundg.json", |mut features| {
             let mut feature = features.next().unwrap();
             let value = FieldValue::IntegerListValue(vec![3, 4, 5]);
-            feature.set_field("an_int_list", &value).unwrap();
-            assert_eq!(feature.field("an_int_list").unwrap().unwrap(), value);
+            let an_int_list_idx = feature.field_index("an_int_list").unwrap();
+            feature.set_field(an_int_list_idx, &value).unwrap();
+            assert_eq!(feature.field(an_int_list_idx).unwrap().unwrap(), value);
         });
     }
 
@@ -1228,8 +1207,9 @@ mod tests {
     fn test_real_list_field() {
         with_features("soundg.json", |mut features| {
             let feature = features.next().unwrap();
+            let a_real_list_idx = feature.field_index("a_real_list").unwrap();
             assert_eq!(
-                feature.field("a_real_list").unwrap().unwrap(),
+                feature.field(a_real_list_idx).unwrap().unwrap(),
                 FieldValue::RealListValue(vec![0.1, 0.2])
             );
         });
@@ -1239,9 +1219,10 @@ mod tests {
     fn test_set_real_list_field() {
         with_features("soundg.json", |mut features| {
             let mut feature = features.next().unwrap();
+            let a_real_list_idx = feature.field_index("a_real_list").unwrap();
             let value = FieldValue::RealListValue(vec![2.5, 3.0, 4.75]);
-            feature.set_field("a_real_list", &value).unwrap();
-            assert_eq!(feature.field("a_real_list").unwrap().unwrap(), value);
+            feature.set_field(a_real_list_idx, &value).unwrap();
+            assert_eq!(feature.field(a_real_list_idx).unwrap().unwrap(), value);
         });
     }
 
@@ -1249,8 +1230,9 @@ mod tests {
     fn test_long_list_field() {
         with_features("soundg.json", |mut features| {
             let feature = features.next().unwrap();
+            let a_long_list_idx = feature.field_index("a_long_list").unwrap();
             assert_eq!(
-                feature.field("a_long_list").unwrap().unwrap(),
+                feature.field(a_long_list_idx).unwrap().unwrap(),
                 FieldValue::Integer64ListValue(vec![5000000000, 6000000000])
             );
         });
@@ -1260,31 +1242,26 @@ mod tests {
     fn test_set_long_list_field() {
         with_features("soundg.json", |mut features| {
             let mut feature = features.next().unwrap();
+            let a_long_list_idx = feature.field_index("a_long_list").unwrap();
             let value = FieldValue::Integer64ListValue(vec![7000000000, 8000000000]);
-            feature.set_field("a_long_list", &value).unwrap();
-            assert_eq!(feature.field("a_long_list").unwrap().unwrap(), value);
+            feature.set_field(a_long_list_idx, &value).unwrap();
+            assert_eq!(feature.field(a_long_list_idx).unwrap().unwrap(), value);
         });
     }
 
     #[test]
     fn test_float_field() {
         with_feature("roads.geojson", 236194095, |feature| {
+            let sort_key_idx = feature.field_index("sort_key").unwrap();
             assert_almost_eq(
                 feature
-                    .field("sort_key")
+                    .field(sort_key_idx)
                     .unwrap()
                     .unwrap()
                     .into_real()
                     .unwrap(),
                 -9.0,
             );
-        });
-    }
-
-    #[test]
-    fn test_missing_field() {
-        with_feature("roads.geojson", 236194095, |feature| {
-            assert!(feature.field("no such field").is_err());
         });
     }
 
@@ -1344,33 +1321,33 @@ mod tests {
     }
 
     #[test]
-    fn test_write_features() {
+    fn test_write_features() -> Result<()> {
         use std::fs;
+
+        let name_idx = 0;
+        let value_idx = 1;
+        let int_value_idx = 2;
 
         {
             let driver = DriverManager::get_driver_by_name("GeoJSON").unwrap();
             let mut ds = driver
                 .create_vector_only(fixture("output.geojson"))
                 .unwrap();
-            let mut layer = ds.create_layer(Default::default()).unwrap();
-            layer
-                .create_defn_fields(&[
-                    ("Name", OGRFieldType::OFTString),
-                    ("Value", OGRFieldType::OFTReal),
-                    ("Int_value", OGRFieldType::OFTInteger),
-                ])
-                .unwrap();
-            layer
-                .create_feature_fields(
-                    Geometry::from_wkt("POINT (1 2)").unwrap(),
-                    &["Name", "Value", "Int_value"],
-                    &[
-                        FieldValue::StringValue("Feature 1".to_string()),
-                        FieldValue::RealValue(45.78),
-                        FieldValue::IntegerValue(1),
-                    ],
-                )
-                .unwrap();
+            let layer = ds.create_layer(Default::default()).unwrap();
+            layer.create_defn_fields(&[
+                ("Name", OGRFieldType::OFTString),
+                ("Value", OGRFieldType::OFTReal),
+                ("Int_value", OGRFieldType::OFTInteger),
+            ])?;
+
+            let mut feature = Feature::new(layer.defn())?;
+            let geometry = Geometry::from_wkt("POINT (1 2)")?;
+            feature.set_geometry(geometry)?;
+            feature.set_field_string(name_idx, "Feature 1")?;
+            feature.set_field_double(value_idx, 45.78)?;
+            feature.set_field_integer(int_value_idx, 1)?;
+            feature.create(&layer)?;
+
             // dataset is closed here
         }
 
@@ -1384,13 +1361,21 @@ mod tests {
             let ft = layer.features().next().unwrap();
             assert_eq!(ft.geometry().unwrap().wkt().unwrap(), "POINT (1 2)");
             assert_eq!(
-                ft.field("Name").unwrap().unwrap().into_string(),
+                ft.field(name_idx).unwrap().unwrap().into_string(),
                 Some("Feature 1".to_string())
             );
-            assert_eq!(ft.field("Value").unwrap().unwrap().into_real(), Some(45.78));
-            assert_eq!(ft.field("Int_value").unwrap().unwrap().into_int(), Some(1));
+            assert_eq!(
+                ft.field(value_idx).unwrap().unwrap().into_real(),
+                Some(45.78)
+            );
+            assert_eq!(
+                ft.field(int_value_idx).unwrap().unwrap().into_int(),
+                Some(1)
+            );
         }
         fs::remove_file(fixture("output.geojson")).unwrap();
+
+        Ok(())
     }
 
     #[test]
@@ -1414,12 +1399,13 @@ mod tests {
             layer.set_attribute_filter("highway = 'primary'").unwrap();
 
             assert_eq!(layer.features().count(), 1);
+            let highway_idx = layer.defn().field_index("highway").unwrap();
             assert_eq!(
                 layer
                     .features()
                     .next()
                     .unwrap()
-                    .field_as_string_by_name("highway")
+                    .field_as_string(highway_idx)
                     .unwrap()
                     .unwrap(),
                 "primary"
@@ -1456,15 +1442,21 @@ mod tests {
         let mut layer = ds.layer(0).unwrap();
         let fids: Vec<u64> = layer.features().map(|f| f.fid().unwrap()).collect();
         let mut feature = layer.feature(fids[0]).unwrap();
+        let id_index = feature.field_index("id").unwrap();
         // to original value of the id field in fid 0 is null; we will set it to 1.
-        feature.set_field_integer("id", 1).ok();
+        feature.set_field_integer(id_index, 1).ok();
         layer.set_feature(feature).ok();
 
         // now we check that the field is 1.
         let ds = Dataset::open(&tmp_file).unwrap();
         let layer = ds.layer(0).unwrap();
         let feature = layer.feature(fids[0]).unwrap();
-        let value = feature.field("id").unwrap().unwrap().into_int().unwrap();
+        let value = feature
+            .field(id_index)
+            .unwrap()
+            .unwrap()
+            .into_int()
+            .unwrap();
         assert_eq!(value, 1);
     }
     #[test]

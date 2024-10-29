@@ -9,6 +9,11 @@
   - Include OS-specific versions of the pre-built bindings ([#574](https://github.com/georust/gdal/pull/574))
   - Upgrade `ndarray` dependency to 0.16 ([#569](https://github.com/georust/gdal/pull/569))
   - Upgrade `thiserror` dependency to 2.0 ([#586](https://github.com/georust/gdal/pull/586))
+  - Update `Feature::field`, `Feature::set_field`, `Feature::set_field_string`, `Feature::set_field_string_list`, `Feature::set_field_double`, `Feature::set_field_double_list`, `Feature::set_field_integer`, `Feature::set_field_integer_list`, `Feature::set_field_integer64`, `Feature::set_field_integer64_list`, `Feature::set_field_datetime`, `Feature::set_field_null`, `Feature::unset_field` to take a field index, not a name ([#581](https://github.com/georust/gdal/pull/581))
+  - Drop `Feature::field_as_integer_by_name`, `Feature::field_as_integer64_by_name`, `Feature::field_as_double_by_name`, `Feature::field_as_string_by_name`, `Feature::field_as_datetime_by_name` ([#581](https://github.com/georust/gdal/pull/581))
+  - Update `Feature::field_count` to return `usize` instead of `i32` ([#581](https://github.com/georust/gdal/pull/581))
+  - Update `Feature::field_as_integer`, `Feature::field_as_integer64`, `Feature::field_as_double`, `Feature::field_as_string`, `Feature::field_as_datetime` to take the field index as `usize` instead of `i32` ([#581](https://github.com/georust/gdal/pull/581))
+  - Drop `LayerAccess::create_feature_fields` ([#581](https://github.com/georust/gdal/pull/581))
 
 ### Added
 
@@ -17,6 +22,7 @@
   - Add pre-built bindings for GDAL 3.10 ([#573](https://github.com/georust/gdal/pull/573))
   - Add methods `alternative_name`, `is_nullable`, `is_unique`, `default_value` to `Field` ([#561](https://github.com/georust/gdal/pull/561))
   - Add `Defn::geometry_type` ([#562](https://github.com/georust/gdal/pull/562))
+  - Add `Defn::field_index` and `Feature::field_index` ([#581](https://github.com/georust/gdal/pull/581))
 
 ### Fixed
 
