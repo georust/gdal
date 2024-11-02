@@ -181,9 +181,9 @@ impl Dataset {
 
 /// Represents maybe a transaction on a dataset for speed reasons.
 ///
-/// It can be committed by calling [`commit`](MaybeTransaction::commit), but unline [`Transaction`] it can not be rolled back. The transaction part is to make the process speedy when possible. If the [`Dataset`] does not support transaction, it does nothing.
+/// It can be committed by calling [`commit`](MaybeTransaction::commit), but unlike [`Transaction`] it can not be rolled back. The transaction part is to make the process speedy when possible. If the [`Dataset`] does not support transaction, it does nothing.
 ///
-/// If the transaction is not explicitly committed when it is dropped, it is implicitely committed, but you will not know if it fails.
+/// If the transaction is not explicitly committed when it is dropped, it is implicitly committed, but you will not know if it fails.
 ///
 /// The transaction holds a mutable borrow on the `Dataset` that it was created from, so during the
 /// lifetime of the transaction you will need to access the dataset by dereferencing the
