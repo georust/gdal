@@ -10,6 +10,7 @@
 
 ### Added
 
+  - Add `Dataset::delete_layer` ([#583](https://github.com/georust/gdal/pull/583))
   - Add a `bundled` feature for `gdal-sys` for building and statically linking a minimal bundled version of GDAL ([#517](https://github.com/georust/gdal/pull/517))
   - Add pre-built bindings for GDAL 3.10 ([#573](https://github.com/georust/gdal/pull/573))
   - Add methods `alternative_name`, `is_nullable`, `is_unique`, `default_value` to `Field` ([#561](https://github.com/georust/gdal/pull/561))
