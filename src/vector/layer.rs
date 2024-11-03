@@ -743,7 +743,7 @@ impl Dataset {
     pub fn delete_layer(&mut self, idx: usize) -> Result<()> {
         let idx = c_int::try_from(idx)?;
         let err = unsafe { gdal_sys::GDALDatasetDeleteLayer(self.c_dataset(), idx) };
-        if err != gdal_sys::OGRErr::OGRERR_NONE {
+        if err != OGRErr::OGRERR_NONE {
             Err(GdalError::OgrError {
                 err,
                 method_name: "GDALDatasetDeleteLayer",
