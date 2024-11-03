@@ -728,6 +728,30 @@ impl Dataset {
         };
         Ok(self.child_layer(c_layer))
     }
+
+    /// Deletes the layer at given index
+    ///
+    /// ```
+    /// # use gdal::DriverManager;
+    /// # let driver = DriverManager::get_driver_by_name("GPKG").unwrap();
+    /// # let mut dataset = driver.create_vector_only("/vsimem/example.gpkg").unwrap();
+    /// let blank_layer = dataset.create_layer(Default::default()).unwrap();
+    /// assert!(dataset.delete_layer(1).is_err());
+    /// dataset.delete_layer(0).unwrap();
+    /// assert_eq!(dataset.layers().count(), 0);
+    /// ```
+    pub fn delete_layer(&mut self, idx: usize) -> Result<()> {
+        let idx = c_int::try_from(idx)?;
+        let err = unsafe { gdal_sys::GDALDatasetDeleteLayer(self.c_dataset(), idx) };
+        if err != OGRErr::OGRERR_NONE {
+            Err(GdalError::OgrError {
+                err,
+                method_name: "GDALDatasetDeleteLayer",
+            })
+        } else {
+            Ok(())
+        }
+    }
 }
 
 #[cfg(test)]
