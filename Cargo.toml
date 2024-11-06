@@ -18,7 +18,7 @@ bindgen = ["gdal-sys/bindgen"]
 array = ["ndarray"]
 
 [dependencies]
-thiserror = "1.0"
+thiserror = "2.0"
 geo-types = { version = "0.7.11" }
 gdal-sys = { path = "gdal-sys", version = "0.10" }
 gdal-src = { path = "gdal-src", optional = true, default-features = false }
