@@ -6,6 +6,7 @@
 
   - Drop support for GDAL <3.4 ([#578](https://github.com/georust/gdal/pull/578))
   - Regenerate the pre-built bindings with `std::ffi` instead of `libc` for C types ([#573](https://github.com/georust/gdal/pull/573))
+  - Include OS-specific versions of the pre-built bindings ([#574](https://github.com/georust/gdal/pull/574))
   - Upgrade `ndarray` dependency to 0.16 ([#569](https://github.com/georust/gdal/pull/569))
   - Upgrade `thiserror` dependency to 2.0 ([#586](https://github.com/georust/gdal/pull/586))
 

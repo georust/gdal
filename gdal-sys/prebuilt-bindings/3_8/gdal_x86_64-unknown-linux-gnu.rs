@@ -161,35 +161,23 @@ const _: () = {
     ["Offset of field: tm::tm_gmtoff"][::std::mem::offset_of!(tm, tm_gmtoff) - 40usize];
     ["Offset of field: tm::tm_zone"][::std::mem::offset_of!(tm, tm_zone) - 48usize];
 };
-#[doc = " Int32 type"]
 pub type GInt32 = ::std::ffi::c_int;
-#[doc = " Unsigned int32 type"]
 pub type GUInt32 = ::std::ffi::c_uint;
-#[doc = " Int16 type"]
 pub type GInt16 = ::std::ffi::c_short;
-#[doc = " Unsigned byte type"]
 pub type GByte = ::std::ffi::c_uchar;
-#[doc = " Large signed integer type (generally 64-bit integer type).\n  Use GInt64 when exactly 64 bit is needed"]
 pub type GIntBig = ::std::ffi::c_longlong;
-#[doc = " Large unsigned integer type (generally 64-bit unsigned integer type).\n  Use GUInt64 when exactly 64 bit is needed"]
 pub type GUIntBig = ::std::ffi::c_ulonglong;
-#[doc = " Signed 64 bit integer type"]
 pub type GInt64 = GIntBig;
-#[doc = " Unsigned 64 bit integer type"]
 pub type GUInt64 = GUIntBig;
-#[doc = " Integer type large enough to hold the difference between 2 addresses"]
 pub type GPtrDiff_t = GIntBig;
-#[doc = " Type of a constant null-terminated list of nul terminated strings.\n Seen as char** from C and const char* const* from C++"]
 pub type CSLConstList = *mut *mut ::std::ffi::c_char;
 extern "C" {
-    #[doc = " Add a value to a pointed integer in a thread and SMP-safe way\n and return the resulting value of the operation.\n\n This function, which in most cases is implemented by a few\n efficient machine instructions, guarantees that the value pointed\n by ptr will be incremented in a thread and SMP-safe way.\n The variables for this function must be aligned on a 32-bit boundary.\n\n Depending on the platforms, this function can also act as a\n memory barrier, but this should not be assumed.\n\n Current platforms/architectures where an efficient implementation\n exists are MacOSX, MS Windows, i386/x86_64 with GCC and platforms\n supported by GCC 4.1 or higher. For other platforms supporting\n the pthread library, and when GDAL is configured with thread-support,\n the atomicity will be done with a mutex, but with\n reduced efficiency. For the remaining platforms, a simple addition\n with no locking will be done...\n\n @param ptr a pointer to an integer to increment\n @param increment the amount to add to the pointed integer\n @return the pointed value AFTER the result of the addition"]
     pub fn CPLAtomicAdd(
         ptr: *mut ::std::ffi::c_int,
         increment: ::std::ffi::c_int,
     ) -> ::std::ffi::c_int;
 }
 extern "C" {
-    #[doc = " Compares *ptr with oldval. If *ptr == oldval, then *ptr is assigned\n newval and TRUE is returned. Otherwise nothing is done, and FALSE is\n returned.\n\n Current platforms/architectures where an efficient implementation\n exists are MacOSX, MS Windows, i386/x86_64 with GCC and platforms\n supported by GCC 4.1 or higher. For other platforms supporting\n the pthread library, and when GDAL is configured with thread-support,\n the atomicity will be done with a mutex, but with\n reduced efficiency. For the remaining platforms, a simple compare and\n exchange with no locking will be done...\n\n @param ptr a pointer to an integer (aligned on 32bit boundary).\n @param oldval old value\n @param newval new value\n @return TRUE if the exchange has been done"]
     pub fn CPLAtomicCompareAndExchange(
         ptr: *mut ::std::ffi::c_int,
         oldval: ::std::ffi::c_int,
@@ -276,7 +264,6 @@ const _: () = {
         [::std::mem::offset_of!(stat, __glibc_reserved) - 120usize];
 };
 extern "C" {
-    #[doc = " @cond Doxygen_Suppress"]
     pub fn VSIFOpen(arg1: *const ::std::ffi::c_char, arg2: *const ::std::ffi::c_char) -> *mut FILE;
 }
 extern "C" {
@@ -339,19 +326,16 @@ extern "C" {
 extern "C" {
     pub fn VSIFEof(arg1: *mut FILE) -> ::std::ffi::c_int;
 }
-#[doc = " @cond Doxygen_Suppress"]
 pub type VSIStatBuf = stat;
 extern "C" {
     pub fn VSIStat(arg1: *const ::std::ffi::c_char, arg2: *mut VSIStatBuf) -> ::std::ffi::c_int;
 }
-#[doc = " Type for a file offset"]
 pub type vsi_l_offset = GUIntBig;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct VSIVirtualHandle {
     _unused: [u8; 0],
 }
-#[doc = " Opaque type for a FILE that implements the VSIVirtualHandle API"]
 pub type VSILFILE = VSIVirtualHandle;
 extern "C" {
     pub fn VSIFOpenL(
@@ -435,13 +419,9 @@ extern "C" {
     pub fn VSIFPutcL(arg1: ::std::ffi::c_int, arg2: *mut VSILFILE) -> ::std::ffi::c_int;
 }
 pub mod VSIRangeStatus {
-    #[doc = " Range status"]
     pub type Type = ::std::ffi::c_uint;
-    #[doc = "< Unknown"]
     pub const VSI_RANGE_STATUS_UNKNOWN: Type = 0;
-    #[doc = "< Data present"]
     pub const VSI_RANGE_STATUS_DATA: Type = 1;
-    #[doc = "< Hole"]
     pub const VSI_RANGE_STATUS_HOLE: Type = 2;
 }
 extern "C" {
@@ -471,7 +451,6 @@ extern "C" {
 pub struct stat64 {
     _unused: [u8; 0],
 }
-#[doc = " Type for VSIStatL()"]
 pub type VSIStatBufL = stat64;
 extern "C" {
     pub fn VSIStatL(arg1: *const ::std::ffi::c_char, arg2: *mut VSIStatBufL) -> ::std::ffi::c_int;
@@ -491,6 +470,9 @@ extern "C" {
 }
 extern "C" {
     pub fn VSIIsLocal(pszPath: *const ::std::ffi::c_char) -> bool;
+}
+extern "C" {
+    pub fn VSIGetCanonicalFilename(pszPath: *const ::std::ffi::c_char) -> *mut ::std::ffi::c_char;
 }
 extern "C" {
     pub fn VSISupportsSequentialWrite(
@@ -608,15 +590,12 @@ extern "C" {
     ) -> *mut ::std::ffi::c_void;
 }
 extern "C" {
-    #[doc = "VSIMalloc2 allocates (nSize1 * nSize2) bytes.\nIn case of overflow of the multiplication, or if memory allocation fails, a\nNULL pointer is returned and a CE_Failure error is raised with CPLError().\nIf nSize1 == 0 || nSize2 == 0, a NULL pointer will also be returned.\nCPLFree() or VSIFree() can be used to free memory allocated by this function."]
     pub fn VSIMalloc2(nSize1: usize, nSize2: usize) -> *mut ::std::ffi::c_void;
 }
 extern "C" {
-    #[doc = "VSIMalloc3 allocates (nSize1 * nSize2 * nSize3) bytes.\nIn case of overflow of the multiplication, or if memory allocation fails, a\nNULL pointer is returned and a CE_Failure error is raised with CPLError().\nIf nSize1 == 0 || nSize2 == 0 || nSize3 == 0, a NULL pointer will also be\nreturned. CPLFree() or VSIFree() can be used to free memory allocated by this\nfunction."]
     pub fn VSIMalloc3(nSize1: usize, nSize2: usize, nSize3: usize) -> *mut ::std::ffi::c_void;
 }
 extern "C" {
-    #[doc = " VSIMallocVerbose"]
     pub fn VSIMallocVerbose(
         nSize: usize,
         pszFile: *const ::std::ffi::c_char,
@@ -624,7 +603,6 @@ extern "C" {
     ) -> *mut ::std::ffi::c_void;
 }
 extern "C" {
-    #[doc = " VSIMalloc2Verbose"]
     pub fn VSIMalloc2Verbose(
         nSize1: usize,
         nSize2: usize,
@@ -633,7 +611,6 @@ extern "C" {
     ) -> *mut ::std::ffi::c_void;
 }
 extern "C" {
-    #[doc = " VSIMalloc3Verbose"]
     pub fn VSIMalloc3Verbose(
         nSize1: usize,
         nSize2: usize,
@@ -643,7 +620,6 @@ extern "C" {
     ) -> *mut ::std::ffi::c_void;
 }
 extern "C" {
-    #[doc = " VSICallocVerbose"]
     pub fn VSICallocVerbose(
         nCount: usize,
         nSize: usize,
@@ -652,7 +628,6 @@ extern "C" {
     ) -> *mut ::std::ffi::c_void;
 }
 extern "C" {
-    #[doc = " VSIReallocVerbose"]
     pub fn VSIReallocVerbose(
         pOldPtr: *mut ::std::ffi::c_void,
         nNewSize: usize,
@@ -661,7 +636,6 @@ extern "C" {
     ) -> *mut ::std::ffi::c_void;
 }
 extern "C" {
-    #[doc = " VSIStrdupVerbose"]
     pub fn VSIStrdupVerbose(
         pszStr: *const ::std::ffi::c_char,
         pszFile: *const ::std::ffi::c_char,
@@ -701,25 +675,16 @@ extern "C" {
         papszOptions: *const *const ::std::ffi::c_char,
     ) -> *mut VSIDIR;
 }
-#[doc = " Directory entry."]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct VSIDIREntry {
-    #[doc = " Filename"]
     pub pszName: *mut ::std::ffi::c_char,
-    #[doc = " File mode. See VSI_ISREG() / VSI_ISDIR()"]
     pub nMode: ::std::ffi::c_int,
-    #[doc = " File size"]
     pub nSize: vsi_l_offset,
-    #[doc = " Last modification time (seconds since 1970/01/01)"]
     pub nMTime: GIntBig,
-    #[doc = " Whether nMode is known: 0 = unknown, 1 = known."]
     pub bModeKnown: ::std::ffi::c_char,
-    #[doc = " Whether nSize is known: 0 = unknown, 1 = known."]
     pub bSizeKnown: ::std::ffi::c_char,
-    #[doc = " Whether nMTime is known: 0 = unknown, 1 = known."]
     pub bMTimeKnown: ::std::ffi::c_char,
-    #[doc = " NULL-terminated list of extra properties."]
     pub papszExtra: *mut *mut ::std::ffi::c_char,
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
@@ -818,11 +783,9 @@ extern "C" {
     pub fn VSIInstallMemFileHandler();
 }
 extern "C" {
-    #[doc = " @cond Doxygen_Suppress"]
     pub fn VSIInstallLargeFileHandler();
 }
 extern "C" {
-    #[doc = " @endcond"]
     pub fn VSIInstallSubFileHandler();
 }
 extern "C" {
@@ -901,17 +864,18 @@ extern "C" {
     pub fn VSIInstallTarFileHandler();
 }
 extern "C" {
+    pub fn VSIInstallCachedFileHandler();
+}
+extern "C" {
     pub fn VSIInstallCryptFileHandler();
 }
 extern "C" {
     pub fn VSISetCryptKey(pabyKey: *const GByte, nKeySize: ::std::ffi::c_int);
 }
 extern "C" {
-    #[doc = " @cond Doxygen_Suppress"]
     pub fn VSICleanupFileManager();
 }
 extern "C" {
-    #[doc = " @endcond"]
     pub fn VSIDuplicateFileSystemHandler(
         pszSourceFSName: *const ::std::ffi::c_char,
         pszNewFSName: *const ::std::ffi::c_char,
@@ -932,7 +896,6 @@ extern "C" {
         bUnlinkAndSeize: ::std::ffi::c_int,
     ) -> *mut GByte;
 }
-#[doc = " Callback used by VSIStdoutSetRedirection()"]
 pub type VSIWriteFunction = ::std::option::Option<
     unsafe extern "C" fn(
         ptr: *const ::std::ffi::c_void,
@@ -944,7 +907,6 @@ pub type VSIWriteFunction = ::std::option::Option<
 extern "C" {
     pub fn VSIStdoutSetRedirection(pFct: VSIWriteFunction, stream: *mut FILE);
 }
-#[doc = " Return information about a handle. Optional (driver dependent)\n @since GDAL 3.0"]
 pub type VSIFilesystemPluginStatCallback = ::std::option::Option<
     unsafe extern "C" fn(
         pUserData: *mut ::std::ffi::c_void,
@@ -953,14 +915,12 @@ pub type VSIFilesystemPluginStatCallback = ::std::option::Option<
         nFlags: ::std::ffi::c_int,
     ) -> ::std::ffi::c_int,
 >;
-#[doc = " Remove handle by name. Optional\n @since GDAL 3.0"]
 pub type VSIFilesystemPluginUnlinkCallback = ::std::option::Option<
     unsafe extern "C" fn(
         pUserData: *mut ::std::ffi::c_void,
         pszFilename: *const ::std::ffi::c_char,
     ) -> ::std::ffi::c_int,
 >;
-#[doc = " Rename handle. Optional\n @since GDAL 3.0"]
 pub type VSIFilesystemPluginRenameCallback = ::std::option::Option<
     unsafe extern "C" fn(
         pUserData: *mut ::std::ffi::c_void,
@@ -968,7 +928,6 @@ pub type VSIFilesystemPluginRenameCallback = ::std::option::Option<
         newpath: *const ::std::ffi::c_char,
     ) -> ::std::ffi::c_int,
 >;
-#[doc = " Create Directory. Optional\n @since GDAL 3.0"]
 pub type VSIFilesystemPluginMkdirCallback = ::std::option::Option<
     unsafe extern "C" fn(
         pUserData: *mut ::std::ffi::c_void,
@@ -976,14 +935,12 @@ pub type VSIFilesystemPluginMkdirCallback = ::std::option::Option<
         nMode: ::std::ffi::c_long,
     ) -> ::std::ffi::c_int,
 >;
-#[doc = "  Delete Directory. Optional\n @since GDAL 3.0"]
 pub type VSIFilesystemPluginRmdirCallback = ::std::option::Option<
     unsafe extern "C" fn(
         pUserData: *mut ::std::ffi::c_void,
         pszDirname: *const ::std::ffi::c_char,
     ) -> ::std::ffi::c_int,
 >;
-#[doc = " List directory content. Optional\n @since GDAL 3.0"]
 pub type VSIFilesystemPluginReadDirCallback = ::std::option::Option<
     unsafe extern "C" fn(
         pUserData: *mut ::std::ffi::c_void,
@@ -991,14 +948,12 @@ pub type VSIFilesystemPluginReadDirCallback = ::std::option::Option<
         nMaxFiles: ::std::ffi::c_int,
     ) -> *mut *mut ::std::ffi::c_char,
 >;
-#[doc = " List related files. Must return NULL if unknown, or a list of relative\n filenames that can be opened along the main file. If no other file than\n pszFilename needs to be opened, return static_cast<char**>\n (CPLCalloc(1,sizeof(char*)));\n\n Optional\n @since GDAL 3.2"]
 pub type VSIFilesystemPluginSiblingFilesCallback = ::std::option::Option<
     unsafe extern "C" fn(
         pUserData: *mut ::std::ffi::c_void,
         pszDirname: *const ::std::ffi::c_char,
     ) -> *mut *mut ::std::ffi::c_char,
 >;
-#[doc = " Open a handle. Mandatory. Returns an opaque pointer that will be used in\n subsequent file I/O calls. Should return null and/or set errno if the handle\n does not exist or the access mode is incorrect.\n @since GDAL 3.0"]
 pub type VSIFilesystemPluginOpenCallback = ::std::option::Option<
     unsafe extern "C" fn(
         pUserData: *mut ::std::ffi::c_void,
@@ -1006,10 +961,8 @@ pub type VSIFilesystemPluginOpenCallback = ::std::option::Option<
         pszAccess: *const ::std::ffi::c_char,
     ) -> *mut ::std::ffi::c_void,
 >;
-#[doc = " Return current position in handle. Mandatory\n @since GDAL 3.0"]
 pub type VSIFilesystemPluginTellCallback =
     ::std::option::Option<unsafe extern "C" fn(pFile: *mut ::std::ffi::c_void) -> vsi_l_offset>;
-#[doc = " Seek to position in handle. Mandatory except for write only handles\n @since GDAL 3.0"]
 pub type VSIFilesystemPluginSeekCallback = ::std::option::Option<
     unsafe extern "C" fn(
         pFile: *mut ::std::ffi::c_void,
@@ -1017,7 +970,6 @@ pub type VSIFilesystemPluginSeekCallback = ::std::option::Option<
         nWhence: ::std::ffi::c_int,
     ) -> ::std::ffi::c_int,
 >;
-#[doc = " Read data from current position, returns the number of blocks correctly read.\n Mandatory except for write only handles\n @since GDAL 3.0"]
 pub type VSIFilesystemPluginReadCallback = ::std::option::Option<
     unsafe extern "C" fn(
         pFile: *mut ::std::ffi::c_void,
@@ -1026,7 +978,6 @@ pub type VSIFilesystemPluginReadCallback = ::std::option::Option<
         nCount: usize,
     ) -> usize,
 >;
-#[doc = " Read from multiple offsets. Optional, will be replaced by multiple calls to\n Read() if not provided\n @since GDAL 3.0"]
 pub type VSIFilesystemPluginReadMultiRangeCallback = ::std::option::Option<
     unsafe extern "C" fn(
         pFile: *mut ::std::ffi::c_void,
@@ -1036,7 +987,6 @@ pub type VSIFilesystemPluginReadMultiRangeCallback = ::std::option::Option<
         panSizes: *const usize,
     ) -> ::std::ffi::c_int,
 >;
-#[doc = " Get empty ranges. Optional\n @since GDAL 3.0"]
 pub type VSIFilesystemPluginGetRangeStatusCallback = ::std::option::Option<
     unsafe extern "C" fn(
         pFile: *mut ::std::ffi::c_void,
@@ -1044,11 +994,9 @@ pub type VSIFilesystemPluginGetRangeStatusCallback = ::std::option::Option<
         nLength: vsi_l_offset,
     ) -> VSIRangeStatus::Type,
 >;
-#[doc = " Has end of file been reached. Mandatory? for read handles.\n @since GDAL 3.0"]
 pub type VSIFilesystemPluginEofCallback = ::std::option::Option<
     unsafe extern "C" fn(pFile: *mut ::std::ffi::c_void) -> ::std::ffi::c_int,
 >;
-#[doc = " Write bytes at current offset. Mandatory for writable handles\n @since GDAL 3.0"]
 pub type VSIFilesystemPluginWriteCallback = ::std::option::Option<
     unsafe extern "C" fn(
         pFile: *mut ::std::ffi::c_void,
@@ -1057,22 +1005,18 @@ pub type VSIFilesystemPluginWriteCallback = ::std::option::Option<
         nCount: usize,
     ) -> usize,
 >;
-#[doc = " Sync written bytes. Optional\n @since GDAL 3.0"]
 pub type VSIFilesystemPluginFlushCallback = ::std::option::Option<
     unsafe extern "C" fn(pFile: *mut ::std::ffi::c_void) -> ::std::ffi::c_int,
 >;
-#[doc = " Truncate handle. Mandatory (driver dependent?) for write handles"]
 pub type VSIFilesystemPluginTruncateCallback = ::std::option::Option<
     unsafe extern "C" fn(
         pFile: *mut ::std::ffi::c_void,
         nNewSize: vsi_l_offset,
     ) -> ::std::ffi::c_int,
 >;
-#[doc = " Close file handle. Optional\n @since GDAL 3.0"]
 pub type VSIFilesystemPluginCloseCallback = ::std::option::Option<
     unsafe extern "C" fn(pFile: *mut ::std::ffi::c_void) -> ::std::ffi::c_int,
 >;
-#[doc = " This optional method is called when code plans to access soon one or several\n ranges in a file. Some file systems may be able to use this hint to\n for example asynchronously start such requests.\n\n Offsets may be given in a non-increasing order, and may potentially\n overlap.\n\n @param pFile File handle.\n @param nRanges Size of the panOffsets and panSizes arrays.\n @param panOffsets Array containing the start offset of each range.\n @param panSizes Array containing the size (in bytes) of each range.\n @since GDAL 3.7"]
 pub type VSIFilesystemPluginAdviseReadCallback = ::std::option::Option<
     unsafe extern "C" fn(
         pFile: *mut ::std::ffi::c_void,
@@ -1081,53 +1025,30 @@ pub type VSIFilesystemPluginAdviseReadCallback = ::std::option::Option<
         panSizes: *const usize,
     ),
 >;
-#[doc = " struct containing callbacks to used by the handler.\n (rw), (r), (w) or () at the end indicate whether the given callback is\n mandatory for reading and or writing handlers. A (?) indicates that the\n callback might be mandatory for certain drivers only.\n @since GDAL 3.0"]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct VSIFilesystemPluginCallbacksStruct {
-    #[doc = " Optional opaque pointer passed back to filemanager callbacks (e.g. open,\n stat, rmdir)"]
     pub pUserData: *mut ::std::ffi::c_void,
-    #[doc = "< stat handle by name (rw)"]
     pub stat: VSIFilesystemPluginStatCallback,
-    #[doc = "< unlink handle by name ()"]
     pub unlink: VSIFilesystemPluginUnlinkCallback,
-    #[doc = "< rename handle ()"]
     pub rename: VSIFilesystemPluginRenameCallback,
-    #[doc = "< make directory ()"]
     pub mkdir: VSIFilesystemPluginMkdirCallback,
-    #[doc = "< remove directory ()"]
     pub rmdir: VSIFilesystemPluginRmdirCallback,
-    #[doc = "< list directory content (r?)"]
     pub read_dir: VSIFilesystemPluginReadDirCallback,
-    #[doc = "< open handle by name (rw)"]
     pub open: VSIFilesystemPluginOpenCallback,
-    #[doc = "< get current position of handle (rw)"]
     pub tell: VSIFilesystemPluginTellCallback,
-    #[doc = "< set current position of handle (rw)"]
     pub seek: VSIFilesystemPluginSeekCallback,
-    #[doc = "< read from current position (r)"]
     pub read: VSIFilesystemPluginReadCallback,
-    #[doc = "< read multiple blocks ()"]
     pub read_multi_range: VSIFilesystemPluginReadMultiRangeCallback,
-    #[doc = "< get range status ()"]
     pub get_range_status: VSIFilesystemPluginGetRangeStatusCallback,
-    #[doc = "< has end of file been reached (r?)"]
     pub eof: VSIFilesystemPluginEofCallback,
-    #[doc = "< write bytes to current position (w)"]
     pub write: VSIFilesystemPluginWriteCallback,
-    #[doc = "< sync bytes (w)"]
     pub flush: VSIFilesystemPluginFlushCallback,
-    #[doc = "< truncate handle (w?)"]
     pub truncate: VSIFilesystemPluginTruncateCallback,
-    #[doc = "< close handle  (rw)"]
     pub close: VSIFilesystemPluginCloseCallback,
-    #[doc = "< buffer small reads (makes handler read only)"]
     pub nBufferSize: usize,
-    #[doc = "< max mem to use per file when buffering"]
     pub nCacheSize: usize,
-    #[doc = "< list related files"]
     pub sibling_files: VSIFilesystemPluginSiblingFilesCallback,
-    #[doc = "< AdviseRead()"]
     pub advise_read: VSIFilesystemPluginAdviseReadCallback,
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
@@ -1182,22 +1103,18 @@ const _: () = {
         [::std::mem::offset_of!(VSIFilesystemPluginCallbacksStruct, advise_read) - 168usize];
 };
 extern "C" {
-    #[doc = " return a VSIFilesystemPluginCallbacksStruct to be populated at runtime with\n handler callbacks\n @since GDAL 3.0"]
     pub fn VSIAllocFilesystemPluginCallbacksStruct() -> *mut VSIFilesystemPluginCallbacksStruct;
 }
 extern "C" {
-    #[doc = " free resources allocated by VSIAllocFilesystemPluginCallbacksStruct\n @since GDAL 3.0"]
     pub fn VSIFreeFilesystemPluginCallbacksStruct(poCb: *mut VSIFilesystemPluginCallbacksStruct);
 }
 extern "C" {
-    #[doc = " register a handler on the given prefix. All IO on datasets opened with the\n filename /prefix/xxxxxx will go through these callbacks. pszPrefix must begin\n and end with a '/'\n @since GDAL 3.0"]
     pub fn VSIInstallPluginHandler(
         pszPrefix: *const ::std::ffi::c_char,
         poCb: *const VSIFilesystemPluginCallbacksStruct,
     ) -> ::std::ffi::c_int;
 }
 extern "C" {
-    #[doc = " @cond Doxygen_Suppress"]
     pub fn VSITime(arg1: *mut ::std::ffi::c_ulong) -> ::std::ffi::c_ulong;
 }
 extern "C" {
@@ -1210,7 +1127,6 @@ extern "C" {
     pub fn VSILocalTime(pnTime: *const time_t, poBrokenTime: *mut tm) -> *mut tm;
 }
 pub mod CPLErr {
-    #[doc = " Error category"]
     pub type Type = ::std::ffi::c_uint;
     pub const CE_None: Type = 0;
     pub const CE_Debug: Type = 1;
@@ -1218,7 +1134,6 @@ pub mod CPLErr {
     pub const CE_Failure: Type = 3;
     pub const CE_Fatal: Type = 4;
 }
-#[doc = " Error number"]
 pub type CPLErrorNum = ::std::ffi::c_int;
 extern "C" {
     pub fn CPLError(
@@ -1265,10 +1180,15 @@ extern "C" {
     );
 }
 extern "C" {
-    #[doc = " @cond Doxygen_Suppress"]
+    pub fn CPLCallPreviousHandler(
+        eErrClass: CPLErr::Type,
+        err_no: CPLErrorNum,
+        pszMsg: *const ::std::ffi::c_char,
+    );
+}
+extern "C" {
     pub fn CPLCleanupErrorMutex();
 }
-#[doc = " Callback for a custom error handler"]
 pub type CPLErrorHandler = ::std::option::Option<
     unsafe extern "C" fn(arg1: CPLErr::Type, arg2: CPLErrorNum, arg3: *const ::std::ffi::c_char),
 >;
@@ -1324,11 +1244,9 @@ extern "C" {
     pub fn CPLDebug(arg1: *const ::std::ffi::c_char, arg2: *const ::std::ffi::c_char, ...);
 }
 extern "C" {
-    #[doc = " @cond Doxygen_Suppress"]
     pub fn CPLVerifyConfiguration();
 }
 extern "C" {
-    #[doc = " @endcond"]
     pub fn CPLGetConfigOption(
         arg1: *const ::std::ffi::c_char,
         arg2: *const ::std::ffi::c_char,
@@ -1336,6 +1254,12 @@ extern "C" {
 }
 extern "C" {
     pub fn CPLGetThreadLocalConfigOption(
+        arg1: *const ::std::ffi::c_char,
+        arg2: *const ::std::ffi::c_char,
+    ) -> *const ::std::ffi::c_char;
+}
+extern "C" {
+    pub fn CPLGetGlobalConfigOption(
         arg1: *const ::std::ffi::c_char,
         arg2: *const ::std::ffi::c_char,
     ) -> *const ::std::ffi::c_char;
@@ -1349,7 +1273,6 @@ extern "C" {
         pszValue: *const ::std::ffi::c_char,
     );
 }
-#[doc = " Callback for CPLSubscribeToSetConfigOption()"]
 pub type CPLSetConfigOptionSubscriber = ::std::option::Option<
     unsafe extern "C" fn(
         pszKey: *const ::std::ffi::c_char,
@@ -1368,11 +1291,9 @@ extern "C" {
     pub fn CPLUnsubscribeToSetConfigOption(nSubscriberId: ::std::ffi::c_int);
 }
 extern "C" {
-    #[doc = " @cond Doxygen_Suppress"]
     pub fn CPLFreeConfig();
 }
 extern "C" {
-    #[doc = " @endcond"]
     pub fn CPLGetConfigOptions() -> *mut *mut ::std::ffi::c_char;
 }
 extern "C" {
@@ -1657,7 +1578,6 @@ extern "C" {
         pszOutputPath: *const ::std::ffi::c_char,
     ) -> *const ::std::ffi::c_char;
 }
-#[doc = " Callback for CPLPushFileFinder"]
 pub type CPLFileFinder = ::std::option::Option<
     unsafe extern "C" fn(
         arg1: *const ::std::ffi::c_char,
@@ -1694,19 +1614,13 @@ extern "C" {
 extern "C" {
     pub fn CPLStat(arg1: *const ::std::ffi::c_char, arg2: *mut VSIStatBuf) -> ::std::ffi::c_int;
 }
-#[doc = " Information on a shared file"]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct CPLSharedFileInfo {
-    #[doc = "< File pointer"]
     pub fp: *mut FILE,
-    #[doc = "< Reference counter"]
     pub nRefCount: ::std::ffi::c_int,
-    #[doc = "< Whether fp must be interpreted as VSIFILE*"]
     pub bLarge: ::std::ffi::c_int,
-    #[doc = "< Filename"]
     pub pszFilename: *mut ::std::ffi::c_char,
-    #[doc = "< Access mode"]
     pub pszAccess: *mut ::std::ffi::c_char,
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
@@ -1741,11 +1655,9 @@ extern "C" {
     pub fn CPLDumpSharedList(arg1: *mut FILE);
 }
 extern "C" {
-    #[doc = " @cond Doxygen_Suppress"]
     pub fn CPLCleanupSharedFileMutex();
 }
 extern "C" {
-    #[doc = " @endcond"]
     pub fn CPLDMSToDec(is: *const ::std::ffi::c_char) -> f64;
 }
 extern "C" {
@@ -1797,7 +1709,6 @@ extern "C" {
     ) -> ::std::ffi::c_int;
 }
 extern "C" {
-    #[doc = " @endcond"]
     pub fn CPLCreateZip(
         pszZipFilename: *const ::std::ffi::c_char,
         papszOptions: *mut *mut ::std::ffi::c_char,
@@ -1867,15 +1778,12 @@ extern "C" {
     ) -> *mut ::std::ffi::c_char;
 }
 extern "C" {
-    #[doc = " @cond Doxygen_Suppress"]
     pub fn CPLCleanupSetlocaleMutex();
 }
 extern "C" {
-    #[doc = "CPLIsPowerOfTwo()\n@param i - tested number\n@return TRUE if i is power of two otherwise return FALSE"]
     pub fn CPLIsPowerOfTwo(i: ::std::ffi::c_uint) -> ::std::ffi::c_int;
 }
 extern "C" {
-    #[doc = " \\file cpl_string.h\n\n Various convenience functions for working with strings and string lists.\n\n A StringList is just an array of strings with the last pointer being\n NULL.  An empty StringList may be either a NULL pointer, or a pointer to\n a pointer memory location with a NULL value.\n\n A common convention for StringLists is to use them to store name/value\n lists.  In this case the contents are treated like a dictionary of\n name/value pairs.  The actual data is formatted with each string having\n the format \"<name>:<value>\" (though \"=\" is also an acceptable separator).\n A number of the functions in the file operate on name/value style\n string lists (such as CSLSetNameValue(), and CSLFetchNameValue()).\n\n To some extent the CPLStringList C++ class can be used to abstract\n managing string lists a bit but still be able to return them from C\n functions.\n"]
     pub fn CSLAddString(
         papszStrList: *mut *mut ::std::ffi::c_char,
         pszNewString: *const ::std::ffi::c_char,
@@ -2098,13 +2006,9 @@ extern "C" {
     pub fn CPLBase64DecodeInPlace(pszBase64: *mut GByte) -> ::std::ffi::c_int;
 }
 pub mod CPLValueType {
-    #[doc = " Type of value"]
     pub type Type = ::std::ffi::c_uint;
-    #[doc = "< String"]
     pub const CPL_VALUE_STRING: Type = 0;
-    #[doc = "< Real number"]
     pub const CPL_VALUE_REAL: Type = 1;
-    #[doc = "< Integer"]
     pub const CPL_VALUE_INTEGER: Type = 2;
 }
 extern "C" {
@@ -2151,11 +2055,9 @@ extern "C" {
     ) -> ::std::ffi::c_int;
 }
 extern "C" {
-    #[doc = " @endcond"]
     pub fn CPLprintf(fmt: *const ::std::ffi::c_char, ...) -> ::std::ffi::c_int;
 }
 extern "C" {
-    #[doc = " @cond Doxygen_Suppress"]
     pub fn CPLsscanf(
         str_: *const ::std::ffi::c_char,
         fmt: *const ::std::ffi::c_char,
@@ -2163,7 +2065,6 @@ extern "C" {
     ) -> ::std::ffi::c_int;
 }
 extern "C" {
-    #[doc = " @endcond"]
     pub fn CPLSPrintf(fmt: *const ::std::ffi::c_char, ...) -> *const ::std::ffi::c_char;
 }
 extern "C" {
@@ -2184,11 +2085,9 @@ extern "C" {
     pub fn CPLEncodingCharSize(pszEncoding: *const ::std::ffi::c_char) -> ::std::ffi::c_int;
 }
 extern "C" {
-    #[doc = " @cond Doxygen_Suppress"]
     pub fn CPLClearRecodeWarningFlags();
 }
 extern "C" {
-    #[doc = " @endcond"]
     pub fn CPLRecode(
         pszSource: *const ::std::ffi::c_char,
         pszSrcEncoding: *const ::std::ffi::c_char,
@@ -2240,23 +2139,18 @@ extern "C" {
 pub struct _CPLHashSet {
     _unused: [u8; 0],
 }
-#[doc = " Opaque type for a hash set"]
 pub type CPLHashSet = _CPLHashSet;
-#[doc = " CPLHashSetHashFunc"]
 pub type CPLHashSetHashFunc = ::std::option::Option<
     unsafe extern "C" fn(elt: *const ::std::ffi::c_void) -> ::std::ffi::c_ulong,
 >;
-#[doc = " CPLHashSetEqualFunc"]
 pub type CPLHashSetEqualFunc = ::std::option::Option<
     unsafe extern "C" fn(
         elt1: *const ::std::ffi::c_void,
         elt2: *const ::std::ffi::c_void,
     ) -> ::std::ffi::c_int,
 >;
-#[doc = " CPLHashSetFreeEltFunc"]
 pub type CPLHashSetFreeEltFunc =
     ::std::option::Option<unsafe extern "C" fn(elt: *mut ::std::ffi::c_void)>;
-#[doc = " CPLHashSetIterEltFunc"]
 pub type CPLHashSetIterEltFunc = ::std::option::Option<
     unsafe extern "C" fn(
         elt: *mut ::std::ffi::c_void,
@@ -2328,15 +2222,11 @@ extern "C" {
         pszStr2: *const ::std::ffi::c_void,
     ) -> ::std::ffi::c_int;
 }
-#[doc = " List element structure."]
 pub type CPLList = _CPLList;
-#[doc = " List element structure."]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct _CPLList {
-    #[doc = " Pointer to the data object. Should be allocated and freed by the\n caller."]
     pub pData: *mut ::std::ffi::c_void,
-    #[doc = " Pointer to the next element in list. NULL, if current element is the\n last one."]
     pub psNext: *mut _CPLList,
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
@@ -2378,30 +2268,19 @@ extern "C" {
     pub fn CPLListGetData(psElement: *const CPLList) -> *mut ::std::ffi::c_void;
 }
 pub mod CPLXMLNodeType {
-    #[doc = " XML node type"]
     pub type Type = ::std::ffi::c_uint;
-    #[doc = " Node is an element"]
     pub const CXT_Element: Type = 0;
-    #[doc = " Node is a raw text value"]
     pub const CXT_Text: Type = 1;
-    #[doc = " Node is attribute"]
     pub const CXT_Attribute: Type = 2;
-    #[doc = " Node is an XML comment."]
     pub const CXT_Comment: Type = 3;
-    #[doc = " Node is a special literal"]
     pub const CXT_Literal: Type = 4;
 }
-#[doc = " Document node structure.\n\n This C structure is used to hold a single text fragment representing a\n component of the document when parsed.   It should be allocated with the\n appropriate CPL function, and freed with CPLDestroyXMLNode().  The structure\n contents should not normally be altered by application code, but may be\n freely examined by application code.\n\n Using the psChild and psNext pointers, a hierarchical tree structure\n for a document can be represented as a tree of CPLXMLNode structures."]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct CPLXMLNode {
-    #[doc = " \\brief Node type\n\n One of CXT_Element, CXT_Text, CXT_Attribute, CXT_Comment,\n or CXT_Literal."]
     pub eType: CPLXMLNodeType::Type,
-    #[doc = " \\brief Node value\n\n For CXT_Element this is the name of the element, without the angle\n brackets.  Note there is a single CXT_Element even when the document\n contains a start and end element tag.  The node represents the pair.\n All text or other elements between the start and end tag will appear\n as children nodes of this CXT_Element node.\n\n For CXT_Attribute the pszValue is the attribute name.  The value of\n the attribute will be a CXT_Text child.\n\n For CXT_Text this is the text itself (value of an attribute, or a\n text fragment between an element start and end tags.\n\n For CXT_Literal it is all the literal text.  Currently this is just\n used for !DOCTYPE lines, and the value would be the entire line.\n\n For CXT_Comment the value is all the literal text within the comment,\n but not including the comment start/end indicators (\"<--\" and \"-->\")."]
     pub pszValue: *mut ::std::ffi::c_char,
-    #[doc = " \\brief Next sibling.\n\n Pointer to next sibling, that is the next node appearing after this\n one that has the same parent as this node.  NULL if this node is the\n last child of the parent element."]
     pub psNext: *mut CPLXMLNode,
-    #[doc = " \\brief Child node.\n\n Pointer to first child node, if any.  Only CXT_Element and CXT_Attribute\n nodes should have children.  For CXT_Attribute it should be a single\n CXT_Text value node, while CXT_Element can have any kind of child.\n The full list of children for a node are identified by walking the\n psNext's starting with the psChild node."]
     pub psChild: *mut CPLXMLNode,
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
@@ -2504,17 +2383,12 @@ extern "C" {
         pszFilename: *const ::std::ffi::c_char,
     ) -> ::std::ffi::c_int;
 }
-#[doc = " Describe a rectangle"]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct CPLRectObj {
-    #[doc = "< Minimum x"]
     pub minx: f64,
-    #[doc = "< Minimum y"]
     pub miny: f64,
-    #[doc = "< Maximum x"]
     pub maxx: f64,
-    #[doc = "< Maximum y"]
     pub maxy: f64,
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
@@ -2531,13 +2405,10 @@ const _: () = {
 pub struct _CPLQuadTree {
     _unused: [u8; 0],
 }
-#[doc = " Opaque type for a quad tree"]
 pub type CPLQuadTree = _CPLQuadTree;
-#[doc = " CPLQuadTreeGetBoundsFunc"]
 pub type CPLQuadTreeGetBoundsFunc = ::std::option::Option<
     unsafe extern "C" fn(hFeature: *const ::std::ffi::c_void, pBounds: *mut CPLRectObj),
 >;
-#[doc = " CPLQuadTreeGetBoundsExFunc"]
 pub type CPLQuadTreeGetBoundsExFunc = ::std::option::Option<
     unsafe extern "C" fn(
         hFeature: *const ::std::ffi::c_void,
@@ -2545,14 +2416,12 @@ pub type CPLQuadTreeGetBoundsExFunc = ::std::option::Option<
         pBounds: *mut CPLRectObj,
     ),
 >;
-#[doc = " CPLQuadTreeForeachFunc"]
 pub type CPLQuadTreeForeachFunc = ::std::option::Option<
     unsafe extern "C" fn(
         pElt: *mut ::std::ffi::c_void,
         pUserData: *mut ::std::ffi::c_void,
     ) -> ::std::ffi::c_int,
 >;
-#[doc = " CPLQuadTreeDumpFeatureFunc"]
 pub type CPLQuadTreeDumpFeatureFunc = ::std::option::Option<
     unsafe extern "C" fn(
         hFeature: *const ::std::ffi::c_void,
@@ -2644,7 +2513,6 @@ extern "C" {
 pub struct CPLVirtualMem {
     _unused: [u8; 0],
 }
-#[doc = " Callback triggered when a still unmapped page of virtual memory is accessed.\n The callback has the responsibility of filling the page with relevant values\n\n @param ctxt virtual memory handle.\n @param nOffset offset of the page in the memory mapping.\n @param pPageToFill address of the page to fill. Note that the address might\n                    be a temporary location, and not at CPLVirtualMemGetAddr()\n + nOffset.\n @param nToFill number of bytes of the page.\n @param pUserData user data that was passed to CPLVirtualMemNew()."]
 pub type CPLVirtualMemCachePageCbk = ::std::option::Option<
     unsafe extern "C" fn(
         ctxt: *mut CPLVirtualMem,
@@ -2654,7 +2522,6 @@ pub type CPLVirtualMemCachePageCbk = ::std::option::Option<
         pUserData: *mut ::std::ffi::c_void,
     ),
 >;
-#[doc = " Callback triggered when a dirty mapped page is going to be freed.\n (saturation of cache, or termination of the virtual memory mapping).\n\n @param ctxt virtual memory handle.\n @param nOffset offset of the page in the memory mapping.\n @param pPageToBeEvicted address of the page that will be flushed. Note that\n the address might be a temporary location, and not at CPLVirtualMemGetAddr()\n + nOffset.\n @param nToBeEvicted number of bytes of the page.\n @param pUserData user data that was passed to CPLVirtualMemNew()."]
 pub type CPLVirtualMemUnCachePageCbk = ::std::option::Option<
     unsafe extern "C" fn(
         ctxt: *mut CPLVirtualMem,
@@ -2664,25 +2531,18 @@ pub type CPLVirtualMemUnCachePageCbk = ::std::option::Option<
         pUserData: *mut ::std::ffi::c_void,
     ),
 >;
-#[doc = " Callback triggered when a virtual memory mapping is destroyed.\n @param pUserData user data that was passed to CPLVirtualMemNew()."]
 pub type CPLVirtualMemFreeUserData =
     ::std::option::Option<unsafe extern "C" fn(pUserData: *mut ::std::ffi::c_void)>;
 pub mod CPLVirtualMemAccessMode {
-    #[doc = " Access mode of a virtual memory mapping."]
     pub type Type = ::std::ffi::c_uint;
-    #[doc = " The mapping is meant at being read-only, but writes will not be\nprevented. Note that any content written will be lost."]
     pub const VIRTUALMEM_READONLY: Type = 0;
-    #[doc = " The mapping is meant at being read-only, and this will be enforced\nthrough the operating system page protection mechanism."]
     pub const VIRTUALMEM_READONLY_ENFORCED: Type = 1;
-    #[doc = " The mapping is meant at being read-write, and modified pages can be\nsaved thanks to the pfnUnCachePage callback"]
     pub const VIRTUALMEM_READWRITE: Type = 2;
 }
 extern "C" {
-    #[doc = " Return the size of a page of virtual memory.\n\n @return the page size.\n\n @since GDAL 1.11"]
     pub fn CPLGetPageSize() -> usize;
 }
 extern "C" {
-    #[doc = " Create a new virtual memory mapping.\n\n This will reserve an area of virtual memory of size nSize, whose size\n might be potentially much larger than the physical memory available.\n Initially, no physical memory will be allocated. As soon as memory pages will\n be accessed, they will be allocated transparently and filled with the\n pfnCachePage callback. When the allowed cache size is reached, the least\n recently used pages will be unallocated.\n\n On Linux AMD64 platforms, the maximum value for nSize is 128 TB.\n On Linux x86 platforms, the maximum value for nSize is 2 GB.\n\n Only supported on Linux for now.\n\n Note that on Linux, this function will install a SIGSEGV handler. The\n original handler will be restored by CPLVirtualMemManagerTerminate().\n\n @param nSize size in bytes of the virtual memory mapping.\n @param nCacheSize   size in bytes of the maximum memory that will be really\n                     allocated (must ideally fit into RAM).\n @param nPageSizeHint hint for the page size. Must be a multiple of the\n                      system page size, returned by CPLGetPageSize().\n                      Minimum value is generally 4096. Might be set to 0 to\n                      let the function determine a default page size.\n @param bSingleThreadUsage set to TRUE if there will be no concurrent threads\n                           that will access the virtual memory mapping. This\n can optimize performance a bit.\n @param eAccessMode permission to use for the virtual memory mapping.\n @param pfnCachePage callback triggered when a still unmapped page of virtual\n                     memory is accessed. The callback has the responsibility\n                     of filling the page with relevant values.\n @param pfnUnCachePage callback triggered when a dirty mapped page is going to\n                       be freed (saturation of cache, or termination of the\n                       virtual memory mapping). Might be NULL.\n @param pfnFreeUserData callback that can be used to free pCbkUserData. Might\n be NULL\n @param pCbkUserData user data passed to pfnCachePage and pfnUnCachePage.\n\n @return a virtual memory object that must be freed by CPLVirtualMemFree(),\n         or NULL in case of failure.\n\n @since GDAL 1.11"]
     pub fn CPLVirtualMemNew(
         nSize: usize,
         nCacheSize: usize,
@@ -2696,11 +2556,9 @@ extern "C" {
     ) -> *mut CPLVirtualMem;
 }
 extern "C" {
-    #[doc = " Return if virtual memory mapping of a file is available.\n\n @return TRUE if virtual memory mapping of a file is available.\n @since GDAL 1.11"]
     pub fn CPLIsVirtualMemFileMapAvailable() -> ::std::ffi::c_int;
 }
 extern "C" {
-    #[doc = " Create a new virtual memory mapping from a file.\n\n The file must be a \"real\" file recognized by the operating system, and not\n a VSI extended virtual file.\n\n In VIRTUALMEM_READWRITE mode, updates to the memory mapping will be written\n in the file.\n\n On Linux AMD64 platforms, the maximum value for nLength is 128 TB.\n On Linux x86 platforms, the maximum value for nLength is 2 GB.\n\n Supported on Linux only in GDAL <= 2.0, and all POSIX systems supporting\n mmap() in GDAL >= 2.1\n\n @param  fp       Virtual file handle.\n @param  nOffset  Offset in the file to start the mapping from.\n @param  nLength  Length of the portion of the file to map into memory.\n @param eAccessMode Permission to use for the virtual memory mapping. This\n must be consistent with how the file has been opened.\n @param pfnFreeUserData callback that is called when the object is destroyed.\n @param pCbkUserData user data passed to pfnFreeUserData.\n @return a virtual memory object that must be freed by CPLVirtualMemFree(),\n         or NULL in case of failure.\n\n @since GDAL 1.11"]
     pub fn CPLVirtualMemFileMapNew(
         fp: *mut VSILFILE,
         nOffset: vsi_l_offset,
@@ -2711,7 +2569,6 @@ extern "C" {
     ) -> *mut CPLVirtualMem;
 }
 extern "C" {
-    #[doc = " Create a new virtual memory mapping derived from an other virtual memory\n  mapping.\n\n This may be useful in case of creating mapping for pixel interleaved data.\n\n The new mapping takes a reference on the base mapping.\n\n @param pVMemBase Base virtual memory mapping\n @param nOffset   Offset in the base virtual memory mapping from which to\n start the new mapping.\n @param nSize     Size of the base virtual memory mapping to expose in the\n                  the new mapping.\n @param pfnFreeUserData callback that is called when the object is destroyed.\n @param pCbkUserData user data passed to pfnFreeUserData.\n @return a virtual memory object that must be freed by CPLVirtualMemFree(),\n         or NULL in case of failure.\n\n @since GDAL 1.11"]
     pub fn CPLVirtualMemDerivedNew(
         pVMemBase: *mut CPLVirtualMem,
         nOffset: vsi_l_offset,
@@ -2721,43 +2578,33 @@ extern "C" {
     ) -> *mut CPLVirtualMem;
 }
 extern "C" {
-    #[doc = " Free a virtual memory mapping.\n\n The pointer returned by CPLVirtualMemGetAddr() will no longer be valid.\n If the virtual memory mapping was created with read/write permissions and\n that they are dirty (i.e. modified) pages, they will be flushed through the\n pfnUnCachePage callback before being freed.\n\n @param ctxt context returned by CPLVirtualMemNew().\n\n @since GDAL 1.11"]
     pub fn CPLVirtualMemFree(ctxt: *mut CPLVirtualMem);
 }
 extern "C" {
-    #[doc = " Return the pointer to the start of a virtual memory mapping.\n\n The bytes in the range [p:p+CPLVirtualMemGetSize()-1] where p is the pointer\n returned by this function will be valid, until CPLVirtualMemFree() is called.\n\n Note that if a range of bytes used as an argument of a system call\n (such as read() or write()) contains pages that have not been \"realized\", the\n system call will fail with EFAULT. CPLVirtualMemPin() can be used to work\n around this issue.\n\n @param ctxt context returned by CPLVirtualMemNew().\n @return the pointer to the start of a virtual memory mapping.\n\n @since GDAL 1.11"]
     pub fn CPLVirtualMemGetAddr(ctxt: *mut CPLVirtualMem) -> *mut ::std::ffi::c_void;
 }
 extern "C" {
-    #[doc = " Return the size of the virtual memory mapping.\n\n @param ctxt context returned by CPLVirtualMemNew().\n @return the size of the virtual memory mapping.\n\n @since GDAL 1.11"]
     pub fn CPLVirtualMemGetSize(ctxt: *mut CPLVirtualMem) -> usize;
 }
 extern "C" {
-    #[doc = " Return if the virtual memory mapping is a direct file mapping.\n\n @param ctxt context returned by CPLVirtualMemNew().\n @return TRUE if the virtual memory mapping is a direct file mapping.\n\n @since GDAL 1.11"]
     pub fn CPLVirtualMemIsFileMapping(ctxt: *mut CPLVirtualMem) -> ::std::ffi::c_int;
 }
 extern "C" {
-    #[doc = " Return the access mode of the virtual memory mapping.\n\n @param ctxt context returned by CPLVirtualMemNew().\n @return the access mode of the virtual memory mapping.\n\n @since GDAL 1.11"]
     pub fn CPLVirtualMemGetAccessMode(ctxt: *mut CPLVirtualMem) -> CPLVirtualMemAccessMode::Type;
 }
 extern "C" {
-    #[doc = " Return the page size associated to a virtual memory mapping.\n\n The value returned will be at least CPLGetPageSize(), but potentially\n larger.\n\n @param ctxt context returned by CPLVirtualMemNew().\n @return the page size\n\n @since GDAL 1.11"]
     pub fn CPLVirtualMemGetPageSize(ctxt: *mut CPLVirtualMem) -> usize;
 }
 extern "C" {
-    #[doc = " Return TRUE if this memory mapping can be accessed safely from concurrent\n  threads.\n\n The situation that can cause problems is when several threads try to access\n a page of the mapping that is not yet mapped.\n\n The return value of this function depends on whether bSingleThreadUsage has\n been set of not in CPLVirtualMemNew() and/or the implementation.\n\n On Linux, this will always return TRUE if bSingleThreadUsage = FALSE.\n\n @param ctxt context returned by CPLVirtualMemNew().\n @return TRUE if this memory mapping can be accessed safely from concurrent\n         threads.\n\n @since GDAL 1.11"]
     pub fn CPLVirtualMemIsAccessThreadSafe(ctxt: *mut CPLVirtualMem) -> ::std::ffi::c_int;
 }
 extern "C" {
-    #[doc = " Declare that a thread will access a virtual memory mapping.\n\n This function must be called by a thread that wants to access the\n content of a virtual memory mapping, except if the virtual memory mapping has\n been created with bSingleThreadUsage = TRUE.\n\n This function must be paired with CPLVirtualMemUnDeclareThread().\n\n @param ctxt context returned by CPLVirtualMemNew().\n\n @since GDAL 1.11"]
     pub fn CPLVirtualMemDeclareThread(ctxt: *mut CPLVirtualMem);
 }
 extern "C" {
-    #[doc = " Declare that a thread will stop accessing a virtual memory mapping.\n\n This function must be called by a thread that will no longer access the\n content of a virtual memory mapping, except if the virtual memory mapping has\n been created with bSingleThreadUsage = TRUE.\n\n This function must be paired with CPLVirtualMemDeclareThread().\n\n @param ctxt context returned by CPLVirtualMemNew().\n\n @since GDAL 1.11"]
     pub fn CPLVirtualMemUnDeclareThread(ctxt: *mut CPLVirtualMem);
 }
 extern "C" {
-    #[doc = " Make sure that a region of virtual memory will be realized.\n\n Calling this function is not required, but might be useful when debugging\n a process with tools like gdb or valgrind that do not naturally like\n segmentation fault signals.\n\n It is also needed when wanting to provide part of virtual memory mapping\n to a system call such as read() or write(). If read() or write() is called\n on a memory region not yet realized, the call will fail with EFAULT.\n\n @param ctxt context returned by CPLVirtualMemNew().\n @param pAddr the memory region to pin.\n @param nSize the size of the memory region.\n @param bWriteOp set to TRUE if the memory are will be accessed in write mode.\n\n @since GDAL 1.11"]
     pub fn CPLVirtualMemPin(
         ctxt: *mut CPLVirtualMem,
         pAddr: *mut ::std::ffi::c_void,
@@ -2766,7 +2613,6 @@ extern "C" {
     );
 }
 extern "C" {
-    #[doc = " Cleanup any resource and handlers related to virtual memory.\n\n This function must be called after the last CPLVirtualMem object has\n been freed.\n\n @since GDAL 2.0"]
     pub fn CPLVirtualMemManagerTerminate();
 }
 #[repr(C)]
@@ -2808,7 +2654,6 @@ const _: () = {
     ["Offset of field: OGREnvelope3D::MaxZ"][::std::mem::offset_of!(OGREnvelope3D, MaxZ) - 40usize];
 };
 extern "C" {
-    #[doc = " @cond Doxygen_Suppress"]
     pub fn OGRMalloc(arg1: usize) -> *mut ::std::ffi::c_void;
 }
 extern "C" {
@@ -2824,145 +2669,77 @@ extern "C" {
     pub fn OGRFree(arg1: *mut ::std::ffi::c_void);
 }
 pub mod OGRwkbGeometryType {
-    #[doc = " List of well known binary geometry types.  These are used within the BLOBs\n but are also returned from OGRGeometry::getGeometryType() to identify the\n type of a geometry object."]
     pub type Type = ::std::ffi::c_uint;
-    #[doc = "< unknown type, non-standard"]
     pub const wkbUnknown: Type = 0;
-    #[doc = "< 0-dimensional geometric object, standard WKB"]
     pub const wkbPoint: Type = 1;
-    #[doc = "< 1-dimensional geometric object with linear\n   interpolation between Points, standard WKB"]
     pub const wkbLineString: Type = 2;
-    #[doc = "< planar 2-dimensional geometric object defined\n   by 1 exterior boundary and 0 or more interior\n   boundaries, standard WKB"]
     pub const wkbPolygon: Type = 3;
-    #[doc = "< GeometryCollection of Points, standard WKB"]
     pub const wkbMultiPoint: Type = 4;
     pub const wkbMultiLineString: Type = 5;
-    #[doc = "< GeometryCollection of Polygons, standard WKB"]
     pub const wkbMultiPolygon: Type = 6;
-    #[doc = "< geometric object that is a collection of 1\nor more geometric objects, standard WKB"]
     pub const wkbGeometryCollection: Type = 7;
-    #[doc = "< one or more circular arc segments connected end\n to end, ISO SQL/MM Part 3. GDAL &gt;= 2.0"]
     pub const wkbCircularString: Type = 8;
-    #[doc = "< sequence of contiguous curves, ISO SQL/MM Part 3.\nGDAL &gt;= 2.0"]
     pub const wkbCompoundCurve: Type = 9;
-    #[doc = "< planar surface, defined by 1 exterior boundary\n   and zero or more interior boundaries, that are\n curves. ISO SQL/MM Part 3. GDAL &gt;= 2.0"]
     pub const wkbCurvePolygon: Type = 10;
-    #[doc = "< GeometryCollection of Curves, ISO SQL/MM Part 3.\nGDAL &gt;= 2.0"]
     pub const wkbMultiCurve: Type = 11;
-    #[doc = "< GeometryCollection of Surfaces, ISO SQL/MM\nPart 3. GDAL &gt;= 2.0"]
     pub const wkbMultiSurface: Type = 12;
     pub const wkbCurve: Type = 13;
     pub const wkbSurface: Type = 14;
     pub const wkbPolyhedralSurface: Type = 15;
-    #[doc = "< a PolyhedralSurface consisting only of Triangle patches\n    ISO SQL/MM Part 3. GDAL &gt;= 2.3"]
     pub const wkbTIN: Type = 16;
-    #[doc = "< a Triangle. ISO SQL/MM Part 3. GDAL &gt;= 2.3"]
     pub const wkbTriangle: Type = 17;
-    #[doc = "< non-standard, for pure attribute records"]
     pub const wkbNone: Type = 100;
-    #[doc = "< non-standard, just for createGeometry()"]
     pub const wkbLinearRing: Type = 101;
-    #[doc = "< wkbCircularString with Z component. ISO\nSQL/MM Part 3. GDAL &gt;= 2.0"]
     pub const wkbCircularStringZ: Type = 1008;
-    #[doc = "< wkbCompoundCurve with Z component. ISO SQL/MM\nPart 3. GDAL &gt;= 2.0"]
     pub const wkbCompoundCurveZ: Type = 1009;
-    #[doc = "< wkbCurvePolygon with Z component. ISO SQL/MM\nPart 3. GDAL &gt;= 2.0"]
     pub const wkbCurvePolygonZ: Type = 1010;
-    #[doc = "< wkbMultiCurve with Z component. ISO SQL/MM\nPart 3. GDAL &gt;= 2.0"]
     pub const wkbMultiCurveZ: Type = 1011;
-    #[doc = "< wkbMultiSurface with Z component. ISO SQL/MM\nPart 3. GDAL &gt;= 2.0"]
     pub const wkbMultiSurfaceZ: Type = 1012;
-    #[doc = "< wkbCurve with Z component. ISO SQL/MM Part 3. GDAL\n&gt;= 2.1"]
     pub const wkbCurveZ: Type = 1013;
-    #[doc = "< wkbSurface with Z component. ISO SQL/MM Part 3.\nGDAL &gt;= 2.1"]
     pub const wkbSurfaceZ: Type = 1014;
-    #[doc = "< ISO SQL/MM Part 3. GDAL &gt;= 2.3"]
     pub const wkbPolyhedralSurfaceZ: Type = 1015;
-    #[doc = "< ISO SQL/MM Part 3. GDAL &gt;= 2.3"]
     pub const wkbTINZ: Type = 1016;
-    #[doc = "< ISO SQL/MM Part 3. GDAL &gt;= 2.3"]
     pub const wkbTriangleZ: Type = 1017;
-    #[doc = "< ISO SQL/MM Part 3. GDAL &gt;= 2.1"]
     pub const wkbPointM: Type = 2001;
-    #[doc = "< ISO SQL/MM Part 3. GDAL &gt;= 2.1"]
     pub const wkbLineStringM: Type = 2002;
-    #[doc = "< ISO SQL/MM Part 3. GDAL &gt;= 2.1"]
     pub const wkbPolygonM: Type = 2003;
-    #[doc = "< ISO SQL/MM Part 3. GDAL &gt;= 2.1"]
     pub const wkbMultiPointM: Type = 2004;
-    #[doc = "< ISO SQL/MM Part 3. GDAL &gt;= 2.1"]
     pub const wkbMultiLineStringM: Type = 2005;
-    #[doc = "< ISO SQL/MM Part 3. GDAL &gt;= 2.1"]
     pub const wkbMultiPolygonM: Type = 2006;
-    #[doc = "< ISO SQL/MM Part 3. GDAL &gt;= 2.1"]
     pub const wkbGeometryCollectionM: Type = 2007;
-    #[doc = "< ISO SQL/MM Part 3. GDAL &gt;= 2.1"]
     pub const wkbCircularStringM: Type = 2008;
-    #[doc = "< ISO SQL/MM Part 3. GDAL &gt;= 2.1"]
     pub const wkbCompoundCurveM: Type = 2009;
-    #[doc = "< ISO SQL/MM Part 3. GDAL &gt;= 2.1"]
     pub const wkbCurvePolygonM: Type = 2010;
-    #[doc = "< ISO SQL/MM Part 3. GDAL &gt;= 2.1"]
     pub const wkbMultiCurveM: Type = 2011;
-    #[doc = "< ISO SQL/MM Part 3. GDAL &gt;= 2.1"]
     pub const wkbMultiSurfaceM: Type = 2012;
-    #[doc = "< ISO SQL/MM Part 3. GDAL &gt;= 2.1"]
     pub const wkbCurveM: Type = 2013;
-    #[doc = "< ISO SQL/MM Part 3. GDAL &gt;= 2.1"]
     pub const wkbSurfaceM: Type = 2014;
-    #[doc = "< ISO SQL/MM Part 3. GDAL &gt;= 2.3"]
     pub const wkbPolyhedralSurfaceM: Type = 2015;
-    #[doc = "< ISO SQL/MM Part 3. GDAL &gt;= 2.3"]
     pub const wkbTINM: Type = 2016;
-    #[doc = "< ISO SQL/MM Part 3. GDAL &gt;= 2.3"]
     pub const wkbTriangleM: Type = 2017;
-    #[doc = "< ISO SQL/MM Part 3. GDAL &gt;= 2.1"]
     pub const wkbPointZM: Type = 3001;
-    #[doc = "< ISO SQL/MM Part 3. GDAL &gt;= 2.1"]
     pub const wkbLineStringZM: Type = 3002;
-    #[doc = "< ISO SQL/MM Part 3. GDAL &gt;= 2.1"]
     pub const wkbPolygonZM: Type = 3003;
-    #[doc = "< ISO SQL/MM Part 3. GDAL &gt;= 2.1"]
     pub const wkbMultiPointZM: Type = 3004;
-    #[doc = "< ISO SQL/MM Part 3. GDAL &gt;= 2.1"]
     pub const wkbMultiLineStringZM: Type = 3005;
-    #[doc = "< ISO SQL/MM Part 3. GDAL &gt;= 2.1"]
     pub const wkbMultiPolygonZM: Type = 3006;
-    #[doc = "< ISO SQL/MM Part 3. GDAL &gt;= 2.1"]
     pub const wkbGeometryCollectionZM: Type = 3007;
-    #[doc = "< ISO SQL/MM Part 3. GDAL &gt;= 2.1"]
     pub const wkbCircularStringZM: Type = 3008;
-    #[doc = "< ISO SQL/MM Part 3. GDAL &gt;= 2.1"]
     pub const wkbCompoundCurveZM: Type = 3009;
-    #[doc = "< ISO SQL/MM Part 3. GDAL &gt;= 2.1"]
     pub const wkbCurvePolygonZM: Type = 3010;
-    #[doc = "< ISO SQL/MM Part 3. GDAL &gt;= 2.1"]
     pub const wkbMultiCurveZM: Type = 3011;
-    #[doc = "< ISO SQL/MM Part 3. GDAL &gt;= 2.1"]
     pub const wkbMultiSurfaceZM: Type = 3012;
-    #[doc = "< ISO SQL/MM Part 3. GDAL &gt;= 2.1"]
     pub const wkbCurveZM: Type = 3013;
-    #[doc = "< ISO SQL/MM Part 3. GDAL &gt;= 2.1"]
     pub const wkbSurfaceZM: Type = 3014;
-    #[doc = "< ISO SQL/MM Part 3. GDAL &gt;= 2.3"]
     pub const wkbPolyhedralSurfaceZM: Type = 3015;
-    #[doc = "< ISO SQL/MM Part 3. GDAL &gt;= 2.3"]
     pub const wkbTINZM: Type = 3016;
-    #[doc = "< ISO SQL/MM Part 3. GDAL &gt;= 2.3"]
     pub const wkbTriangleZM: Type = 3017;
-    #[doc = "< 2.5D extension as per 99-402"]
     pub const wkbPoint25D: Type = 2147483649;
-    #[doc = "< 2.5D extension as per 99-402"]
     pub const wkbLineString25D: Type = 2147483650;
-    #[doc = "< 2.5D extension as per 99-402"]
     pub const wkbPolygon25D: Type = 2147483651;
-    #[doc = "< 2.5D extension as per 99-402"]
     pub const wkbMultiPoint25D: Type = 2147483652;
-    #[doc = "< 2.5D extension as per 99-402"]
     pub const wkbMultiLineString25D: Type = 2147483653;
-    #[doc = "< 2.5D extension as per 99-402"]
     pub const wkbMultiPolygon25D: Type = 2147483654;
-    #[doc = "< 2.5D extension as per 99-402"]
     pub const wkbGeometryCollection25D: Type = 2147483655;
 }
 extern "C" {
@@ -3028,77 +2805,47 @@ extern "C" {
     pub fn OGR_GT_GetLinear(eType: OGRwkbGeometryType::Type) -> OGRwkbGeometryType::Type;
 }
 pub mod OGRwkbByteOrder {
-    #[doc = " Enumeration to describe byte order"]
     pub type Type = ::std::ffi::c_uint;
-    #[doc = "< MSB/Sun/Motorola: Most Significant Byte First"]
     pub const wkbXDR: Type = 0;
-    #[doc = "< LSB/Intel/Vax: Least Significant Byte First"]
     pub const wkbNDR: Type = 1;
 }
 pub mod OGRFieldType {
-    #[doc = " List of feature field types.  This list is likely to be extended in the\n future ... avoid coding applications based on the assumption that all\n field types can be known."]
     pub type Type = ::std::ffi::c_uint;
-    #[doc = " Simple 32bit integer"]
     pub const OFTInteger: Type = 0;
-    #[doc = " List of 32bit integers"]
     pub const OFTIntegerList: Type = 1;
-    #[doc = " Double Precision floating point"]
     pub const OFTReal: Type = 2;
-    #[doc = " List of doubles"]
     pub const OFTRealList: Type = 3;
-    #[doc = " String of ASCII chars"]
     pub const OFTString: Type = 4;
-    #[doc = " Array of strings"]
     pub const OFTStringList: Type = 5;
-    #[doc = " deprecated"]
     pub const OFTWideString: Type = 6;
-    #[doc = " deprecated"]
     pub const OFTWideStringList: Type = 7;
-    #[doc = " Raw Binary data"]
     pub const OFTBinary: Type = 8;
-    #[doc = " Date"]
     pub const OFTDate: Type = 9;
-    #[doc = " Time"]
     pub const OFTTime: Type = 10;
-    #[doc = " Date and Time"]
     pub const OFTDateTime: Type = 11;
-    #[doc = " Single 64bit integer"]
     pub const OFTInteger64: Type = 12;
-    #[doc = " List of 64bit integers"]
     pub const OFTInteger64List: Type = 13;
-    #[doc = " List of 64bit integers"]
     pub const OFTMaxType: Type = 13;
 }
 pub mod OGRFieldSubType {
-    #[doc = " List of field subtypes. A subtype represents a hint, a restriction of the\n main type, that is not strictly necessary to consult.\n This list is likely to be extended in the\n future ... avoid coding applications based on the assumption that all\n field types can be known.\n Most subtypes only make sense for a restricted set of main types.\n @since GDAL 2.0"]
     pub type Type = ::std::ffi::c_uint;
-    #[doc = " No subtype. This is the default value"]
     pub const OFSTNone: Type = 0;
-    #[doc = " Boolean integer. Only valid for OFTInteger and OFTIntegerList."]
     pub const OFSTBoolean: Type = 1;
-    #[doc = " Signed 16-bit integer. Only valid for OFTInteger and OFTIntegerList."]
     pub const OFSTInt16: Type = 2;
-    #[doc = " Single precision (32 bit) floating point. Only valid for OFTReal and\nOFTRealList."]
     pub const OFSTFloat32: Type = 3;
-    #[doc = " JSON content. Only valid for OFTString.\n @since GDAL 2.4"]
     pub const OFSTJSON: Type = 4;
-    #[doc = " UUID string representation. Only valid for OFTString.\n @since GDAL 3.3"]
     pub const OFSTUUID: Type = 5;
-    #[doc = " UUID string representation. Only valid for OFTString.\n @since GDAL 3.3"]
     pub const OFSTMaxSubType: Type = 5;
 }
 pub mod OGRJustification {
-    #[doc = " Display justification for field values."]
     pub type Type = ::std::ffi::c_uint;
     pub const OJUndefined: Type = 0;
     pub const OJLeft: Type = 1;
     pub const OJRight: Type = 2;
 }
-#[doc = " OGRFeature field attribute value union."]
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub union OGRField {
-    #[doc = " @cond Doxygen_Suppress"]
     pub Integer: ::std::ffi::c_int,
     pub Integer64: GIntBig,
     pub Real: f64,
@@ -3271,48 +3018,29 @@ extern "C" {
     ) -> ::std::ffi::c_int;
 }
 pub mod ogr_style_tool_class_id {
-    #[doc = " OGRStyleTool derived class types (returned by GetType())."]
     pub type Type = ::std::ffi::c_uint;
-    #[doc = "< None"]
     pub const OGRSTCNone: Type = 0;
-    #[doc = "< Pen"]
     pub const OGRSTCPen: Type = 1;
-    #[doc = "< Brush"]
     pub const OGRSTCBrush: Type = 2;
-    #[doc = "< Symbol"]
     pub const OGRSTCSymbol: Type = 3;
-    #[doc = "< Label"]
     pub const OGRSTCLabel: Type = 4;
-    #[doc = "< Vector"]
     pub const OGRSTCVector: Type = 5;
 }
-#[doc = " OGRStyleTool derived class types (returned by GetType())."]
 pub use self::ogr_style_tool_class_id::Type as OGRSTClassId;
 pub mod ogr_style_tool_units_id {
-    #[doc = " List of units supported by OGRStyleTools."]
     pub type Type = ::std::ffi::c_uint;
-    #[doc = "< Ground unit"]
     pub const OGRSTUGround: Type = 0;
-    #[doc = "< Pixel"]
     pub const OGRSTUPixel: Type = 1;
-    #[doc = "< Points"]
     pub const OGRSTUPoints: Type = 2;
-    #[doc = "< Millimeter"]
     pub const OGRSTUMM: Type = 3;
-    #[doc = "< Centimeter"]
     pub const OGRSTUCM: Type = 4;
-    #[doc = "< Inch"]
     pub const OGRSTUInches: Type = 5;
 }
-#[doc = " List of units supported by OGRStyleTools."]
 pub use self::ogr_style_tool_units_id::Type as OGRSTUnitId;
-#[doc = " Associates a code and a value\n\n @since GDAL 3.3"]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct OGRCodedValue {
-    #[doc = " Code. Content should be of the type of the OGRFieldDomain"]
     pub pszCode: *mut ::std::ffi::c_char,
-    #[doc = " Value. Might be NULL"]
     pub pszValue: *mut ::std::ffi::c_char,
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
@@ -3325,40 +3053,27 @@ const _: () = {
         [::std::mem::offset_of!(OGRCodedValue, pszValue) - 8usize];
 };
 pub mod OGRFieldDomainType {
-    #[doc = " Type of field domain.\n\n @since GDAL 3.3"]
     pub type Type = ::std::ffi::c_uint;
-    #[doc = " Coded"]
     pub const OFDT_CODED: Type = 0;
-    #[doc = " Range (min/max)"]
     pub const OFDT_RANGE: Type = 1;
-    #[doc = " Glob (used by GeoPackage)"]
     pub const OFDT_GLOB: Type = 2;
 }
 pub mod OGRFieldDomainSplitPolicy {
-    #[doc = " Split policy for field domains.\n\n When a feature is split in two, defines how the value of attributes\n following the domain are computed.\n\n @since GDAL 3.3"]
     pub type Type = ::std::ffi::c_uint;
-    #[doc = " Default value"]
     pub const OFDSP_DEFAULT_VALUE: Type = 0;
-    #[doc = " Duplicate"]
     pub const OFDSP_DUPLICATE: Type = 1;
-    #[doc = " New values are computed by the ratio of their area/length compared to\nthe area/length of the original feature"]
     pub const OFDSP_GEOMETRY_RATIO: Type = 2;
 }
 pub mod OGRFieldDomainMergePolicy {
-    #[doc = " Merge policy for field domains.\n\n When a feature is built by merging two features, defines how the value of\n attributes following the domain are computed.\n\n @since GDAL 3.3"]
     pub type Type = ::std::ffi::c_uint;
-    #[doc = " Default value"]
     pub const OFDMP_DEFAULT_VALUE: Type = 0;
-    #[doc = " Sum"]
     pub const OFDMP_SUM: Type = 1;
-    #[doc = " New values are computed as the weighted average of the source values."]
     pub const OFDMP_GEOMETRY_WEIGHTED: Type = 2;
 }
 extern "C" {
     pub fn GDALVersionInfo(arg1: *const ::std::ffi::c_char) -> *const ::std::ffi::c_char;
 }
 extern "C" {
-    #[doc = " Return TRUE if GDAL library version at runtime matches\nnVersionMajor.nVersionMinor.\n\nThe purpose of this method is to ensure that calling code will run with the\nGDAL version it is compiled for. It is primarily indented for external\nplugins.\n\n@param nVersionMajor Major version to be tested against\n@param nVersionMinor Minor version to be tested against\n@param pszCallingComponentName If not NULL, in case of version mismatch, the\nmethod will issue a failure mentioning the name of the calling component."]
     pub fn GDALCheckVersion(
         nVersionMajor: ::std::ffi::c_int,
         nVersionMinor: ::std::ffi::c_int,
@@ -3372,11 +3087,8 @@ extern "C" {
         pnPatch: *mut ::std::ffi::c_int,
     ) -> bool;
 }
-#[doc = " Opaque type for a geometry"]
 pub type OGRGeometryH = *mut ::std::ffi::c_void;
-#[doc = " Opaque type for a spatial reference system"]
 pub type OGRSpatialReferenceH = *mut ::std::ffi::c_void;
-#[doc = " Opaque type for a coordinate transformation object"]
 pub type OGRCoordinateTransformationH = *mut ::std::ffi::c_void;
 extern "C" {
     pub fn OGR_G_CreateFromWkb(
@@ -3584,11 +3296,9 @@ extern "C" {
     ) -> *mut ::std::ffi::c_char;
 }
 extern "C" {
-    #[doc = " Create a OGR geometry from a GeoJSON geometry object"]
     pub fn OGR_G_CreateGeometryFromJson(arg1: *const ::std::ffi::c_char) -> OGRGeometryH;
 }
 extern "C" {
-    #[doc = " Create a OGR geometry from a ESRI JSON geometry object"]
     pub fn OGR_G_CreateGeometryFromEsriJson(arg1: *const ::std::ffi::c_char) -> OGRGeometryH;
 }
 extern "C" {
@@ -3608,7 +3318,6 @@ extern "C" {
 pub struct OGRGeomTransformer {
     _unused: [u8; 0],
 }
-#[doc = " Opaque type for a geometry transformer."]
 pub type OGRGeomTransformerH = *mut OGRGeomTransformer;
 extern "C" {
     pub fn OGR_GeomTransformer_Create(
@@ -3711,6 +3420,9 @@ extern "C" {
     pub fn OGR_G_Area(arg1: OGRGeometryH) -> f64;
 }
 extern "C" {
+    pub fn OGR_G_IsClockwise(hGeom: OGRGeometryH) -> bool;
+}
+extern "C" {
     pub fn OGR_G_Centroid(arg1: OGRGeometryH, arg2: OGRGeometryH) -> ::std::ffi::c_int;
 }
 extern "C" {
@@ -3744,7 +3456,6 @@ extern "C" {
     pub fn OGR_G_Polygonize(arg1: OGRGeometryH) -> OGRGeometryH;
 }
 extern "C" {
-    #[doc = " @cond Doxygen_Suppress"]
     pub fn OGR_G_Intersect(arg1: OGRGeometryH, arg2: OGRGeometryH) -> ::std::ffi::c_int;
 }
 extern "C" {
@@ -3760,7 +3471,6 @@ extern "C" {
     pub fn OGR_G_GetBoundary(arg1: OGRGeometryH) -> OGRGeometryH;
 }
 extern "C" {
-    #[doc = " @endcond"]
     pub fn OGR_G_GetPointCount(arg1: OGRGeometryH) -> ::std::ffi::c_int;
 }
 extern "C" {
@@ -3941,7 +3651,6 @@ extern "C" {
     ) -> OGRGeometryH;
 }
 extern "C" {
-    #[doc = " @cond Doxygen_Suppress"]
     pub fn OGRSetGenerate_DB2_V72_BYTE_ORDER(
         bGenerate_DB2_V72_BYTE_ORDER: ::std::ffi::c_int,
     ) -> OGRErr::Type;
@@ -3950,7 +3659,6 @@ extern "C" {
     pub fn OGRGetGenerate_DB2_V72_BYTE_ORDER() -> ::std::ffi::c_int;
 }
 extern "C" {
-    #[doc = " @endcond"]
     pub fn OGRSetNonLinearGeometriesEnabledFlag(bFlag: ::std::ffi::c_int);
 }
 extern "C" {
@@ -3961,7 +3669,6 @@ extern "C" {
 pub struct _OGRPreparedGeometry {
     _unused: [u8; 0],
 }
-#[doc = " Opaque type for a prepared geometry"]
 pub type OGRPreparedGeometryH = *mut _OGRPreparedGeometry;
 extern "C" {
     pub fn OGRHasPreparedGeometrySupport() -> ::std::ffi::c_int;
@@ -3984,27 +3691,21 @@ extern "C" {
         hOtherGeom: OGRGeometryH,
     ) -> ::std::ffi::c_int;
 }
-#[doc = " Opaque type for a field definition (OGRFieldDefn)"]
 pub type OGRFieldDefnH = *mut ::std::ffi::c_void;
-#[doc = " Opaque type for a feature definition (OGRFeatureDefn)"]
 pub type OGRFeatureDefnH = *mut ::std::ffi::c_void;
-#[doc = " Opaque type for a feature (OGRFeature)"]
 pub type OGRFeatureH = *mut ::std::ffi::c_void;
-#[doc = " Opaque type for a style table (OGRStyleTable)"]
 pub type OGRStyleTableH = *mut ::std::ffi::c_void;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct OGRGeomFieldDefnHS {
     _unused: [u8; 0],
 }
-#[doc = " Opaque type for a geometry field definition (OGRGeomFieldDefn)"]
 pub type OGRGeomFieldDefnH = *mut OGRGeomFieldDefnHS;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct OGRFieldDomainHS {
     _unused: [u8; 0],
 }
-#[doc = " Opaque type for a field domain definition (OGRFieldDomain)"]
 pub type OGRFieldDomainH = *mut OGRFieldDomainHS;
 extern "C" {
     pub fn OGR_Fld_Create(
@@ -4056,6 +3757,12 @@ extern "C" {
 }
 extern "C" {
     pub fn OGR_Fld_SetPrecision(arg1: OGRFieldDefnH, arg2: ::std::ffi::c_int);
+}
+extern "C" {
+    pub fn OGR_Fld_GetTZFlag(arg1: OGRFieldDefnH) -> ::std::ffi::c_int;
+}
+extern "C" {
+    pub fn OGR_Fld_SetTZFlag(arg1: OGRFieldDefnH, arg2: ::std::ffi::c_int);
 }
 extern "C" {
     pub fn OGR_Fld_Set(
@@ -4537,6 +4244,12 @@ extern "C" {
     pub fn OGR_F_DumpReadable(arg1: OGRFeatureH, arg2: *mut FILE);
 }
 extern "C" {
+    pub fn OGR_F_DumpReadableAsString(
+        arg1: OGRFeatureH,
+        arg2: CSLConstList,
+    ) -> *mut ::std::ffi::c_char;
+}
+extern "C" {
     pub fn OGR_F_SetFrom(
         arg1: OGRFeatureH,
         arg2: OGRFeatureH,
@@ -4561,15 +4274,12 @@ extern "C" {
     pub fn OGR_F_SetStyleStringDirectly(arg1: OGRFeatureH, arg2: *mut ::std::ffi::c_char);
 }
 extern "C" {
-    #[doc = " Return style table"]
     pub fn OGR_F_GetStyleTable(arg1: OGRFeatureH) -> OGRStyleTableH;
 }
 extern "C" {
-    #[doc = " Set style table and take ownership"]
     pub fn OGR_F_SetStyleTableDirectly(arg1: OGRFeatureH, arg2: OGRStyleTableH);
 }
 extern "C" {
-    #[doc = " Set style table"]
     pub fn OGR_F_SetStyleTable(arg1: OGRFeatureH, arg2: OGRStyleTableH);
 }
 extern "C" {
@@ -4682,11 +4392,8 @@ extern "C" {
 extern "C" {
     pub fn OGR_GlobFldDomain_GetGlob(arg1: OGRFieldDomainH) -> *const ::std::ffi::c_char;
 }
-#[doc = " Opaque type for a layer (OGRLayer)"]
 pub type OGRLayerH = *mut ::std::ffi::c_void;
-#[doc = " Opaque type for a OGR datasource (OGRDataSource)"]
 pub type OGRDataSourceH = *mut ::std::ffi::c_void;
-#[doc = " Opaque type for a OGR driver (OGRSFDriver)"]
 pub type OGRSFDriverH = *mut ::std::ffi::c_void;
 extern "C" {
     pub fn OGR_L_GetName(arg1: OGRLayerH) -> *const ::std::ffi::c_char;
@@ -4694,13 +4401,10 @@ extern "C" {
 extern "C" {
     pub fn OGR_L_GetGeomType(arg1: OGRLayerH) -> OGRwkbGeometryType::Type;
 }
-#[doc = " Result item of OGR_L_GetGeometryTypes"]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct OGRGeometryTypeCounter {
-    #[doc = " Geometry type"]
     pub eGeomType: OGRwkbGeometryType::Type,
-    #[doc = " Number of geometries of type eGeomType"]
     pub nCount: i64,
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
@@ -4765,6 +4469,29 @@ extern "C" {
     pub fn OGR_L_GetArrowStream(
         hLayer: OGRLayerH,
         out_stream: *mut ArrowArrayStream,
+        papszOptions: *mut *mut ::std::ffi::c_char,
+    ) -> bool;
+}
+extern "C" {
+    pub fn OGR_L_IsArrowSchemaSupported(
+        hLayer: OGRLayerH,
+        schema: *const ArrowSchema,
+        papszOptions: *mut *mut ::std::ffi::c_char,
+        ppszErrorMsg: *mut *mut ::std::ffi::c_char,
+    ) -> bool;
+}
+extern "C" {
+    pub fn OGR_L_CreateFieldFromArrowSchema(
+        hLayer: OGRLayerH,
+        schema: *const ArrowSchema,
+        papszOptions: *mut *mut ::std::ffi::c_char,
+    ) -> bool;
+}
+extern "C" {
+    pub fn OGR_L_WriteArrowBatch(
+        hLayer: OGRLayerH,
+        schema: *const ArrowSchema,
+        array: *mut ArrowArray,
         papszOptions: *mut *mut ::std::ffi::c_char,
     ) -> bool;
 }
@@ -4904,7 +4631,6 @@ extern "C" {
     pub fn OGR_L_Rename(hLayer: OGRLayerH, pszNewName: *const ::std::ffi::c_char) -> OGRErr::Type;
 }
 extern "C" {
-    #[doc = " @cond Doxygen_Suppress"]
     pub fn OGR_L_Reference(arg1: OGRLayerH) -> ::std::ffi::c_int;
 }
 extern "C" {
@@ -4914,30 +4640,24 @@ extern "C" {
     pub fn OGR_L_GetRefCount(arg1: OGRLayerH) -> ::std::ffi::c_int;
 }
 extern "C" {
-    #[doc = " @endcond"]
     pub fn OGR_L_SyncToDisk(arg1: OGRLayerH) -> OGRErr::Type;
 }
 extern "C" {
-    #[doc = " @cond Doxygen_Suppress"]
     pub fn OGR_L_GetFeaturesRead(arg1: OGRLayerH) -> GIntBig;
 }
 extern "C" {
-    #[doc = " @endcond"]
     pub fn OGR_L_GetFIDColumn(arg1: OGRLayerH) -> *const ::std::ffi::c_char;
 }
 extern "C" {
     pub fn OGR_L_GetGeometryColumn(arg1: OGRLayerH) -> *const ::std::ffi::c_char;
 }
 extern "C" {
-    #[doc = " Get style table"]
     pub fn OGR_L_GetStyleTable(arg1: OGRLayerH) -> OGRStyleTableH;
 }
 extern "C" {
-    #[doc = " Set style table (and take ownership)"]
     pub fn OGR_L_SetStyleTableDirectly(arg1: OGRLayerH, arg2: OGRStyleTableH);
 }
 extern "C" {
-    #[doc = " Set style table"]
     pub fn OGR_L_SetStyleTable(arg1: OGRLayerH, arg2: OGRStyleTableH);
 }
 extern "C" {
@@ -5075,7 +4795,6 @@ extern "C" {
     pub fn OGR_DS_ReleaseResultSet(arg1: OGRDataSourceH, arg2: OGRLayerH);
 }
 extern "C" {
-    #[doc = " @cond Doxygen_Suppress"]
     pub fn OGR_DS_Reference(arg1: OGRDataSourceH) -> ::std::ffi::c_int;
 }
 extern "C" {
@@ -5088,19 +4807,15 @@ extern "C" {
     pub fn OGR_DS_GetSummaryRefCount(arg1: OGRDataSourceH) -> ::std::ffi::c_int;
 }
 extern "C" {
-    #[doc = " @endcond */\n/** Flush pending changes to disk. See GDALDataset::FlushCache()"]
     pub fn OGR_DS_SyncToDisk(arg1: OGRDataSourceH) -> OGRErr::Type;
 }
 extern "C" {
-    #[doc = " Get style table"]
     pub fn OGR_DS_GetStyleTable(arg1: OGRDataSourceH) -> OGRStyleTableH;
 }
 extern "C" {
-    #[doc = " Set style table (and take ownership)"]
     pub fn OGR_DS_SetStyleTableDirectly(arg1: OGRDataSourceH, arg2: OGRStyleTableH);
 }
 extern "C" {
-    #[doc = " Set style table"]
     pub fn OGR_DS_SetStyleTable(arg1: OGRDataSourceH, arg2: OGRStyleTableH);
 }
 extern "C" {
@@ -5158,14 +4873,12 @@ extern "C" {
     pub fn OGRReleaseDataSource(arg1: OGRDataSourceH) -> OGRErr::Type;
 }
 extern "C" {
-    #[doc = " @cond Doxygen_Suppress"]
     pub fn OGRRegisterDriver(arg1: OGRSFDriverH);
 }
 extern "C" {
     pub fn OGRDeregisterDriver(arg1: OGRSFDriverH);
 }
 extern "C" {
-    #[doc = " @endcond"]
     pub fn OGRGetDriverCount() -> ::std::ffi::c_int;
 }
 extern "C" {
@@ -5175,23 +4888,18 @@ extern "C" {
     pub fn OGRGetDriverByName(arg1: *const ::std::ffi::c_char) -> OGRSFDriverH;
 }
 extern "C" {
-    #[doc = " @cond Doxygen_Suppress"]
     pub fn OGRGetOpenDSCount() -> ::std::ffi::c_int;
 }
 extern "C" {
     pub fn OGRGetOpenDS(iDS: ::std::ffi::c_int) -> OGRDataSourceH;
 }
 extern "C" {
-    #[doc = " @endcond"]
     pub fn OGRRegisterAll();
 }
 extern "C" {
-    #[doc = " Clean-up all drivers (including raster ones starting with GDAL 2.0.\n See GDALDestroyDriverManager()"]
     pub fn OGRCleanupAll();
 }
-#[doc = " Style manager opaque type"]
 pub type OGRStyleMgrH = *mut ::std::ffi::c_void;
-#[doc = " Style tool opaque type"]
 pub type OGRStyleToolH = *mut ::std::ffi::c_void;
 extern "C" {
     pub fn OGR_SM_Create(hStyleTable: OGRStyleTableH) -> OGRStyleMgrH;
@@ -5341,39 +5049,22 @@ extern "C" {
     pub fn OGR_STBL_GetLastStyleName(hStyleTable: OGRStyleTableH) -> *const ::std::ffi::c_char;
 }
 pub mod GDALDataType {
-    #[doc = " Pixel data types"]
     pub type Type = ::std::ffi::c_uint;
-    #[doc = " Unknown or unspecified type"]
     pub const GDT_Unknown: Type = 0;
-    #[doc = " Eight bit unsigned integer"]
     pub const GDT_Byte: Type = 1;
-    #[doc = " 8-bit signed integer (GDAL >= 3.7)"]
     pub const GDT_Int8: Type = 14;
-    #[doc = " Sixteen bit unsigned integer"]
     pub const GDT_UInt16: Type = 2;
-    #[doc = " Sixteen bit signed integer"]
     pub const GDT_Int16: Type = 3;
-    #[doc = " Thirty two bit unsigned integer"]
     pub const GDT_UInt32: Type = 4;
-    #[doc = " Thirty two bit signed integer"]
     pub const GDT_Int32: Type = 5;
-    #[doc = " 64 bit unsigned integer (GDAL >= 3.5)"]
     pub const GDT_UInt64: Type = 12;
-    #[doc = " 64 bit signed integer  (GDAL >= 3.5)"]
     pub const GDT_Int64: Type = 13;
-    #[doc = " Thirty two bit floating point"]
     pub const GDT_Float32: Type = 6;
-    #[doc = " Sixty four bit floating point"]
     pub const GDT_Float64: Type = 7;
-    #[doc = " Complex Int16"]
     pub const GDT_CInt16: Type = 8;
-    #[doc = " Complex Int32"]
     pub const GDT_CInt32: Type = 9;
-    #[doc = " Complex Float32"]
     pub const GDT_CFloat32: Type = 10;
-    #[doc = " Complex Float64"]
     pub const GDT_CFloat64: Type = 11;
-    #[doc = " Complex Float64"]
     pub const GDT_TypeCount: Type = 15;
 }
 extern "C" {
@@ -5446,7 +5137,6 @@ extern "C" {
     ) -> ::std::ffi::c_int;
 }
 pub mod GDALAsyncStatusType {
-    #[doc = " status of the asynchronous stream"]
     pub type Type = ::std::ffi::c_uint;
     pub const GARIO_PENDING: Type = 0;
     pub const GARIO_UPDATE: Type = 1;
@@ -5464,70 +5154,41 @@ extern "C" {
     ) -> GDALAsyncStatusType::Type;
 }
 pub mod GDALAccess {
-    #[doc = " Flag indicating read/write, or read-only access to data."]
     pub type Type = ::std::ffi::c_uint;
-    #[doc = " Read only (no update) access"]
     pub const GA_ReadOnly: Type = 0;
-    #[doc = " Read/write access."]
     pub const GA_Update: Type = 1;
 }
 pub mod GDALRWFlag {
-    #[doc = " Read/Write flag for RasterIO() method"]
     pub type Type = ::std::ffi::c_uint;
-    #[doc = " Read data"]
     pub const GF_Read: Type = 0;
-    #[doc = " Write data"]
     pub const GF_Write: Type = 1;
 }
 pub mod GDALRIOResampleAlg {
-    #[doc = " RasterIO() resampling method.\n @since GDAL 2.0"]
     pub type Type = ::std::ffi::c_uint;
-    #[doc = " Nearest neighbour"]
     pub const GRIORA_NearestNeighbour: Type = 0;
-    #[doc = " Bilinear (2x2 kernel)"]
     pub const GRIORA_Bilinear: Type = 1;
-    #[doc = " Cubic Convolution Approximation (4x4 kernel)"]
     pub const GRIORA_Cubic: Type = 2;
-    #[doc = " Cubic B-Spline Approximation (4x4 kernel)"]
     pub const GRIORA_CubicSpline: Type = 3;
-    #[doc = " Lanczos windowed sinc interpolation (6x6 kernel)"]
     pub const GRIORA_Lanczos: Type = 4;
-    #[doc = " Average"]
     pub const GRIORA_Average: Type = 5;
-    #[doc = " Mode (selects the value which appears most often of all the sampled\npoints)"]
     pub const GRIORA_Mode: Type = 6;
-    #[doc = " Gauss blurring"]
     pub const GRIORA_Gauss: Type = 7;
-    #[doc = " @cond Doxygen_Suppress"]
     pub const GRIORA_RESERVED_START: Type = 8;
-    #[doc = " @cond Doxygen_Suppress"]
     pub const GRIORA_RESERVED_END: Type = 13;
-    #[doc = " @endcond */\n/** RMS: Root Mean Square / Quadratic Mean.\n For complex numbers, applies on the real and imaginary part\n independently."]
     pub const GRIORA_RMS: Type = 14;
-    #[doc = " @cond Doxygen_Suppress"]
     pub const GRIORA_LAST: Type = 14;
 }
-#[doc = " Structure to pass extra arguments to RasterIO() method,\n must be initialized with INIT_RASTERIO_EXTRA_ARG\n @since GDAL 2.0"]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct GDALRasterIOExtraArg {
-    #[doc = " Version of structure (to allow future extensions of the structure)"]
     pub nVersion: ::std::ffi::c_int,
-    #[doc = " Resampling algorithm"]
     pub eResampleAlg: GDALRIOResampleAlg::Type,
-    #[doc = " Progress callback"]
     pub pfnProgress: GDALProgressFunc,
-    #[doc = " Progress callback user data"]
     pub pProgressData: *mut ::std::ffi::c_void,
-    #[doc = " Indicate if dfXOff, dfYOff, dfXSize and dfYSize are set.\nMostly reserved from the VRT driver to communicate a more precise\nsource window. Must be such that dfXOff - nXOff < 1.0 and\ndfYOff - nYOff < 1.0 and nXSize - dfXSize < 1.0 and nYSize - dfYSize\n< 1.0"]
     pub bFloatingPointWindowValidity: ::std::ffi::c_int,
-    #[doc = " Pixel offset to the top left corner. Only valid if\n bFloatingPointWindowValidity = TRUE"]
     pub dfXOff: f64,
-    #[doc = " Line offset to the top left corner. Only valid if\n bFloatingPointWindowValidity = TRUE"]
     pub dfYOff: f64,
-    #[doc = " Width in pixels of the area of interest. Only valid if\n bFloatingPointWindowValidity = TRUE"]
     pub dfXSize: f64,
-    #[doc = " Height in pixels of the area of interest. Only valid if\n bFloatingPointWindowValidity = TRUE"]
     pub dfYSize: f64,
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
@@ -5554,43 +5215,24 @@ const _: () = {
         [::std::mem::offset_of!(GDALRasterIOExtraArg, dfYSize) - 56usize];
 };
 pub mod GDALColorInterp {
-    #[doc = " Types of color interpretation for raster bands."]
     pub type Type = ::std::ffi::c_uint;
-    #[doc = " Undefined"]
     pub const GCI_Undefined: Type = 0;
-    #[doc = " Greyscale"]
     pub const GCI_GrayIndex: Type = 1;
-    #[doc = " Paletted (see associated color table)"]
     pub const GCI_PaletteIndex: Type = 2;
-    #[doc = " Red band of RGBA image"]
     pub const GCI_RedBand: Type = 3;
-    #[doc = " Green band of RGBA image"]
     pub const GCI_GreenBand: Type = 4;
-    #[doc = " Blue band of RGBA image"]
     pub const GCI_BlueBand: Type = 5;
-    #[doc = " Alpha (0=transparent, 255=opaque)"]
     pub const GCI_AlphaBand: Type = 6;
-    #[doc = " Hue band of HLS image"]
     pub const GCI_HueBand: Type = 7;
-    #[doc = " Saturation band of HLS image"]
     pub const GCI_SaturationBand: Type = 8;
-    #[doc = " Lightness band of HLS image"]
     pub const GCI_LightnessBand: Type = 9;
-    #[doc = " Cyan band of CMYK image"]
     pub const GCI_CyanBand: Type = 10;
-    #[doc = " Magenta band of CMYK image"]
     pub const GCI_MagentaBand: Type = 11;
-    #[doc = " Yellow band of CMYK image"]
     pub const GCI_YellowBand: Type = 12;
-    #[doc = " Black band of CMYK image"]
     pub const GCI_BlackBand: Type = 13;
-    #[doc = " Y Luminance"]
     pub const GCI_YCbCr_YBand: Type = 14;
-    #[doc = " Cb Chroma"]
     pub const GCI_YCbCr_CbBand: Type = 15;
-    #[doc = " Cr Chroma"]
     pub const GCI_YCbCr_CrBand: Type = 16;
-    #[doc = " Max current value (equals to GCI_YCbCr_CrBand currently)"]
     pub const GCI_Max: Type = 16;
 }
 extern "C" {
@@ -5603,15 +5245,10 @@ extern "C" {
     ) -> GDALColorInterp::Type;
 }
 pub mod GDALPaletteInterp {
-    #[doc = " Types of color interpretations for a GDALColorTable."]
     pub type Type = ::std::ffi::c_uint;
-    #[doc = " Grayscale (in GDALColorEntry.c1)"]
     pub const GPI_Gray: Type = 0;
-    #[doc = " Red, Green, Blue and Alpha in (in c1, c2, c3 and c4)"]
     pub const GPI_RGB: Type = 1;
-    #[doc = " Cyan, Magenta, Yellow and Black (in c1, c2, c3 and c4)"]
     pub const GPI_CMYK: Type = 2;
-    #[doc = " Hue, Lightness and Saturation (in c1, c2, and c3)"]
     pub const GPI_HLS: Type = 3;
 }
 extern "C" {
@@ -5619,40 +5256,24 @@ extern "C" {
         arg1: GDALPaletteInterp::Type,
     ) -> *const ::std::ffi::c_char;
 }
-#[doc = " Opaque type used for the C bindings of the C++ GDALMajorObject class"]
 pub type GDALMajorObjectH = *mut ::std::ffi::c_void;
-#[doc = " Opaque type used for the C bindings of the C++ GDALDataset class"]
 pub type GDALDatasetH = *mut ::std::ffi::c_void;
-#[doc = " Opaque type used for the C bindings of the C++ GDALRasterBand class"]
 pub type GDALRasterBandH = *mut ::std::ffi::c_void;
-#[doc = " Opaque type used for the C bindings of the C++ GDALDriver class"]
 pub type GDALDriverH = *mut ::std::ffi::c_void;
-#[doc = " Opaque type used for the C bindings of the C++ GDALColorTable class"]
 pub type GDALColorTableH = *mut ::std::ffi::c_void;
-#[doc = " Opaque type used for the C bindings of the C++ GDALRasterAttributeTable\n class"]
 pub type GDALRasterAttributeTableH = *mut ::std::ffi::c_void;
-#[doc = " Opaque type used for the C bindings of the C++ GDALAsyncReader class"]
 pub type GDALAsyncReaderH = *mut ::std::ffi::c_void;
-#[doc = " Opaque type used for the C bindings of the C++ GDALRelationship class\n  @since GDAL 3.6"]
 pub type GDALRelationshipH = *mut ::std::ffi::c_void;
-#[doc = " Type to express pixel, line or band spacing. Signed 64 bit integer."]
 pub type GSpacing = GIntBig;
 pub mod GDALExtendedDataTypeClass {
-    #[doc = " Enumeration giving the class of a GDALExtendedDataType.\n @since GDAL 3.1"]
     pub type Type = ::std::ffi::c_uint;
-    #[doc = " Numeric value. Based on GDALDataType enumeration"]
     pub const GEDTC_NUMERIC: Type = 0;
-    #[doc = " String value."]
     pub const GEDTC_STRING: Type = 1;
-    #[doc = " Compound data type."]
     pub const GEDTC_COMPOUND: Type = 2;
 }
 pub mod GDALExtendedDataTypeSubType {
-    #[doc = " Enumeration giving the subtype of a GDALExtendedDataType.\n @since GDAL 3.4"]
     pub type Type = ::std::ffi::c_uint;
-    #[doc = " None."]
     pub const GEDTST_NONE: Type = 0;
-    #[doc = " JSon. Only applies to GEDTC_STRING"]
     pub const GEDTST_JSON: Type = 1;
 }
 #[repr(C)]
@@ -5660,45 +5281,45 @@ pub mod GDALExtendedDataTypeSubType {
 pub struct GDALExtendedDataTypeHS {
     _unused: [u8; 0],
 }
-#[doc = " Opaque type for C++ GDALExtendedDataType"]
 pub type GDALExtendedDataTypeH = *mut GDALExtendedDataTypeHS;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct GDALEDTComponentHS {
     _unused: [u8; 0],
 }
-#[doc = " Opaque type for C++ GDALEDTComponent"]
 pub type GDALEDTComponentH = *mut GDALEDTComponentHS;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct GDALGroupHS {
     _unused: [u8; 0],
 }
-#[doc = " Opaque type for C++ GDALGroup"]
 pub type GDALGroupH = *mut GDALGroupHS;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct GDALMDArrayHS {
     _unused: [u8; 0],
 }
-#[doc = " Opaque type for C++ GDALMDArray"]
 pub type GDALMDArrayH = *mut GDALMDArrayHS;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct GDALAttributeHS {
     _unused: [u8; 0],
 }
-#[doc = " Opaque type for C++ GDALAttribute"]
 pub type GDALAttributeH = *mut GDALAttributeHS;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct GDALDimensionHS {
     _unused: [u8; 0],
 }
-#[doc = " Opaque type for C++ GDALDimension"]
 pub type GDALDimensionH = *mut GDALDimensionHS;
 extern "C" {
     pub fn GDALAllRegister();
+}
+extern "C" {
+    pub fn GDALRegisterPlugins();
+}
+extern "C" {
+    pub fn GDALRegisterPlugin(name: *const ::std::ffi::c_char) -> CPLErr::Type;
 }
 extern "C" {
     pub fn GDALCreate(
@@ -5819,23 +5440,15 @@ extern "C" {
 extern "C" {
     pub fn GDALGetDriverCreationOptionList(arg1: GDALDriverH) -> *const ::std::ffi::c_char;
 }
-#[doc = " Ground Control Point"]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct GDAL_GCP {
-    #[doc = " Unique identifier, often numeric"]
     pub pszId: *mut ::std::ffi::c_char,
-    #[doc = " Informational message or \"\""]
     pub pszInfo: *mut ::std::ffi::c_char,
-    #[doc = " Pixel (x) location of GCP on raster"]
     pub dfGCPPixel: f64,
-    #[doc = " Line (y) location of GCP on raster"]
     pub dfGCPLine: f64,
-    #[doc = " X position of GCP in georeferenced space"]
     pub dfGCPX: f64,
-    #[doc = " Y position of GCP in georeferenced space"]
     pub dfGCPY: f64,
-    #[doc = " Elevation of GCP, or zero if not known"]
     pub dfGCPZ: f64,
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
@@ -6354,7 +5967,6 @@ extern "C" {
         ppszFailureReason: *mut *mut ::std::ffi::c_char,
     ) -> bool;
 }
-#[doc = " Type of functions to pass to GDALDatasetSetQueryLoggerFunc\n @since GDAL 3.7"]
 pub type GDALQueryLoggerFunc = ::std::option::Option<
     unsafe extern "C" fn(
         pszSQL: *const ::std::ffi::c_char,
@@ -6365,14 +5977,40 @@ pub type GDALQueryLoggerFunc = ::std::option::Option<
     ),
 >;
 extern "C" {
-    #[doc = " Sets the SQL query logger callback.\n\n When supported by the driver, the callback will be called with\n the executed SQL text, the error message, the execution time in milliseconds,\n the number of records fetched/affected and the client status data.\n\n A value of -1 in the execution time or in the number of records indicates\n that the values are unknown.\n\n @param hDS                   Dataset handle.\n @param pfnQueryLoggerFunc    Callback function\n @param poQueryLoggerArg      Opaque client status data\n @return                      true in case of success.\n @since                       GDAL 3.7"]
     pub fn GDALDatasetSetQueryLoggerFunc(
         hDS: GDALDatasetH,
         pfnQueryLoggerFunc: GDALQueryLoggerFunc,
         poQueryLoggerArg: *mut ::std::ffi::c_void,
     ) -> bool;
 }
-#[doc = " Type of functions to pass to GDALAddDerivedBandPixelFunc.\n @since GDAL 2.2"]
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct GDALSubdatasetInfo {
+    _unused: [u8; 0],
+}
+pub type GDALSubdatasetInfoH = *mut GDALSubdatasetInfo;
+extern "C" {
+    pub fn GDALGetSubdatasetInfo(pszFileName: *const ::std::ffi::c_char) -> GDALSubdatasetInfoH;
+}
+extern "C" {
+    pub fn GDALSubdatasetInfoGetPathComponent(
+        hInfo: GDALSubdatasetInfoH,
+    ) -> *mut ::std::ffi::c_char;
+}
+extern "C" {
+    pub fn GDALSubdatasetInfoGetSubdatasetComponent(
+        hInfo: GDALSubdatasetInfoH,
+    ) -> *mut ::std::ffi::c_char;
+}
+extern "C" {
+    pub fn GDALSubdatasetInfoModifyPathComponent(
+        hInfo: GDALSubdatasetInfoH,
+        pszNewPath: *const ::std::ffi::c_char,
+    ) -> *mut ::std::ffi::c_char;
+}
+extern "C" {
+    pub fn GDALDestroySubdatasetInfo(hInfo: GDALSubdatasetInfoH);
+}
 pub type GDALDerivedPixelFunc = ::std::option::Option<
     unsafe extern "C" fn(
         papoSources: *mut *mut ::std::ffi::c_void,
@@ -6386,7 +6024,6 @@ pub type GDALDerivedPixelFunc = ::std::option::Option<
         nLineSpace: ::std::ffi::c_int,
     ) -> CPLErr::Type,
 >;
-#[doc = " Type of functions to pass to GDALAddDerivedBandPixelFuncWithArgs.\n @since GDAL 3.4"]
 pub type GDALDerivedPixelFuncWithArgs = ::std::option::Option<
     unsafe extern "C" fn(
         papoSources: *mut *mut ::std::ffi::c_void,
@@ -6933,41 +6570,23 @@ extern "C" {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct GDALRPCInfoV1 {
-    #[doc = "< Line offset"]
     pub dfLINE_OFF: f64,
-    #[doc = "< Sample/Pixel offset"]
     pub dfSAMP_OFF: f64,
-    #[doc = "< Latitude offset"]
     pub dfLAT_OFF: f64,
-    #[doc = "< Longitude offset"]
     pub dfLONG_OFF: f64,
-    #[doc = "< Height offset"]
     pub dfHEIGHT_OFF: f64,
-    #[doc = "< Line scale"]
     pub dfLINE_SCALE: f64,
-    #[doc = "< Sample/Pixel scale"]
     pub dfSAMP_SCALE: f64,
-    #[doc = "< Latitude scale"]
     pub dfLAT_SCALE: f64,
-    #[doc = "< Longitude scale"]
     pub dfLONG_SCALE: f64,
-    #[doc = "< Height scale"]
     pub dfHEIGHT_SCALE: f64,
-    #[doc = "< Line Numerator Coefficients"]
     pub adfLINE_NUM_COEFF: [f64; 20usize],
-    #[doc = "< Line Denominator Coefficients"]
     pub adfLINE_DEN_COEFF: [f64; 20usize],
-    #[doc = "< Sample/Pixel Numerator Coefficients"]
     pub adfSAMP_NUM_COEFF: [f64; 20usize],
-    #[doc = "< Sample/Pixel Denominator Coefficients"]
     pub adfSAMP_DEN_COEFF: [f64; 20usize],
-    #[doc = "< Minimum longitude"]
     pub dfMIN_LONG: f64,
-    #[doc = "< Minimum latitude"]
     pub dfMIN_LAT: f64,
-    #[doc = "< Maximum longitude"]
     pub dfMAX_LONG: f64,
-    #[doc = "< Maximum latitude"]
     pub dfMAX_LAT: f64,
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
@@ -7011,49 +6630,28 @@ const _: () = {
     ["Offset of field: GDALRPCInfoV1::dfMAX_LAT"]
         [::std::mem::offset_of!(GDALRPCInfoV1, dfMAX_LAT) - 744usize];
 };
-#[doc = " Structure to store Rational Polynomial Coefficients / Rigorous Projection\n Model. See http://geotiff.maptools.org/rpc_prop.html"]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct GDALRPCInfoV2 {
-    #[doc = "< Line offset"]
     pub dfLINE_OFF: f64,
-    #[doc = "< Sample/Pixel offset"]
     pub dfSAMP_OFF: f64,
-    #[doc = "< Latitude offset"]
     pub dfLAT_OFF: f64,
-    #[doc = "< Longitude offset"]
     pub dfLONG_OFF: f64,
-    #[doc = "< Height offset"]
     pub dfHEIGHT_OFF: f64,
-    #[doc = "< Line scale"]
     pub dfLINE_SCALE: f64,
-    #[doc = "< Sample/Pixel scale"]
     pub dfSAMP_SCALE: f64,
-    #[doc = "< Latitude scale"]
     pub dfLAT_SCALE: f64,
-    #[doc = "< Longitude scale"]
     pub dfLONG_SCALE: f64,
-    #[doc = "< Height scale"]
     pub dfHEIGHT_SCALE: f64,
-    #[doc = "< Line Numerator Coefficients"]
     pub adfLINE_NUM_COEFF: [f64; 20usize],
-    #[doc = "< Line Denominator Coefficients"]
     pub adfLINE_DEN_COEFF: [f64; 20usize],
-    #[doc = "< Sample/Pixel Numerator Coefficients"]
     pub adfSAMP_NUM_COEFF: [f64; 20usize],
-    #[doc = "< Sample/Pixel Denominator Coefficients"]
     pub adfSAMP_DEN_COEFF: [f64; 20usize],
-    #[doc = "< Minimum longitude"]
     pub dfMIN_LONG: f64,
-    #[doc = "< Minimum latitude"]
     pub dfMIN_LAT: f64,
-    #[doc = "< Maximum longitude"]
     pub dfMAX_LONG: f64,
-    #[doc = "< Maximum latitude"]
     pub dfMAX_LAT: f64,
-    #[doc = "< Bias error"]
     pub dfERR_BIAS: f64,
-    #[doc = "< Random error"]
     pub dfERR_RAND: f64,
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
@@ -7102,24 +6700,17 @@ const _: () = {
         [::std::mem::offset_of!(GDALRPCInfoV2, dfERR_RAND) - 760usize];
 };
 extern "C" {
-    #[doc = " @cond Doxygen_Suppress"]
     pub fn GDALExtractRPCInfoV1(arg1: CSLConstList, arg2: *mut GDALRPCInfoV1) -> ::std::ffi::c_int;
 }
 extern "C" {
-    #[doc = " @endcond"]
     pub fn GDALExtractRPCInfoV2(arg1: CSLConstList, arg2: *mut GDALRPCInfoV2) -> ::std::ffi::c_int;
 }
-#[doc = " Color tuple"]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct GDALColorEntry {
-    #[doc = " gray, red, cyan or hue"]
     pub c1: ::std::ffi::c_short,
-    #[doc = " green, magenta, or lightness"]
     pub c2: ::std::ffi::c_short,
-    #[doc = " blue, yellow, or saturation"]
     pub c3: ::std::ffi::c_short,
-    #[doc = " alpha or blackband"]
     pub c4: ::std::ffi::c_short,
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
@@ -7176,63 +6767,36 @@ extern "C" {
     );
 }
 pub mod GDALRATFieldType {
-    #[doc = " Field type of raster attribute table"]
     pub type Type = ::std::ffi::c_uint;
-    #[doc = " Integer field"]
     pub const GFT_Integer: Type = 0;
-    #[doc = " Floating point (double) field"]
     pub const GFT_Real: Type = 1;
-    #[doc = " String field"]
     pub const GFT_String: Type = 2;
 }
 pub mod GDALRATFieldUsage {
-    #[doc = " Field usage of raster attribute table"]
     pub type Type = ::std::ffi::c_uint;
-    #[doc = " General purpose field."]
     pub const GFU_Generic: Type = 0;
-    #[doc = " Histogram pixel count"]
     pub const GFU_PixelCount: Type = 1;
-    #[doc = " Class name"]
     pub const GFU_Name: Type = 2;
-    #[doc = " Class range minimum"]
     pub const GFU_Min: Type = 3;
-    #[doc = " Class range maximum"]
     pub const GFU_Max: Type = 4;
-    #[doc = " Class value (min=max)"]
     pub const GFU_MinMax: Type = 5;
-    #[doc = " Red class color (0-255)"]
     pub const GFU_Red: Type = 6;
-    #[doc = " Green class color (0-255)"]
     pub const GFU_Green: Type = 7;
-    #[doc = " Blue class color (0-255)"]
     pub const GFU_Blue: Type = 8;
-    #[doc = " Alpha (0=transparent,255=opaque)"]
     pub const GFU_Alpha: Type = 9;
-    #[doc = " Color Range Red Minimum"]
     pub const GFU_RedMin: Type = 10;
-    #[doc = " Color Range Green Minimum"]
     pub const GFU_GreenMin: Type = 11;
-    #[doc = " Color Range Blue Minimum"]
     pub const GFU_BlueMin: Type = 12;
-    #[doc = " Color Range Alpha Minimum"]
     pub const GFU_AlphaMin: Type = 13;
-    #[doc = " Color Range Red Maximum"]
     pub const GFU_RedMax: Type = 14;
-    #[doc = " Color Range Green Maximum"]
     pub const GFU_GreenMax: Type = 15;
-    #[doc = " Color Range Blue Maximum"]
     pub const GFU_BlueMax: Type = 16;
-    #[doc = " Color Range Alpha Maximum"]
     pub const GFU_AlphaMax: Type = 17;
-    #[doc = " Maximum GFU value (equals to GFU_AlphaMax+1 currently)"]
     pub const GFU_MaxCount: Type = 18;
 }
 pub mod GDALRATTableType {
-    #[doc = " RAT table type (thematic or athematic)\n @since GDAL 2.4"]
     pub type Type = ::std::ffi::c_uint;
-    #[doc = " Thematic table type"]
     pub const GRTT_THEMATIC: Type = 0;
-    #[doc = " Athematic table type"]
     pub const GRTT_ATHEMATIC: Type = 1;
 }
 extern "C" {
@@ -7411,25 +6975,16 @@ extern "C" {
     pub fn GDALRATRemoveStatistics(arg1: GDALRasterAttributeTableH);
 }
 pub mod GDALRelationshipCardinality {
-    #[doc = " Cardinality of relationship.\n\n @since GDAL 3.6"]
     pub type Type = ::std::ffi::c_uint;
-    #[doc = " One-to-one"]
     pub const GRC_ONE_TO_ONE: Type = 0;
-    #[doc = " One-to-many"]
     pub const GRC_ONE_TO_MANY: Type = 1;
-    #[doc = " Many-to-one"]
     pub const GRC_MANY_TO_ONE: Type = 2;
-    #[doc = " Many-to-many"]
     pub const GRC_MANY_TO_MANY: Type = 3;
 }
 pub mod GDALRelationshipType {
-    #[doc = " Type of relationship.\n\n @since GDAL 3.6"]
     pub type Type = ::std::ffi::c_uint;
-    #[doc = " Composite relationship"]
     pub const GRT_COMPOSITE: Type = 0;
-    #[doc = " Association relationship"]
     pub const GRT_ASSOCIATION: Type = 1;
-    #[doc = " Aggregation relationship"]
     pub const GRT_AGGREGATION: Type = 2;
 }
 extern "C" {
@@ -7611,13 +7166,9 @@ extern "C" {
     ) -> *mut CPLVirtualMem;
 }
 pub mod GDALTileOrganization {
-    #[doc = " Enumeration to describe the tile organization"]
     pub type Type = ::std::ffi::c_uint;
-    #[doc = " Tile Interleaved by Pixel: tile (0,0) with internal band interleaved by\npixel organization, tile (1, 0), ..."]
     pub const GTO_TIP: Type = 0;
-    #[doc = " Band Interleaved by Tile : tile (0,0) of first band, tile (0,0) of\nsecond band, ... tile (1,0) of first band, tile (1,0) of second band, ..."]
     pub const GTO_BIT: Type = 1;
-    #[doc = " Band SeQuential : all the tiles of first band, all the tiles of\nfollowing band..."]
     pub const GTO_BSQ: Type = 2;
 }
 extern "C" {
@@ -7868,6 +7419,13 @@ extern "C" {
     ) -> GDALGroupH;
 }
 extern "C" {
+    pub fn GDALGroupDeleteGroup(
+        hGroup: GDALGroupH,
+        pszName: *const ::std::ffi::c_char,
+        papszOptions: CSLConstList,
+    ) -> bool;
+}
+extern "C" {
     pub fn GDALGroupCreateDimension(
         hGroup: GDALGroupH,
         pszName: *const ::std::ffi::c_char,
@@ -7888,6 +7446,13 @@ extern "C" {
     ) -> GDALMDArrayH;
 }
 extern "C" {
+    pub fn GDALGroupDeleteMDArray(
+        hGroup: GDALGroupH,
+        pszName: *const ::std::ffi::c_char,
+        papszOptions: CSLConstList,
+    ) -> bool;
+}
+extern "C" {
     pub fn GDALGroupCreateAttribute(
         hGroup: GDALGroupH,
         pszName: *const ::std::ffi::c_char,
@@ -7896,6 +7461,23 @@ extern "C" {
         hEDT: GDALExtendedDataTypeH,
         papszOptions: CSLConstList,
     ) -> GDALAttributeH;
+}
+extern "C" {
+    pub fn GDALGroupDeleteAttribute(
+        hGroup: GDALGroupH,
+        pszName: *const ::std::ffi::c_char,
+        papszOptions: CSLConstList,
+    ) -> bool;
+}
+extern "C" {
+    pub fn GDALGroupRename(hGroup: GDALGroupH, pszNewName: *const ::std::ffi::c_char) -> bool;
+}
+extern "C" {
+    pub fn GDALGroupSubsetDimensionFromSelection(
+        hGroup: GDALGroupH,
+        pszSelection: *const ::std::ffi::c_char,
+        papszOptions: CSLConstList,
+    ) -> GDALGroupH;
 }
 extern "C" {
     pub fn GDALMDArrayRelease(hMDArray: GDALMDArrayH);
@@ -7984,6 +7566,13 @@ extern "C" {
         hEDT: GDALExtendedDataTypeH,
         papszOptions: CSLConstList,
     ) -> GDALAttributeH;
+}
+extern "C" {
+    pub fn GDALMDArrayDeleteAttribute(
+        hArray: GDALMDArrayH,
+        pszName: *const ::std::ffi::c_char,
+        papszOptions: CSLConstList,
+    ) -> bool;
 }
 extern "C" {
     pub fn GDALMDArrayResize(
@@ -8135,6 +7724,15 @@ extern "C" {
     ) -> GDALDatasetH;
 }
 extern "C" {
+    pub fn GDALMDArrayAsClassicDatasetEx(
+        hArray: GDALMDArrayH,
+        iXDim: usize,
+        iYDim: usize,
+        hRootGroup: GDALGroupH,
+        papszOptions: CSLConstList,
+    ) -> GDALDatasetH;
+}
+extern "C" {
     pub fn GDALMDArrayGetStatistics(
         hArray: GDALMDArrayH,
         arg1: GDALDatasetH,
@@ -8161,6 +7759,21 @@ extern "C" {
         pnValidCount: *mut GUInt64,
         arg2: GDALProgressFunc,
         pProgressData: *mut ::std::ffi::c_void,
+    ) -> ::std::ffi::c_int;
+}
+extern "C" {
+    pub fn GDALMDArrayComputeStatisticsEx(
+        hArray: GDALMDArrayH,
+        arg1: GDALDatasetH,
+        bApproxOK: ::std::ffi::c_int,
+        pdfMin: *mut f64,
+        pdfMax: *mut f64,
+        pdfMean: *mut f64,
+        pdfStdDev: *mut f64,
+        pnValidCount: *mut GUInt64,
+        arg2: GDALProgressFunc,
+        pProgressData: *mut ::std::ffi::c_void,
+        papszOptions: CSLConstList,
     ) -> ::std::ffi::c_int;
 }
 extern "C" {
@@ -8193,6 +7806,9 @@ extern "C" {
 }
 extern "C" {
     pub fn GDALMDArrayCache(hArray: GDALMDArrayH, papszOptions: CSLConstList) -> ::std::ffi::c_int;
+}
+extern "C" {
+    pub fn GDALMDArrayRename(hArray: GDALMDArrayH, pszNewName: *const ::std::ffi::c_char) -> bool;
 }
 extern "C" {
     pub fn GDALAttributeRelease(hAttr: GDALAttributeH);
@@ -8284,6 +7900,12 @@ extern "C" {
     ) -> ::std::ffi::c_int;
 }
 extern "C" {
+    pub fn GDALAttributeRename(
+        hAttr: GDALAttributeH,
+        pszNewName: *const ::std::ffi::c_char,
+    ) -> bool;
+}
+extern "C" {
     pub fn GDALDimensionRelease(hDim: GDALDimensionH);
 }
 extern "C" {
@@ -8312,6 +7934,10 @@ extern "C" {
         hDim: GDALDimensionH,
         hArray: GDALMDArrayH,
     ) -> ::std::ffi::c_int;
+}
+extern "C" {
+    pub fn GDALDimensionRename(hDim: GDALDimensionH, pszNewName: *const ::std::ffi::c_char)
+        -> bool;
 }
 extern "C" {
     pub fn GDALComputeMedianCutPCT(
@@ -8418,7 +8044,6 @@ pub type GDALTransformerFunc = ::std::option::Option<
     ) -> ::std::ffi::c_int,
 >;
 extern "C" {
-    #[doc = " @cond Doxygen_Suppress"]
     pub fn GDALDestroyTransformer(pTransformerArg: *mut ::std::ffi::c_void);
 }
 extern "C" {
@@ -8440,7 +8065,6 @@ extern "C" {
     ) -> *mut ::std::ffi::c_void;
 }
 extern "C" {
-    #[doc = " @endcond"]
     pub fn GDALCreateGenImgProjTransformer(
         hSrcDS: GDALDatasetH,
         pszSrcWKT: *const ::std::ffi::c_char,
@@ -8590,7 +8214,6 @@ extern "C" {
     ) -> *mut ::std::ffi::c_void;
 }
 extern "C" {
-    #[doc = " @endcond"]
     pub fn GDALCreateRPCTransformerV2(
         psRPC: *const GDALRPCInfoV2,
         bReversed: ::std::ffi::c_int,
@@ -8696,7 +8319,6 @@ extern "C" {
     ) -> CPLErr::Type;
 }
 extern "C" {
-    #[doc = " @cond Doxygen_Suppress"]
     pub fn GDALSerializeTransformer(
         pfnFunc: GDALTransformerFunc,
         pTransformArg: *mut ::std::ffi::c_void,
@@ -8710,7 +8332,6 @@ extern "C" {
     ) -> CPLErr::Type;
 }
 extern "C" {
-    #[doc = " @endcond"]
     pub fn GDALTransformGeolocations(
         hXBand: GDALRasterBandH,
         hYBand: GDALRasterBandH,
@@ -8722,7 +8343,6 @@ extern "C" {
         papszOptions: *mut *mut ::std::ffi::c_char,
     ) -> CPLErr::Type;
 }
-#[doc = " Contour writer callback type"]
 pub type GDALContourWriter = ::std::option::Option<
     unsafe extern "C" fn(
         dfLevel: f64,
@@ -8732,7 +8352,6 @@ pub type GDALContourWriter = ::std::option::Option<
         arg1: *mut ::std::ffi::c_void,
     ) -> CPLErr::Type,
 >;
-#[doc = " Contour generator opaque type"]
 pub type GDALContourGeneratorH = *mut ::std::ffi::c_void;
 extern "C" {
     pub fn GDAL_CG_Create(
@@ -8762,7 +8381,6 @@ extern "C" {
     ) -> CPLErr::Type;
 }
 extern "C" {
-    #[doc = " @endcond"]
     pub fn GDALContourGenerate(
         hBand: GDALRasterBandH,
         dfContourInterval: f64,
@@ -8788,7 +8406,6 @@ extern "C" {
     ) -> CPLErr::Type;
 }
 pub mod GDALViewshedMode {
-    #[doc = " Viewshed Modes"]
     pub type Type = ::std::ffi::c_uint;
     pub const GVM_Diagonal: Type = 1;
     pub const GVM_Edge: Type = 2;
@@ -8796,7 +8413,6 @@ pub mod GDALViewshedMode {
     pub const GVM_Min: Type = 4;
 }
 pub mod GDALViewshedOutputType {
-    #[doc = " Viewshed output types"]
     pub type Type = ::std::ffi::c_uint;
     pub const GVOT_NORMAL: Type = 1;
     pub const GVOT_MIN_TARGET_HEIGHT_FROM_DEM: Type = 2;
@@ -8891,29 +8507,17 @@ extern "C" {
     ) -> CPLErr::Type;
 }
 pub mod GDALGridAlgorithm {
-    #[doc = " Gridding Algorithms"]
     pub type Type = ::std::ffi::c_uint;
-    #[doc = " Inverse distance to a power"]
     pub const GGA_InverseDistanceToAPower: Type = 1;
-    #[doc = " Moving Average"]
     pub const GGA_MovingAverage: Type = 2;
-    #[doc = " Nearest Neighbor"]
     pub const GGA_NearestNeighbor: Type = 3;
-    #[doc = " Minimum Value (Data Metric)"]
     pub const GGA_MetricMinimum: Type = 4;
-    #[doc = " Maximum Value (Data Metric)"]
     pub const GGA_MetricMaximum: Type = 5;
-    #[doc = " Data Range (Data Metric)"]
     pub const GGA_MetricRange: Type = 6;
-    #[doc = " Number of Points (Data Metric)"]
     pub const GGA_MetricCount: Type = 7;
-    #[doc = " Average Distance (Data Metric)"]
     pub const GGA_MetricAverageDistance: Type = 8;
-    #[doc = " Average Distance Between Data Points (Data Metric)"]
     pub const GGA_MetricAverageDistancePts: Type = 9;
-    #[doc = " Linear interpolation (from Delaunay triangulation. Since GDAL 2.1"]
     pub const GGA_Linear: Type = 10;
-    #[doc = " Inverse distance to a power with nearest neighbor search for max points"]
     pub const GGA_InverseDistanceToAPowerNearestNeighbor: Type = 11;
 }
 extern "C" {
@@ -8978,13 +8582,10 @@ extern "C" {
         pnGCPCount: *mut ::std::ffi::c_int,
     ) -> *mut GDAL_GCP;
 }
-#[doc = " Triangle fact"]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct GDALTriFacet {
-    #[doc = "< index to the padfX/padfY arrays"]
     pub anVertexIdx: [::std::ffi::c_int; 3usize],
-    #[doc = "< index to GDALDelaunayTriangulation.pasFacets, or\n-1"]
     pub anNeighborIdx: [::std::ffi::c_int; 3usize],
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
@@ -8996,21 +8597,14 @@ const _: () = {
     ["Offset of field: GDALTriFacet::anNeighborIdx"]
         [::std::mem::offset_of!(GDALTriFacet, anNeighborIdx) - 12usize];
 };
-#[doc = " Triangle barycentric coefficients.\n\n Conversion from cartesian (x,y) to barycentric (l1,l2,l3) with :\n  l1 = dfMul1X * (x - dfCxtX) + dfMul1Y * (y - dfCstY)\n  l2 = dfMul2X * (x - dfCxtX) + dfMul2Y * (y - dfCstY)\n  l3 = 1 - l1 - l2"]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct GDALTriBarycentricCoefficients {
-    #[doc = "< dfMul1X"]
     pub dfMul1X: f64,
-    #[doc = "< dfMul1Y"]
     pub dfMul1Y: f64,
-    #[doc = "< dfMul2X"]
     pub dfMul2X: f64,
-    #[doc = "< dfMul2Y"]
     pub dfMul2Y: f64,
-    #[doc = "< dfCstX"]
     pub dfCstX: f64,
-    #[doc = "< dfCstY"]
     pub dfCstY: f64,
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
@@ -9032,15 +8626,11 @@ const _: () = {
     ["Offset of field: GDALTriBarycentricCoefficients::dfCstY"]
         [::std::mem::offset_of!(GDALTriBarycentricCoefficients, dfCstY) - 40usize];
 };
-#[doc = " Triangulation structure"]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct GDALTriangulation {
-    #[doc = "< number of facets"]
     pub nFacets: ::std::ffi::c_int,
-    #[doc = "< array of nFacets facets"]
     pub pasFacets: *mut GDALTriFacet,
-    #[doc = "< arra of nFacets barycentric coefficients"]
     pub pasFacetCoefficients: *mut GDALTriBarycentricCoefficients,
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
@@ -9103,14 +8693,12 @@ extern "C" {
     pub fn GDALTriangulationFree(psDT: *mut GDALTriangulation);
 }
 extern "C" {
-    #[doc = " @endcond"]
     pub fn GDALOpenVerticalShiftGrid(
         pszProj4Geoidgrids: *const ::std::ffi::c_char,
         pbError: *mut ::std::ffi::c_int,
     ) -> GDALDatasetH;
 }
 extern "C" {
-    #[doc = " @endcond"]
     pub fn GDALApplyVerticalShiftGrid(
         hSrcDataset: GDALDatasetH,
         hGridDataset: GDALDatasetH,
@@ -9406,6 +8994,41 @@ extern "C" {
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
+pub struct GDALFootprintOptions {
+    _unused: [u8; 0],
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct GDALFootprintOptionsForBinary {
+    _unused: [u8; 0],
+}
+extern "C" {
+    pub fn GDALFootprintOptionsNew(
+        papszArgv: *mut *mut ::std::ffi::c_char,
+        psOptionsForBinary: *mut GDALFootprintOptionsForBinary,
+    ) -> *mut GDALFootprintOptions;
+}
+extern "C" {
+    pub fn GDALFootprintOptionsFree(psOptions: *mut GDALFootprintOptions);
+}
+extern "C" {
+    pub fn GDALFootprintOptionsSetProgress(
+        psOptions: *mut GDALFootprintOptions,
+        pfnProgress: GDALProgressFunc,
+        pProgressData: *mut ::std::ffi::c_void,
+    );
+}
+extern "C" {
+    pub fn GDALFootprint(
+        pszDest: *const ::std::ffi::c_char,
+        hDstDS: GDALDatasetH,
+        hSrcDS: GDALDatasetH,
+        psOptions: *const GDALFootprintOptions,
+        pbUsageError: *mut ::std::ffi::c_int,
+    ) -> GDALDatasetH;
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
 pub struct GDALBuildVRTOptions {
     _unused: [u8; 0],
 }
@@ -9527,21 +9150,13 @@ extern "C" {
     ) -> *mut ::std::ffi::c_char;
 }
 pub mod OGRAxisOrientation {
-    #[doc = " Axis orientations (corresponds to CS_AxisOrientationEnum)."]
     pub type Type = ::std::ffi::c_uint;
-    #[doc = "< Other"]
     pub const OAO_Other: Type = 0;
-    #[doc = "< North"]
     pub const OAO_North: Type = 1;
-    #[doc = "< South"]
     pub const OAO_South: Type = 2;
-    #[doc = "< East"]
     pub const OAO_East: Type = 3;
-    #[doc = "< West"]
     pub const OAO_West: Type = 4;
-    #[doc = "< Up (to space)"]
     pub const OAO_Up: Type = 5;
-    #[doc = "< Down (to Earth center)"]
     pub const OAO_Down: Type = 6;
 }
 extern "C" {
@@ -9876,6 +9491,9 @@ extern "C" {
     pub fn OSRIsDynamic(arg1: OGRSpatialReferenceH) -> ::std::ffi::c_int;
 }
 extern "C" {
+    pub fn OSRHasPointMotionOperation(arg1: OGRSpatialReferenceH) -> ::std::ffi::c_int;
+}
+extern "C" {
     pub fn OSRIsSameGeogCS(
         arg1: OGRSpatialReferenceH,
         arg2: OGRSpatialReferenceH,
@@ -10149,13 +9767,9 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 pub mod OSRAxisMappingStrategy {
-    #[doc = " Data axis to CRS axis mapping strategy."]
     pub type Type = ::std::ffi::c_uint;
-    #[doc = "< Traditional GIS order"]
     pub const OAMS_TRADITIONAL_GIS_ORDER: Type = 0;
-    #[doc = "< Compliant with the order mandated by the CRS\nauthority"]
     pub const OAMS_AUTHORITY_COMPLIANT: Type = 1;
-    #[doc = "< Custom"]
     pub const OAMS_CUSTOM: Type = 2;
 }
 extern "C" {
@@ -10181,7 +9795,6 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
-    #[doc = " Albers Conic Equal Area"]
     pub fn OSRSetACEA(
         hSRS: OGRSpatialReferenceH,
         dfStdP1: f64,
@@ -10193,7 +9806,6 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
-    #[doc = " Azimuthal Equidistant"]
     pub fn OSRSetAE(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -10203,7 +9815,6 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
-    #[doc = " Bonne"]
     pub fn OSRSetBonne(
         hSRS: OGRSpatialReferenceH,
         dfStandardParallel: f64,
@@ -10213,7 +9824,6 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
-    #[doc = " Cylindrical Equal Area"]
     pub fn OSRSetCEA(
         hSRS: OGRSpatialReferenceH,
         dfStdP1: f64,
@@ -10223,7 +9833,6 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
-    #[doc = " Cassini-Soldner"]
     pub fn OSRSetCS(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -10233,7 +9842,6 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
-    #[doc = " Equidistant Conic"]
     pub fn OSRSetEC(
         hSRS: OGRSpatialReferenceH,
         dfStdP1: f64,
@@ -10245,7 +9853,6 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
-    #[doc = " Eckert I-VI"]
     pub fn OSRSetEckert(
         hSRS: OGRSpatialReferenceH,
         nVariation: ::std::ffi::c_int,
@@ -10255,7 +9862,6 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
-    #[doc = " Eckert IV"]
     pub fn OSRSetEckertIV(
         hSRS: OGRSpatialReferenceH,
         dfCentralMeridian: f64,
@@ -10264,7 +9870,6 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
-    #[doc = " Eckert VI"]
     pub fn OSRSetEckertVI(
         hSRS: OGRSpatialReferenceH,
         dfCentralMeridian: f64,
@@ -10273,7 +9878,6 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
-    #[doc = " Equirectangular"]
     pub fn OSRSetEquirectangular(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -10283,7 +9887,6 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
-    #[doc = " Equirectangular generalized form"]
     pub fn OSRSetEquirectangular2(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -10294,7 +9897,6 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
-    #[doc = " Gall Stereograpic"]
     pub fn OSRSetGS(
         hSRS: OGRSpatialReferenceH,
         dfCentralMeridian: f64,
@@ -10303,7 +9905,6 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
-    #[doc = " Goode Homolosine"]
     pub fn OSRSetGH(
         hSRS: OGRSpatialReferenceH,
         dfCentralMeridian: f64,
@@ -10312,11 +9913,9 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
-    #[doc = " Interrupted Goode Homolosine"]
     pub fn OSRSetIGH(hSRS: OGRSpatialReferenceH) -> OGRErr::Type;
 }
 extern "C" {
-    #[doc = " GEOS - Geostationary Satellite View"]
     pub fn OSRSetGEOS(
         hSRS: OGRSpatialReferenceH,
         dfCentralMeridian: f64,
@@ -10326,7 +9925,6 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
-    #[doc = " Gauss Schreiber Transverse Mercator"]
     pub fn OSRSetGaussSchreiberTMercator(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -10337,7 +9935,6 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
-    #[doc = " Gnomonic"]
     pub fn OSRSetGnomonic(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -10347,7 +9944,6 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
-    #[doc = " Hotine Oblique Mercator using azimuth angle"]
     pub fn OSRSetHOM(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -10372,7 +9968,6 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
-    #[doc = " Hotine Oblique Mercator using two points on centerline"]
     pub fn OSRSetHOM2PNO(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -10386,7 +9981,6 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
-    #[doc = " International Map of the World Polyconic"]
     pub fn OSRSetIWMPolyconic(
         hSRS: OGRSpatialReferenceH,
         dfLat1: f64,
@@ -10397,7 +9991,6 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
-    #[doc = " Krovak Oblique Conic Conformal"]
     pub fn OSRSetKrovak(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -10410,7 +10003,6 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
-    #[doc = " Lambert Azimuthal Equal-Area"]
     pub fn OSRSetLAEA(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -10420,7 +10012,6 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
-    #[doc = " Lambert Conformal Conic"]
     pub fn OSRSetLCC(
         hSRS: OGRSpatialReferenceH,
         dfStdP1: f64,
@@ -10432,7 +10023,6 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
-    #[doc = " Lambert Conformal Conic 1SP"]
     pub fn OSRSetLCC1SP(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -10443,7 +10033,6 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
-    #[doc = " Lambert Conformal Conic (Belgium)"]
     pub fn OSRSetLCCB(
         hSRS: OGRSpatialReferenceH,
         dfStdP1: f64,
@@ -10455,7 +10044,6 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
-    #[doc = " Miller Cylindrical"]
     pub fn OSRSetMC(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -10465,7 +10053,6 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
-    #[doc = " Mercator"]
     pub fn OSRSetMercator(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -10476,7 +10063,6 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
-    #[doc = " Mercator 2SP"]
     pub fn OSRSetMercator2SP(
         hSRS: OGRSpatialReferenceH,
         dfStdP1: f64,
@@ -10487,7 +10073,6 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
-    #[doc = " Mollweide"]
     pub fn OSRSetMollweide(
         hSRS: OGRSpatialReferenceH,
         dfCentralMeridian: f64,
@@ -10496,7 +10081,6 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
-    #[doc = " New Zealand Map Grid"]
     pub fn OSRSetNZMG(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -10506,7 +10090,6 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
-    #[doc = " Oblique Stereographic"]
     pub fn OSRSetOS(
         hSRS: OGRSpatialReferenceH,
         dfOriginLat: f64,
@@ -10517,7 +10100,6 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
-    #[doc = " Orthographic"]
     pub fn OSRSetOrthographic(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -10527,7 +10109,6 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
-    #[doc = " Polyconic"]
     pub fn OSRSetPolyconic(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -10537,7 +10118,6 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
-    #[doc = " Polar Stereographic"]
     pub fn OSRSetPS(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -10548,7 +10128,6 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
-    #[doc = " Robinson"]
     pub fn OSRSetRobinson(
         hSRS: OGRSpatialReferenceH,
         dfCenterLong: f64,
@@ -10557,7 +10136,6 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
-    #[doc = " Sinusoidal"]
     pub fn OSRSetSinusoidal(
         hSRS: OGRSpatialReferenceH,
         dfCenterLong: f64,
@@ -10566,7 +10144,6 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
-    #[doc = " Stereographic"]
     pub fn OSRSetStereographic(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -10577,7 +10154,6 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
-    #[doc = " Swiss Oblique Cylindrical"]
     pub fn OSRSetSOC(
         hSRS: OGRSpatialReferenceH,
         dfLatitudeOfOrigin: f64,
@@ -10587,7 +10163,6 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
-    #[doc = " Transverse Mercator\n\n Special processing available for Transverse Mercator with GDAL &gt;= 1.10 and\n PROJ &gt;= 4.8 : see OGRSpatialReference::exportToProj4()."]
     pub fn OSRSetTM(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -10598,7 +10173,6 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
-    #[doc = " Transverse Mercator variant"]
     pub fn OSRSetTMVariant(
         hSRS: OGRSpatialReferenceH,
         pszVariantName: *const ::std::ffi::c_char,
@@ -10610,7 +10184,6 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
-    #[doc = " Tunesia Mining Grid"]
     pub fn OSRSetTMG(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -10620,7 +10193,6 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
-    #[doc = " Transverse Mercator (South Oriented)"]
     pub fn OSRSetTMSO(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -10631,7 +10203,6 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
-    #[doc = " TPED (Two Point Equi Distant)"]
     pub fn OSRSetTPED(
         hSRS: OGRSpatialReferenceH,
         dfLat1: f64,
@@ -10643,7 +10214,6 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
-    #[doc = " VanDerGrinten"]
     pub fn OSRSetVDG(
         hSRS: OGRSpatialReferenceH,
         dfCenterLong: f64,
@@ -10652,7 +10222,6 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
-    #[doc = " Wagner I -- VII"]
     pub fn OSRSetWagner(
         hSRS: OGRSpatialReferenceH,
         nVariation: ::std::ffi::c_int,
@@ -10662,7 +10231,6 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
-    #[doc = " Quadrilateralized Spherical Cube"]
     pub fn OSRSetQSC(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -10670,7 +10238,6 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
-    #[doc = " Spherical, Cross-track, Height"]
     pub fn OSRSetSCH(
         hSRS: OGRSpatialReferenceH,
         dfPegLat: f64,
@@ -10680,7 +10247,6 @@ extern "C" {
     ) -> OGRErr::Type;
 }
 extern "C" {
-    #[doc = " Vertical Perspective / Near-sided Perspective"]
     pub fn OSRSetVerticalPerspective(
         hSRS: OGRSpatialReferenceH,
         dfTopoOriginLat: f64,
@@ -10701,50 +10267,29 @@ extern "C" {
     pub fn OSRCleanup();
 }
 pub mod OSRCRSType {
-    #[doc = " \\brief Type of Coordinate Reference System (CRS)."]
     pub type Type = ::std::ffi::c_uint;
-    #[doc = " Geographic 2D CRS"]
     pub const OSR_CRS_TYPE_GEOGRAPHIC_2D: Type = 0;
-    #[doc = " Geographic 3D CRS"]
     pub const OSR_CRS_TYPE_GEOGRAPHIC_3D: Type = 1;
-    #[doc = " Geocentric CRS"]
     pub const OSR_CRS_TYPE_GEOCENTRIC: Type = 2;
-    #[doc = " Projected CRS"]
     pub const OSR_CRS_TYPE_PROJECTED: Type = 3;
-    #[doc = " Vertical CRS"]
     pub const OSR_CRS_TYPE_VERTICAL: Type = 4;
-    #[doc = " Compound CRS"]
     pub const OSR_CRS_TYPE_COMPOUND: Type = 5;
-    #[doc = " Other"]
     pub const OSR_CRS_TYPE_OTHER: Type = 6;
 }
-#[doc = " \\brief Structure given overall description of a CRS.\n\n This structure may grow over time, and should not be directly allocated by\n client code."]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct OSRCRSInfo {
-    #[doc = " Authority name."]
     pub pszAuthName: *mut ::std::ffi::c_char,
-    #[doc = " Object code."]
     pub pszCode: *mut ::std::ffi::c_char,
-    #[doc = " Object name."]
     pub pszName: *mut ::std::ffi::c_char,
-    #[doc = " Object type."]
     pub eType: OSRCRSType::Type,
-    #[doc = " Whether the object is deprecated"]
     pub bDeprecated: ::std::ffi::c_int,
-    #[doc = " Whereas the west_lon_degree, south_lat_degree, east_lon_degree and\n north_lat_degree fields are valid."]
     pub bBboxValid: ::std::ffi::c_int,
-    #[doc = " Western-most longitude of the area of use, in degrees."]
     pub dfWestLongitudeDeg: f64,
-    #[doc = " Southern-most latitude of the area of use, in degrees."]
     pub dfSouthLatitudeDeg: f64,
-    #[doc = " Eastern-most longitude of the area of use, in degrees."]
     pub dfEastLongitudeDeg: f64,
-    #[doc = " Northern-most latitude of the area of use, in degrees."]
     pub dfNorthLatitudeDeg: f64,
-    #[doc = " Name of the area of use."]
     pub pszAreaName: *mut ::std::ffi::c_char,
-    #[doc = " Name of the projection method for a projected CRS. Might be NULL even\nfor projected CRS in some cases."]
     pub pszProjectionMethod: *mut ::std::ffi::c_char,
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
@@ -10799,7 +10344,6 @@ extern "C" {
 pub struct OGRCoordinateTransformationOptions {
     _unused: [u8; 0],
 }
-#[doc = " Coordinate transformation options."]
 pub type OGRCoordinateTransformationOptionsH = *mut OGRCoordinateTransformationOptions;
 extern "C" {
     pub fn OCTNewCoordinateTransformationOptions() -> OGRCoordinateTransformationOptionsH;
@@ -10830,6 +10374,12 @@ extern "C" {
     pub fn OCTCoordinateTransformationOptionsSetBallparkAllowed(
         hOptions: OGRCoordinateTransformationOptionsH,
         bAllowBallpark: ::std::ffi::c_int,
+    ) -> ::std::ffi::c_int;
+}
+extern "C" {
+    pub fn OCTCoordinateTransformationOptionsSetOnlyBest(
+        hOptions: OGRCoordinateTransformationOptionsH,
+        bOnlyBest: bool,
     ) -> ::std::ffi::c_int;
 }
 extern "C" {
@@ -10985,7 +10535,6 @@ extern "C" {
     pub fn CPLDestroyCond(hCond: *mut ::std::ffi::c_void);
 }
 extern "C" {
-    #[doc = " Contrary to what its name suggests, CPLGetPID() actually returns the thread\n id"]
     pub fn CPLGetPID() -> GIntBig;
 }
 extern "C" {
@@ -11085,40 +10634,23 @@ extern "C" {
     pub fn CPLCleanupTLS();
 }
 pub mod GDALResampleAlg {
-    #[doc = " Warp Resampling Algorithm"]
     pub type Type = ::std::ffi::c_uint;
-    #[doc = " Nearest neighbour (select on one input pixel)"]
     pub const GRA_NearestNeighbour: Type = 0;
-    #[doc = " Bilinear (2x2 kernel)"]
     pub const GRA_Bilinear: Type = 1;
-    #[doc = " Cubic Convolution Approximation (4x4 kernel)"]
     pub const GRA_Cubic: Type = 2;
-    #[doc = " Cubic B-Spline Approximation (4x4 kernel)"]
     pub const GRA_CubicSpline: Type = 3;
-    #[doc = " Lanczos windowed sinc interpolation (6x6 kernel)"]
     pub const GRA_Lanczos: Type = 4;
-    #[doc = " Average (computes the weighted average of all non-NODATA contributing\npixels)"]
     pub const GRA_Average: Type = 5;
-    #[doc = " Mode (selects the value which appears most often of all the sampled\npoints)"]
     pub const GRA_Mode: Type = 6;
-    #[doc = " Max (selects maximum of all non-NODATA contributing pixels)"]
     pub const GRA_Max: Type = 8;
-    #[doc = " Min (selects minimum of all non-NODATA contributing pixels)"]
     pub const GRA_Min: Type = 9;
-    #[doc = " Med (selects median of all non-NODATA contributing pixels)"]
     pub const GRA_Med: Type = 10;
-    #[doc = " Q1 (selects first quartile of all non-NODATA contributing pixels)"]
     pub const GRA_Q1: Type = 11;
-    #[doc = " Q3 (selects third quartile of all non-NODATA contributing pixels)"]
     pub const GRA_Q3: Type = 12;
-    #[doc = " Sum (weighed sum of all non-NODATA contributing pixels). Added in\nGDAL 3.1"]
     pub const GRA_Sum: Type = 13;
-    #[doc = " RMS (weighted root mean square (quadratic mean) of all non-NODATA\ncontributing pixels)"]
     pub const GRA_RMS: Type = 14;
-    #[doc = " @cond Doxygen_Suppress"]
     pub const GRA_LAST_VALUE: Type = 14;
 }
-#[doc = " @cond Doxygen_Suppress"]
 pub type GDALMaskFunc = ::std::option::Option<
     unsafe extern "C" fn(
         pMaskFuncArg: *mut ::std::ffi::c_void,
@@ -11220,88 +10752,53 @@ extern "C" {
         pnValidityFlag: *mut ::std::ffi::c_int,
     ) -> CPLErr::Type;
 }
-#[doc = " Warp control options for use with GDALWarpOperation::Initialize()"]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct GDALWarpOptions {
     pub papszWarpOptions: *mut *mut ::std::ffi::c_char,
-    #[doc = " In bytes, 0.0 for internal default"]
     pub dfWarpMemoryLimit: f64,
-    #[doc = " Resampling algorithm to use"]
     pub eResampleAlg: GDALResampleAlg::Type,
-    #[doc = " data type to use during warp operation, GDT_Unknown lets the algorithm\nselect the type"]
     pub eWorkingDataType: GDALDataType::Type,
-    #[doc = " Source image dataset."]
     pub hSrcDS: GDALDatasetH,
-    #[doc = " Destination image dataset - may be NULL if only using\n GDALWarpOperation::WarpRegionToBuffer()."]
     pub hDstDS: GDALDatasetH,
-    #[doc = " Number of bands to process, may be 0 to select all bands."]
     pub nBandCount: ::std::ffi::c_int,
-    #[doc = " The band numbers for the source bands to process (1 based)"]
     pub panSrcBands: *mut ::std::ffi::c_int,
-    #[doc = " The band numbers for the destination bands to process (1 based)"]
     pub panDstBands: *mut ::std::ffi::c_int,
-    #[doc = " The source band so use as an alpha (transparency) value, 0=disabled"]
     pub nSrcAlphaBand: ::std::ffi::c_int,
-    #[doc = " The dest. band so use as an alpha (transparency) value, 0=disabled"]
     pub nDstAlphaBand: ::std::ffi::c_int,
-    #[doc = " The \"nodata\" value real component for each input band, if NULL there\n isn't one"]
     pub padfSrcNoDataReal: *mut f64,
-    #[doc = " The \"nodata\" value imaginary component - may be NULL even if real\ncomponent is provided. This value is not used to flag invalid values.\nOnly the real component is used."]
     pub padfSrcNoDataImag: *mut f64,
-    #[doc = " The \"nodata\" value real component for each output band, if NULL there\n isn't one"]
     pub padfDstNoDataReal: *mut f64,
-    #[doc = " The \"nodata\" value imaginary component - may be NULL even if real\ncomponent is provided. Note that warp operations only use real component\nfor flagging invalid data."]
     pub padfDstNoDataImag: *mut f64,
-    #[doc = " GDALProgressFunc() compatible progress reporting function, or NULL\nif there isn't one."]
     pub pfnProgress: GDALProgressFunc,
-    #[doc = " Callback argument to be passed to pfnProgress."]
     pub pProgressArg: *mut ::std::ffi::c_void,
-    #[doc = " Type of spatial point transformer function"]
     pub pfnTransformer: GDALTransformerFunc,
-    #[doc = " Handle to image transformer setup structure"]
     pub pTransformerArg: *mut ::std::ffi::c_void,
-    #[doc = " Unused. Must be NULL"]
     pub papfnSrcPerBandValidityMaskFunc: *mut GDALMaskFunc,
-    #[doc = " Unused. Must be NULL"]
     pub papSrcPerBandValidityMaskFuncArg: *mut *mut ::std::ffi::c_void,
-    #[doc = " Unused. Must be NULL"]
     pub pfnSrcValidityMaskFunc: GDALMaskFunc,
-    #[doc = " Unused. Must be NULL"]
     pub pSrcValidityMaskFuncArg: *mut ::std::ffi::c_void,
-    #[doc = " Unused. Must be NULL"]
     pub pfnSrcDensityMaskFunc: GDALMaskFunc,
-    #[doc = " Unused. Must be NULL"]
     pub pSrcDensityMaskFuncArg: *mut ::std::ffi::c_void,
-    #[doc = " Unused. Must be NULL"]
     pub pfnDstDensityMaskFunc: GDALMaskFunc,
-    #[doc = " Unused. Must be NULL"]
     pub pDstDensityMaskFuncArg: *mut ::std::ffi::c_void,
-    #[doc = " Unused. Must be NULL"]
     pub pfnDstValidityMaskFunc: GDALMaskFunc,
-    #[doc = " Unused. Must be NULL"]
     pub pDstValidityMaskFuncArg: *mut ::std::ffi::c_void,
-    #[doc = " Unused. Must be NULL"]
     pub pfnPreWarpChunkProcessor: ::std::option::Option<
         unsafe extern "C" fn(
             pKern: *mut ::std::ffi::c_void,
             pArg: *mut ::std::ffi::c_void,
         ) -> CPLErr::Type,
     >,
-    #[doc = " Unused. Must be NULL"]
     pub pPreWarpProcessorArg: *mut ::std::ffi::c_void,
-    #[doc = " Unused. Must be NULL"]
     pub pfnPostWarpChunkProcessor: ::std::option::Option<
         unsafe extern "C" fn(
             pKern: *mut ::std::ffi::c_void,
             pArg: *mut ::std::ffi::c_void,
         ) -> CPLErr::Type,
     >,
-    #[doc = " Unused. Must be NULL"]
     pub pPostWarpProcessorArg: *mut ::std::ffi::c_void,
-    #[doc = " Optional OGRPolygonH for a masking cutline."]
     pub hCutline: *mut ::std::ffi::c_void,
-    #[doc = " Optional blending distance to apply across cutline in pixels, default is\n zero."]
     pub dfCutlineBlendDist: f64,
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
@@ -11413,7 +10910,6 @@ extern "C" {
     );
 }
 extern "C" {
-    #[doc = " @cond Doxygen_Suppress"]
     pub fn GDALSerializeWarpOptions(arg1: *const GDALWarpOptions) -> *mut CPLXMLNode;
 }
 extern "C" {
@@ -11482,7 +10978,6 @@ extern "C" {
 extern "C" {
     pub fn GDALInitializeWarpedVRT(hDS: GDALDatasetH, psWO: *mut GDALWarpOptions) -> CPLErr::Type;
 }
-#[doc = " Opaque type representing a GDALWarpOperation object"]
 pub type GDALWarpOperationH = *mut ::std::ffi::c_void;
 extern "C" {
     pub fn GDALCreateWarpOperation(arg1: *const GDALWarpOptions) -> GDALWarpOperationH;
@@ -11604,7 +11099,6 @@ const _: () = {
     ["Offset of field: ArrowArray::private_data"]
         [::std::mem::offset_of!(ArrowArray, private_data) - 72usize];
 };
-#[doc = " Data type for a Arrow C stream Include ogr_recordbatch.h to get the\n definition."]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct ArrowArrayStream {

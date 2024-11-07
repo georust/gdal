@@ -11,6 +11,7 @@ pub fn write_bindings(include_paths: Vec<String>, out_path: &Path) {
     // To generate the bindings manually, use
     // bindgen --constified-enum-module ".*" --ctypes-prefix ::std::ffi --allowlist-function "(CPL|CSL|GDAL|OGR|OSR|OCT|VSI).*" wrapper.h -- $(pkg-config --cflags-only-I gdal) -fretain-comments-from-system-headers
     // If you add a new pre-built version, make sure to bump the docs.rs version in main.
+    // If you update this command consider updating the command in `DEVELOPMENT.md`
 
     let mut builder = bindgen::Builder::default()
         .size_t_is_usize(true)
@@ -241,11 +242,25 @@ fn main() {
                 "cargo:rustc-cfg=gdal_sys_{}_{}_{}",
                 version.major, version.minor, version.patch
             );
+            let target_arch = std::env::var("CARGO_CFG_TARGET_ARCH").expect("Set by cargo");
+            let is_windows = std::env::var("CARGO_CFG_WINDOWS").is_ok();
+            let ptr_size = std::env::var("CARGO_CFG_TARGET_POINTER_WIDTH").expect("Set by cargo");
 
+            let binding_name = match (target_arch.as_str(), ptr_size.as_str(), is_windows) {
+                ("x86_64" | "aarch64", "64", false) => "gdal_x86_64-unknown-linux-gnu.rs",
+                ("x86_64", "64", true) => "gdal_x86_64-pc-windows-gnu.rs",
+                ("x86" | "arm", "32", false) => "gdal_i686-unknown-linux-gnu.rs",
+                ("x86", "32", true) => "gdal_i686-pc-windows-gnu.rs",
+                _ => panic!(
+                    "No pre-built bindings available for target: {} ptr_size: {} is_windows: {}",
+                    target_arch, ptr_size, is_windows
+                ),
+            };
             let binding_path = PathBuf::from(format!(
-                "prebuilt-bindings/gdal_{}_{}.rs",
-                version.major, version.minor
+                "prebuilt-bindings/{}_{}/{binding_name}",
+                version.major, version.minor,
             ));
+
             if !binding_path.exists() {
                 panic!("No pre-built bindings available for GDAL version {}.{}. Enable the `bindgen` feature of the `gdal` or `gdal-sys` crate to generate them during build.", version.major, version.minor);
             }
