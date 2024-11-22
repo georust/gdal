@@ -65,12 +65,29 @@ fn find_gdal_dll(lib_dir: &Path) -> io::Result<Option<String>> {
 }
 
 fn main() {
+    println!("cargo:rerun-if-env-changed=DOCS_RS");
+    println!("cargo:rerun-if-env-changed=GDAL_STATIC");
+    println!("cargo:rerun-if-env-changed=GDAL_DYNAMIC");
+    println!("cargo:rerun-if-env-changed=GDAL_INCLUDE_DIR");
+    println!("cargo:rerun-if-env-changed=GDAL_LIB_DIR");
+    println!("cargo:rerun-if-env-changed=GDAL_HOME");
+    println!("cargo:rerun-if-env-changed=GDAL_VERSION");
+
     let out_path = PathBuf::from(env::var("OUT_DIR").unwrap()).join("bindings.rs");
 
     // Hardcode a prebuilt binding version while generating docs.
     // Otherwise docs.rs will explode due to not actually having libgdal installed.
-    if std::env::var("DOCS_RS").is_ok() || cfg!(feature = "bundled") {
-        let version = Version::parse("3.10.0").expect("invalid version for docs.rs");
+    let use_latest = std::env::var("DOCS_RS").is_ok() || cfg!(feature = "bundled");
+    let mut version = if use_latest {
+        Version::parse("3.10.0").ok()
+    } else {
+        env::var_os("GDAL_VERSION")
+            .map(|vs| vs.to_string_lossy().to_string())
+            .and_then(|vs| Version::parse(vs.trim()).ok())
+    };
+
+    if use_latest {
+        let version = version.expect("invalid version for docs.rs");
         println!(
             "cargo:rustc-cfg=gdal_sys_{}_{}_{}",
             version.major, version.minor, version.patch
@@ -82,26 +99,10 @@ fn main() {
             version.major * 1_000_000 + version.minor * 10_000 + version.patch * 100;
         println!("cargo:version_number={}", gdal_version_number_string);
 
-        let binding_path = PathBuf::from(format!(
-            "prebuilt-bindings/gdal_{}_{}.rs",
-            version.major, version.minor
-        ));
-
-        if !binding_path.exists() {
-            panic!("Missing bindings for docs.rs (version {})", version);
-        }
-
-        std::fs::copy(&binding_path, &out_path).expect("Can't copy bindings to output directory");
-
+        let bindings_path = prebuilt_bindings_path(&version);
+        std::fs::copy(&bindings_path, &out_path).expect("Can't copy bindings to output directory");
         return;
     }
-
-    println!("cargo:rerun-if-env-changed=GDAL_STATIC");
-    println!("cargo:rerun-if-env-changed=GDAL_DYNAMIC");
-    println!("cargo:rerun-if-env-changed=GDAL_INCLUDE_DIR");
-    println!("cargo:rerun-if-env-changed=GDAL_LIB_DIR");
-    println!("cargo:rerun-if-env-changed=GDAL_HOME");
-    println!("cargo:rerun-if-env-changed=GDAL_VERSION");
 
     let mut need_metadata = true;
     let mut lib_name = String::from("gdal");
@@ -112,9 +113,6 @@ fn main() {
     let mut include_dir = env_dir("GDAL_INCLUDE_DIR");
     let mut lib_dir = env_dir("GDAL_LIB_DIR");
     let home_dir = env_dir("GDAL_HOME");
-    let mut version = env::var_os("GDAL_VERSION")
-        .map(|vs| vs.to_string_lossy().to_string())
-        .and_then(|vs| Version::parse(vs.trim()).ok());
 
     let mut found = false;
     if cfg!(windows) {
@@ -219,7 +217,7 @@ fn main() {
             }
 
             if let Ok(pkg_version) = Version::parse(&version_string) {
-                version.replace(pkg_version);
+                version = Some(pkg_version);
             }
         }
     }
@@ -238,34 +236,9 @@ fn main() {
     #[cfg(not(feature = "bindgen"))]
     {
         if let Some(version) = version {
-            println!(
-                "cargo:rustc-cfg=gdal_sys_{}_{}_{}",
-                version.major, version.minor, version.patch
-            );
-            let target_arch = std::env::var("CARGO_CFG_TARGET_ARCH").expect("Set by cargo");
-            let is_windows = std::env::var("CARGO_CFG_WINDOWS").is_ok();
-            let ptr_size = std::env::var("CARGO_CFG_TARGET_POINTER_WIDTH").expect("Set by cargo");
+            let bindings_path = prebuilt_bindings_path(&version);
 
-            let binding_name = match (target_arch.as_str(), ptr_size.as_str(), is_windows) {
-                ("x86_64" | "aarch64", "64", false) => "gdal_x86_64-unknown-linux-gnu.rs",
-                ("x86_64", "64", true) => "gdal_x86_64-pc-windows-gnu.rs",
-                ("x86" | "arm", "32", false) => "gdal_i686-unknown-linux-gnu.rs",
-                ("x86", "32", true) => "gdal_i686-pc-windows-gnu.rs",
-                _ => panic!(
-                    "No pre-built bindings available for target: {} ptr_size: {} is_windows: {}",
-                    target_arch, ptr_size, is_windows
-                ),
-            };
-            let binding_path = PathBuf::from(format!(
-                "prebuilt-bindings/{}_{}/{binding_name}",
-                version.major, version.minor,
-            ));
-
-            if !binding_path.exists() {
-                panic!("No pre-built bindings available for GDAL version {}.{}. Enable the `bindgen` feature of the `gdal` or `gdal-sys` crate to generate them during build.", version.major, version.minor);
-            }
-
-            std::fs::copy(&binding_path, &out_path)
+            std::fs::copy(&bindings_path, &out_path)
                 .expect("Can't copy bindings to output directory");
         } else if let Err(pkg_config_err) = &gdal_pkg_config {
             // Special case output for this common error
@@ -279,4 +252,35 @@ fn main() {
             panic!("No GDAL version detected");
         }
     }
+}
+
+fn prebuilt_bindings_path(version: &Version) -> PathBuf {
+    println!(
+        "cargo:rustc-cfg=gdal_sys_{}_{}_{}",
+        version.major, version.minor, version.patch
+    );
+    let target_arch = std::env::var("CARGO_CFG_TARGET_ARCH").expect("Set by cargo");
+    let is_windows = std::env::var("CARGO_CFG_WINDOWS").is_ok();
+    let ptr_size = std::env::var("CARGO_CFG_TARGET_POINTER_WIDTH").expect("Set by cargo");
+
+    let binding_name = match (target_arch.as_str(), ptr_size.as_str(), is_windows) {
+        ("x86_64" | "aarch64", "64", false) => "gdal_x86_64-unknown-linux-gnu.rs",
+        ("x86_64", "64", true) => "gdal_x86_64-pc-windows-gnu.rs",
+        ("x86" | "arm", "32", false) => "gdal_i686-unknown-linux-gnu.rs",
+        ("x86", "32", true) => "gdal_i686-pc-windows-gnu.rs",
+        _ => panic!(
+            "No pre-built bindings available for target: {} ptr_size: {} is_windows: {}",
+            target_arch, ptr_size, is_windows
+        ),
+    };
+    let bindings_path = PathBuf::from(format!(
+        "prebuilt-bindings/{}_{}/{binding_name}",
+        version.major, version.minor,
+    ));
+
+    if !bindings_path.exists() {
+        panic!("No pre-built bindings available for GDAL version {}.{}. Enable the `bindgen` feature of the `gdal` or `gdal-sys` crate to generate them during build.", version.major, version.minor);
+    }
+
+    bindings_path
 }
