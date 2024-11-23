@@ -36,26 +36,3 @@ By default, gdal-sys will detect the version of libgdal you have installed and
 attempt to use prebuilt bindings corresponding to that version. Alternatively,
 you can generate your own bindings from your libgdal installation by specifying
 the `bindgen` feature.
-
-## Creating prebuilt bindings
-
-If a new version of GDAL is released, you (as a `gdal` contributor) can
-generate new bindings for inclusion in the `gdal-sys` source distribution by
-building with the `bindgen` feature, and then copying the generated file. For
-example (the hash will differ in your build):
-
-    $ cargo build --features bindgen
-    $ cp target/debug/build/gdal-sys-db833e3088b78e57/out/bindings.rs gdal-sys/prebuilt-bindings/gdal_3_6.rs
-
-If your're not on a rolling distro, the following commands might help:
-
-```
-podman run --rm -it -v $PWD:$PWD:z -w $PWD ghcr.io/osgeo/gdal:ubuntu-full-3.10.0 bash -c "curl --proto =https --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain stable; . ~/.cargo/env && apt update && apt install -y pkg-config gcc libclang-dev && cargo clean && cargo test --features bindgen && shopt -s globstar && mv target/**/bindings.rs gdal-sys/prebuilt-bindings/gdal_3_10.rs"
-podman run --rm -it -v $PWD:$PWD:z -w $PWD ghcr.io/osgeo/gdal:ubuntu-full-3.9.3 bash -c "curl --proto =https --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain stable; . ~/.cargo/env && apt update && apt install -y pkg-config gcc libclang-dev && cargo clean && cargo test --features bindgen && shopt -s globstar && mv target/**/bindings.rs gdal-sys/prebuilt-bindings/gdal_3_9.rs"
-podman run --rm -it -v $PWD:$PWD:z -w $PWD ghcr.io/osgeo/gdal:ubuntu-full-3.8.5 bash -c "curl --proto =https --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain stable; . ~/.cargo/env && apt update && apt install -y pkg-config gcc libclang-dev && cargo clean && cargo test --features bindgen && shopt -s globstar && mv target/**/bindings.rs gdal-sys/prebuilt-bindings/gdal_3_8.rs"
-podman run --rm -it -v $PWD:$PWD:z -w $PWD ghcr.io/osgeo/gdal:ubuntu-full-3.7.3 bash -c "curl --proto =https --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain stable; . ~/.cargo/env && apt update && apt install -y pkg-config gcc libclang-dev && cargo clean && cargo test --features bindgen && shopt -s globstar && mv target/**/bindings.rs gdal-sys/prebuilt-bindings/gdal_3_7.rs"
-podman run --rm -it -v $PWD:$PWD:z -w $PWD ghcr.io/osgeo/gdal:ubuntu-full-3.6.4 bash -c "curl --proto =https --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain stable; . ~/.cargo/env && apt update && apt install -y pkg-config gcc libclang-dev && cargo clean && cargo test --features bindgen && shopt -s globstar && mv target/**/bindings.rs gdal-sys/prebuilt-bindings/gdal_3_6.rs"
-podman run --rm -it -v $PWD:$PWD:z -w $PWD ghcr.io/osgeo/gdal:ubuntu-full-3.5.3 bash -c "curl --proto =https --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain stable; . ~/.cargo/env && apt update && apt install -y pkg-config gcc libclang-dev && cargo clean && cargo test --features bindgen && shopt -s globstar && mv target/**/bindings.rs gdal-sys/prebuilt-bindings/gdal_3_5.rs"
-podman run --rm -it -v $PWD:$PWD:z -w $PWD ghcr.io/osgeo/gdal:ubuntu-full-3.4.3 bash -c "curl --proto =https --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain stable; . ~/.cargo/env && apt update && apt install -y pkg-config gcc libclang-dev && cargo clean && cargo test --features bindgen && shopt -s globstar && mv target/**/bindings.rs gdal-sys/prebuilt-bindings/gdal_3_4.rs"
-rustfmt gdal-sys/prebuilt-bindings/*.rs
-```

@@ -15,7 +15,7 @@ git commit -m "Update bundled gdal version to 3.8.4"
 
 These steps assume that there are no fundamental changes to the gdal build system.
 
-# Generating Binding
+# Generating Bindings
 
 ```bash
 docker run -it --rm -v ./gdal-sys:/gdal_sys ghcr.io/osgeo/gdal:ubuntu-full-$GDAL_VERSION bash
@@ -49,6 +49,6 @@ rm /usr/include/stdio.h /usr/include/stdlib.h /usr/include/limits.h /usr/include
 
 # 64 bit windows
 bindgen --constified-enum-module ".*" --ctypes-prefix ::std::ffi --allowlist-function "(CPL|CSL|GDAL|OGR|OSR|OCT|VSI).*" /gdal_sys/wrapper.h -- -target x86_64-pc-windows-gnu -I /usr/include/ > /gdal_sys/prebuilt-bindings/$GDAL_VERSION/gdal_x86_64-pc-windows-gnu.rs
-# 32 bit windows 
+# 32 bit windows
 bindgen --constified-enum-module ".*" --ctypes-prefix ::std::ffi --allowlist-function "(CPL|CSL|GDAL|OGR|OSR|OCT|VSI).*" /gdal_sys/wrapper.h -- -target i686-pc-windows-gnu -I /usr/include/ > /gdal_sys/prebuilt-bindings/$GDAL_VERSION/gdal_i686-pc-windows-gnu.rs
 ```
