@@ -73,16 +73,16 @@ impl Defn {
     ///
     pub fn field_index<S: AsRef<str>>(&self, field_name: S) -> Result<usize> {
         let c_str_field_name = CString::new(field_name.as_ref())?;
-        let field_id =
+        let field_idx =
             unsafe { gdal_sys::OGR_FD_GetFieldIndex(self.c_defn(), c_str_field_name.as_ptr()) };
-        if field_id == -1 {
+        if field_idx == -1 {
             return Err(GdalError::InvalidFieldName {
                 field_name: field_name.as_ref().to_string(),
                 method_name: "OGR_FD_GetFieldIndex",
             });
         }
 
-        let idx = field_id.try_into()?;
+        let idx = field_idx.try_into()?;
         Ok(idx)
     }
 }
@@ -122,13 +122,13 @@ impl<'a> Field<'a> {
     /// Get the name of this field.
     pub fn name(&'a self) -> String {
         let rv = unsafe { gdal_sys::OGR_Fld_GetNameRef(self.c_field_defn) };
-        _string(rv)
+        _string(rv).unwrap_or_default()
     }
 
     /// Get the alternative name (alias) of this field.
     pub fn alternative_name(&'a self) -> String {
         let rv = unsafe { gdal_sys::OGR_Fld_GetAlternativeNameRef(self.c_field_defn) };
-        _string(rv)
+        _string(rv).unwrap_or_default()
     }
 
     /// Get the data type of this field.
@@ -162,11 +162,8 @@ impl<'a> Field<'a> {
 
     /// Get default field value.
     pub fn default_value(&'a self) -> Option<String> {
-        let rv = unsafe { gdal_sys::OGR_Fld_GetDefault(self.c_field_defn) };
-        if rv.is_null() {
-            return None;
-        }
-        Some(_string(rv))
+        let c_ptr = unsafe { gdal_sys::OGR_Fld_GetDefault(self.c_field_defn) };
+        _string(c_ptr)
     }
 }
 
@@ -206,7 +203,7 @@ impl<'a> GeomField<'a> {
     /// Get the name of this field.
     pub fn name(&'a self) -> String {
         let rv = unsafe { gdal_sys::OGR_GFld_GetNameRef(self.c_field_defn) };
-        _string(rv)
+        _string(rv).unwrap_or_default()
     }
 
     pub fn field_type(&'a self) -> OGRwkbGeometryType::Type {

@@ -55,7 +55,7 @@ pub fn get_config_option(key: &str, default: &str) -> Result<String> {
     let c_key = CString::new(key.as_bytes())?;
     let c_default = CString::new(default.as_bytes())?;
     let rv = unsafe { gdal_sys::CPLGetConfigOption(c_key.as_ptr(), c_default.as_ptr()) };
-    Ok(_string(rv))
+    Ok(_string(rv).unwrap_or_else(|| default.to_string()))
 }
 
 /// Clear the value of a GDAL library configuration option
@@ -96,7 +96,7 @@ pub fn get_thread_local_config_option(key: &str, default: &str) -> Result<String
     let c_key = CString::new(key.as_bytes())?;
     let c_default = CString::new(default.as_bytes())?;
     let rv = unsafe { gdal_sys::CPLGetThreadLocalConfigOption(c_key.as_ptr(), c_default.as_ptr()) };
-    Ok(_string(rv))
+    Ok(_string(rv).unwrap_or_else(|| default.to_string()))
 }
 
 /// Clear the value of a GDAL library configuration option
@@ -141,7 +141,7 @@ where
         error_num: CPLErrorNum,
         error_msg_ptr: *const c_char,
     ) {
-        let error_msg = _string(error_msg_ptr);
+        let error_msg = _string(error_msg_ptr).unwrap_or_default();
         let error_type: CplErrType = error_type.into();
 
         // reconstruct callback from user data pointer

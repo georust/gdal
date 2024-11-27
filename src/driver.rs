@@ -66,7 +66,7 @@ impl Driver {
     /// See also: [`long_name`](Self::long_name).
     pub fn short_name(&self) -> String {
         let rv = unsafe { gdal_sys::GDALGetDriverShortName(self.c_driver) };
-        _string(rv)
+        _string(rv).unwrap_or_default()
     }
 
     /// Return the short name of a driver.
@@ -76,7 +76,7 @@ impl Driver {
     /// See also: [`short_name`](Self::short_name`).
     pub fn long_name(&self) -> String {
         let rv = unsafe { gdal_sys::GDALGetDriverLongName(self.c_driver) };
-        _string(rv)
+        _string(rv).unwrap_or_default()
     }
 
     /// Create a new dataset of size (`size_x`, `size_y`) and `bands` band count,

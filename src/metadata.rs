@@ -59,10 +59,7 @@ pub trait Metadata: MajorObject {
     /// ```
     fn description(&self) -> Result<String> {
         let c_res = unsafe { gdal_sys::GDALGetDescription(self.gdal_object_ptr()) };
-        if c_res.is_null() {
-            return Err(_last_null_pointer_err("GDALGetDescription"));
-        }
-        Ok(_string(c_res))
+        _string(c_res).ok_or_else(|| _last_null_pointer_err("GDALGetDescription"))
     }
 
     /// Metadata in GDAL is partitioned into namespaces, knows as "domains" in the
@@ -150,9 +147,7 @@ pub trait Metadata: MajorObject {
                         c_domain.as_ptr(),
                     )
                 };
-                if !c_res.is_null() {
-                    return Some(_string(c_res));
-                }
+                return _string(c_res);
             }
         }
         None

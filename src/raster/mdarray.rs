@@ -331,16 +331,11 @@ impl<'a> MDArray<'a> {
 
             let strings = string_pointers
                 .into_iter()
-                .map(|string_ptr| {
-                    if string_ptr.is_null() {
-                        String::new()
-                    } else {
-                        let string = _string(string_ptr);
-
-                        VSIFree(string_ptr as *mut c_void);
-
-                        string
-                    }
+                .filter_map(|ptr| {
+                    let s = _string(ptr);
+                    // GDAL allows `VSIFree(nullptr)`
+                    VSIFree(ptr as *mut c_void);
+                    s
                 })
                 .collect();
 
@@ -376,9 +371,8 @@ impl<'a> MDArray<'a> {
     pub fn unit(&self) -> String {
         unsafe {
             // should not be freed
-            let c_unit = GDALMDArrayGetUnit(self.c_mdarray);
-
-            _string(c_unit)
+            let c_ptr = GDALMDArrayGetUnit(self.c_mdarray);
+            _string(c_ptr).unwrap_or_default()
         }
     }
 
@@ -488,7 +482,8 @@ impl<'a> Group<'a> {
     }
 
     pub fn name(&self) -> String {
-        _string(unsafe { GDALGroupGetName(self.c_group) })
+        let c_ptr = unsafe { GDALGroupGetName(self.c_group) };
+        _string(c_ptr).unwrap_or_default()
     }
 
     pub fn group_names(&self, options: CslStringList) -> Vec<String> {
@@ -624,7 +619,8 @@ impl<'a> Dimension<'a> {
     }
 
     pub fn name(&self) -> String {
-        _string(unsafe { GDALDimensionGetName(self.c_dimension) })
+        let c_ptr = unsafe { GDALDimensionGetName(self.c_dimension) };
+        _string(c_ptr).unwrap_or_default()
     }
 
     pub fn indexing_variable(&self) -> MDArray {
@@ -712,7 +708,8 @@ impl ExtendedDataType {
     }
 
     pub fn name(&self) -> String {
-        _string(unsafe { GDALExtendedDataTypeGetName(self.c_data_type) })
+        let c_ptr = unsafe { GDALExtendedDataTypeGetName(self.c_data_type) };
+        _string(c_ptr).unwrap_or_default()
     }
 }
 
@@ -767,12 +764,9 @@ impl Attribute {
     }
 
     pub fn read_as_string(&self) -> String {
-        unsafe {
-            // SAFETY: should no be freed
-            let c_string = GDALAttributeReadAsString(self.c_attribute);
-
-            _string(c_string)
-        }
+        // should not be freed
+        let c_ptr = unsafe { GDALAttributeReadAsString(self.c_attribute) };
+        _string(c_ptr).unwrap_or_default()
     }
 
     pub fn read_as_string_array(&self) -> Vec<String> {

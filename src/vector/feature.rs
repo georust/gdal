@@ -90,7 +90,7 @@ impl<'a> Feature<'a> {
         match field_type {
             OGRFieldType::OFTString => {
                 let rv = unsafe { gdal_sys::OGR_F_GetFieldAsString(self.c_feature, field_idx) };
-                Ok(Some(FieldValue::StringValue(_string(rv))))
+                Ok(_string(rv).map(FieldValue::StringValue))
             }
             OGRFieldType::OFTStringList => {
                 let rv = unsafe {
@@ -268,8 +268,7 @@ impl<'a> Feature<'a> {
         }
 
         let value = _string(unsafe { gdal_sys::OGR_F_GetFieldAsString(self.c_feature, idx) });
-
-        Ok(Some(value))
+        Ok(value)
     }
 
     /// Get the value of the specified field as a [`DateTime<FixedOffset>`].
@@ -625,13 +624,13 @@ impl Iterator for FieldValueIterator<'_> {
             let field_defn =
                 unsafe { gdal_sys::OGR_F_GetFieldDefnRef(self.feature.c_feature, idx as c_int) };
             let field_name = unsafe { gdal_sys::OGR_Fld_GetNameRef(field_defn) };
-            let name = _string(field_name);
+            let name = _string(field_name).unwrap_or_default();
             let fv: Option<(String, Option<FieldValue>)> = self
                 .feature
                 .field(idx)
                 .ok()
                 .map(|field_value| (name, field_value));
-            //skip unknown types
+            // skip unknown types
             if fv.is_none() {
                 return self.next();
             }
@@ -835,7 +834,7 @@ impl FieldValue {
 
 pub fn field_type_to_name(ty: OGRFieldType::Type) -> String {
     let rv = unsafe { gdal_sys::OGR_GetFieldTypeName(ty) };
-    _string(rv)
+    _string(rv).unwrap_or_default()
 }
 
 #[cfg(test)]

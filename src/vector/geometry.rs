@@ -170,11 +170,7 @@ impl Geometry {
         // Note: C API makes no statements about this possibly returning null.
         // So we don't have to result wrap this,
         let c_str = unsafe { gdal_sys::OGR_G_GetGeometryName(self.c_geometry()) };
-        if c_str.is_null() {
-            "".into()
-        } else {
-            _string(c_str)
-        }
+        _string(c_str).unwrap_or_default()
     }
 
     /// Get the number of elements in a geometry, or number of geometries in container.
@@ -358,9 +354,7 @@ impl Eq for Geometry {}
 
 pub fn geometry_type_to_name(ty: OGRwkbGeometryType::Type) -> String {
     let rv = unsafe { gdal_sys::OGRGeometryTypeToName(ty) };
-    // If the type is invalid, OGRGeometryTypeToName returns a valid string anyway.
-    assert!(!rv.is_null());
-    _string(rv)
+    _string(rv).unwrap_or_default()
 }
 
 /// Reference to owned geometry

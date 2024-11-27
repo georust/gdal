@@ -6,7 +6,6 @@
 use std::ffi::{c_char, c_int, CString};
 use std::fmt::{Debug, Display, Formatter};
 use std::mem::ManuallyDrop;
-use std::ops::Deref;
 use std::ptr;
 use std::str::FromStr;
 
@@ -178,11 +177,7 @@ impl CslStringList {
         // we know already `name` will never exist in a valid CslStringList.
         let key = CString::new(name).ok()?;
         let c_value = unsafe { CSLFetchNameValue(self.as_ptr(), key.as_ptr()) };
-        if c_value.is_null() {
-            None
-        } else {
-            Some(_string(c_value))
-        }
+        _string(c_value)
     }
 
     /// Perform a case <u>insensitive</u> search for the given string
@@ -240,20 +235,13 @@ impl CslStringList {
         if index > c_int::MAX as usize {
             return None;
         }
+
         // In the C++ implementation, an index-out-of-bounds returns an empty string, not an error.
         // We don't want to check against `len` because that scans the list.
         // See: https://github.com/OSGeo/gdal/blob/fada29feb681e97f0fc4e8861e07f86b16855681/port/cpl_string.cpp#L181-L182
         let field = unsafe { CSLGetField(self.as_ptr(), index as c_int) };
-        if field.is_null() {
-            return None;
-        }
 
-        let field = _string(field);
-        if field.is_empty() {
-            None
-        } else {
-            Some(field.deref().into())
-        }
+        _string(field).filter(|s| !s.is_empty()).map(|s| s.into())
     }
 
     /// Determine the number of entries in the list.
@@ -505,12 +493,7 @@ impl Iterator for CslStringListIterator<'_> {
             slice[self.idx]
         };
         self.idx += 1;
-        if field.is_null() {
-            None
-        } else {
-            let entry = _string(field);
-            Some(entry.deref().into())
-        }
+        _string(field).map(|s| s.into())
     }
 }
 

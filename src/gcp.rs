@@ -81,8 +81,10 @@ impl GcpRef<'_> {
 impl From<&gdal_sys::GDAL_GCP> for Gcp {
     fn from(gcp: &gdal_sys::GDAL_GCP) -> Self {
         Gcp {
-            id: _string(gcp.pszId),
-            info: _string(gcp.pszId),
+            // This seems to never be NULL
+            id: _string(gcp.pszId).unwrap_or_default(),
+            // GDAL docs state that `pszInfo` is filled in or `""`
+            info: _string(gcp.pszInfo).unwrap_or_default(),
             pixel: gcp.dfGCPPixel,
             line: gcp.dfGCPLine,
             x: gcp.dfGCPX,
@@ -133,10 +135,7 @@ impl Dataset {
     ///  See: [`GDALGetGCPProjection`](https://gdal.org/api/raster_c_api.html#gdal_8h_1a85ffa184d3ecb7c0a59a66096b22b2ec)
     pub fn gcp_projection(&self) -> Option<String> {
         let cc_ptr = unsafe { gdal_sys::GDALGetGCPProjection(self.c_dataset()) };
-        if cc_ptr.is_null() {
-            return None;
-        }
-        Some(_string(cc_ptr))
+        _string(cc_ptr)
     }
 
     /// Fetch GCPs.

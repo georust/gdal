@@ -92,8 +92,8 @@ impl Geometry {
                 method_name: "OGR_G_ExportToWkt",
             });
         }
-        let wkt = _string(c_wkt);
-        unsafe { gdal_sys::OGRFree(c_wkt as *mut c_void) };
+        let wkt = _string(c_wkt).unwrap_or_default();
+        unsafe { gdal_sys::VSIFree(c_wkt as *mut c_void) };
         Ok(wkt)
     }
 
@@ -122,12 +122,9 @@ impl Geometry {
     /// See: [`OGR_G_ExportToJson`](https://gdal.org/api/vector_c_api.html#_CPPv418OGR_G_ExportToJson12OGRGeometryH)
     pub fn json(&self) -> Result<String> {
         let c_json = unsafe { gdal_sys::OGR_G_ExportToJson(self.c_geometry()) };
-        if c_json.is_null() {
-            return Err(_last_null_pointer_err("OGR_G_ExportToJson"));
-        };
-        let rv = _string(c_json);
+        let rv = _string(c_json).ok_or_else(|| _last_null_pointer_err("OGR_G_ExportToJson"));
         unsafe { gdal_sys::VSIFree(c_json as *mut c_void) };
-        Ok(rv)
+        rv
     }
 }
 
