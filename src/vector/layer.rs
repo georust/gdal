@@ -284,7 +284,7 @@ pub trait LayerAccess: Sized {
     /// Get the name of this layer.
     fn name(&self) -> String {
         let rv = unsafe { gdal_sys::OGR_L_GetName(self.c_layer()) };
-        _string(rv)
+        _string(rv).unwrap_or_default()
     }
 
     fn has_capability(&self, capability: LayerCaps) -> bool {

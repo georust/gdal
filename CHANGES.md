@@ -14,6 +14,7 @@
   - Update `Feature::field_count` to return `usize` instead of `i32` ([#581](https://github.com/georust/gdal/pull/581))
   - Update `Feature::field_as_integer`, `Feature::field_as_integer64`, `Feature::field_as_double`, `Feature::field_as_string`, `Feature::field_as_datetime` to take the field index as `usize` instead of `i32` ([#581](https://github.com/georust/gdal/pull/581))
   - Drop `LayerAccess::create_feature_fields` ([#581](https://github.com/georust/gdal/pull/581))
+  - Update `SpatialRef::auth_name`, `SpatialRef::name`, `SpatialRef::angular_units_name`, `SpatialRef::linear_units_name` to return `Option<String>` instead of `Result<String>` ([#589](https://github.com/georust/gdal/pull/589))
 
 ### Added
 

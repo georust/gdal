@@ -103,15 +103,7 @@ impl GdalDataType {
     /// ```
     pub fn name(&self) -> String {
         let c_str = unsafe { GDALGetDataTypeName(self.gdal_ordinal()) };
-        if c_str.is_null() {
-            // This case shouldn't happen, because `self` only exists for valid
-            // GDALDataType ordinals.
-            panic!(
-                "GDALGetDataTypeName unexpectedly returned an empty name for {:?}",
-                &self
-            );
-        }
-        _string(c_str)
+        _string(c_str).unwrap_or_default()
     }
 
     /// Get the [`GDALDataType`] size in **bits**.

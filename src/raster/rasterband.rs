@@ -950,13 +950,8 @@ impl<'a> RasterBand<'a> {
     /// Return the unit of the rasterband.
     /// If there is no unit, the empty string is returned.
     pub fn unit(&self) -> String {
-        let str_ptr = unsafe { gdal_sys::GDALGetRasterUnitType(self.c_rasterband) };
-
-        if str_ptr.is_null() {
-            return String::new();
-        }
-
-        _string(str_ptr)
+        let c_ptr = unsafe { gdal_sys::GDALGetRasterUnitType(self.c_rasterband) };
+        _string(c_ptr).unwrap_or_default()
     }
 
     /// Read the band mask flags for a GDAL `RasterBand`.
@@ -1362,8 +1357,8 @@ impl ColorInterpretation {
 
     /// Returns the name of this color interpretation.
     pub fn name(&self) -> String {
-        let rv = unsafe { gdal_sys::GDALGetColorInterpretationName(self.c_int()) };
-        _string(rv)
+        let c_ptr = unsafe { gdal_sys::GDALGetColorInterpretationName(self.c_int()) };
+        _string(c_ptr).unwrap_or_default()
     }
 }
 

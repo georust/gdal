@@ -54,7 +54,8 @@ use std::fmt::Write;
 /// Details: [`const char *GDALVersionInfo(const char*)`](https://gdal.org/api/raster_c_api.html#_CPPv415GDALVersionInfoPKc)
 pub fn version_info(key: &str) -> String {
     let c_key = CString::new(key.as_bytes()).unwrap();
-    _string(unsafe { gdal_sys::GDALVersionInfo(c_key.as_ptr()) })
+    let rv = unsafe { gdal_sys::GDALVersionInfo(c_key.as_ptr()) };
+    _string(rv).unwrap_or_default()
 }
 
 /// Convenience functions for the various pre-defined queryable properties of GDAL version information.

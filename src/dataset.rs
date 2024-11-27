@@ -235,7 +235,7 @@ impl Dataset {
     /// Fetch the projection definition string for this dataset.
     pub fn projection(&self) -> String {
         let rv = unsafe { gdal_sys::GDALGetProjectionRef(self.c_dataset) };
-        _string(rv)
+        _string(rv).unwrap_or_default()
     }
 
     /// Set the projection reference string for this dataset.
