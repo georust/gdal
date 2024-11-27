@@ -25,13 +25,13 @@ impl<'a> Deref for ResultSet<'a> {
     }
 }
 
-impl<'a> DerefMut for ResultSet<'a> {
+impl DerefMut for ResultSet<'_> {
     fn deref_mut(&mut self) -> &mut <Self as Deref>::Target {
         &mut self.layer
     }
 }
 
-impl<'a> Drop for ResultSet<'a> {
+impl Drop for ResultSet<'_> {
     fn drop(&mut self) {
         unsafe { gdal_sys::GDALDatasetReleaseResultSet(self.dataset, self.layer.c_layer()) };
     }

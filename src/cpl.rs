@@ -490,7 +490,7 @@ impl<'a> CslStringListIterator<'a> {
     }
 }
 
-impl<'a> Iterator for CslStringListIterator<'a> {
+impl Iterator for CslStringListIterator<'_> {
     type Item = CslStringListEntry;
 
     fn next(&mut self) -> Option<Self::Item> {

@@ -290,7 +290,7 @@ impl<'a> MetadataIter<'a> {
     }
 }
 
-impl<'a> Iterator for MetadataIter<'a> {
+impl Iterator for MetadataIter<'_> {
     type Item = MetadataEntry;
 
     fn next(&mut self) -> Option<Self::Item> {

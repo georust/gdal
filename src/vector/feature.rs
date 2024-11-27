@@ -614,7 +614,7 @@ impl<'a> FieldValueIterator<'a> {
     }
 }
 
-impl<'a> Iterator for FieldValueIterator<'a> {
+impl Iterator for FieldValueIterator<'_> {
     type Item = (String, Option<FieldValue>);
 
     #[inline]
@@ -646,7 +646,7 @@ impl<'a> Iterator for FieldValueIterator<'a> {
     }
 }
 
-impl<'a> Drop for Feature<'a> {
+impl Drop for Feature<'_> {
     fn drop(&mut self) {
         unsafe {
             gdal_sys::OGR_F_Destroy(self.c_feature);
