@@ -1257,13 +1257,13 @@ impl Drop for HistogramCounts {
     }
 }
 
-impl<'a> MajorObject for RasterBand<'a> {
+impl MajorObject for RasterBand<'_> {
     fn gdal_object_ptr(&self) -> GDALMajorObjectH {
         self.c_rasterband
     }
 }
 
-impl<'a> Metadata for RasterBand<'a> {}
+impl Metadata for RasterBand<'_> {}
 
 /// Represents a color interpretation of a RasterBand
 #[derive(Debug, PartialEq, Eq)]

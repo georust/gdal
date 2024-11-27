@@ -37,7 +37,7 @@ pub struct GcpRef<'a> {
     _phantom: PhantomData<&'a gdal_sys::GDAL_GCP>,
 }
 
-impl<'p> GcpRef<'p> {
+impl GcpRef<'_> {
     /// Returns an unique identifier of the GCP, often numeric.
     pub fn id(&self) -> String {
         unsafe { CStr::from_ptr(self.inner.pszId) }

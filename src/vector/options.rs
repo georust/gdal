@@ -16,7 +16,7 @@ pub struct LayerOptions<'a> {
 
 const EMPTY_LAYER_NAME: &str = "";
 
-impl<'a> Default for LayerOptions<'a> {
+impl Default for LayerOptions<'_> {
     /// Returns creation options for a new layer with no name, no SRS and unknown geometry type.
     fn default() -> Self {
         LayerOptions {

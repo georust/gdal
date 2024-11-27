@@ -85,7 +85,7 @@ impl<'d> MemFileRef<'d> {
     }
 }
 
-impl<'d> Drop for MemFileRef<'d> {
+impl Drop for MemFileRef<'_> {
     fn drop(&mut self) {
         // try to unlink file
         // if it fails, ignore - it probably was manually unlinked before

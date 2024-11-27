@@ -107,15 +107,15 @@ pub struct Layer<'a> {
     phantom: PhantomData<&'a Dataset>,
 }
 
-impl<'a> MajorObject for Layer<'a> {
+impl MajorObject for Layer<'_> {
     fn gdal_object_ptr(&self) -> GDALMajorObjectH {
         self.c_layer
     }
 }
 
-impl<'a> Metadata for Layer<'a> {}
+impl Metadata for Layer<'_> {}
 
-impl<'a> LayerAccess for Layer<'a> {
+impl LayerAccess for Layer<'_> {
     unsafe fn c_layer(&self) -> OGRLayerH {
         self.c_layer
     }
