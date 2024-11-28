@@ -24,6 +24,7 @@
   - Add `Defn::geometry_type` ([#562](https://github.com/georust/gdal/pull/562))
   - Add `Defn::field_index` and `Feature::field_index` ([#581](https://github.com/georust/gdal/pull/581))
   - Add `Dataset::has_capability` for dataset capability check ([#581](https://github.com/georust/gdal/pull/585))
+  - Add `Dataset::maybe_batch` which always succeeds to use transaction when possible for speed reasons -- rollbacks if operation fails under transaction ([#584](https://github.com/georust/gdal/pull/584))
 
 ### Fixed
 
