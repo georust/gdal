@@ -1510,7 +1510,6 @@ mod tests {
 
         let geom_field = layer.defn().geom_fields().next().unwrap();
         let mut spatial_ref2 = SpatialRef::from_epsg(4326).unwrap();
-        #[cfg(major_ge_3)]
         spatial_ref2.set_axis_mapping_strategy(AxisMappingStrategy::TraditionalGisOrder);
 
         assert_eq!(geom_field.spatial_ref().unwrap(), spatial_ref2);

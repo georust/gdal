@@ -283,7 +283,6 @@ impl SpatialRef {
         }
     }
 
-    #[cfg(major_ge_3)]
     pub fn name(&self) -> Result<String> {
         let c_ptr = unsafe { gdal_sys::OSRGetName(self.0) };
         if c_ptr.is_null() {
@@ -402,7 +401,6 @@ impl SpatialRef {
         unsafe { gdal_sys::OSRGetAxesCount(self.0) }
     }
 
-    #[cfg(major_ge_3)]
     /// Set the data axis to CRS axis mapping strategy.
     ///
     /// # Notes
@@ -420,7 +418,6 @@ impl SpatialRef {
         }
     }
 
-    #[cfg(major_ge_3)]
     /// Return the data axis to CRS axis mapping strategy.
     ///
     /// See: [`OSRGetAxisMappingStrategy`](https://gdal.org/api/ogrspatialref.html#_CPPv4NK19OGRSpatialReference22GetAxisMappingStrategyEv)
@@ -429,7 +426,6 @@ impl SpatialRef {
         id.try_into().expect("valid enumeration ordinal from GDAL")
     }
 
-    #[cfg(major_ge_3)]
     /// Get the valid use bounding area for this `SpatialRef`.
     ///
     /// See: [`OSRGetAreaOfUse`](https://gdal.org/api/ogr_srs_api.html#_CPPv415OSRGetAreaOfUse20OGRSpatialReferenceHPdPdPdPdPPKc)
@@ -615,7 +611,6 @@ pub struct AreaOfUse {
     pub name: String,
 }
 
-#[cfg(major_ge_3)]
 /// Data axis to CRS axis mapping strategy.
 ///
 /// See: [`OSRGetAxisMappingStrategy`](https://gdal.org/api/ogrspatialref.html#_CPPv4NK19OGRSpatialReference22GetAxisMappingStrategyEv)
@@ -694,9 +689,6 @@ mod tests {
         let spatial_ref = SpatialRef::from_epsg(4326).unwrap();
         let wkt = spatial_ref.to_wkt().unwrap();
         // TODO: handle proj changes on lib level
-        #[cfg(not(major_ge_3))]
-        assert_eq!("GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",\"7030\"]],AUTHORITY[\"EPSG\",\"6326\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]", wkt);
-        #[cfg(major_ge_3)]
         assert_eq!("GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",\"7030\"]],AUTHORITY[\"EPSG\",\"6326\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AXIS[\"Latitude\",NORTH],AXIS[\"Longitude\",EAST],AUTHORITY[\"EPSG\",\"4326\"]]", wkt);
         let proj4string = spatial_ref.to_proj4().unwrap();
         assert_eq!("+proj=longlat +datum=WGS84 +no_defs", proj4string.trim());
@@ -794,7 +786,6 @@ mod tests {
         assert_eq!(spatial_ref.auth_code().unwrap(), 32632);
     }
 
-    #[cfg(major_ge_3)]
     #[test]
     fn axis_mapping_strategy() {
         let mut spatial_ref = SpatialRef::from_epsg(4326).unwrap();
@@ -809,7 +800,6 @@ mod tests {
         );
     }
 
-    #[cfg(major_ge_3)]
     #[test]
     fn area_of_use() {
         let spatial_ref = SpatialRef::from_epsg(4326).unwrap();
@@ -820,7 +810,6 @@ mod tests {
         assert_almost_eq(area_of_use.north_lat_degree, 90.0);
     }
 
-    #[cfg(major_ge_3)]
     #[test]
     fn get_name() {
         let spatial_ref = SpatialRef::from_epsg(4326).unwrap();
@@ -870,8 +859,6 @@ mod tests {
         assert!(!spatial_ref_2154.is_derived_geographic());
     }
 
-    //XXX Gdal 2 implementation is partial
-    #[cfg(major_ge_3)]
     #[test]
     fn crs_axis() {
         let spatial_ref = SpatialRef::from_epsg(4326).unwrap();

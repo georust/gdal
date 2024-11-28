@@ -218,7 +218,6 @@ impl Dataset {
         Ok(())
     }
 
-    #[cfg(major_ge_3)]
     /// Get the spatial reference system for this dataset.
     pub fn spatial_ref(&self) -> Result<SpatialRef> {
         unsafe {
@@ -234,7 +233,6 @@ impl Dataset {
         }
     }
 
-    #[cfg(major_ge_3)]
     /// Set the spatial reference system for this dataset.
     pub fn set_spatial_ref(&mut self, spatial_ref: &SpatialRef) -> Result<()> {
         let rv = unsafe { gdal_sys::GDALSetSpatialRef(self.c_dataset, spatial_ref.to_c_hsrs()) };

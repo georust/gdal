@@ -274,9 +274,7 @@ mod tests {
         let mut spatial_ref2 = SpatialRef::from_epsg(3035).unwrap();
 
         // TODO: handle axis order in tests
-        #[cfg(major_ge_3)]
         spatial_ref1.set_axis_mapping_strategy(AxisMappingStrategy::TraditionalGisOrder);
-        #[cfg(major_ge_3)]
         spatial_ref2.set_axis_mapping_strategy(AxisMappingStrategy::TraditionalGisOrder);
 
         let transform = CoordTransform::new(&spatial_ref1, &spatial_ref2).unwrap();
@@ -307,9 +305,7 @@ mod tests {
         let mut spatial_ref2 = SpatialRef::from_wkt("GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",7030]],TOWGS84[0,0,0,0,0,0,0],AUTHORITY[\"EPSG\",6326]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",8901]],UNIT[\"DMSH\",0.0174532925199433,AUTHORITY[\"EPSG\",9108]],AXIS[\"Lat\",NORTH],AXIS[\"Long\",EAST],AUTHORITY[\"EPSG\",4326]]").unwrap();
 
         // TODO: handle axis order in tests
-        #[cfg(major_ge_3)]
         spatial_ref1.set_axis_mapping_strategy(AxisMappingStrategy::TraditionalGisOrder);
-        #[cfg(major_ge_3)]
         spatial_ref2.set_axis_mapping_strategy(AxisMappingStrategy::TraditionalGisOrder);
 
         let htransform = CoordTransform::new(&spatial_ref2, &spatial_ref1).unwrap();
@@ -323,9 +319,7 @@ mod tests {
         let mut dhd_2 = SpatialRef::from_epsg(31462).unwrap();
 
         // TODO: handle axis order in tests
-        #[cfg(major_ge_3)]
         wgs84.set_axis_mapping_strategy(AxisMappingStrategy::TraditionalGisOrder);
-        #[cfg(major_ge_3)]
         dhd_2.set_axis_mapping_strategy(AxisMappingStrategy::TraditionalGisOrder);
 
         let mut x = [1979105.06, 0.0];
@@ -340,9 +334,7 @@ mod tests {
         let mut webmercator = SpatialRef::from_epsg(3857).unwrap();
 
         // TODO: handle axis order in tests
-        #[cfg(major_ge_3)]
         wgs84.set_axis_mapping_strategy(AxisMappingStrategy::TraditionalGisOrder);
-        #[cfg(major_ge_3)]
         webmercator.set_axis_mapping_strategy(AxisMappingStrategy::TraditionalGisOrder);
 
         let mut x = [1000000.0];
