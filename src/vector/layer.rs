@@ -41,7 +41,7 @@ pub enum LayerCaps {
     OLCAlterFieldDefn,
     /// Layer capability for transactions
     OLCTransactions,
-    /// Layer capability for feature deletiond
+    /// Layer capability for feature deletion
     OLCDeleteFeature,
     /// Layer capability for setting next feature index
     OLCFastSetNextByIndex,
