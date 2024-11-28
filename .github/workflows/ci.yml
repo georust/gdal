@@ -115,8 +115,9 @@ jobs:
         run: cargo test --features "default bindgen array" -- --nocapture
       - name: Install cargo-valgrind
         run: cargo install cargo-valgrind
-      - name: Run --lib tests under valgrind
-        run: cargo valgrind test --lib
+      # There's a possible leak in Rust 1.83 and generating suppressions on CI is hard
+      # - name: Run --lib tests under valgrind
+      #   run: cargo valgrind test --lib
 
   gdal_static:
     name: "ci gdal-static"
