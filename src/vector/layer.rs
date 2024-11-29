@@ -1284,11 +1284,14 @@ mod tests {
             let geom = feature.geometry_by_index(0).unwrap();
             assert_eq!(geom.geometry_type(), OGRwkbGeometryType::wkbLineString);
             assert!(feature.geometry_by_index(1).is_err());
-            let geom = feature.geometry_by_name("");
+            let geom = feature.geometry_by_index(0);
             assert!(geom.is_ok());
-            let geom = feature.geometry_by_name("").unwrap();
+            let geom = feature.geometry_by_index(0).unwrap();
             assert_eq!(geom.geometry_type(), OGRwkbGeometryType::wkbLineString);
-            assert!(feature.geometry_by_name("FOO").is_err());
+            assert!(feature.geometry_by_index(1).is_err());
+
+            assert_eq!(feature.geometry_field_index("").unwrap(), 0);
+            assert!(feature.geometry_field_index("FOO").is_err());
         });
     }
 
@@ -1513,6 +1516,26 @@ mod tests {
         spatial_ref2.set_axis_mapping_strategy(AxisMappingStrategy::TraditionalGisOrder);
 
         assert_eq!(geom_field.spatial_ref().unwrap(), spatial_ref2);
+    }
+
+    #[test]
+    fn test_two_geom_fields() -> Result<()> {
+        let ds = Dataset::open(fixture("two_geoms.csv"))?;
+        let mut layer = ds.layer(0)?;
+
+        let geom_field_2_idx = layer
+            .defn()
+            .geometry_field_index("geom__WKTanother_geometry")
+            .unwrap();
+        assert_eq!(geom_field_2_idx, 1);
+
+        let feature = layer.features().next().unwrap();
+        let geom_1 = feature.geometry_by_index(0)?;
+        let geom_2 = feature.geometry_by_index(1)?;
+        assert_eq!(geom_1.get_point(0), (1.0, 2.0, 0.0));
+        assert_eq!(geom_2.get_point(0), (10.0, 20.0, 0.0));
+
+        Ok(())
     }
 
     #[test]

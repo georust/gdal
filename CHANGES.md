@@ -14,16 +14,19 @@
   - Update `Feature::field_count` to return `usize` instead of `i32` ([#581](https://github.com/georust/gdal/pull/581))
   - Update `Feature::field_as_integer`, `Feature::field_as_integer64`, `Feature::field_as_double`, `Feature::field_as_string`, `Feature::field_as_datetime` to take the field index as `usize` instead of `i32` ([#581](https://github.com/georust/gdal/pull/581))
   - Drop `LayerAccess::create_feature_fields` ([#581](https://github.com/georust/gdal/pull/581))
+  - Drop `Feature::geometry_by_name` ([#594](https://github.com/georust/gdal/pull/594))
   - Update `SpatialRef::auth_name`, `SpatialRef::name`, `SpatialRef::angular_units_name`, `SpatialRef::linear_units_name` to return `Option<String>` instead of `Result<String>` ([#589](https://github.com/georust/gdal/pull/589))
 
 ### Added
 
   - Add `Dataset::delete_layer` ([#583](https://github.com/georust/gdal/pull/583))
+  - Add `Dataset::has_capability` ([#585](https://github.com/georust/gdal/pull/585))
   - Add a `bundled` feature for `gdal-sys` for building and statically linking a minimal bundled version of GDAL ([#517](https://github.com/georust/gdal/pull/517))
   - Add pre-built bindings for GDAL 3.10 ([#573](https://github.com/georust/gdal/pull/573))
   - Add methods `alternative_name`, `is_nullable`, `is_unique`, `default_value` to `Field` ([#561](https://github.com/georust/gdal/pull/561))
   - Add `Defn::geometry_type` ([#562](https://github.com/georust/gdal/pull/562))
   - Add `Defn::field_index` and `Feature::field_index` ([#581](https://github.com/georust/gdal/pull/581))
+  - Add `Defn::geometry_field_index` and `Feature::geometry_field_index` ([#594](https://github.com/georust/gdal/pull/594))
   - Add `Dataset::has_capability` for dataset capability check ([#581](https://github.com/georust/gdal/pull/585))
 
 ### Fixed

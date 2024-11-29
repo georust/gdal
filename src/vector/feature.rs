@@ -158,14 +158,44 @@ impl<'a> Feature<'a> {
     ///
     /// If the field is missing, returns [`GdalError::InvalidFieldName`].
     ///
+    /// Calling [`Defn::field_index`] once and caching the index can be faster, and should be preferred.
     pub fn field_index<S: AsRef<str>>(&self, field_name: S) -> Result<usize> {
-        let c_str_field_name = CString::new(field_name.as_ref())?;
+        self._field_index(field_name.as_ref())
+    }
+
+    fn _field_index(&self, field_name: &str) -> Result<usize> {
+        let c_str_field_name = CString::new(field_name)?;
         let field_idx =
             unsafe { gdal_sys::OGR_F_GetFieldIndex(self.c_feature(), c_str_field_name.as_ptr()) };
         if field_idx == -1 {
             return Err(GdalError::InvalidFieldName {
-                field_name: field_name.as_ref().to_string(),
+                field_name: field_name.to_string(),
                 method_name: "OGR_F_GetFieldIndex",
+            });
+        }
+
+        let field_index = field_idx.try_into()?;
+        Ok(field_index)
+    }
+
+    /// Get the index of a geometry field.
+    ///
+    /// If the field is missing, returns [`GdalError::InvalidFieldName`].
+    ///
+    /// Calling [`Defn::geometry_field_index`] once and caching the index can be faster, and should be preferred.
+    pub fn geometry_field_index<S: AsRef<str>>(&self, field_name: S) -> Result<usize> {
+        self._geometry_field_index(field_name.as_ref())
+    }
+
+    fn _geometry_field_index(&self, field_name: &str) -> Result<usize> {
+        let c_str_field_name = CString::new(field_name)?;
+        let field_idx = unsafe {
+            gdal_sys::OGR_F_GetGeomFieldIndex(self.c_feature(), c_str_field_name.as_ptr())
+        };
+        if field_idx == -1 {
+            return Err(GdalError::InvalidFieldName {
+                field_name: field_name.to_string(),
+                method_name: "OGR_F_GetGeomFieldIndex",
             });
         }
 
@@ -362,20 +392,6 @@ impl<'a> Feature<'a> {
                 Some(geom)
             }
             None => None,
-        }
-    }
-
-    pub fn geometry_by_name(&self, field_name: &str) -> Result<&Geometry> {
-        let c_str_field_name = CString::new(field_name)?;
-        let idx =
-            unsafe { gdal_sys::OGR_F_GetGeomFieldIndex(self.c_feature, c_str_field_name.as_ptr()) };
-        if idx == -1 {
-            Err(GdalError::InvalidFieldName {
-                field_name: field_name.to_string(),
-                method_name: "geometry_by_name",
-            })
-        } else {
-            self.geometry_by_index(idx as usize)
         }
     }
 
