@@ -14,7 +14,7 @@ links = "gdal"
 gdal-src = { version = "0.1.0", path = "../gdal-src/", optional = true }
 
 [build-dependencies]
-bindgen = { version = "0.70", optional = true }
+bindgen = { version = "0.71", optional = true }
 pkg-config = "0.3"
 semver = "1.0"
 
