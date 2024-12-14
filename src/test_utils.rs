@@ -110,19 +110,12 @@ impl Drop for SuppressGDALErrorLog {
 /// Copies the given file to a temporary file and opens it for writing. When the returned
 /// `TempPath` is dropped, the file is deleted.
 pub fn open_gpkg_for_update(path: &Path) -> (TempPath, Dataset) {
-    use std::fs;
-    use std::io::Write;
-
-    let input_data = fs::read(path).unwrap();
-    let (mut file, temp_path) = tempfile::Builder::new()
+    let temp_path = tempfile::Builder::new()
         .suffix(".gpkg")
         .tempfile()
         .unwrap()
-        .into_parts();
-    file.write_all(&input_data).unwrap();
-    // Close the temporary file so that Dataset can open it safely even if the filesystem uses
-    // exclusive locking (Windows?).
-    drop(file);
+        .into_temp_path();
+    std::fs::copy(path, &temp_path).unwrap();
 
     let ds = Dataset::open_ex(
         &temp_path,
@@ -139,11 +132,7 @@ pub fn open_gpkg_for_update(path: &Path) -> (TempPath, Dataset) {
 /// Copies the given file to a temporary file and opens it for writing. When the returned
 /// `TempPath` is dropped, the file is deleted.
 pub fn open_dataset_for_update(path: &Path) -> (TempPath, Dataset) {
-    use std::fs;
-    use std::io::Write;
-
-    let input_data = fs::read(path).unwrap();
-    let (mut file, temp_path) = tempfile::Builder::new()
+    let temp_path = tempfile::Builder::new()
         // using the whole filename as suffix should be fine (can't
         // use .extension() for .shp.zip and such)
         .suffix(
@@ -154,11 +143,8 @@ pub fn open_dataset_for_update(path: &Path) -> (TempPath, Dataset) {
         )
         .tempfile()
         .unwrap()
-        .into_parts();
-    file.write_all(&input_data).unwrap();
-    // Close the temporary file so that Dataset can open it safely even if the filesystem uses
-    // exclusive locking (Windows?).
-    drop(file);
+        .into_temp_path();
+    std::fs::copy(path, &temp_path).unwrap();
 
     let ds = Dataset::open_ex(
         &temp_path,
