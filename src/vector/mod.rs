@@ -79,7 +79,7 @@ pub use feature::{
     OwnedFeatureIterator,
 };
 pub use gdal_sys::{OGRFieldType, OGRwkbGeometryType};
-pub use geometry::{geometry_type_to_name, has_z, has_m, Geometry};
+pub use geometry::{geometry_type_to_name, geometry_type_flatten, geometry_type_has_z, geometry_type_has_m, Geometry};
 pub use layer::{FieldDefn, Layer, LayerAccess, LayerCaps, LayerIterator, OwnedLayer};
 pub use options::LayerOptions;
 pub use transaction::Transaction;

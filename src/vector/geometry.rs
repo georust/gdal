@@ -383,7 +383,15 @@ impl Clone for Geometry {
 
 impl Debug for Geometry {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self.wkt() {
+        let should_iso = geometry_type_has_m(self.geometry_type());
+
+        // .wkt() does not return the M coordinate regardless or whether or not the Z coordinate is present.
+        let wkt = match should_iso {
+            true => self.iso_wkt(),
+            false => self.wkt()
+        };
+
+        match wkt {
             Ok(wkt) => f.write_str(wkt.as_str()),
             Err(_) => Err(fmt::Error),
         }
@@ -403,13 +411,34 @@ pub fn geometry_type_to_name(ty: OGRwkbGeometryType::Type) -> String {
     _string(rv).unwrap_or_default()
 }
 
+
+/// Returns the 2D geometry type corresponding to the passed geometry type. 
+pub fn geometry_type_flatten(ty: OGRwkbGeometryType::Type) -> OGRwkbGeometryType::Type {
+    unsafe { gdal_sys::OGR_GT_Flatten(ty) }
+}
+
+/// Returns the 3D geometry type corresponding to the passed geometry type. 
+pub fn geometry_type_set_z(ty: OGRwkbGeometryType::Type) -> OGRwkbGeometryType::Type {
+    unsafe { gdal_sys::OGR_GT_SetZ(ty) }
+}
+
+/// Returns the measured geometry type corresponding to the passed geometry type.
+pub fn geometry_type_set_m(ty: OGRwkbGeometryType::Type) -> OGRwkbGeometryType::Type {
+    unsafe { gdal_sys::OGR_GT_SetM(ty) }
+}
+
+/// Returns a XY, XYZ, XYM or XYZM geometry type depending on parameter.
+pub fn geometry_type_set_modifier(ty: OGRwkbGeometryType::Type, set_z: bool, set_m: bool) -> OGRwkbGeometryType::Type {
+    unsafe { gdal_sys::OGR_GT_SetModifier(ty, set_z as i32, set_m as i32) }
+}
+
 /// Return if the geometry type is a 3D geometry type. 
-pub fn has_z(ty: OGRwkbGeometryType::Type) -> bool {
+pub fn geometry_type_has_z(ty: OGRwkbGeometryType::Type) -> bool {
     unsafe { gdal_sys::OGR_GT_HasZ(ty) != 0 }
 }
 
 /// Return if the geometry type is a measured type.
-pub fn has_m(ty: OGRwkbGeometryType::Type) -> bool {
+pub fn geometry_type_has_m(ty: OGRwkbGeometryType::Type) -> bool {
     unsafe { gdal_sys::OGR_GT_HasM(ty) != 0 }
 }
 
@@ -555,6 +584,7 @@ mod tests {
 
         let expected = Geometry::from_wkt("MULTIPOINT ZM ((1.0 2.0 3.0 0.0), (4.0 2.0 1.0 1.0))").unwrap();
         assert_eq!(geom, expected);
+        assert_eq!(geometry_type_has_m(geom.geometry_type()), geometry_type_has_m(expected.geometry_type()))
     }
 
 
@@ -637,20 +667,37 @@ mod tests {
     }
 
     #[test]
+    fn test_geometry_type_modification() {
+        let mut geom_type = OGRwkbGeometryType::wkbPoint;
+
+        geom_type = geometry_type_set_z(geom_type);
+        assert_eq!(geom_type, OGRwkbGeometryType::wkbPoint25D);
+
+        geom_type = geometry_type_set_m(geom_type);
+        assert_eq!(geom_type, OGRwkbGeometryType::wkbPointZM);
+
+        geom_type = geometry_type_set_modifier(geom_type, false, true);
+        assert_eq!(geom_type, OGRwkbGeometryType::wkbPointM);
+
+        geom_type = geometry_type_flatten(geom_type);
+        assert_eq!(geom_type, OGRwkbGeometryType::wkbPoint);
+    }
+
+    #[test]
     fn test_geometry_type_has_zm() {
         let geom = Geometry::from_wkt("POINT(0 1)").unwrap();
 
-        assert_eq!(has_z(geom.geometry_type()), false);
-        assert_eq!(has_m(geom.geometry_type()), false);
+        assert_eq!(geometry_type_has_z(geom.geometry_type()), false);
+        assert_eq!(geometry_type_has_m(geom.geometry_type()), false);
 
-        let geom = Geometry::from_wkt("POINT Z (0 1 2)").unwrap();
+        let geom = Geometry::from_wkt("POINT(0 1 2)").unwrap();
 
-        assert_eq!(has_z(geom.geometry_type()), true);
-        assert_eq!(has_m(geom.geometry_type()), false);
+        assert_eq!(geometry_type_has_z(geom.geometry_type()), true);
+        assert_eq!(geometry_type_has_m(geom.geometry_type()), false);
 
         let geom = Geometry::from_wkt("POINT ZM (0 1 2 3)").unwrap();
 
-        assert_eq!(has_z(geom.geometry_type()), true);
-        assert_eq!(has_m(geom.geometry_type()), true);
+        assert_eq!(geometry_type_has_z(geom.geometry_type()), true);
+        assert_eq!(geometry_type_has_m(geom.geometry_type()), true);
     }
 }
