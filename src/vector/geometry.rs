@@ -114,6 +114,20 @@ impl Geometry {
         };
     }
 
+    pub fn set_point_zm(&mut self, i: usize, point: (f64, f64, f64, f64)) {
+        let (x, y, z, m) = point;
+        unsafe {
+            gdal_sys::OGR_G_SetPointZM(
+                self.c_geometry(),
+                i as c_int,
+                x as c_double,
+                y as c_double,
+                z as c_double,
+                m as c_double,
+            );
+        };
+    }
+
     pub fn set_point_2d(&mut self, i: usize, p: (f64, f64)) {
         let (x, y) = p;
         unsafe {
@@ -138,6 +152,19 @@ impl Geometry {
         unsafe { gdal_sys::OGR_G_AddPoint_2D(self.c_geometry(), x as c_double, y as c_double) };
     }
 
+    pub fn add_point_zm(&mut self, p: (f64, f64, f64, f64)) {
+        let (x, y, z, m) = p;
+        unsafe {
+            gdal_sys::OGR_G_AddPointZM(
+                self.c_geometry(),
+                x as c_double,
+                y as c_double,
+                z as c_double,
+                m as c_double,
+            )
+        };
+    }
+
     /// Get point coordinates from a line string or a point geometry.
     ///
     /// `index` is the line string vertex index, from 0 to `point_count()-1`, or `0` when a point.
@@ -151,9 +178,28 @@ impl Geometry {
         (x, y, z)
     }
 
+    /// Get point coordinates from a line string or a point geometry.
+    ///
+    /// `index` is the line string vertex index, from 0 to `point_count()-1`, or `0` when a point.
+    ///
+    /// See: [`OGR_G_GetPointZM`](https://gdal.org/en/stable/api/vector_c_api.html#_CPPv416OGR_G_GetPointZM12OGRGeometryHiPdPdPdPd)
+    pub fn get_point_zm(&self, index: i32) -> (f64, f64, f64, f64) {
+        let mut x: c_double = 0.;
+        let mut y: c_double = 0.;
+        let mut z: c_double = 0.;
+        let mut m: c_double = 0.;
+        unsafe { gdal_sys::OGR_G_GetPointZM(self.c_geometry(), index, &mut x, &mut y, &mut z, &mut m) };
+        (x, y, z, m)
+    }
+
     pub fn get_point_vec(&self) -> Vec<(f64, f64, f64)> {
         let length = unsafe { gdal_sys::OGR_G_GetPointCount(self.c_geometry()) };
         (0..length).map(|i| self.get_point(i)).collect()
+    }
+
+    pub fn get_point_vec_zm(&self) -> Vec<(f64, f64, f64, f64)> {
+        let length = unsafe { gdal_sys::OGR_G_GetPointCount(self.c_geometry()) };
+        (0..length).map(|i| self.get_point_zm(i)).collect()
     }
 
     /// Get the geometry type ordinal
@@ -385,6 +431,8 @@ impl Debug for GeometryRef<'_> {
 
 #[cfg(test)]
 mod tests {
+    use self::OGRwkbGeometryType::{wkbMultiPointZM, wkbPointZM};
+
     use super::*;
     use crate::spatial_ref::SpatialRef;
     use crate::test_utils::SuppressGDALErrorLog;
@@ -481,6 +529,25 @@ mod tests {
         let expected = Geometry::from_wkt("MULTIPOINT((1.0 2.0 3.0), (4.0 2.0 1.0))").unwrap();
         assert_eq!(geom, expected);
     }
+
+    #[test]
+    pub fn test_create_multipoint_zm() {
+        let mut geom = Geometry::empty(wkbMultiPointZM).unwrap();
+        let mut point = Geometry::empty(wkbPointZM).unwrap();
+        point.add_point_zm((1.0, 2.0, 3.0, 0.0));
+        geom.add_geometry(point).unwrap();
+        let mut point = Geometry::empty(wkbPointZM).unwrap();
+        point.add_point_zm((3.0, 2.0, 1.0, 1.0));
+        assert!(!point.is_empty());
+        point.set_point_zm(0, (4.0, 2.0, 1.0, 1.0));
+        geom.add_geometry(point).unwrap();
+        assert!(!geom.is_empty());
+
+        let expected = Geometry::from_wkt("MULTIPOINT ZM ((1.0 2.0 3.0 0.0), (4.0 2.0 1.0 1.0))").unwrap();
+        assert_eq!(geom, expected);
+    }
+
+
 
     #[test]
     pub fn test_spatial_ref() {

@@ -177,6 +177,15 @@ mod tests {
     }
 
     #[test]
+    pub fn test_iso_wkb() {
+        let wkt = "POLYGON ZM ((45.0 45.0 0.0 0.0, 45.0 50.0 0.0 0.25, 50.0 50.0 0.0 0.50, 50.0 45.0 0.0 0.75, 45.0 45.0 0.0 1.0))";
+        let orig_geom = Geometry::from_wkt(wkt).unwrap();
+        let wkb = orig_geom.iso_wkb().unwrap();
+        let new_geom = Geometry::from_wkb(&wkb).unwrap();
+        assert_eq!(new_geom, orig_geom);
+    }
+
+    #[test]
     pub fn test_geojson() {
         let json = r#"{ "type": "Point", "coordinates": [10, 20] }"#;
         let geom = Geometry::from_geojson(json).unwrap();
