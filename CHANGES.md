@@ -28,10 +28,13 @@
   - Add `Defn::field_index` and `Feature::field_index` ([#581](https://github.com/georust/gdal/pull/581))
   - Add `Defn::geometry_field_index` and `Feature::geometry_field_index` ([#594](https://github.com/georust/gdal/pull/594))
   - Add `Dataset::has_capability` for dataset capability check ([#581](https://github.com/georust/gdal/pull/585))
+  - Add methods `add_point_zm`, `add_point_m`, `set_point_zm`, `set_point_m`, `get_point_zm`, `get_point_vec_zm`, `iso_wkt` and `iso_wkb` to `Geometry` ([#600](https://github.com/georust/gdal/pull/600))
+  - Add functions `geometry_type_flatten`, `geometry_type_set_z`, `geometry_type_set_m`, `geometry_type_set_modifier`, `geometry_type_has_z` and `geometry_type_has_m` to `vector::geometry` ([#600](https://github.com/georust/gdal/pull/600))
 
 ### Fixed
 
   - Fix conversion from `ndarray` when the data is offsetted from the start of the buffer ([#569](https://github.com/georust/gdal/pull/569))
+  - `Debug` trait for `Geometry` now prints ISO WKT when the M-dim is present ([#600](https://github.com/georust/gdal/pull/600))
 
 ### Removed
 

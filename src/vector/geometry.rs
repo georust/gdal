@@ -114,6 +114,33 @@ impl Geometry {
         };
     }
 
+    pub fn set_point_zm(&mut self, i: usize, point: (f64, f64, f64, f64)) {
+        let (x, y, z, m) = point;
+        unsafe {
+            gdal_sys::OGR_G_SetPointZM(
+                self.c_geometry(),
+                i as c_int,
+                x as c_double,
+                y as c_double,
+                z as c_double,
+                m as c_double,
+            );
+        };
+    }
+
+    pub fn set_point_m(&mut self, i: usize, point: (f64, f64, f64)) {
+        let (x, y, m) = point;
+        unsafe {
+            gdal_sys::OGR_G_SetPointM(
+                self.c_geometry(),
+                i as c_int,
+                x as c_double,
+                y as c_double,
+                m as c_double,
+            );
+        };
+    }
+
     pub fn set_point_2d(&mut self, i: usize, p: (f64, f64)) {
         let (x, y) = p;
         unsafe {
@@ -138,6 +165,31 @@ impl Geometry {
         unsafe { gdal_sys::OGR_G_AddPoint_2D(self.c_geometry(), x as c_double, y as c_double) };
     }
 
+    pub fn add_point_zm(&mut self, p: (f64, f64, f64, f64)) {
+        let (x, y, z, m) = p;
+        unsafe {
+            gdal_sys::OGR_G_AddPointZM(
+                self.c_geometry(),
+                x as c_double,
+                y as c_double,
+                z as c_double,
+                m as c_double,
+            )
+        };
+    }
+
+    pub fn add_point_m(&mut self, p: (f64, f64, f64)) {
+        let (x, y, m) = p;
+        unsafe {
+            gdal_sys::OGR_G_AddPointM(
+                self.c_geometry(),
+                x as c_double,
+                y as c_double,
+                m as c_double,
+            )
+        };
+    }
+
     /// Get point coordinates from a line string or a point geometry.
     ///
     /// `index` is the line string vertex index, from 0 to `point_count()-1`, or `0` when a point.
@@ -151,9 +203,28 @@ impl Geometry {
         (x, y, z)
     }
 
+    /// Get point coordinates from a line string or a point geometry.
+    ///
+    /// `index` is the line string vertex index, from 0 to `point_count()-1`, or `0` when a point.
+    ///
+    /// See: [`OGR_G_GetPointZM`](https://gdal.org/en/stable/api/vector_c_api.html#_CPPv416OGR_G_GetPointZM12OGRGeometryHiPdPdPdPd)
+    pub fn get_point_zm(&self, index: i32) -> (f64, f64, f64, f64) {
+        let mut x: c_double = 0.;
+        let mut y: c_double = 0.;
+        let mut z: c_double = 0.;
+        let mut m: c_double = 0.;
+        unsafe { gdal_sys::OGR_G_GetPointZM(self.c_geometry(), index, &mut x, &mut y, &mut z, &mut m) };
+        (x, y, z, m)
+    }
+
     pub fn get_point_vec(&self) -> Vec<(f64, f64, f64)> {
         let length = unsafe { gdal_sys::OGR_G_GetPointCount(self.c_geometry()) };
         (0..length).map(|i| self.get_point(i)).collect()
+    }
+
+    pub fn get_point_vec_zm(&self) -> Vec<(f64, f64, f64, f64)> {
+        let length = unsafe { gdal_sys::OGR_G_GetPointCount(self.c_geometry()) };
+        (0..length).map(|i| self.get_point_zm(i)).collect()
     }
 
     /// Get the geometry type ordinal
@@ -337,7 +408,15 @@ impl Clone for Geometry {
 
 impl Debug for Geometry {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self.wkt() {
+        let should_iso = geometry_type_has_m(self.geometry_type());
+
+        // .wkt() does not return the M coordinate regardless or whether or not the Z coordinate is present.
+        let wkt = match should_iso {
+            true => self.iso_wkt(),
+            false => self.wkt()
+        };
+
+        match wkt {
             Ok(wkt) => f.write_str(wkt.as_str()),
             Err(_) => Err(fmt::Error),
         }
@@ -355,6 +434,37 @@ impl Eq for Geometry {}
 pub fn geometry_type_to_name(ty: OGRwkbGeometryType::Type) -> String {
     let rv = unsafe { gdal_sys::OGRGeometryTypeToName(ty) };
     _string(rv).unwrap_or_default()
+}
+
+
+/// Returns the 2D geometry type corresponding to the passed geometry type. 
+pub fn geometry_type_flatten(ty: OGRwkbGeometryType::Type) -> OGRwkbGeometryType::Type {
+    unsafe { gdal_sys::OGR_GT_Flatten(ty) }
+}
+
+/// Returns the 3D geometry type corresponding to the passed geometry type. 
+pub fn geometry_type_set_z(ty: OGRwkbGeometryType::Type) -> OGRwkbGeometryType::Type {
+    unsafe { gdal_sys::OGR_GT_SetZ(ty) }
+}
+
+/// Returns the measured geometry type corresponding to the passed geometry type.
+pub fn geometry_type_set_m(ty: OGRwkbGeometryType::Type) -> OGRwkbGeometryType::Type {
+    unsafe { gdal_sys::OGR_GT_SetM(ty) }
+}
+
+/// Returns a XY, XYZ, XYM or XYZM geometry type depending on parameter.
+pub fn geometry_type_set_modifier(ty: OGRwkbGeometryType::Type, set_z: bool, set_m: bool) -> OGRwkbGeometryType::Type {
+    unsafe { gdal_sys::OGR_GT_SetModifier(ty, set_z as i32, set_m as i32) }
+}
+
+/// Return if the geometry type is a 3D geometry type. 
+pub fn geometry_type_has_z(ty: OGRwkbGeometryType::Type) -> bool {
+    unsafe { gdal_sys::OGR_GT_HasZ(ty) != 0 }
+}
+
+/// Return if the geometry type is a measured type.
+pub fn geometry_type_has_m(ty: OGRwkbGeometryType::Type) -> bool {
+    unsafe { gdal_sys::OGR_GT_HasM(ty) != 0 }
 }
 
 /// Reference to owned geometry
@@ -385,6 +495,8 @@ impl Debug for GeometryRef<'_> {
 
 #[cfg(test)]
 mod tests {
+    use self::OGRwkbGeometryType::{wkbMultiPointZM, wkbPointZM};
+
     use super::*;
     use crate::spatial_ref::SpatialRef;
     use crate::test_utils::SuppressGDALErrorLog;
@@ -483,6 +595,26 @@ mod tests {
     }
 
     #[test]
+    pub fn test_create_multipoint_zm() {
+        let mut geom = Geometry::empty(wkbMultiPointZM).unwrap();
+        let mut point = Geometry::empty(wkbPointZM).unwrap();
+        point.add_point_zm((1.0, 2.0, 3.0, 0.0));
+        geom.add_geometry(point).unwrap();
+        let mut point = Geometry::empty(wkbPointZM).unwrap();
+        point.add_point_zm((3.0, 2.0, 1.0, 1.0));
+        assert!(!point.is_empty());
+        point.set_point_zm(0, (4.0, 2.0, 1.0, 1.0));
+        geom.add_geometry(point).unwrap();
+        assert!(!geom.is_empty());
+
+        let expected = Geometry::from_wkt("MULTIPOINT ZM ((1.0 2.0 3.0 0.0), (4.0 2.0 1.0 1.0))").unwrap();
+        assert_eq!(geom, expected);
+        assert_eq!(geometry_type_has_m(geom.geometry_type()), geometry_type_has_m(expected.geometry_type()))
+    }
+
+
+
+    #[test]
     pub fn test_spatial_ref() {
         let geom = Geometry::empty(wkbMultiPolygon).unwrap();
         assert!(geom.spatial_ref().is_none());
@@ -557,5 +689,40 @@ mod tests {
             "POLYGON ((300 100,400 400,200 400,100 200,300 100))",
             polygon.wkt().unwrap()
         );
+    }
+
+    #[test]
+    fn test_geometry_type_modification() {
+        let mut geom_type = OGRwkbGeometryType::wkbPoint;
+
+        geom_type = geometry_type_set_z(geom_type);
+        assert_eq!(geom_type, OGRwkbGeometryType::wkbPoint25D);
+
+        geom_type = geometry_type_set_m(geom_type);
+        assert_eq!(geom_type, OGRwkbGeometryType::wkbPointZM);
+
+        geom_type = geometry_type_set_modifier(geom_type, false, true);
+        assert_eq!(geom_type, OGRwkbGeometryType::wkbPointM);
+
+        geom_type = geometry_type_flatten(geom_type);
+        assert_eq!(geom_type, OGRwkbGeometryType::wkbPoint);
+    }
+
+    #[test]
+    fn test_geometry_type_has_zm() {
+        let geom = Geometry::from_wkt("POINT(0 1)").unwrap();
+
+        assert_eq!(geometry_type_has_z(geom.geometry_type()), false);
+        assert_eq!(geometry_type_has_m(geom.geometry_type()), false);
+
+        let geom = Geometry::from_wkt("POINT(0 1 2)").unwrap();
+
+        assert_eq!(geometry_type_has_z(geom.geometry_type()), true);
+        assert_eq!(geometry_type_has_m(geom.geometry_type()), false);
+
+        let geom = Geometry::from_wkt("POINT ZM (0 1 2 3)").unwrap();
+
+        assert_eq!(geometry_type_has_z(geom.geometry_type()), true);
+        assert_eq!(geometry_type_has_m(geom.geometry_type()), true);
     }
 }
