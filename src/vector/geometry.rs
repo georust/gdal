@@ -128,6 +128,19 @@ impl Geometry {
         };
     }
 
+    pub fn set_point_m(&mut self, i: usize, point: (f64, f64, f64)) {
+        let (x, y, m) = point;
+        unsafe {
+            gdal_sys::OGR_G_SetPointM(
+                self.c_geometry(),
+                i as c_int,
+                x as c_double,
+                y as c_double,
+                m as c_double,
+            );
+        };
+    }
+
     pub fn set_point_2d(&mut self, i: usize, p: (f64, f64)) {
         let (x, y) = p;
         unsafe {
@@ -160,6 +173,18 @@ impl Geometry {
                 x as c_double,
                 y as c_double,
                 z as c_double,
+                m as c_double,
+            )
+        };
+    }
+
+    pub fn add_point_m(&mut self, p: (f64, f64, f64)) {
+        let (x, y, m) = p;
+        unsafe {
+            gdal_sys::OGR_G_AddPointM(
+                self.c_geometry(),
+                x as c_double,
+                y as c_double,
                 m as c_double,
             )
         };
