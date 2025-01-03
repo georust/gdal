@@ -403,6 +403,16 @@ pub fn geometry_type_to_name(ty: OGRwkbGeometryType::Type) -> String {
     _string(rv).unwrap_or_default()
 }
 
+/// Return if the geometry type is a 3D geometry type. 
+pub fn has_z(ty: OGRwkbGeometryType::Type) -> bool {
+    unsafe { gdal_sys::OGR_GT_HasZ(ty) != 0 }
+}
+
+/// Return if the geometry type is a measured type.
+pub fn has_m(ty: OGRwkbGeometryType::Type) -> bool {
+    unsafe { gdal_sys::OGR_GT_HasM(ty) != 0 }
+}
+
 /// Reference to owned geometry
 pub struct GeometryRef<'a> {
     geom: Geometry,
@@ -624,5 +634,23 @@ mod tests {
             "POLYGON ((300 100,400 400,200 400,100 200,300 100))",
             polygon.wkt().unwrap()
         );
+    }
+
+    #[test]
+    fn test_geometry_type_has_zm() {
+        let geom = Geometry::from_wkt("POINT(0 1)").unwrap();
+
+        assert_eq!(has_z(geom.geometry_type()), false);
+        assert_eq!(has_m(geom.geometry_type()), false);
+
+        let geom = Geometry::from_wkt("POINT Z (0 1 2)").unwrap();
+
+        assert_eq!(has_z(geom.geometry_type()), true);
+        assert_eq!(has_m(geom.geometry_type()), false);
+
+        let geom = Geometry::from_wkt("POINT ZM (0 1 2 3)").unwrap();
+
+        assert_eq!(has_z(geom.geometry_type()), true);
+        assert_eq!(has_m(geom.geometry_type()), true);
     }
 }
