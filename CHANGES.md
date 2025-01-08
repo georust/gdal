@@ -31,6 +31,7 @@
   - Add `Dataset::has_capability` for dataset capability check ([#581](https://github.com/georust/gdal/pull/585))
   - Add methods `add_point_zm`, `add_point_m`, `set_point_zm`, `set_point_m`, `get_point_zm`, `get_points_zm`, `iso_wkt` and `iso_wkb` to `Geometry` ([#600](https://github.com/georust/gdal/pull/600))
   - Add functions `geometry_type_flatten`, `geometry_type_set_z`, `geometry_type_set_m`, `geometry_type_set_modifier`, `geometry_type_has_z` and `geometry_type_has_m` to `vector::geometry` ([#600](https://github.com/georust/gdal/pull/600))
+  - Make `GeometryRef` public ([#601](https://github.com/georust/gdal/pull/601))
 
 ### Fixed
 
