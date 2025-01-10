@@ -119,6 +119,8 @@ impl Geometry {
         let wkb_size = unsafe { gdal_sys::OGR_G_WkbSize(self.c_geometry()) as usize };
         // We default to little-endian for now. A WKB string explicitly indicates the byte
         // order, so this is not a problem for interoperability.
+        // 
+        // Consider using `Vec::MaybeUninit` in future.
         let byte_order = gdal_sys::OGRwkbByteOrder::wkbNDR;
         let mut wkb = vec![0; wkb_size];
         let rv =
@@ -139,6 +141,8 @@ impl Geometry {
         let wkb_size = unsafe { gdal_sys::OGR_G_WkbSize(self.c_geometry()) as usize };
         // We default to little-endian for now. A WKB string explicitly indicates the byte
         // order, so this is not a problem for interoperability.
+        //
+        // Consider using `Vec::MaybeUninit` in future.
         let byte_order = gdal_sys::OGRwkbByteOrder::wkbNDR;
         let mut wkb = vec![0; wkb_size];
         let rv =
