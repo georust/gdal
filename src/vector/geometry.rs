@@ -221,26 +221,24 @@ impl Geometry {
     ///
     /// Only wkbPoint[X] or wkbLineString[X] may alter `out_points`. Other geometry types will silently do nothing, see
     /// [`OGR_G_GetPointCount`](https://gdal.org/en/stable/api/vector_c_api.html#_CPPv419OGR_G_GetPointCount12OGRGeometryH)
-    pub fn get_point_vec(&self, out_points: &mut Vec<(f64, f64, f64)>) -> i32 {
+    pub fn get_point_vec(&self, out_points: &mut Vec<(f64, f64, f64)>) -> as usize {
         // Consider replacing logic with
         // [OGR_G_GetPoints](https://gdal.org/en/stable/api/vector_c_api.html#_CPPv415OGR_G_GetPoints12OGRGeometryHPviPviPvi)
         let length = unsafe { gdal_sys::OGR_G_GetPointCount(self.c_geometry()) };
         out_points.extend((0..length).map(|i| self.get_point(i)));
-
-        length
+        length as usize
     }
 
     /// Appends all points of a line string to `out_points`. 
     ///
     /// Only wkbPoint[X] or wkbLineString[X] may alter `out_points`. Other geometry types will silently do nothing, see
     /// [`OGR_G_GetPointCount`](https://gdal.org/en/stable/api/vector_c_api.html#_CPPv419OGR_G_GetPointCount12OGRGeometryH)
-    pub fn get_point_vec_zm(&self, out_points: &mut Vec<(f64, f64, f64, f64)>) -> i32 {
+    pub fn get_point_vec_zm(&self, out_points: &mut Vec<(f64, f64, f64, f64)>) -> usize {
         // Consider replacing logic with
         // [OGR_G_GetPoints](https://gdal.org/en/stable/api/vector_c_api.html#_CPPv415OGR_G_GetPoints12OGRGeometryHPviPviPvi)
         let length = unsafe { gdal_sys::OGR_G_GetPointCount(self.c_geometry()) };
         out_points.extend((0..length).map(|i| self.get_point_zm(i)));
-
-        length
+        length as usize
     }
 
     /// Get the geometry type ordinal
