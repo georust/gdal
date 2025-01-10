@@ -408,13 +408,7 @@ impl Clone for Geometry {
 
 impl Debug for Geometry {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let should_iso = geometry_type_has_m(self.geometry_type());
-
-        // .wkt() does not return the M coordinate regardless or whether or not the Z coordinate is present.
-        let wkt = match should_iso {
-            true => self.iso_wkt(),
-            false => self.wkt()
-        };
+        let wkt = self.iso_wkt();
 
         match wkt {
             Ok(wkt) => f.write_str(wkt.as_str()),
