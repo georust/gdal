@@ -217,14 +217,28 @@ impl Geometry {
         (x, y, z, m)
     }
 
-    pub fn get_point_vec(&self) -> Vec<(f64, f64, f64)> {
+    /// Appends all points of a line string to `out_points`. 
+    ///
+    /// Only wkbPoint[X] or wkbLineString[X] may alter `out_points`. Other geometry types will silently do nothing, see
+    /// [`OGR_G_GetPointCount`](https://gdal.org/en/stable/api/vector_c_api.html#_CPPv419OGR_G_GetPointCount12OGRGeometryH)
+    pub fn get_point_vec(&self, out_points: &mut Vec<(f64, f64, f64)>) {
+        // Consider replacing logic with
+        // [OGR_G_GetPoints](https://gdal.org/en/stable/api/vector_c_api.html#_CPPv415OGR_G_GetPoints12OGRGeometryHPviPviPvi)
         let length = unsafe { gdal_sys::OGR_G_GetPointCount(self.c_geometry()) };
-        (0..length).map(|i| self.get_point(i)).collect()
+        out_points.extend(
+            (0..length).map(|i| self.get_point(i))
+        );
     }
 
-    pub fn get_point_vec_zm(&self) -> Vec<(f64, f64, f64, f64)> {
+    /// Appends all points of a line string to `out_points`. 
+    ///
+    /// Only wkbPoint[X] or wkbLineString[X] may alter `out_points`. Other geometry types will silently do nothing, see
+    /// [`OGR_G_GetPointCount`](https://gdal.org/en/stable/api/vector_c_api.html#_CPPv419OGR_G_GetPointCount12OGRGeometryH)
+    pub fn get_point_vec_zm(&self, out_points: &mut Vec<(f64, f64, f64, f64)>) {
         let length = unsafe { gdal_sys::OGR_G_GetPointCount(self.c_geometry()) };
-        (0..length).map(|i| self.get_point_zm(i)).collect()
+        out_points.extend(
+            (0..length).map(|i| self.get_point_zm(i))
+        );
     }
 
     /// Get the geometry type ordinal
@@ -489,7 +503,7 @@ impl Debug for GeometryRef<'_> {
 
 #[cfg(test)]
 mod tests {
-    use self::OGRwkbGeometryType::{wkbMultiPointZM, wkbPointZM};
+    use self::OGRwkbGeometryType::{wkbLineStringZM, wkbMultiPointZM, wkbPointZM};
 
     use super::*;
     use crate::spatial_ref::SpatialRef;
@@ -635,18 +649,26 @@ mod tests {
         ring.add_point_2d((1218405.0658121984, 721108.1805541387));
         ring.add_point_2d((1179091.1646903288, 712782.8838459781));
         assert!(!ring.is_empty());
-        assert_eq!(ring.get_point_vec().len(), 6);
+        let mut ring_vec: Vec<(f64, f64, f64)> = Vec::new();
+        ring.get_point_vec(&mut ring_vec);
+
+        assert_eq!(ring_vec.len(), 6);
         let mut poly = Geometry::empty(wkbPolygon).unwrap();
         poly.add_geometry(ring.to_owned()).unwrap();
+
+        let mut poly_vec: Vec<(f64, f64, f64)> = Vec::new();
+        poly.get_point_vec(&mut poly_vec);
         // Points are in ring, not containing geometry.
         // NB: In Python SWIG bindings, `GetPoints` is fallible.
-        assert!(poly.get_point_vec().is_empty());
+        assert!(poly_vec.is_empty());
         assert_eq!(poly.geometry_count(), 1);
         let ring_out = poly.get_geometry(0);
+        let mut ring_out_vec: Vec<(f64, f64, f64)> = Vec::new();
+        ring_out.get_point_vec(&mut ring_out_vec);
         // NB: `wkb()` shows it to be a `LINEARRING`, but returned type is LineString
         assert_eq!(ring_out.geometry_type(), wkbLineString);
         assert!(!&ring_out.is_empty());
-        assert_eq!(ring.get_point_vec(), ring_out.get_point_vec());
+        assert_eq!(ring_vec, ring_out_vec);
     }
 
     #[test]
@@ -658,8 +680,23 @@ mod tests {
         assert_eq!(geom.geometry_type(), OGRwkbGeometryType::wkbPolygon);
         assert!(geom.json().unwrap().contains("Polygon"));
         let inner = geom.get_geometry(0);
-        let points = inner.get_point_vec();
+        let mut points: Vec<(f64, f64, f64)> = Vec::new();
+        inner.get_point_vec(&mut points);
         assert!(!points.is_empty());
+    }
+
+    #[test]
+    fn test_get_points_zm() {
+        let mut line = Geometry::empty(wkbLineStringZM).unwrap();
+        line.add_point_zm((0.0, 0.0, 0.0, 0.0));
+        line.add_point_zm((1.0, 0.0, 0.25, 0.5));
+        line.add_point_zm((1.0, 1.0, 0.5, 1.0));
+
+        let mut line_points: Vec<(f64, f64, f64, f64)> = Vec::new();
+        line.get_point_vec_zm(&mut line_points);
+
+        assert_eq!(line_points.len(), 3);
+        assert_eq!(line_points.get(2), Some(&(1.0, 1.0, 0.5, 1.0)));
     }
 
     #[test]

@@ -44,11 +44,13 @@ impl TryFrom<&Geometry> for geo_types::Geometry<f64> {
                 )))
             }
             OGRwkbGeometryType::wkbLineString => {
-                let coords = geo
-                    .get_point_vec()
-                    .iter()
-                    .map(|&(x, y, _)| geo_types::Coord { x, y })
+                let mut gdal_coords: Vec<(f64, f64, f64)> = Vec::new();
+                geo.get_point_vec(&mut gdal_coords);
+
+                let coords = gdal_coords.into_iter()
+                    .map(|(x, y, _)| geo_types::Coord { x, y })
                     .collect();
+
                 Ok(geo_types::Geometry::LineString(geo_types::LineString(
                     coords,
                 )))
