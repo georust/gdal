@@ -219,7 +219,7 @@ impl Geometry {
 
     /// Appends all points of a line string to `out_points`. 
     ///
-    /// Only wkbPoint[X] or wkbLineString[X] may alter `out_points`. Other geometry types will silently do nothing, see
+    /// Only wkbPoint[X], wkbLineString[X] or wkbCircularString[X] may alter `out_points`. Other geometry types will silently do nothing, see
     /// [`OGR_G_GetPointCount`](https://gdal.org/en/stable/api/vector_c_api.html#_CPPv419OGR_G_GetPointCount12OGRGeometryH)
     pub fn get_point_vec(&self, out_points: &mut Vec<(f64, f64, f64)>) -> usize {
         // Consider replacing logic with
@@ -231,7 +231,7 @@ impl Geometry {
 
     /// Appends all points of a line string to `out_points`. 
     ///
-    /// Only wkbPoint[X] or wkbLineString[X] may alter `out_points`. Other geometry types will silently do nothing, see
+    /// Only wkbPoint[X], wkbLineString[X] or wkbCircularString[X] may alter `out_points`. Other geometry types will silently do nothing, see
     /// [`OGR_G_GetPointCount`](https://gdal.org/en/stable/api/vector_c_api.html#_CPPv419OGR_G_GetPointCount12OGRGeometryH)
     pub fn get_point_vec_zm(&self, out_points: &mut Vec<(f64, f64, f64, f64)>) -> usize {
         // Consider replacing logic with
