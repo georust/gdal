@@ -225,9 +225,7 @@ impl Geometry {
         // Consider replacing logic with
         // [OGR_G_GetPoints](https://gdal.org/en/stable/api/vector_c_api.html#_CPPv415OGR_G_GetPoints12OGRGeometryHPviPviPvi)
         let length = unsafe { gdal_sys::OGR_G_GetPointCount(self.c_geometry()) };
-        out_points.extend(
-            (0..length).map(|i| self.get_point(i))
-        );
+        out_points.extend((0..length).map(|i| self.get_point(i)));
 
         length
     }
@@ -240,9 +238,7 @@ impl Geometry {
         // Consider replacing logic with
         // [OGR_G_GetPoints](https://gdal.org/en/stable/api/vector_c_api.html#_CPPv415OGR_G_GetPoints12OGRGeometryHPviPviPvi)
         let length = unsafe { gdal_sys::OGR_G_GetPointCount(self.c_geometry()) };
-        out_points.extend(
-            (0..length).map(|i| self.get_point_zm(i))
-        );
+        out_points.extend((0..length).map(|i| self.get_point_zm(i)));
 
         length
     }
