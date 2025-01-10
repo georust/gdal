@@ -614,13 +614,10 @@ mod tests {
         point.set_point_zm(0, (4.0, 2.0, 1.0, 1.0));
         geom.add_geometry(point).unwrap();
         assert!(!geom.is_empty());
-
         let expected = Geometry::from_wkt("MULTIPOINT ZM ((1.0 2.0 3.0 0.0), (4.0 2.0 1.0 1.0))").unwrap();
         assert_eq!(geom, expected);
         assert_eq!(geometry_type_has_m(geom.geometry_type()), geometry_type_has_m(expected.geometry_type()))
     }
-
-
 
     #[test]
     pub fn test_spatial_ref() {
@@ -651,11 +648,9 @@ mod tests {
         assert!(!ring.is_empty());
         let mut ring_vec: Vec<(f64, f64, f64)> = Vec::new();
         ring.get_point_vec(&mut ring_vec);
-
         assert_eq!(ring_vec.len(), 6);
         let mut poly = Geometry::empty(wkbPolygon).unwrap();
         poly.add_geometry(ring.to_owned()).unwrap();
-
         let mut poly_vec: Vec<(f64, f64, f64)> = Vec::new();
         poly.get_point_vec(&mut poly_vec);
         // Points are in ring, not containing geometry.
@@ -691,10 +686,8 @@ mod tests {
         line.add_point_zm((0.0, 0.0, 0.0, 0.0));
         line.add_point_zm((1.0, 0.0, 0.25, 0.5));
         line.add_point_zm((1.0, 1.0, 0.5, 1.0));
-
         let mut line_points: Vec<(f64, f64, f64, f64)> = Vec::new();
         line.get_point_vec_zm(&mut line_points);
-
         assert_eq!(line_points.len(), 3);
         assert_eq!(line_points.get(2), Some(&(1.0, 1.0, 0.5, 1.0)));
     }
@@ -725,16 +718,12 @@ mod tests {
     #[test]
     fn test_geometry_type_modification() {
         let mut geom_type = OGRwkbGeometryType::wkbPoint;
-
         geom_type = geometry_type_set_z(geom_type);
         assert_eq!(geom_type, OGRwkbGeometryType::wkbPoint25D);
-
         geom_type = geometry_type_set_m(geom_type);
         assert_eq!(geom_type, OGRwkbGeometryType::wkbPointZM);
-
         geom_type = geometry_type_set_modifier(geom_type, false, true);
         assert_eq!(geom_type, OGRwkbGeometryType::wkbPointM);
-
         geom_type = geometry_type_flatten(geom_type);
         assert_eq!(geom_type, OGRwkbGeometryType::wkbPoint);
     }
@@ -742,17 +731,12 @@ mod tests {
     #[test]
     fn test_geometry_type_has_zm() {
         let geom = Geometry::from_wkt("POINT(0 1)").unwrap();
-
         assert_eq!(geometry_type_has_z(geom.geometry_type()), false);
         assert_eq!(geometry_type_has_m(geom.geometry_type()), false);
-
         let geom = Geometry::from_wkt("POINT(0 1 2)").unwrap();
-
         assert_eq!(geometry_type_has_z(geom.geometry_type()), true);
         assert_eq!(geometry_type_has_m(geom.geometry_type()), false);
-
         let geom = Geometry::from_wkt("POINT ZM (0 1 2 3)").unwrap();
-
         assert_eq!(geometry_type_has_z(geom.geometry_type()), true);
         assert_eq!(geometry_type_has_m(geom.geometry_type()), true);
     }
