@@ -34,7 +34,7 @@
 ### Fixed
 
   - Fix conversion from `ndarray` when the data is offsetted from the start of the buffer ([#569](https://github.com/georust/gdal/pull/569))
-  - `Debug` trait for `Geometry` now prints ISO WKT when the M-dim is present ([#600](https://github.com/georust/gdal/pull/600))
+  - use ISO WKT for the `Debug` implementation of `Geometry`, in order to properly display measure values,  ([#600](https://github.com/georust/gdal/pull/600))
 
 ### Removed
 
