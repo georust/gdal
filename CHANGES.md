@@ -16,6 +16,7 @@
   - Drop `LayerAccess::create_feature_fields` ([#581](https://github.com/georust/gdal/pull/581))
   - Drop `Feature::geometry_by_name` ([#594](https://github.com/georust/gdal/pull/594))
   - Update `SpatialRef::auth_name`, `SpatialRef::name`, `SpatialRef::angular_units_name`, `SpatialRef::linear_units_name` to return `Option<String>` instead of `Result<String>` ([#589](https://github.com/georust/gdal/pull/589))
+  - Update `Geometry::get_point_vec` to modify a `&mut Vec` as opposed to new allocations, returning an `i32` of points added ([#600](https://github.com/georust/gdal/pull/600))
 
 ### Added
 
