@@ -213,11 +213,13 @@ impl Geometry {
         let mut y: c_double = 0.;
         let mut z: c_double = 0.;
         let mut m: c_double = 0.;
-        unsafe { gdal_sys::OGR_G_GetPointZM(self.c_geometry(), index, &mut x, &mut y, &mut z, &mut m) };
+        unsafe {
+            gdal_sys::OGR_G_GetPointZM(self.c_geometry(), index, &mut x, &mut y, &mut z, &mut m)
+        };
         (x, y, z, m)
     }
 
-    /// Appends all points of a line string to `out_points`. 
+    /// Appends all points of a line string to `out_points`.
     ///
     /// Only wkbPoint[X], wkbLineString[X] or wkbCircularString[X] may alter `out_points`. Other geometry types will silently do nothing, see
     /// [`OGR_G_GetPointCount`](https://gdal.org/en/stable/api/vector_c_api.html#_CPPv419OGR_G_GetPointCount12OGRGeometryH)
@@ -229,7 +231,7 @@ impl Geometry {
         length as usize
     }
 
-    /// Appends all points of a line string to `out_points`. 
+    /// Appends all points of a line string to `out_points`.
     ///
     /// Only wkbPoint[X], wkbLineString[X] or wkbCircularString[X] may alter `out_points`. Other geometry types will silently do nothing, see
     /// [`OGR_G_GetPointCount`](https://gdal.org/en/stable/api/vector_c_api.html#_CPPv419OGR_G_GetPointCount12OGRGeometryH)
@@ -444,13 +446,12 @@ pub fn geometry_type_to_name(ty: OGRwkbGeometryType::Type) -> String {
     _string(rv).unwrap_or_default()
 }
 
-
-/// Returns the 2D geometry type corresponding to the passed geometry type. 
+/// Returns the 2D geometry type corresponding to the passed geometry type.
 pub fn geometry_type_flatten(ty: OGRwkbGeometryType::Type) -> OGRwkbGeometryType::Type {
     unsafe { gdal_sys::OGR_GT_Flatten(ty) }
 }
 
-/// Returns the 3D geometry type corresponding to the passed geometry type. 
+/// Returns the 3D geometry type corresponding to the passed geometry type.
 pub fn geometry_type_set_z(ty: OGRwkbGeometryType::Type) -> OGRwkbGeometryType::Type {
     unsafe { gdal_sys::OGR_GT_SetZ(ty) }
 }
@@ -461,11 +462,15 @@ pub fn geometry_type_set_m(ty: OGRwkbGeometryType::Type) -> OGRwkbGeometryType::
 }
 
 /// Returns a XY, XYZ, XYM or XYZM geometry type depending on parameter.
-pub fn geometry_type_set_modifier(ty: OGRwkbGeometryType::Type, set_z: bool, set_m: bool) -> OGRwkbGeometryType::Type {
+pub fn geometry_type_set_modifier(
+    ty: OGRwkbGeometryType::Type,
+    set_z: bool,
+    set_m: bool,
+) -> OGRwkbGeometryType::Type {
     unsafe { gdal_sys::OGR_GT_SetModifier(ty, set_z as i32, set_m as i32) }
 }
 
-/// Returns `true` if the geometry type is a 3D geometry type. 
+/// Returns `true` if the geometry type is a 3D geometry type.
 pub fn geometry_type_has_z(ty: OGRwkbGeometryType::Type) -> bool {
     unsafe { gdal_sys::OGR_GT_HasZ(ty) != 0 }
 }
@@ -614,9 +619,13 @@ mod tests {
         point.set_point_zm(0, (4.0, 2.0, 1.0, 1.0));
         geom.add_geometry(point).unwrap();
         assert!(!geom.is_empty());
-        let expected = Geometry::from_wkt("MULTIPOINT ZM ((1.0 2.0 3.0 0.0), (4.0 2.0 1.0 1.0))").unwrap();
+        let expected =
+            Geometry::from_wkt("MULTIPOINT ZM ((1.0 2.0 3.0 0.0), (4.0 2.0 1.0 1.0))").unwrap();
         assert_eq!(geom, expected);
-        assert_eq!(geometry_type_has_m(geom.geometry_type()), geometry_type_has_m(expected.geometry_type()))
+        assert_eq!(
+            geometry_type_has_m(geom.geometry_type()),
+            geometry_type_has_m(expected.geometry_type())
+        )
     }
 
     #[test]
