@@ -457,7 +457,7 @@ pub fn geometry_type_set_modifier(ty: OGRwkbGeometryType::Type, set_z: bool, set
     unsafe { gdal_sys::OGR_GT_SetModifier(ty, set_z as i32, set_m as i32) }
 }
 
-/// Return if the geometry type is a 3D geometry type. 
+/// Returns `true` if the geometry type is a 3D geometry type. 
 pub fn geometry_type_has_z(ty: OGRwkbGeometryType::Type) -> bool {
     unsafe { gdal_sys::OGR_GT_HasZ(ty) != 0 }
 }
