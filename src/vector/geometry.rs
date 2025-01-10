@@ -462,7 +462,7 @@ pub fn geometry_type_has_z(ty: OGRwkbGeometryType::Type) -> bool {
     unsafe { gdal_sys::OGR_GT_HasZ(ty) != 0 }
 }
 
-/// Return if the geometry type is a measured type.
+/// Returns `true` if the geometry type is a measured type.
 pub fn geometry_type_has_m(ty: OGRwkbGeometryType::Type) -> bool {
     unsafe { gdal_sys::OGR_GT_HasM(ty) != 0 }
 }
