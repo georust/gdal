@@ -740,13 +740,13 @@ mod tests {
     #[test]
     fn test_geometry_type_has_zm() {
         let geom = Geometry::from_wkt("POINT(0 1)").unwrap();
-        assert_eq!(geometry_type_has_z(geom.geometry_type()), false);
-        assert_eq!(geometry_type_has_m(geom.geometry_type()), false);
+        assert!(!geometry_type_has_z(geom.geometry_type()));
+        assert!(!geometry_type_has_m(geom.geometry_type()));
         let geom = Geometry::from_wkt("POINT(0 1 2)").unwrap();
-        assert_eq!(geometry_type_has_z(geom.geometry_type()), true);
-        assert_eq!(geometry_type_has_m(geom.geometry_type()), false);
+        assert!(geometry_type_has_z(geom.geometry_type()));
+        assert!(!geometry_type_has_m(geom.geometry_type()));
         let geom = Geometry::from_wkt("POINT ZM (0 1 2 3)").unwrap();
-        assert_eq!(geometry_type_has_z(geom.geometry_type()), true);
-        assert_eq!(geometry_type_has_m(geom.geometry_type()), true);
+        assert!(geometry_type_has_z(geom.geometry_type()));
+        assert!(geometry_type_has_m(geom.geometry_type()));
     }
 }
