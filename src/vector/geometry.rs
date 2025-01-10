@@ -221,7 +221,7 @@ impl Geometry {
     ///
     /// Only wkbPoint[X] or wkbLineString[X] may alter `out_points`. Other geometry types will silently do nothing, see
     /// [`OGR_G_GetPointCount`](https://gdal.org/en/stable/api/vector_c_api.html#_CPPv419OGR_G_GetPointCount12OGRGeometryH)
-    pub fn get_point_vec(&self, out_points: &mut Vec<(f64, f64, f64)>) -> as usize {
+    pub fn get_point_vec(&self, out_points: &mut Vec<(f64, f64, f64)>) -> usize {
         // Consider replacing logic with
         // [OGR_G_GetPoints](https://gdal.org/en/stable/api/vector_c_api.html#_CPPv415OGR_G_GetPoints12OGRGeometryHPviPviPvi)
         let length = unsafe { gdal_sys::OGR_G_GetPointCount(self.c_geometry()) };
