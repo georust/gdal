@@ -16,6 +16,7 @@
   - Drop `LayerAccess::create_feature_fields` ([#581](https://github.com/georust/gdal/pull/581))
   - Drop `Feature::geometry_by_name` ([#594](https://github.com/georust/gdal/pull/594))
   - Update `SpatialRef::auth_name`, `SpatialRef::name`, `SpatialRef::angular_units_name`, `SpatialRef::linear_units_name` to return `Option<String>` instead of `Result<String>` ([#589](https://github.com/georust/gdal/pull/589))
+  - Update `Geometry::get_point_vec` to modify a `&mut Vec` as opposed to new allocations, returning an `i32` of points added ([#600](https://github.com/georust/gdal/pull/600))
 
 ### Added
 
@@ -28,10 +29,13 @@
   - Add `Defn::field_index` and `Feature::field_index` ([#581](https://github.com/georust/gdal/pull/581))
   - Add `Defn::geometry_field_index` and `Feature::geometry_field_index` ([#594](https://github.com/georust/gdal/pull/594))
   - Add `Dataset::has_capability` for dataset capability check ([#581](https://github.com/georust/gdal/pull/585))
+  - Add methods `add_point_zm`, `add_point_m`, `set_point_zm`, `set_point_m`, `get_point_zm`, `get_point_vec_zm`, `iso_wkt` and `iso_wkb` to `Geometry` ([#600](https://github.com/georust/gdal/pull/600))
+  - Add functions `geometry_type_flatten`, `geometry_type_set_z`, `geometry_type_set_m`, `geometry_type_set_modifier`, `geometry_type_has_z` and `geometry_type_has_m` to `vector::geometry` ([#600](https://github.com/georust/gdal/pull/600))
 
 ### Fixed
 
   - Fix conversion from `ndarray` when the data is offsetted from the start of the buffer ([#569](https://github.com/georust/gdal/pull/569))
+  - use ISO WKT for the `Debug` implementation of `Geometry`, in order to properly display measure values,  ([#600](https://github.com/georust/gdal/pull/600))
 
 ### Removed
 
