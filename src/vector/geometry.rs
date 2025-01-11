@@ -1,6 +1,6 @@
 use std::{
     cell::RefCell,
-    ffi::{c_double, c_int},
+    ffi::{c_double, c_int, c_void},
     fmt::{self, Debug, Formatter},
     marker::PhantomData,
     mem::MaybeUninit,
@@ -219,26 +219,60 @@ impl Geometry {
         (x, y, z, m)
     }
 
-    /// Appends all points in the geometry to `out_points`, as XYZ.
+    /// Writes all points in the geometry to `out_points`, as XYZ.
     ///
-    /// For some geometry types, like polygons, that don't consist of points, `out_points` will not be modified.
+    /// For some geometry types, like polygons, that don't consist of points, `out_points` will only be resized, not modified.
     pub fn get_points(&self, out_points: &mut Vec<(f64, f64, f64)>) -> usize {
-        // Consider replacing logic with
-        // [OGR_G_GetPoints](https://gdal.org/en/stable/api/vector_c_api.html#_CPPv415OGR_G_GetPoints12OGRGeometryHPviPviPvi)
-        let length = unsafe { gdal_sys::OGR_G_GetPointCount(self.c_geometry()) };
-        out_points.extend((0..length).map(|i| self.get_point(i)));
-        length as usize
+        let length = unsafe { gdal_sys::OGR_G_GetPointCount(self.c_geometry()) } as usize;
+        out_points.resize(length, Default::default());
+
+        let byte_offset = size_of::<f64>() as isize;
+        let stride = size_of::<(f64, f64, f64)>() as c_int;
+
+        unsafe {
+            let data = out_points.as_mut_ptr() as *mut c_void;
+
+            gdal_sys::OGR_G_GetPoints(
+                self.c_geometry(),
+                data,
+                stride,
+                data.byte_offset(byte_offset),
+                stride,
+                data.byte_offset(byte_offset * 2),
+                stride,
+            );
+        }
+
+        length
     }
 
-    /// Appends all points in the geometry to `out_points`, as XYZM.
+    /// Writes all points in the geometry to `out_points`, as XYZM.
     ///
-    /// For some geometry types, like polygons, that don't consist of points, `out_points` will not be modified.
+    /// For some geometry types, like polygons, that don't consist of points, `out_points` will only be resized, not modified.
     pub fn get_points_zm(&self, out_points: &mut Vec<(f64, f64, f64, f64)>) -> usize {
-        // Consider replacing logic with
-        // [OGR_G_GetPoints](https://gdal.org/en/stable/api/vector_c_api.html#_CPPv415OGR_G_GetPoints12OGRGeometryHPviPviPvi)
-        let length = unsafe { gdal_sys::OGR_G_GetPointCount(self.c_geometry()) };
-        out_points.extend((0..length).map(|i| self.get_point_zm(i)));
-        length as usize
+        let length = unsafe { gdal_sys::OGR_G_GetPointCount(self.c_geometry()) } as usize;
+        out_points.resize(length, Default::default());
+
+        let byte_offset = size_of::<f64>() as isize;
+        let stride = size_of::<(f64, f64, f64, f64)>() as c_int;
+
+        unsafe {
+            let data = out_points.as_mut_ptr() as *mut c_void;
+
+            gdal_sys::OGR_G_GetPointsZM(
+                self.c_geometry(),
+                data,
+                stride,
+                data.byte_offset(byte_offset),
+                stride,
+                data.byte_offset(byte_offset * 2),
+                stride,
+                data.byte_offset(byte_offset * 3),
+                stride,
+            );
+        }
+
+        length
     }
 
     /// Get the geometry type ordinal
