@@ -30,7 +30,7 @@
 //!         // Summarize the geometry
 //!         let geometry = feature.geometry().unwrap();
 //!         let geom_type = geometry_type_to_name(geometry.geometry_type());
-//!         let geom_len = geometry.get_point_vec(&mut Vec::new());
+//!         let geom_len = geometry.get_points(&mut Vec::new());
 //!         println!("    Feature fid={fid:?}, geometry_type='{geom_type}', geometry_len={geom_len}");
 //!         // Get all the available fields and print their values
 //!         for field in feature.fields() {
