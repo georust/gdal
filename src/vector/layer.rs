@@ -748,6 +748,7 @@ mod tests {
     use crate::spatial_ref::AxisMappingStrategy;
     use crate::test_utils::{fixture, open_gpkg_for_update, SuppressGDALErrorLog, TempFixture};
     use crate::vector::feature::FeatureIterator;
+    use crate::vector::geometry::CoordinateLayout;
     use crate::vector::FieldValue;
     use crate::{assert_almost_eq, Dataset, DriverManager, GdalOpenFlags};
     use gdal_sys::OGRwkbGeometryType;
@@ -1270,15 +1271,11 @@ mod tests {
         with_feature("roads.geojson", 236194095, |feature| {
             let geom = feature.geometry().unwrap();
             assert_eq!(geom.geometry_type(), OGRwkbGeometryType::wkbLineString);
-            let mut coords: Vec<(f64, f64, f64)> = Vec::new();
-            geom.get_points(&mut coords);
+            let mut coords: Vec<f64> = Vec::new();
+            geom.get_points(&mut coords, CoordinateLayout::Xy);
             assert_eq!(
                 coords,
-                [
-                    (26.1019276, 44.4302748, 0.0),
-                    (26.1019382, 44.4303191, 0.0),
-                    (26.1020002, 44.4304202, 0.0)
-                ]
+                [26.1019276, 44.4302748, 26.1019382, 44.4303191, 26.1020002, 44.4304202]
             );
             assert_eq!(geom.geometry_count(), 0);
 

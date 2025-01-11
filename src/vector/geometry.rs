@@ -14,6 +14,43 @@ use crate::spatial_ref::SpatialRef;
 use crate::utils::{_last_null_pointer_err, _string};
 use crate::vector::{Envelope, Envelope3D};
 
+/// Desired coordinate layout.
+#[derive(Debug, Clone, Copy)]
+#[repr(u8)]
+pub enum CoordinateLayout {
+    X = 0b0001,
+    Y = 0b0010,
+    Z = 0b0100,
+    M = 0b1000,
+
+    Xy = 0b0011,
+
+    Xyz = 0b0111,
+    Xym = 0b1011,
+
+    Xyzm = 0b1111,
+}
+
+impl CoordinateLayout {
+    const COMPONENTS: [CoordinateLayout; 4] = [
+        CoordinateLayout::X,
+        CoordinateLayout::Y,
+        CoordinateLayout::Z,
+        CoordinateLayout::M,
+    ];
+
+    fn has_component(&self, layout: CoordinateLayout) -> bool {
+        (*self as u8 & layout as u8) != 0
+    }
+
+    fn coordinate_size(&self) -> usize {
+        Self::COMPONENTS
+            .into_iter()
+            .filter(|c| self.has_component(*c))
+            .count()
+    }
+}
+
 /// OGR Geometry
 pub struct Geometry {
     c_geometry_ref: RefCell<Option<OGRGeometryH>>,
@@ -219,55 +256,74 @@ impl Geometry {
         (x, y, z, m)
     }
 
-    /// Writes all points in the geometry to `out_points`, as XYZ.
+    /// Writes all points in the geometry to `out_points` according to the specified `layout`.
     ///
-    /// For some geometry types, like polygons, that don't consist of points, `out_points` will only be resized, not modified.
-    pub fn get_points(&self, out_points: &mut Vec<(f64, f64, f64)>) -> usize {
-        let length = unsafe { gdal_sys::OGR_G_GetPointCount(self.c_geometry()) } as usize;
-        out_points.resize(length, Default::default());
-
-        let byte_offset = size_of::<f64>() as isize;
-        let stride = size_of::<(f64, f64, f64)>() as c_int;
-
-        unsafe {
-            let data = out_points.as_mut_ptr() as *mut c_void;
-
-            gdal_sys::OGR_G_GetPoints(
-                self.c_geometry(),
-                data,
-                stride,
-                data.byte_offset(byte_offset),
-                stride,
-                data.byte_offset(byte_offset * 2),
-                stride,
-            );
+    /// For some geometry types, like polygons, that don't consist of points, 0 will be returned
+    /// and `out_points` will remain unmodified.
+    pub fn get_points(&self, out_points: &mut Vec<f64>, layout: CoordinateLayout) -> usize {
+        let num_points = unsafe { gdal_sys::OGR_G_GetPointCount(self.c_geometry()) } as usize;
+        if num_points == 0 {
+            return 0;
         }
 
-        length
-    }
+        // Number of dims
+        let coord_size = layout.coordinate_size();
 
-    /// Writes all points in the geometry to `out_points`, as XYZM.
-    ///
-    /// For some geometry types, like polygons, that don't consist of points, `out_points` will only be resized, not modified.
-    pub fn get_points_zm(&self, out_points: &mut Vec<(f64, f64, f64, f64)>) -> usize {
-        let length = unsafe { gdal_sys::OGR_G_GetPointCount(self.c_geometry()) } as usize;
+        // Total length of the output.
+        let length = num_points * coord_size;
+
         out_points.resize(length, Default::default());
 
         let byte_offset = size_of::<f64>() as isize;
-        let stride = size_of::<(f64, f64, f64, f64)>() as c_int;
 
         unsafe {
             let data = out_points.as_mut_ptr() as *mut c_void;
+            let mut curr_offset: isize = 0;
 
+            let x_ptr: *mut c_void = match layout.has_component(CoordinateLayout::X) {
+                true => {
+                    let ret = data.byte_offset(curr_offset);
+                    curr_offset += byte_offset;
+                    ret
+                }
+                false => std::ptr::null_mut(),
+            };
+
+            let y_ptr: *mut c_void = match layout.has_component(CoordinateLayout::Y) {
+                true => {
+                    let ret = data.byte_offset(curr_offset);
+                    curr_offset += byte_offset;
+                    ret
+                }
+                false => std::ptr::null_mut(),
+            };
+
+            let z_ptr: *mut c_void = match layout.has_component(CoordinateLayout::Z) {
+                true => {
+                    let ret = data.byte_offset(curr_offset);
+                    curr_offset += byte_offset;
+                    ret
+                }
+                false => std::ptr::null_mut(),
+            };
+
+            let m_ptr: *mut c_void = match layout.has_component(CoordinateLayout::M) {
+                true => data.byte_offset(curr_offset),
+                false => std::ptr::null_mut(),
+            };
+
+            // Since GDAL only checks for nullptrs when deciding when not to do anything, we can
+            // avoid complicating things too much and pass the stride as-is.
+            let stride = (byte_offset * coord_size as isize) as c_int;
             gdal_sys::OGR_G_GetPointsZM(
                 self.c_geometry(),
-                data,
+                x_ptr,
                 stride,
-                data.byte_offset(byte_offset),
+                y_ptr,
                 stride,
-                data.byte_offset(byte_offset * 2),
+                z_ptr,
                 stride,
-                data.byte_offset(byte_offset * 3),
+                m_ptr,
                 stride,
             );
         }
@@ -550,6 +606,26 @@ mod tests {
     };
 
     #[test]
+    fn test_coordinate_layout() {
+        assert!(CoordinateLayout::Xyz.has_component(CoordinateLayout::X));
+        assert!(CoordinateLayout::Xyz.has_component(CoordinateLayout::Y));
+        assert!(CoordinateLayout::Xyz.has_component(CoordinateLayout::Z));
+        assert!(!CoordinateLayout::Xyz.has_component(CoordinateLayout::M));
+
+        assert!(!CoordinateLayout::Xym.has_component(CoordinateLayout::Z));
+        assert!(CoordinateLayout::Xym.has_component(CoordinateLayout::M));
+
+        assert!(CoordinateLayout::Xy.has_component(CoordinateLayout::X));
+        assert!(CoordinateLayout::Xy.has_component(CoordinateLayout::Y));
+        assert!(!CoordinateLayout::Xy.has_component(CoordinateLayout::Z));
+        assert!(!CoordinateLayout::Xy.has_component(CoordinateLayout::M));
+
+        assert_eq!(CoordinateLayout::Xy.coordinate_size(), 2);
+        assert_eq!(CoordinateLayout::Xyz.coordinate_size(), 3);
+        assert_eq!(CoordinateLayout::Xyzm.coordinate_size(), 4);
+    }
+
+    #[test]
     fn test_create_bbox() {
         let bbox = Geometry::bbox(-27., 33., 52., 85.).unwrap();
         assert_eq!(bbox.json().unwrap(), "{ \"type\": \"Polygon\", \"coordinates\": [ [ [ -27.0, 85.0 ], [ 52.0, 85.0 ], [ 52.0, 33.0 ], [ -27.0, 33.0 ], [ -27.0, 85.0 ] ] ] }");
@@ -687,20 +763,20 @@ mod tests {
         ring.add_point_2d((1218405.0658121984, 721108.1805541387));
         ring.add_point_2d((1179091.1646903288, 712782.8838459781));
         assert!(!ring.is_empty());
-        let mut ring_vec: Vec<(f64, f64, f64)> = Vec::new();
-        ring.get_points(&mut ring_vec);
-        assert_eq!(ring_vec.len(), 6);
+        let mut ring_vec: Vec<f64> = Vec::new();
+        ring.get_points(&mut ring_vec, CoordinateLayout::Xy);
+        assert_eq!(ring_vec.len(), 6 * 2);
         let mut poly = Geometry::empty(wkbPolygon).unwrap();
         poly.add_geometry(ring.to_owned()).unwrap();
-        let mut poly_vec: Vec<(f64, f64, f64)> = Vec::new();
-        poly.get_points(&mut poly_vec);
+        let mut poly_vec: Vec<f64> = Vec::new();
+        poly.get_points(&mut poly_vec, CoordinateLayout::Xy);
         // Points are in ring, not containing geometry.
         // NB: In Python SWIG bindings, `GetPoints` is fallible.
         assert!(poly_vec.is_empty());
         assert_eq!(poly.geometry_count(), 1);
         let ring_out = poly.get_geometry(0);
-        let mut ring_out_vec: Vec<(f64, f64, f64)> = Vec::new();
-        ring_out.get_points(&mut ring_out_vec);
+        let mut ring_out_vec: Vec<f64> = Vec::new();
+        ring_out.get_points(&mut ring_out_vec, CoordinateLayout::Xy);
         // NB: `wkb()` shows it to be a `LINEARRING`, but returned type is LineString
         assert_eq!(ring_out.geometry_type(), wkbLineString);
         assert!(!&ring_out.is_empty());
@@ -716,21 +792,43 @@ mod tests {
         assert_eq!(geom.geometry_type(), OGRwkbGeometryType::wkbPolygon);
         assert!(geom.json().unwrap().contains("Polygon"));
         let inner = geom.get_geometry(0);
-        let mut points: Vec<(f64, f64, f64)> = Vec::new();
-        inner.get_points(&mut points);
+        let mut points: Vec<f64> = Vec::new();
+        inner.get_points(&mut points, CoordinateLayout::Xy);
         assert!(!points.is_empty());
     }
 
     #[test]
-    fn test_get_points_zm() {
+    fn test_get_points() {
         let mut line = Geometry::empty(wkbLineStringZM).unwrap();
         line.add_point_zm((0.0, 0.0, 0.0, 0.0));
         line.add_point_zm((1.0, 0.0, 0.25, 0.5));
-        line.add_point_zm((1.0, 1.0, 0.5, 1.0));
-        let mut line_points: Vec<(f64, f64, f64, f64)> = Vec::new();
-        line.get_points_zm(&mut line_points);
-        assert_eq!(line_points.len(), 3);
-        assert_eq!(line_points.get(2), Some(&(1.0, 1.0, 0.5, 1.0)));
+        line.add_point_zm((1.0, 2.0, 0.5, 1.0));
+        let mut line_points: Vec<f64> = Vec::new();
+
+        line.get_points(&mut line_points, CoordinateLayout::Xy);
+        assert_eq!(line_points.len(), 3 * 2);
+        assert_eq!(line_points, vec![0.0, 0.0, 1.0, 0.0, 1.0, 2.0]);
+
+        line.get_points(&mut line_points, CoordinateLayout::Xyz);
+        assert_eq!(line_points.len(), 3 * 3);
+        assert_eq!(
+            line_points,
+            vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.25, 1.0, 2.0, 0.5]
+        );
+
+        line.get_points(&mut line_points, CoordinateLayout::Xym);
+        assert_eq!(line_points.len(), 3 * 3);
+        assert_eq!(
+            line_points,
+            vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.5, 1.0, 2.0, 1.0]
+        );
+
+        line.get_points(&mut line_points, CoordinateLayout::Xyzm);
+        assert_eq!(line_points.len(), 3 * 4);
+        assert_eq!(
+            line_points,
+            vec![0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.25, 0.5, 1.0, 2.0, 0.5, 1.0]
+        );
     }
 
     #[test]

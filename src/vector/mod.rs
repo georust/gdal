@@ -9,7 +9,7 @@
 //! ```rust, no_run
 //! use gdal::{Dataset, Metadata};
 //! // The `LayerAccess` trait enables reading of vector specific fields from the `Dataset`.
-//! use gdal::vector::LayerAccess;
+//! use gdal::vector::{LayerAccess, CoordinateLayout};
 //! # fn main() -> gdal::errors::Result<()> {
 //! use gdal::vector::geometry_type_to_name;
 //! let dataset = Dataset::open("fixtures/roads.geojson")?;
@@ -30,7 +30,7 @@
 //!         // Summarize the geometry
 //!         let geometry = feature.geometry().unwrap();
 //!         let geom_type = geometry_type_to_name(geometry.geometry_type());
-//!         let geom_len = geometry.get_points(&mut Vec::new());
+//!         let geom_len = geometry.get_points(&mut Vec::new(), CoordinateLayout::Xy);
 //!         println!("    Feature fid={fid:?}, geometry_type='{geom_type}', geometry_len={geom_len}");
 //!         // Get all the available fields and print their values
 //!         for field in feature.fields() {
@@ -81,7 +81,8 @@ pub use feature::{
 pub use gdal_sys::{OGRFieldType, OGRwkbGeometryType};
 pub use geometry::{
     geometry_type_flatten, geometry_type_has_m, geometry_type_has_z, geometry_type_set_m,
-    geometry_type_set_modifier, geometry_type_set_z, geometry_type_to_name, Geometry, GeometryRef,
+    geometry_type_set_modifier, geometry_type_set_z, geometry_type_to_name, CoordinateLayout,
+    Geometry, GeometryRef,
 };
 pub use layer::{FieldDefn, Layer, LayerAccess, LayerCaps, LayerIterator, OwnedLayer};
 pub use options::LayerOptions;
