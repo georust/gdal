@@ -18,17 +18,23 @@ use crate::vector::{Envelope, Envelope3D};
 #[derive(Debug, Clone, Copy)]
 #[repr(u8)]
 pub enum CoordinateLayout {
-    X = 0b0001,
-    Y = 0b0010,
-    Z = 0b0100,
-    M = 0b1000,
+    X = 0b00001,
+    Y = 0b00010,
+    Z = 0b00100,
+    M = 0b01000,
+    Sequential = 0b10000,
 
-    Xy = 0b0011,
+    XyXy = 0b10011,
+    XxYy = 0b00011,
 
-    Xyz = 0b0111,
-    Xym = 0b1011,
+    XyzXyz = 0b10111,
+    XxYyZz = 0b00111,
 
-    Xyzm = 0b1111,
+    XymXym = 0b11011,
+    XxYyMm = 0b01011,
+
+    XyzmXyzm = 0b11111,
+    XxYyZzMm = 0b01111,
 }
 
 impl CoordinateLayout {
@@ -274,47 +280,46 @@ impl Geometry {
 
         out_points.resize(length, Default::default());
 
-        let byte_offset = size_of::<f64>() as isize;
+        let component_size = size_of::<f64>();
+
+        let (stride, ptr_offset): (c_int, isize) =
+            match layout.has_component(CoordinateLayout::Sequential) {
+                true => (
+                    (component_size * coord_size) as c_int,
+                    component_size as isize,
+                ),
+                false => (
+                    component_size as c_int,
+                    (num_points * component_size) as isize,
+                ),
+            };
 
         unsafe {
             let data = out_points.as_mut_ptr() as *mut c_void;
-            let mut curr_offset: isize = 0;
 
-            let x_ptr: *mut c_void = match layout.has_component(CoordinateLayout::X) {
-                true => {
-                    let ret = data.byte_offset(curr_offset);
-                    curr_offset += byte_offset;
-                    ret
+            // Per-component ptr offset.
+            let mut curr_ptr_offset: isize = 0;
+
+            let component_loc = |layout: &CoordinateLayout,
+                                 component: CoordinateLayout,
+                                 curr_ptr_offset: &mut isize|
+             -> *mut c_void {
+                match layout.has_component(component) {
+                    true => {
+                        let ret = data.byte_offset(*curr_ptr_offset);
+                        *curr_ptr_offset += ptr_offset;
+                        ret
+                    }
+                    false => std::ptr::null_mut(),
                 }
-                false => std::ptr::null_mut(),
             };
 
-            let y_ptr: *mut c_void = match layout.has_component(CoordinateLayout::Y) {
-                true => {
-                    let ret = data.byte_offset(curr_offset);
-                    curr_offset += byte_offset;
-                    ret
-                }
-                false => std::ptr::null_mut(),
-            };
+            let x_ptr = component_loc(&layout, CoordinateLayout::X, &mut curr_ptr_offset);
+            let y_ptr = component_loc(&layout, CoordinateLayout::Y, &mut curr_ptr_offset);
+            let z_ptr = component_loc(&layout, CoordinateLayout::Z, &mut curr_ptr_offset);
+            let m_ptr = component_loc(&layout, CoordinateLayout::M, &mut curr_ptr_offset);
 
-            let z_ptr: *mut c_void = match layout.has_component(CoordinateLayout::Z) {
-                true => {
-                    let ret = data.byte_offset(curr_offset);
-                    curr_offset += byte_offset;
-                    ret
-                }
-                false => std::ptr::null_mut(),
-            };
-
-            let m_ptr: *mut c_void = match layout.has_component(CoordinateLayout::M) {
-                true => data.byte_offset(curr_offset),
-                false => std::ptr::null_mut(),
-            };
-
-            // Since GDAL only checks for nullptrs when deciding when not to do anything, we can
-            // avoid complicating things too much and pass the stride as-is.
-            let stride = (byte_offset * coord_size as isize) as c_int;
+            // Should be OK to just use the offset even for unused components...
             gdal_sys::OGR_G_GetPointsZM(
                 self.c_geometry(),
                 x_ptr,
@@ -607,22 +612,20 @@ mod tests {
 
     #[test]
     fn test_coordinate_layout() {
-        assert!(CoordinateLayout::Xyz.has_component(CoordinateLayout::X));
-        assert!(CoordinateLayout::Xyz.has_component(CoordinateLayout::Y));
-        assert!(CoordinateLayout::Xyz.has_component(CoordinateLayout::Z));
-        assert!(!CoordinateLayout::Xyz.has_component(CoordinateLayout::M));
+        assert!(CoordinateLayout::XyzXyz.has_component(CoordinateLayout::X));
+        assert!(CoordinateLayout::XyzXyz.has_component(CoordinateLayout::Y));
+        assert!(CoordinateLayout::XyzXyz.has_component(CoordinateLayout::Z));
+        assert!(!CoordinateLayout::XyzXyz.has_component(CoordinateLayout::M));
+        assert!(CoordinateLayout::XyzXyz.has_component(CoordinateLayout::Sequential));
 
-        assert!(!CoordinateLayout::Xym.has_component(CoordinateLayout::Z));
-        assert!(CoordinateLayout::Xym.has_component(CoordinateLayout::M));
+        assert!(!CoordinateLayout::XxYy.has_component(CoordinateLayout::Sequential));
 
-        assert!(CoordinateLayout::Xy.has_component(CoordinateLayout::X));
-        assert!(CoordinateLayout::Xy.has_component(CoordinateLayout::Y));
-        assert!(!CoordinateLayout::Xy.has_component(CoordinateLayout::Z));
-        assert!(!CoordinateLayout::Xy.has_component(CoordinateLayout::M));
+        assert!(!CoordinateLayout::XymXym.has_component(CoordinateLayout::Z));
+        assert!(CoordinateLayout::XymXym.has_component(CoordinateLayout::M));
 
-        assert_eq!(CoordinateLayout::Xy.coordinate_size(), 2);
-        assert_eq!(CoordinateLayout::Xyz.coordinate_size(), 3);
-        assert_eq!(CoordinateLayout::Xyzm.coordinate_size(), 4);
+        assert_eq!(CoordinateLayout::XyXy.coordinate_size(), 2);
+        assert_eq!(CoordinateLayout::XxYyZz.coordinate_size(), 3);
+        assert_eq!(CoordinateLayout::XyzmXyzm.coordinate_size(), 4);
     }
 
     #[test]
@@ -764,19 +767,19 @@ mod tests {
         ring.add_point_2d((1179091.1646903288, 712782.8838459781));
         assert!(!ring.is_empty());
         let mut ring_vec: Vec<f64> = Vec::new();
-        ring.get_points(&mut ring_vec, CoordinateLayout::Xy);
+        ring.get_points(&mut ring_vec, CoordinateLayout::XyXy);
         assert_eq!(ring_vec.len(), 6 * 2);
         let mut poly = Geometry::empty(wkbPolygon).unwrap();
         poly.add_geometry(ring.to_owned()).unwrap();
         let mut poly_vec: Vec<f64> = Vec::new();
-        poly.get_points(&mut poly_vec, CoordinateLayout::Xy);
+        poly.get_points(&mut poly_vec, CoordinateLayout::XyXy);
         // Points are in ring, not containing geometry.
         // NB: In Python SWIG bindings, `GetPoints` is fallible.
         assert!(poly_vec.is_empty());
         assert_eq!(poly.geometry_count(), 1);
         let ring_out = poly.get_geometry(0);
         let mut ring_out_vec: Vec<f64> = Vec::new();
-        ring_out.get_points(&mut ring_out_vec, CoordinateLayout::Xy);
+        ring_out.get_points(&mut ring_out_vec, CoordinateLayout::XyXy);
         // NB: `wkb()` shows it to be a `LINEARRING`, but returned type is LineString
         assert_eq!(ring_out.geometry_type(), wkbLineString);
         assert!(!&ring_out.is_empty());
@@ -793,7 +796,7 @@ mod tests {
         assert!(geom.json().unwrap().contains("Polygon"));
         let inner = geom.get_geometry(0);
         let mut points: Vec<f64> = Vec::new();
-        inner.get_points(&mut points, CoordinateLayout::Xy);
+        inner.get_points(&mut points, CoordinateLayout::XyXy);
         assert!(!points.is_empty());
     }
 
@@ -805,29 +808,47 @@ mod tests {
         line.add_point_zm((1.0, 2.0, 0.5, 1.0));
         let mut line_points: Vec<f64> = Vec::new();
 
-        line.get_points(&mut line_points, CoordinateLayout::Xy);
+        line.get_points(&mut line_points, CoordinateLayout::XyXy);
         assert_eq!(line_points.len(), 3 * 2);
         assert_eq!(line_points, vec![0.0, 0.0, 1.0, 0.0, 1.0, 2.0]);
 
-        line.get_points(&mut line_points, CoordinateLayout::Xyz);
+        line.get_points(&mut line_points, CoordinateLayout::XxYy);
+        assert_eq!(line_points.len(), 3 * 2);
+        assert_eq!(line_points, vec![0.0, 1.0, 1.0, 0.0, 0.0, 2.0]);
+
+        line.get_points(&mut line_points, CoordinateLayout::XyzXyz);
         assert_eq!(line_points.len(), 3 * 3);
         assert_eq!(
             line_points,
             vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.25, 1.0, 2.0, 0.5]
         );
 
-        line.get_points(&mut line_points, CoordinateLayout::Xym);
+        line.get_points(&mut line_points, CoordinateLayout::XxYyZz);
+        assert_eq!(line_points.len(), 3 * 3);
+        assert_eq!(
+            line_points,
+            vec![0.0, 1.0, 1.0, 0.0, 0.0, 2.0, 0.0, 0.25, 0.5]
+        );
+
+        line.get_points(&mut line_points, CoordinateLayout::XymXym);
         assert_eq!(line_points.len(), 3 * 3);
         assert_eq!(
             line_points,
             vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.5, 1.0, 2.0, 1.0]
         );
 
-        line.get_points(&mut line_points, CoordinateLayout::Xyzm);
+        line.get_points(&mut line_points, CoordinateLayout::XyzmXyzm);
         assert_eq!(line_points.len(), 3 * 4);
         assert_eq!(
             line_points,
             vec![0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.25, 0.5, 1.0, 2.0, 0.5, 1.0]
+        );
+
+        line.get_points(&mut line_points, CoordinateLayout::XxYyZzMm);
+        assert_eq!(line_points.len(), 3 * 4);
+        assert_eq!(
+            line_points,
+            vec![0.0, 1.0, 1.0, 0.0, 0.0, 2.0, 0.0, 0.25, 0.5, 0.0, 0.5, 1.0]
         );
     }
 
