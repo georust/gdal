@@ -1272,7 +1272,8 @@ mod tests {
             let geom = feature.geometry().unwrap();
             assert_eq!(geom.geometry_type(), OGRwkbGeometryType::wkbLineString);
             let mut coords: Vec<f64> = Vec::new();
-            geom.get_points(&mut coords, CoordinateLayout::XyXy);
+            geom.get_points(&mut coords, CoordinateLayout::XyXy)
+                .unwrap();
             assert_eq!(
                 coords,
                 [26.1019276, 44.4302748, 26.1019382, 44.4303191, 26.1020002, 44.4304202]
