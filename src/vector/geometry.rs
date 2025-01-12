@@ -21,6 +21,7 @@ pub enum CoordinateComponent {
     Y = 0b00010,
     Z = 0b00100,
     M = 0b01000,
+    // Whether or not the layout is sequential (eg. XyXy as opposed to XxYy.)
     Sequential = 0b10000,
 }
 
@@ -54,11 +55,11 @@ impl CoordinateLayout {
         CoordinateComponent::M,
     ];
 
-    fn has_component(&self, layout: CoordinateComponent) -> bool {
+    pub fn has_component(&self, layout: CoordinateComponent) -> bool {
         (*self as u8 & layout as u8) != 0
     }
 
-    fn coordinate_size(&self) -> usize {
+    pub fn coordinate_size(&self) -> usize {
         Self::COMPONENTS
             .into_iter()
             .filter(|c| self.has_component(*c))
@@ -269,6 +270,90 @@ impl Geometry {
             gdal_sys::OGR_G_GetPointZM(self.c_geometry(), index, &mut x, &mut y, &mut z, &mut m)
         };
         (x, y, z, m)
+    }
+
+    /// Writes all points from `in_points` to the geometry, overwriting any existing points.
+    ///
+    /// If the coordinate layout contains more dimensions than the geometry, the geometry type will
+    /// be upgraded.
+    ///
+    /// One-dimensional data is unsupported.
+    pub fn set_points(&mut self, in_points: &[f64], layout: CoordinateLayout) -> Result<()> {
+        let coord_size = layout.coordinate_size();
+
+        if coord_size <= 1 {
+            return Err(GdalError::InvalidCoordinateLayout {
+                msg: Some(format!("One-dimensional layout '{layout:?}' unsupported.")),
+                method_name: "set_points",
+            });
+        }
+
+        if in_points.len() % coord_size != 0 {
+            return Err(
+                GdalError::InvalidDataInput {
+                    msg: Some(format!(
+                        "in_points length is not a multiple of {coord_size} as determined by '{layout:?}'"
+                    )),
+                    method_name: "set_points"
+                }
+            );
+        }
+        let num_points = in_points.len() / coord_size;
+
+        let component_size = size_of::<f64>();
+
+        let (stride, ptr_offset): (c_int, isize) =
+            match layout.has_component(CoordinateComponent::Sequential) {
+                true => (
+                    (component_size * coord_size) as c_int,
+                    component_size as isize,
+                ),
+                false => (
+                    component_size as c_int,
+                    (num_points * component_size) as isize,
+                ),
+            };
+
+        unsafe {
+            let data = in_points.as_ptr() as *mut c_void;
+
+            // Per-component ptr offset.
+            let mut curr_ptr_offset: isize = 0;
+
+            let component_loc = |layout: &CoordinateLayout,
+                                 component: CoordinateComponent,
+                                 curr_ptr_offset: &mut isize|
+             -> *mut c_void {
+                match layout.has_component(component) {
+                    true => {
+                        let ret = data.byte_offset(*curr_ptr_offset);
+                        *curr_ptr_offset += ptr_offset;
+                        ret
+                    }
+                    false => std::ptr::null_mut(),
+                }
+            };
+
+            let x_ptr = component_loc(&layout, CoordinateComponent::X, &mut curr_ptr_offset);
+            let y_ptr = component_loc(&layout, CoordinateComponent::Y, &mut curr_ptr_offset);
+            let z_ptr = component_loc(&layout, CoordinateComponent::Z, &mut curr_ptr_offset);
+            let m_ptr = component_loc(&layout, CoordinateComponent::M, &mut curr_ptr_offset);
+
+            // Should be OK to just use the offset even for unused components...
+            gdal_sys::OGR_G_SetPointsZM(
+                self.c_geometry(),
+                num_points as c_int,
+                x_ptr,
+                stride,
+                y_ptr,
+                stride,
+                z_ptr,
+                stride,
+                m_ptr,
+                stride,
+            );
+        }
+        Ok(())
     }
 
     /// Writes all points in the geometry to `out_points` according to the specified `layout`.
@@ -807,6 +892,62 @@ mod tests {
         let mut points: Vec<f64> = Vec::new();
         inner.get_points(&mut points, CoordinateLayout::XyXy);
         assert!(!points.is_empty());
+    }
+
+    #[test]
+    fn test_set_points() {
+        let mut line = Geometry::empty(wkbLineString).unwrap();
+
+        line.set_points(&[0.0, 0.0, 1.0, 0.0, 1.0, 1.0], CoordinateLayout::XyXy)
+            .unwrap();
+        assert_eq!(line.geometry_type(), OGRwkbGeometryType::wkbLineString);
+        assert_eq!(line.get_point(0), (0.0, 0.0, 0.0));
+        assert_eq!(line.get_point(1), (1.0, 0.0, 0.0));
+        assert_eq!(line.get_point(2), (1.0, 1.0, 0.0));
+
+        line.set_points(
+            &[0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0, 2.0],
+            CoordinateLayout::XyzXyz,
+        )
+        .unwrap();
+        assert_eq!(line.geometry_type(), OGRwkbGeometryType::wkbLineString25D);
+        assert_eq!(line.get_point(0), (0.0, 0.0, 0.0));
+        assert_eq!(line.get_point(1), (1.0, 0.0, 1.0));
+        assert_eq!(line.get_point(2), (1.0, 1.0, 2.0));
+
+        line.set_points(
+            &[0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.5, 1.0, 1.0, 2.0, 1.0],
+            CoordinateLayout::XyzmXyzm,
+        )
+        .unwrap();
+        assert_eq!(line.geometry_type(), OGRwkbGeometryType::wkbLineStringZM);
+        assert_eq!(line.get_point_zm(0), (0.0, 0.0, 0.0, 0.0));
+        assert_eq!(line.get_point_zm(1), (1.0, 0.0, 1.0, 0.5));
+        assert_eq!(line.get_point_zm(2), (1.0, 1.0, 2.0, 1.0));
+
+        // M-values kept.
+        line.set_points(
+            &[0.0, 1.0, 1.0, 1.0, 1.0, 2.0, 0.0, 1.0, 2.0],
+            CoordinateLayout::XxYyZz,
+        )
+        .unwrap();
+        assert_eq!(line.geometry_type(), OGRwkbGeometryType::wkbLineStringZM);
+        assert_eq!(line.get_point_zm(0), (0.0, 1.0, 0.0, 0.0));
+        assert_eq!(line.get_point_zm(1), (1.0, 1.0, 1.0, 0.5));
+        assert_eq!(line.get_point_zm(2), (1.0, 2.0, 2.0, 1.0));
+
+        assert!(line
+            .set_points(
+                &[0.0, 1.0, 1.0, 1.0, 1.0, 2.0, 0.0, 1.0],
+                CoordinateLayout::XxYyZz
+            )
+            .is_err());
+        assert!(line
+            .set_points(
+                &[0.0, 1.0, 1.0, 1.0, 1.0, 2.0, 0.0, 1.0],
+                CoordinateLayout::X
+            )
+            .is_err());
     }
 
     #[test]
