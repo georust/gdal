@@ -14,7 +14,17 @@ use crate::spatial_ref::SpatialRef;
 use crate::utils::{_last_null_pointer_err, _string};
 use crate::vector::{Envelope, Envelope3D};
 
-/// Desired coordinate layout.
+#[derive(Debug, Clone, Copy)]
+#[repr(u8)]
+pub enum CoordinateComponent {
+    X = 0b00001,
+    Y = 0b00010,
+    Z = 0b00100,
+    M = 0b01000,
+    Sequential = 0b10000,
+}
+
+/// Desired coordinates and the output layout.
 #[derive(Debug, Clone, Copy)]
 #[repr(u8)]
 pub enum CoordinateLayout {
@@ -22,7 +32,6 @@ pub enum CoordinateLayout {
     Y = 0b00010,
     Z = 0b00100,
     M = 0b01000,
-    Sequential = 0b10000,
 
     XyXy = 0b10011,
     XxYy = 0b00011,
@@ -38,14 +47,14 @@ pub enum CoordinateLayout {
 }
 
 impl CoordinateLayout {
-    const COMPONENTS: [CoordinateLayout; 4] = [
-        CoordinateLayout::X,
-        CoordinateLayout::Y,
-        CoordinateLayout::Z,
-        CoordinateLayout::M,
+    const COMPONENTS: [CoordinateComponent; 4] = [
+        CoordinateComponent::X,
+        CoordinateComponent::Y,
+        CoordinateComponent::Z,
+        CoordinateComponent::M,
     ];
 
-    fn has_component(&self, layout: CoordinateLayout) -> bool {
+    fn has_component(&self, layout: CoordinateComponent) -> bool {
         (*self as u8 & layout as u8) != 0
     }
 
@@ -283,7 +292,7 @@ impl Geometry {
         let component_size = size_of::<f64>();
 
         let (stride, ptr_offset): (c_int, isize) =
-            match layout.has_component(CoordinateLayout::Sequential) {
+            match layout.has_component(CoordinateComponent::Sequential) {
                 true => (
                     (component_size * coord_size) as c_int,
                     component_size as isize,
@@ -301,7 +310,7 @@ impl Geometry {
             let mut curr_ptr_offset: isize = 0;
 
             let component_loc = |layout: &CoordinateLayout,
-                                 component: CoordinateLayout,
+                                 component: CoordinateComponent,
                                  curr_ptr_offset: &mut isize|
              -> *mut c_void {
                 match layout.has_component(component) {
@@ -314,10 +323,10 @@ impl Geometry {
                 }
             };
 
-            let x_ptr = component_loc(&layout, CoordinateLayout::X, &mut curr_ptr_offset);
-            let y_ptr = component_loc(&layout, CoordinateLayout::Y, &mut curr_ptr_offset);
-            let z_ptr = component_loc(&layout, CoordinateLayout::Z, &mut curr_ptr_offset);
-            let m_ptr = component_loc(&layout, CoordinateLayout::M, &mut curr_ptr_offset);
+            let x_ptr = component_loc(&layout, CoordinateComponent::X, &mut curr_ptr_offset);
+            let y_ptr = component_loc(&layout, CoordinateComponent::Y, &mut curr_ptr_offset);
+            let z_ptr = component_loc(&layout, CoordinateComponent::Z, &mut curr_ptr_offset);
+            let m_ptr = component_loc(&layout, CoordinateComponent::M, &mut curr_ptr_offset);
 
             // Should be OK to just use the offset even for unused components...
             gdal_sys::OGR_G_GetPointsZM(
@@ -612,16 +621,16 @@ mod tests {
 
     #[test]
     fn test_coordinate_layout() {
-        assert!(CoordinateLayout::XyzXyz.has_component(CoordinateLayout::X));
-        assert!(CoordinateLayout::XyzXyz.has_component(CoordinateLayout::Y));
-        assert!(CoordinateLayout::XyzXyz.has_component(CoordinateLayout::Z));
-        assert!(!CoordinateLayout::XyzXyz.has_component(CoordinateLayout::M));
-        assert!(CoordinateLayout::XyzXyz.has_component(CoordinateLayout::Sequential));
+        assert!(CoordinateLayout::XyzXyz.has_component(CoordinateComponent::X));
+        assert!(CoordinateLayout::XyzXyz.has_component(CoordinateComponent::Y));
+        assert!(CoordinateLayout::XyzXyz.has_component(CoordinateComponent::Z));
+        assert!(!CoordinateLayout::XyzXyz.has_component(CoordinateComponent::M));
+        assert!(CoordinateLayout::XyzXyz.has_component(CoordinateComponent::Sequential));
 
-        assert!(!CoordinateLayout::XxYy.has_component(CoordinateLayout::Sequential));
+        assert!(!CoordinateLayout::XxYy.has_component(CoordinateComponent::Sequential));
 
-        assert!(!CoordinateLayout::XymXym.has_component(CoordinateLayout::Z));
-        assert!(CoordinateLayout::XymXym.has_component(CoordinateLayout::M));
+        assert!(!CoordinateLayout::XymXym.has_component(CoordinateComponent::Z));
+        assert!(CoordinateLayout::XymXym.has_component(CoordinateComponent::M));
 
         assert_eq!(CoordinateLayout::XyXy.coordinate_size(), 2);
         assert_eq!(CoordinateLayout::XxYyZz.coordinate_size(), 3);
