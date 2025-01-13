@@ -1,9 +1,9 @@
 [package]
 name = "gdal-src"
-version = "0.1.0+3.10.0"
+version = "0.1.0+3.10.1"
 edition = "2021"
 links = "gdal_src"
-description ="Build script for compiling GDAL from source."
+description = "Build script for compiling GDAL from source."
 license-file = "source/LICENSE.TXT"
 repository = "https://github.com/georust/gdal/"
 include = [
@@ -38,8 +38,14 @@ include = [
 [dependencies]
 link-cplusplus = "1.0"
 proj-sys = { version = "0.25.0", features = ["bundled_proj"] }
-libsqlite3-sys = { version = ">=0.28.0,<0.31", features = ["bundled"], optional = true }
-hdf5-sys = { package = "hdf5-metno-sys", version = "0.9.1", optional = true, features = ["static", "hl", "deprecated"] }
+libsqlite3-sys = { version = ">=0.28.0,<0.31", features = [
+    "bundled",
+], optional = true }
+hdf5-sys = { package = "hdf5-metno-sys", version = "0.9.1", optional = true, features = [
+    "static",
+    "hl",
+    "deprecated",
+] }
 netcdf-sys = { version = "0.8.1", optional = true, features = ["static"] }
 pq-src = { version = "0.3.2", optional = true, default-features = false }
 curl-sys = { version = "0.4.70", features = ["static-curl"], optional = true }
@@ -58,25 +64,25 @@ default = []
 nobuild = ["proj-sys/nobuild"]
 
 all_drivers = [
-        "internal_drivers",
-        "driver_sqlite",
-        "driver_gpkg",
-        "driver_vfk",
-        "driver_hdf5",
-        "driver_netcdf",
-        "driver_amigocloud",
-        "driver_carto",
-        "driver_daas",
-        "driver_eeda",
-        "driver_elastic",
-        "driver_ngw",
-        "driver_ogcapi",
-        "driver_plmosaic",
-        "driver_wcs",
-        "driver_wms",
-        "driver_wmts",
-        "driver_pg",
-        "driver_postgis_raster",
+    "internal_drivers",
+    "driver_sqlite",
+    "driver_gpkg",
+    "driver_vfk",
+    "driver_hdf5",
+    "driver_netcdf",
+    "driver_amigocloud",
+    "driver_carto",
+    "driver_daas",
+    "driver_eeda",
+    "driver_elastic",
+    "driver_ngw",
+    "driver_ogcapi",
+    "driver_plmosaic",
+    "driver_wcs",
+    "driver_wms",
+    "driver_wmts",
+    "driver_pg",
+    "driver_postgis_raster",
 ]
 
 # note that libgeos is LGPL licensed
@@ -236,7 +242,7 @@ driver_derived = []
 driver_dimap = []
 driver_dted = []
 driver_elas = []
-driver_envisat =[]
+driver_envisat = []
 driver_ers = []
 driver_fit = []
 driver_gff = []
@@ -302,7 +308,7 @@ driver_mem = []
 driver_sqlite = ["dep:libsqlite3-sys"]
 driver_gpkg = ["driver_sqlite"]
 driver_vfk = ["driver_sqlite"]
-driver_rasterlite = [] # unclear how to handle that
+driver_rasterlite = []                 # unclear how to handle that
 
 # curl
 driver_amigocloud = ["curl-sys"]
