@@ -38,7 +38,7 @@ include = [
 [dependencies]
 link-cplusplus = "1.0"
 proj-sys = { version = "0.25.0", features = ["bundled_proj"] }
-libsqlite3-sys = { version = ">=0.28.0,<0.31", features = [
+libsqlite3-sys = { version = ">=0.28.0, <0.32", features = [
     "bundled",
 ], optional = true }
 hdf5-sys = { package = "hdf5-metno-sys", version = "0.9.1", optional = true, features = [
