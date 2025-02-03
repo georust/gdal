@@ -995,7 +995,7 @@ impl<'a> RasterBand<'a> {
     /// If approximate statistics are sufficient, the `is_approx_ok` flag can be set to true in which case overviews, or a subset of image tiles may be used in computing the statistics.
     ///
     /// If `force` is `false` results will only be returned if it can be done quickly (i.e. without scanning the data).
-    /// If force` is `false` and results cannot be returned efficiently, the method will return `None`.
+    /// If `force` is `false` and results cannot be returned efficiently, the method will return `None`.
     ///
     /// Note that file formats using PAM (Persistent Auxiliary Metadata) services will generally cache statistics in the .pam file allowing fast fetch after the first request.
     ///
@@ -1026,6 +1026,26 @@ impl<'a> RasterBand<'a> {
             CplErrType::Warning => Ok(None),
             _ => Err(_last_cpl_err(rv)),
         }
+    }
+
+    /// Set statistics on a band
+    ///
+    /// This method can be used to store min/max/mean/standard deviation statistics on a raster band.
+    ///
+    /// The default implementation stores them as metadata, and will only work on formats that can save arbitrary metadata.
+    /// This method cannot detect whether metadata will be properly saved and so may return `Ok(())` even if the statistics will never be saved.
+    ///
+    /// # Notes
+    /// See also:
+    /// [`GDALSetRasterStatistics`](https://gdal.org/api/gdalrasterband_cpp.html#_CPPv4N14GDALRasterBand13SetStatisticsEdddd)
+    pub fn set_statistics(&mut self, min: f64, max: f64, mean: f64, std_dev: f64) -> Result<()> {
+        let rv = unsafe {
+            gdal_sys::GDALSetRasterStatistics(self.c_rasterband, min, max, mean, std_dev)
+        };
+        if rv != CPLErr::CE_None {
+            return Err(_last_cpl_err(rv));
+        }
+        Ok(())
     }
 
     /// Compute the min/max values for a band.
