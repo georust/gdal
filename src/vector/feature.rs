@@ -708,8 +708,16 @@ impl<'a> FeatureIterator<'a> {
     }
 }
 
+impl Drop for FeatureIterator<'_> {
+    fn drop(&mut self) {
+        unsafe {
+            gdal_sys::OGR_L_ResetReading(self.c_layer);
+        }
+    }
+}
+
 pub struct OwnedFeatureIterator {
-    pub(crate) layer: OwnedLayer,
+    pub(crate) layer: Option<OwnedLayer>,
     size_hint: Option<usize>,
 }
 
@@ -721,7 +729,7 @@ where
 
     #[inline]
     fn next(&mut self) -> Option<Feature<'a>> {
-        let c_feature = unsafe { gdal_sys::OGR_L_GetNextFeature(self.layer.c_layer()) };
+        let c_feature = unsafe { gdal_sys::OGR_L_GetNextFeature(self.layer().c_layer()) };
 
         if c_feature.is_null() {
             return None;
@@ -729,7 +737,7 @@ where
 
         Some(unsafe {
             // We have to convince the compiler that our `Defn` adheres to our iterator lifetime `<'a>`
-            let defn: &'a Defn = std::mem::transmute::<&'_ _, &'a _>(self.layer.defn());
+            let defn: &'a Defn = std::mem::transmute::<&'_ _, &'a _>(self.layer().defn());
 
             Feature::from_c_feature(defn, c_feature)
         })
@@ -746,11 +754,18 @@ where
 impl OwnedFeatureIterator {
     pub(crate) fn _with_layer(layer: OwnedLayer) -> Self {
         let size_hint = layer.try_feature_count().and_then(|s| s.try_into().ok());
-        Self { layer, size_hint }
+        Self {
+            layer: Some(layer),
+            size_hint,
+        }
     }
 
-    pub fn into_layer(self) -> OwnedLayer {
-        self.layer
+    pub fn into_layer(mut self) -> OwnedLayer {
+        self.layer.take().expect("layer must be set")
+    }
+
+    fn layer(&self) -> &OwnedLayer {
+        self.layer.as_ref().expect("layer must be set")
     }
 }
 
@@ -763,6 +778,16 @@ impl AsMut<OwnedFeatureIterator> for OwnedFeatureIterator {
 impl From<OwnedFeatureIterator> for OwnedLayer {
     fn from(feature_iterator: OwnedFeatureIterator) -> Self {
         feature_iterator.into_layer()
+    }
+}
+
+impl Drop for OwnedFeatureIterator {
+    fn drop(&mut self) {
+        if let Some(layer) = &self.layer {
+            unsafe {
+                gdal_sys::OGR_L_ResetReading(layer.c_layer());
+            }
+        }
     }
 }
 
