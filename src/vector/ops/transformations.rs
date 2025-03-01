@@ -163,9 +163,9 @@ impl Geometry {
     /// They are defined as follows:
     ///
     /// * `METHOD=LINEWORK`: Combines all rings into a set of node-ed lines and then extracts
-    ///    valid polygons from that "linework".
+    ///   valid polygons from that "linework".
     /// * `METHOD=STRUCTURE`: First makes all rings valid, then merges shells and subtracts holes
-    ///    from shells to generate valid result. Assumes holes and shells are correctly categorized.
+    ///   from shells to generate valid result. Assumes holes and shells are correctly categorized.
     /// * `KEEP_COLLAPSED=YES/NO`. Only for `METHOD=STRUCTURE`.
     ///   - `NO` (default):  Collapses are converted to empty geometries
     ///   - `YES`: collapses are converted to a valid geometry of lower dimension
