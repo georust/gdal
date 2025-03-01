@@ -36,7 +36,8 @@
 ### Fixed
 
   - Fix conversion from `ndarray` when the data is offsetted from the start of the buffer ([#569](https://github.com/georust/gdal/pull/569))
-  - use ISO WKT for the `Debug` implementation of `Geometry`, in order to properly display measure values ([#600](https://github.com/georust/gdal/pull/600))
+  - Use ISO WKT for the `Debug` implementation of `Geometry`, in order to properly display measure values ([#600](https://github.com/georust/gdal/pull/600))
+  - Reset layer when dropping the feature iterator, not when starting ([#611](https://github.com/georust/gdal/pull/611))
 
 ### Removed
 
