@@ -1572,7 +1572,7 @@ mod tests {
         fn edit_dataset(test_file: &str, create: bool) {
             let mut dataset = if !create {
                 Dataset::open_ex(
-                    &test_file,
+                    test_file,
                     DatasetOptions {
                         open_flags: GdalOpenFlags::GDAL_OF_UPDATE,
                         ..Default::default()
@@ -1582,7 +1582,7 @@ mod tests {
             } else {
                 let driver = DriverManager::get_driver_by_name("GPKG").expect("get driver");
                 driver
-                    .create_vector_only(&test_file)
+                    .create_vector_only(test_file)
                     .expect("create dataset")
             };
 
@@ -1598,7 +1598,7 @@ mod tests {
             rivers.create_defn_fields(&[]).expect("define fields");
 
             {
-                let feature = Feature::new(&rivers.defn()).expect("new feature");
+                let feature = Feature::new(rivers.defn()).expect("new feature");
                 feature.create(&rivers).expect("create feature");
             }
 

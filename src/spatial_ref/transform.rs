@@ -70,8 +70,8 @@ impl CoordTransform {
     ///
     /// # Arguments
     /// * `bounds` - array of [axis0_min, axis1_min, axis0_max, axis1_max],
-    ///              interpreted in the axis order of the source SpatialRef,
-    ///              typically [xmin, ymin, xmax, ymax]
+    ///   interpreted in the axis order of the source SpatialRef,
+    ///   typically [xmin, ymin, xmax, ymax]
     /// * `densify_pts` - number of points per edge (recommended: 21)
     ///
     /// # Returns
