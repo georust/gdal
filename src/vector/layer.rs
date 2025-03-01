@@ -1568,4 +1568,68 @@ mod tests {
         layer.set_spatial_filter_rect(26.1017, 44.4297, 26.1025, 44.4303);
         assert_eq!(layer.features().count(), 7);
     }
+
+    #[test]
+    #[should_panic(
+        expected = "create feature: OgrError { err: 6, method_name: \"OGR_L_CreateFeature\" }"
+    )]
+    fn test_database_lock_issue() {
+        use gdal_sys::OGRwkbGeometryType;
+
+        fn edit_dataset(test_file: &str, create: bool) {
+            let mut dataset = if !create {
+                Dataset::open_ex(
+                    &test_file,
+                    DatasetOptions {
+                        open_flags: GdalOpenFlags::GDAL_OF_UPDATE,
+                        ..Default::default()
+                    },
+                )
+                .expect("open dataset")
+            } else {
+                let driver = DriverManager::get_driver_by_name("GPKG").expect("get driver");
+                driver
+                    .create_vector_only(&test_file)
+                    .expect("create dataset")
+            };
+
+            const RIVERS: &str = "rivers";
+            let mut rivers = dataset
+                .create_layer(LayerOptions {
+                    name: RIVERS,
+                    ty: OGRwkbGeometryType::wkbNone,
+                    srs: None,
+                    options: Some(&["OVERWRITE=YES"]),
+                })
+                .expect("create layer");
+            rivers.create_defn_fields(&[]).expect("define fields");
+
+            {
+                let feature = Feature::new(&rivers.defn()).expect("new feature");
+                feature.create(&rivers).expect("create feature");
+            }
+
+            // start reading the layer
+            rivers.features().next();
+
+            const COASTLINES: &str = "coastlines";
+            let coastlines = dataset
+                .create_layer(LayerOptions {
+                    name: COASTLINES,
+                    ty: OGRwkbGeometryType::wkbPolygon,
+                    srs: Some(&SpatialRef::from_epsg(4326).expect("srs")),
+                    options: Some(&["OVERWRITE=YES"]),
+                })
+                .expect("create layer");
+
+            coastlines.create_defn_fields(&[]).expect("defn_fields");
+
+            let feature = Feature::new(coastlines.defn()).expect("new feature");
+            feature.create(&coastlines).expect("create feature");
+        }
+
+        let test_file = "/vsimem/test_database_locked.gpkg";
+        edit_dataset(test_file, true);
+        edit_dataset(test_file, false)
+    }
 }
