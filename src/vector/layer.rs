@@ -195,13 +195,10 @@ impl OwnedLayer {
         }
     }
 
-    /// Returns iterator over the features in this layer.
+    /// Returns an iterator over the features in this layer.
     ///
-    /// **Note.** This method resets the current index to
-    /// the beginning before iteration. It also borrows the
-    /// layer mutably, preventing any overlapping borrows.
-    pub fn owned_features(mut self) -> OwnedFeatureIterator {
-        self.reset_feature_reading();
+    /// This method doesn't reset the layer, but the returned iterator does so when dropped.
+    pub fn owned_features(self) -> OwnedFeatureIterator {
         OwnedFeatureIterator::_with_layer(self)
     }
 
@@ -246,13 +243,12 @@ pub trait LayerAccess: Sized {
         }
     }
 
-    /// Returns iterator over the features in this layer.
+    /// Returns an iterator over the features in this layer.
     ///
-    /// **Note.** This method resets the current index to
-    /// the beginning before iteration. It also borrows the
-    /// layer mutably, preventing any overlapping borrows.
+    /// This method doesn't reset the layer, but the returned iterator does so when dropped.
+    ///
+    /// The iterator also borrows the layer mutably, preventing other overlapping borrows.
     fn features(&mut self) -> FeatureIterator {
-        self.reset_feature_reading();
         FeatureIterator::_with_layer(self)
     }
 
@@ -1570,9 +1566,6 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(
-        expected = "create feature: OgrError { err: 6, method_name: \"OGR_L_CreateFeature\" }"
-    )]
     fn test_database_lock_issue() {
         use gdal_sys::OGRwkbGeometryType;
 
