@@ -63,6 +63,16 @@ pub enum GdalError {
         to: String,
         msg: Option<String>,
     },
+    #[error("Invalid coordinate layout supplied to '{method_name}': '{msg:?}'")]
+    InvalidCoordinateLayout {
+        msg: Option<String>,
+        method_name: &'static str,
+    },
+    #[error("Invalid data supplied to '{method_name}': '{msg:?}'")]
+    InvalidDataInput {
+        msg: Option<String>,
+        method_name: &'static str,
+    },
     #[error("Axis not found for key '{key}' in method '{method_name}'")]
     AxisNotFoundError {
         key: String,
