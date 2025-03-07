@@ -195,13 +195,10 @@ impl OwnedLayer {
         }
     }
 
-    /// Returns iterator over the features in this layer.
+    /// Returns an iterator over the features in this layer.
     ///
-    /// **Note.** This method resets the current index to
-    /// the beginning before iteration. It also borrows the
-    /// layer mutably, preventing any overlapping borrows.
-    pub fn owned_features(mut self) -> OwnedFeatureIterator {
-        self.reset_feature_reading();
+    /// This method doesn't reset the layer, but the returned iterator does so when dropped.
+    pub fn owned_features(self) -> OwnedFeatureIterator {
         OwnedFeatureIterator::_with_layer(self)
     }
 
@@ -246,13 +243,12 @@ pub trait LayerAccess: Sized {
         }
     }
 
-    /// Returns iterator over the features in this layer.
+    /// Returns an iterator over the features in this layer.
     ///
-    /// **Note.** This method resets the current index to
-    /// the beginning before iteration. It also borrows the
-    /// layer mutably, preventing any overlapping borrows.
+    /// This method doesn't reset the layer, but the returned iterator does so when dropped.
+    ///
+    /// The iterator also borrows the layer mutably, preventing other overlapping borrows.
     fn features(&mut self) -> FeatureIterator {
-        self.reset_feature_reading();
         FeatureIterator::_with_layer(self)
     }
 
@@ -1565,5 +1561,66 @@ mod tests {
         // test filter as rectangle
         layer.set_spatial_filter_rect(26.1017, 44.4297, 26.1025, 44.4303);
         assert_eq!(layer.features().count(), 7);
+    }
+
+    #[test]
+    fn test_database_lock_issue() {
+        use gdal_sys::OGRwkbGeometryType;
+
+        fn edit_dataset(test_file: &str, create: bool) {
+            let mut dataset = if !create {
+                Dataset::open_ex(
+                    test_file,
+                    DatasetOptions {
+                        open_flags: GdalOpenFlags::GDAL_OF_UPDATE,
+                        ..Default::default()
+                    },
+                )
+                .expect("open dataset")
+            } else {
+                let driver = DriverManager::get_driver_by_name("GPKG").expect("get driver");
+                driver
+                    .create_vector_only(test_file)
+                    .expect("create dataset")
+            };
+
+            const RIVERS: &str = "rivers";
+            let mut rivers = dataset
+                .create_layer(LayerOptions {
+                    name: RIVERS,
+                    ty: OGRwkbGeometryType::wkbNone,
+                    srs: None,
+                    options: Some(&["OVERWRITE=YES"]),
+                })
+                .expect("create layer");
+            rivers.create_defn_fields(&[]).expect("define fields");
+
+            {
+                let feature = Feature::new(rivers.defn()).expect("new feature");
+                feature.create(&rivers).expect("create feature");
+            }
+
+            // start reading the layer
+            rivers.features().next();
+
+            const COASTLINES: &str = "coastlines";
+            let coastlines = dataset
+                .create_layer(LayerOptions {
+                    name: COASTLINES,
+                    ty: OGRwkbGeometryType::wkbPolygon,
+                    srs: Some(&SpatialRef::from_epsg(4326).expect("srs")),
+                    options: Some(&["OVERWRITE=YES"]),
+                })
+                .expect("create layer");
+
+            coastlines.create_defn_fields(&[]).expect("defn_fields");
+
+            let feature = Feature::new(coastlines.defn()).expect("new feature");
+            feature.create(&coastlines).expect("create feature");
+        }
+
+        let test_file = "/vsimem/test_database_locked.gpkg";
+        edit_dataset(test_file, true);
+        edit_dataset(test_file, false)
     }
 }
