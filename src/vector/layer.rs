@@ -1271,7 +1271,7 @@ mod tests {
         with_feature("roads.geojson", 236194095, |feature| {
             let geom = feature.geometry().unwrap();
             assert_eq!(geom.geometry_type(), OGRwkbGeometryType::wkbLineString);
-            let mut coords: Vec<f64> = Vec::new();
+            let mut coords: Vec<f64> = vec![0.0; geom.point_count() * 2];
             geom.get_points(&mut coords, CoordinateLayout::XyXy)
                 .unwrap();
             assert_eq!(

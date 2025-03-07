@@ -45,7 +45,7 @@ impl TryFrom<&Geometry> for geo_types::Geometry<f64> {
                 )))
             }
             OGRwkbGeometryType::wkbLineString => {
-                let mut gdal_coords: Vec<f64> = Vec::with_capacity(geo.point_count() * 2);
+                let mut gdal_coords: Vec<f64> = vec![0.0; geo.point_count() * 2];
                 geo.get_points(&mut gdal_coords, CoordinateLayout::XyXy)?;
                 let coords = gdal_coords
                     .chunks(2)

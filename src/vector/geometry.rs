@@ -16,7 +16,7 @@ use crate::{errors::*, utils::_last_cpl_err};
 
 #[derive(Debug, Clone, Copy)]
 #[repr(u8)]
-pub enum CoordinateComponent {
+pub enum CoordinateDim {
     X = 0b00001,
     Y = 0b00010,
     Z = 0b00100,
@@ -49,22 +49,13 @@ pub enum CoordinateLayout {
 }
 
 impl CoordinateLayout {
-    const COMPONENTS: [CoordinateComponent; 4] = [
-        CoordinateComponent::X,
-        CoordinateComponent::Y,
-        CoordinateComponent::Z,
-        CoordinateComponent::M,
-    ];
-
-    pub fn has_component(&self, layout: CoordinateComponent) -> bool {
+    pub fn has_dim(&self, layout: CoordinateDim) -> bool {
         (*self as u8 & layout as u8) != 0
     }
 
-    pub fn coordinate_size(&self) -> usize {
-        Self::COMPONENTS
-            .into_iter()
-            .filter(|c| self.has_component(*c))
-            .count()
+    /// Check the number of dimensions for the [`CoordinateLayout`].
+    pub fn num_dims(&self) -> usize {
+        (*self as u8).count_ones() as usize - self.has_dim(CoordinateDim::AoS) as usize
     }
 }
 
@@ -280,7 +271,7 @@ impl Geometry {
     ///
     /// One-dimensional data is unsupported.
     pub fn set_points(&mut self, in_points: &[f64], layout: CoordinateLayout) -> Result<()> {
-        let coord_size = layout.coordinate_size();
+        let coord_size = layout.num_dims();
 
         if in_points.len() % coord_size != 0 {
             return Err(
@@ -296,17 +287,16 @@ impl Geometry {
 
         let component_size = size_of::<f64>();
 
-        let (stride, ptr_offset): (c_int, isize) =
-            match layout.has_component(CoordinateComponent::AoS) {
-                true => (
-                    (component_size * coord_size) as c_int,
-                    component_size as isize,
-                ),
-                false => (
-                    component_size as c_int,
-                    (num_points * component_size) as isize,
-                ),
-            };
+        let (stride, ptr_offset): (c_int, isize) = match layout.has_dim(CoordinateDim::AoS) {
+            true => (
+                (component_size * coord_size) as c_int,
+                component_size as isize,
+            ),
+            false => (
+                component_size as c_int,
+                (num_points * component_size) as isize,
+            ),
+        };
 
         unsafe {
             gdal_sys::CPLErrorReset();
@@ -316,10 +306,10 @@ impl Geometry {
             let mut curr_ptr_offset: isize = 0;
 
             let component_loc = |layout: &CoordinateLayout,
-                                 component: CoordinateComponent,
+                                 component: CoordinateDim,
                                  curr_ptr_offset: &mut isize|
              -> *mut c_void {
-                match layout.has_component(component) {
+                match layout.has_dim(component) {
                     true => {
                         let ret = data.byte_offset(*curr_ptr_offset);
                         *curr_ptr_offset += ptr_offset;
@@ -329,10 +319,10 @@ impl Geometry {
                 }
             };
 
-            let x_ptr = component_loc(&layout, CoordinateComponent::X, &mut curr_ptr_offset);
-            let y_ptr = component_loc(&layout, CoordinateComponent::Y, &mut curr_ptr_offset);
-            let z_ptr = component_loc(&layout, CoordinateComponent::Z, &mut curr_ptr_offset);
-            let m_ptr = component_loc(&layout, CoordinateComponent::M, &mut curr_ptr_offset);
+            let x_ptr = component_loc(&layout, CoordinateDim::X, &mut curr_ptr_offset);
+            let y_ptr = component_loc(&layout, CoordinateDim::Y, &mut curr_ptr_offset);
+            let z_ptr = component_loc(&layout, CoordinateDim::Z, &mut curr_ptr_offset);
+            let m_ptr = component_loc(&layout, CoordinateDim::M, &mut curr_ptr_offset);
 
             // Should be OK to just use the offset even for unused components...
             gdal_sys::OGR_G_SetPointsZM(
@@ -360,32 +350,40 @@ impl Geometry {
 
     /// Writes all points in the geometry to `out_points` according to the specified `layout`.
     ///
-    /// For some geometry types, like polygons, that don't consist of points, Err will be returned
-    /// and `out_points` will only be resized.
-    pub fn get_points(&self, out_points: &mut Vec<f64>, layout: CoordinateLayout) -> Result<usize> {
+    /// `out_points` must be at least the same length as [`Geometry::point_count`] *
+    /// [`CoordinateLayout::num_dims`], or Err will be returned.
+    ///
+    /// For some geometry types, like polygons, that don't consist of points, Err will be returned.
+    pub fn get_points(&self, out_points: &mut [f64], layout: CoordinateLayout) -> Result<usize> {
         let num_points = unsafe { gdal_sys::OGR_G_GetPointCount(self.c_geometry()) } as usize;
 
         // Number of dims
-        let coord_size = layout.coordinate_size();
+        let coord_size = layout.num_dims();
 
-        // Total length of the output.
-        let length = num_points * coord_size;
-
-        out_points.resize(length, Default::default());
+        let out_points_len = out_points.len();
+        if out_points_len < coord_size * num_points {
+            return Err (
+                GdalError::InvalidDataInput {
+                    msg: Some(format!(
+                        "out_points length of {out_points_len} is too small for a point count of {num_points} and a CoordinateLayout with {coord_size} components."
+                    )),
+                    method_name: "get_points"
+                }
+            );
+        }
 
         let component_size = size_of::<f64>();
 
-        let (stride, ptr_offset): (c_int, isize) =
-            match layout.has_component(CoordinateComponent::AoS) {
-                true => (
-                    (component_size * coord_size) as c_int,
-                    component_size as isize,
-                ),
-                false => (
-                    component_size as c_int,
-                    (num_points * component_size) as isize,
-                ),
-            };
+        let (stride, ptr_offset): (c_int, isize) = match layout.has_dim(CoordinateDim::AoS) {
+            true => (
+                (component_size * coord_size) as c_int,
+                component_size as isize,
+            ),
+            false => (
+                component_size as c_int,
+                (num_points * component_size) as isize,
+            ),
+        };
 
         unsafe {
             gdal_sys::CPLErrorReset();
@@ -396,10 +394,10 @@ impl Geometry {
             let mut curr_ptr_offset: isize = 0;
 
             let component_loc = |layout: &CoordinateLayout,
-                                 component: CoordinateComponent,
+                                 component: CoordinateDim,
                                  curr_ptr_offset: &mut isize|
              -> *mut c_void {
-                match layout.has_component(component) {
+                match layout.has_dim(component) {
                     true => {
                         let ret = data.byte_offset(*curr_ptr_offset);
                         *curr_ptr_offset += ptr_offset;
@@ -409,10 +407,10 @@ impl Geometry {
                 }
             };
 
-            let x_ptr = component_loc(&layout, CoordinateComponent::X, &mut curr_ptr_offset);
-            let y_ptr = component_loc(&layout, CoordinateComponent::Y, &mut curr_ptr_offset);
-            let z_ptr = component_loc(&layout, CoordinateComponent::Z, &mut curr_ptr_offset);
-            let m_ptr = component_loc(&layout, CoordinateComponent::M, &mut curr_ptr_offset);
+            let x_ptr = component_loc(&layout, CoordinateDim::X, &mut curr_ptr_offset);
+            let y_ptr = component_loc(&layout, CoordinateDim::Y, &mut curr_ptr_offset);
+            let z_ptr = component_loc(&layout, CoordinateDim::Z, &mut curr_ptr_offset);
+            let m_ptr = component_loc(&layout, CoordinateDim::M, &mut curr_ptr_offset);
 
             // Should be OK to just use the offset even for unused components...
             //
@@ -715,20 +713,20 @@ mod tests {
 
     #[test]
     fn test_coordinate_layout() {
-        assert!(CoordinateLayout::XyzXyz.has_component(CoordinateComponent::X));
-        assert!(CoordinateLayout::XyzXyz.has_component(CoordinateComponent::Y));
-        assert!(CoordinateLayout::XyzXyz.has_component(CoordinateComponent::Z));
-        assert!(!CoordinateLayout::XyzXyz.has_component(CoordinateComponent::M));
-        assert!(CoordinateLayout::XyzXyz.has_component(CoordinateComponent::AoS));
+        assert!(CoordinateLayout::XyzXyz.has_dim(CoordinateDim::X));
+        assert!(CoordinateLayout::XyzXyz.has_dim(CoordinateDim::Y));
+        assert!(CoordinateLayout::XyzXyz.has_dim(CoordinateDim::Z));
+        assert!(!CoordinateLayout::XyzXyz.has_dim(CoordinateDim::M));
+        assert!(CoordinateLayout::XyzXyz.has_dim(CoordinateDim::AoS));
 
-        assert!(!CoordinateLayout::XxYy.has_component(CoordinateComponent::AoS));
+        assert!(!CoordinateLayout::XxYy.has_dim(CoordinateDim::AoS));
 
-        assert!(!CoordinateLayout::XymXym.has_component(CoordinateComponent::Z));
-        assert!(CoordinateLayout::XymXym.has_component(CoordinateComponent::M));
+        assert!(!CoordinateLayout::XymXym.has_dim(CoordinateDim::Z));
+        assert!(CoordinateLayout::XymXym.has_dim(CoordinateDim::M));
 
-        assert_eq!(CoordinateLayout::XyXy.coordinate_size(), 2);
-        assert_eq!(CoordinateLayout::XxYyZz.coordinate_size(), 3);
-        assert_eq!(CoordinateLayout::XyzmXyzm.coordinate_size(), 4);
+        assert_eq!(CoordinateLayout::XyXy.num_dims(), 2);
+        assert_eq!(CoordinateLayout::XxYyZz.num_dims(), 3);
+        assert_eq!(CoordinateLayout::XyzmXyzm.num_dims(), 4);
     }
 
     #[test]
@@ -869,10 +867,9 @@ mod tests {
         ring.add_point_2d((1218405.0658121984, 721108.1805541387));
         ring.add_point_2d((1179091.1646903288, 712782.8838459781));
         assert!(!ring.is_empty());
-        let mut ring_vec: Vec<f64> = Vec::new();
+        let mut ring_vec: Vec<f64> = vec![0.0; 6 * 2];
         ring.get_points(&mut ring_vec, CoordinateLayout::XyXy)
             .unwrap();
-        assert_eq!(ring_vec.len(), 6 * 2);
         let mut poly = Geometry::empty(wkbPolygon).unwrap();
         poly.add_geometry(ring.to_owned()).unwrap();
         let mut poly_vec: Vec<f64> = Vec::new();
@@ -880,7 +877,7 @@ mod tests {
         assert!(res.is_err());
         assert_eq!(poly.geometry_count(), 1);
         let ring_out = poly.get_geometry(0);
-        let mut ring_out_vec: Vec<f64> = Vec::new();
+        let mut ring_out_vec: Vec<f64> = vec![0.0; 6 * 2];
         ring_out
             .get_points(&mut ring_out_vec, CoordinateLayout::XyXy)
             .unwrap();
@@ -899,7 +896,7 @@ mod tests {
         assert_eq!(geom.geometry_type(), OGRwkbGeometryType::wkbPolygon);
         assert!(geom.json().unwrap().contains("Polygon"));
         let inner = geom.get_geometry(0);
-        let mut points: Vec<f64> = Vec::new();
+        let mut points: Vec<f64> = vec![0.0; inner.point_count() * 2];
         inner
             .get_points(&mut points, CoordinateLayout::XyXy)
             .unwrap();
@@ -968,21 +965,19 @@ mod tests {
         line.add_point_zm((0.0, 0.0, 0.0, 0.0));
         line.add_point_zm((1.0, 0.0, 0.25, 0.5));
         line.add_point_zm((1.0, 2.0, 0.5, 1.0));
-        let mut line_points: Vec<f64> = Vec::new();
+        let mut line_points: Vec<f64> = vec![0.0; 3 * 2];
 
         line.get_points(&mut line_points, CoordinateLayout::XyXy)
             .unwrap();
-        assert_eq!(line_points.len(), 3 * 2);
         assert_eq!(line_points, vec![0.0, 0.0, 1.0, 0.0, 1.0, 2.0]);
 
         line.get_points(&mut line_points, CoordinateLayout::XxYy)
             .unwrap();
-        assert_eq!(line_points.len(), 3 * 2);
         assert_eq!(line_points, vec![0.0, 1.0, 1.0, 0.0, 0.0, 2.0]);
 
+        line_points.resize(3 * 3, 0.0);
         line.get_points(&mut line_points, CoordinateLayout::XyzXyz)
             .unwrap();
-        assert_eq!(line_points.len(), 3 * 3);
         assert_eq!(
             line_points,
             vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.25, 1.0, 2.0, 0.5]
@@ -990,7 +985,6 @@ mod tests {
 
         line.get_points(&mut line_points, CoordinateLayout::XxYyZz)
             .unwrap();
-        assert_eq!(line_points.len(), 3 * 3);
         assert_eq!(
             line_points,
             vec![0.0, 1.0, 1.0, 0.0, 0.0, 2.0, 0.0, 0.25, 0.5]
@@ -998,15 +992,14 @@ mod tests {
 
         line.get_points(&mut line_points, CoordinateLayout::XymXym)
             .unwrap();
-        assert_eq!(line_points.len(), 3 * 3);
         assert_eq!(
             line_points,
             vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.5, 1.0, 2.0, 1.0]
         );
 
+        line_points.resize(3 * 4, 0.0);
         line.get_points(&mut line_points, CoordinateLayout::XyzmXyzm)
             .unwrap();
-        assert_eq!(line_points.len(), 3 * 4);
         assert_eq!(
             line_points,
             vec![0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.25, 0.5, 1.0, 2.0, 0.5, 1.0]
@@ -1014,7 +1007,6 @@ mod tests {
 
         line.get_points(&mut line_points, CoordinateLayout::XxYyZzMm)
             .unwrap();
-        assert_eq!(line_points.len(), 3 * 4);
         assert_eq!(
             line_points,
             vec![0.0, 1.0, 1.0, 0.0, 0.0, 2.0, 0.0, 0.25, 0.5, 0.0, 0.5, 1.0]
