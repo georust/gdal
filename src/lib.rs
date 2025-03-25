@@ -1,7 +1,7 @@
 #![crate_name = "gdal"]
 #![crate_type = "lib"]
-// Enable `doc_cfg` features when `docsrs` is defined by docs.rs config
-#![cfg_attr(docsrs, feature(doc_cfg))]
+// Document all features on docs.rs
+#![cfg_attr(docsrs, feature(doc_auto_cfg))]
 #![doc(test(attr(deny(warnings), allow(dead_code, unused_variables))))]
 
 //! # GDAL

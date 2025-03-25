@@ -145,7 +145,7 @@ impl Driver {
     /// [Per GDAL](https://gdal.org/api/gdaldriver_cpp.html#_CPPv4N10GDALDriver6CreateEPKciii12GDALDataType12CSLConstList),
     /// the set of legal options for `options` is driver specific, and there is no way to query in advance to establish the valid ones.
     ///
-    /// See also: [`RasterCreationOption`], [`create`](Self::create), [`create_with_band_type`](Self::create_with_band_type).
+    /// See also: [`RasterCreationOptions`], [`create`](Self::create), [`create_with_band_type`](Self::create_with_band_type).
     ///
     /// # Example
     ///
