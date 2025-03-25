@@ -32,7 +32,17 @@ semver = "1.0"
 [dev-dependencies]
 tempfile = "3.8"
 # Only used in the example
-arrow = { version = "54.0", default-features = false, features = ["ffi"] }
+arrow = { version = "=54.2.1", default-features = false, features = ["ffi"] }
+arrow-arith = { version = "=54.2.1" }
+arrow-array = { version = "=54.2.1" }
+arrow-buffer = { version = "=54.2.1" }
+arrow-cast = { version = "=54.2.1" }
+arrow-data = { version = "=54.2.1" }
+arrow-ord = { version = "=54.2.1" }
+arrow-row = { version = "=54.2.1" }
+arrow-schema = { version = "=54.2.1" }
+arrow-select = { version = "=54.2.1" }
+arrow-string = { version = "=54.2.1" }
 
 [workspace]
 members = ["gdal-src", "gdal-sys"]
