@@ -455,7 +455,7 @@ dependencies = [
 
 [[package]]
 name = "gdal-src"
-version = "0.2.0"
+version = "0.2.0+3.10.2"
 dependencies = [
  "cmake",
  "curl-sys",
