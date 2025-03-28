@@ -249,7 +249,6 @@ impl<'a> MDArray<'a> {
     }
 
     #[cfg(feature = "ndarray")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "array")))]
     /// Read an [`ArrayD<T>`] from this band. T implements [`GdalType`].
     ///
     /// # Arguments

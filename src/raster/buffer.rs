@@ -134,7 +134,6 @@ impl<T: GdalType> Buffer<T> {
     }
 
     #[cfg(feature = "ndarray")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "ndarray")))]
     /// Convert `self` into an [`ndarray::Array2<T>`].
     pub fn to_array(self) -> crate::errors::Result<Array2<T>> {
         // Array2 shape is (rows, cols) and Buffer shape is (cols in x-axis, rows in y-axis)

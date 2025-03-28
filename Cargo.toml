@@ -2,7 +2,7 @@
 name = "gdal"
 description = "GDAL bindings for Rust"
 license = "MIT"
-version = "0.17.1"
+version = "0.18.0"
 authors = [
     "Alex Morega <alex@grep.ro>",
     "Johannes Drönner <droenner@informatik.uni-marburg.de>",
@@ -21,7 +21,7 @@ array = ["ndarray"]
 thiserror = "2.0"
 geo-types = { version = "0.7.11" }
 gdal-sys = { path = "gdal-sys", version = "0.10" }
-gdal-src = { path = "gdal-src", optional = true, default-features = false }
+gdal-src = { path = "gdal-src", version = "0.1.0", optional = true, default-features = false }
 ndarray = { version = "0.16", optional = true }
 chrono = { version = "0.4.26", default-features = false }
 bitflags = "2.4"
@@ -32,7 +32,17 @@ semver = "1.0"
 [dev-dependencies]
 tempfile = "3.8"
 # Only used in the example
-arrow = { version = "54.0", default-features = false, features = ["ffi"] }
+arrow = { version = "=54.2.1", default-features = false, features = ["ffi"] }
+arrow-arith = { version = "=54.2.1" }
+arrow-array = { version = "=54.2.1" }
+arrow-buffer = { version = "=54.2.1" }
+arrow-cast = { version = "=54.2.1" }
+arrow-data = { version = "=54.2.1" }
+arrow-ord = { version = "=54.2.1" }
+arrow-row = { version = "=54.2.1" }
+arrow-schema = { version = "=54.2.1" }
+arrow-select = { version = "=54.2.1" }
+arrow-string = { version = "=54.2.1" }
 
 [workspace]
 members = ["gdal-src", "gdal-sys"]
@@ -59,4 +69,5 @@ check-cfg = [
     'cfg(minor_ge_7)',
     'cfg(minor_ge_8)',
     'cfg(minor_ge_9)',
+    'cfg(minor_ge_10)',
 ]
