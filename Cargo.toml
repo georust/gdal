@@ -40,7 +40,7 @@ arrow-cast = { version = "=54.2.1" }
 arrow-data = { version = "=54.2.1" }
 arrow-ord = { version = "=54.2.1" }
 arrow-row = { version = "=54.2.1" }
-arrow-schema = { version = "=54.2.1" }
+arrow-schema = { version = "=54.3.1" }
 arrow-select = { version = "=54.2.1" }
 arrow-string = { version = "=54.2.1" }
 
