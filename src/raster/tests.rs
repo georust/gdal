@@ -785,7 +785,7 @@ fn test_raster_stats() {
     let fixture = TempFixture::fixture("tinymarble.tif");
 
     let dataset = Dataset::open(&fixture).unwrap();
-    let rb = dataset.rasterband(1).unwrap();
+    let mut rb = dataset.rasterband(1).unwrap();
 
     assert!(rb.get_statistics(false, false).unwrap().is_none());
 
@@ -804,6 +804,18 @@ fn test_raster_stats() {
         StatisticsMinMax {
             min: 0.0,
             max: 255.0,
+        }
+    );
+
+    assert!(rb.set_statistics(1.0, 2.0, 1.5, 10.0).is_ok());
+
+    assert_eq!(
+        rb.get_statistics(true, false).unwrap().unwrap(),
+        StatisticsAll {
+            min: 1.0,
+            max: 2.0,
+            mean: 1.5,
+            std_dev: 10.0,
         }
     );
 }
