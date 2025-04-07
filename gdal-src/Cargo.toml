@@ -1,6 +1,6 @@
 [package]
 name = "gdal-src"
-version = "0.2.0+3.10.2"
+version = "0.2.1+3.10.3"
 edition = "2021"
 links = "gdal_src"
 description = "Build script for compiling GDAL from source."
@@ -191,7 +191,6 @@ internal_drivers = [
     "driver_xpm",
     "driver_xyz",
     "driver_zmap",
-
     # ogr and gdal
     "driver_idrisi",
     "driver_sdts",
