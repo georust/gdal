@@ -47,7 +47,7 @@ hdf5-sys = { package = "hdf5-metno-sys", version = "0.9.1", optional = true, fea
     "deprecated",
 ] }
 netcdf-sys = { version = "0.8.1", optional = true, features = ["static"] }
-pq-src = { version = "0.3.2", optional = true, default-features = false }
+pq-src = { version = "0.3.6", optional = true, default-features = false }
 curl-sys = { version = "0.4.80", features = ["static-curl"], optional = true }
 libz-sys = { version = "1.1.15", features = ["static"], optional = true }
 geos-sys = { version = "2.0.6", optional = true }
