@@ -127,7 +127,7 @@ jobs:
           - ubuntu-latest
           - windows-latest
           - macos-13 # x86_64
-          - macos-14 # aarch64
+          - macos-15 # aarch64
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout code
@@ -163,3 +163,6 @@ jobs:
         run: cargo test --features "gdal-sys/bundled gdal-src gdal-src/driver_sqlite" --no-run
       - name: Test bundled (all features)
         run: cargo test --features "gdal-sys/bundled gdal-src gdal-src/all_drivers gdal-src/geos_static"
+      - name: Check that all files necessary to build gdal are included
+        if: matrix.os != 'macos-13'
+        run: cargo package -p gdal-src -F all_drivers
