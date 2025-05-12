@@ -1010,9 +1010,9 @@ dependencies = [
 
 [[package]]
 name = "pq-src"
-version = "0.3.6+libpq-17.4"
+version = "0.3.8+libpq-17.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5f5b04f06b634725218f5f2d0423e889c82f07890dbb859e6cbfbc7e08d49bde"
+checksum = "7ee4b24aec6c54ba0995bcc9ba17aa369db8764122980c5dbd3c70d26206dc73"
 dependencies = [
  "cc",
 ]
