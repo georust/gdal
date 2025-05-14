@@ -68,7 +68,7 @@ dependencies = [
  "arrow-data",
  "arrow-ord",
  "arrow-row",
- "arrow-schema",
+ "arrow-schema 54.3.1",
  "arrow-select",
  "arrow-string",
 ]
@@ -82,7 +82,7 @@ dependencies = [
  "arrow-array",
  "arrow-buffer",
  "arrow-data",
- "arrow-schema",
+ "arrow-schema 54.3.1",
  "chrono",
  "num",
 ]
@@ -96,7 +96,7 @@ dependencies = [
  "ahash",
  "arrow-buffer",
  "arrow-data",
- "arrow-schema",
+ "arrow-schema 54.3.1",
  "chrono",
  "half",
  "hashbrown",
@@ -123,7 +123,7 @@ dependencies = [
  "arrow-array",
  "arrow-buffer",
  "arrow-data",
- "arrow-schema",
+ "arrow-schema 54.3.1",
  "arrow-select",
  "atoi",
  "base64",
@@ -141,7 +141,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0a329fb064477c9ec5f0870d2f5130966f91055c7c5bce2b3a084f116bc28c3b"
 dependencies = [
  "arrow-buffer",
- "arrow-schema",
+ "arrow-schema 54.3.1",
  "half",
  "num",
 ]
@@ -155,7 +155,7 @@ dependencies = [
  "arrow-array",
  "arrow-buffer",
  "arrow-data",
- "arrow-schema",
+ "arrow-schema 54.3.1",
  "arrow-select",
 ]
 
@@ -168,18 +168,24 @@ dependencies = [
  "arrow-array",
  "arrow-buffer",
  "arrow-data",
- "arrow-schema",
+ "arrow-schema 54.3.1",
  "half",
 ]
 
 [[package]]
 name = "arrow-schema"
-version = "54.2.1"
+version = "54.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "85934a9d0261e0fa5d4e2a5295107d743b543a6e0484a835d4b8db2da15306f9"
+checksum = "39cfaf5e440be44db5413b75b72c2a87c1f8f0627117d110264048f2969b99e9"
 dependencies = [
  "bitflags",
 ]
+
+[[package]]
+name = "arrow-schema"
+version = "55.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "73a47aa0c771b5381de2b7f16998d351a6f4eb839f1e13d48353e17e873d969b"
 
 [[package]]
 name = "arrow-select"
@@ -191,7 +197,7 @@ dependencies = [
  "arrow-array",
  "arrow-buffer",
  "arrow-data",
- "arrow-schema",
+ "arrow-schema 54.3.1",
  "num",
 ]
 
@@ -204,7 +210,7 @@ dependencies = [
  "arrow-array",
  "arrow-buffer",
  "arrow-data",
- "arrow-schema",
+ "arrow-schema 54.3.1",
  "arrow-select",
  "memchr",
  "num",
@@ -439,7 +445,7 @@ dependencies = [
  "arrow-data",
  "arrow-ord",
  "arrow-row",
- "arrow-schema",
+ "arrow-schema 55.1.0",
  "arrow-select",
  "arrow-string",
  "bitflags",
