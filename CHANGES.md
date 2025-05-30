@@ -1,6 +1,12 @@
 # Changes
 
-## 0.18 (unreleased)
+## Unreleased
+
+### Fixed
+
+  - Bump referenced gdal version to 3.10.3
+
+## 0.18
 
 ### Breaking
 

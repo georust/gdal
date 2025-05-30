@@ -44,7 +44,7 @@ impl Dataset {
 
     /// Get the bands of a dataset.
     ///
-    /// Returns an iterator over the [`RasterBands`]s in the current [`Dataset`].
+    /// Returns an iterator over the [`RasterBand`]s in the current [`Dataset`].
     ///
     /// # Example
     ///
