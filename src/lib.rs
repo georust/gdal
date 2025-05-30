@@ -125,7 +125,7 @@ pub mod vector;
 pub mod version;
 pub mod vsi;
 
-pub use dataset::Dataset;
+pub use dataset::{Dataset, DatasetCapability};
 pub use geo_transform::{GeoTransform, GeoTransformEx};
 pub use options::{DatasetOptions, GdalOpenFlags};
 
