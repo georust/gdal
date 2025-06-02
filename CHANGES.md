@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+  - Add `bundled` and `bundled_all` feature to the gdal crate for building and statically linking a minimal bundled version of GDAL.
+
 ### Fixed
 
   - Bump referenced gdal version to 3.10.3
