@@ -37,7 +37,7 @@ arrow-arith = { version = "=54.2.1" }
 arrow-array = { version = "=54.2.1" }
 arrow-buffer = { version = "=54.2.1" }
 arrow-cast = { version = "=54.2.1" }
-arrow-data = { version = "=54.2.1" }
+arrow-data = { version = "=55.2.0" }
 arrow-ord = { version = "=54.2.1" }
 arrow-row = { version = "=54.2.1" }
 arrow-schema = { version = "=54.2.1" }
