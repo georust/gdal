@@ -97,7 +97,7 @@ fn main() {
         // #define GDAL_COMPUTE_VERSION(maj,min,rev) ((maj)*1000000+(min)*10000+(rev)*100)
         let gdal_version_number_string =
             version.major * 1_000_000 + version.minor * 10_000 + version.patch * 100;
-        println!("cargo:version_number={}", gdal_version_number_string);
+        println!("cargo:version_number={gdal_version_number_string}");
 
         let bindings_path = prebuilt_bindings_path(&version);
         std::fs::copy(&bindings_path, &out_path).expect("Can't copy bindings to output directory");
@@ -227,7 +227,7 @@ fn main() {
         // #define GDAL_COMPUTE_VERSION(maj,min,rev) ((maj)*1000000+(min)*10000+(rev)*100)
         let gdal_version_number_string =
             gdal_version.major * 1_000_000 + gdal_version.minor * 10_000 + gdal_version.patch * 100;
-        println!("cargo:version_number={}", gdal_version_number_string);
+        println!("cargo:version_number={gdal_version_number_string}");
     }
 
     #[cfg(feature = "bindgen")]
@@ -246,7 +246,7 @@ fn main() {
             {
                 panic!("Could not find `pkg-config` in your path. Please install it before building gdal-sys.");
             } else {
-                panic!("Error while running `pkg-config`: {}", pkg_config_err);
+                panic!("Error while running `pkg-config`: {pkg_config_err}");
             }
         } else {
             panic!("No GDAL version detected");
@@ -269,8 +269,7 @@ fn prebuilt_bindings_path(version: &Version) -> PathBuf {
         ("x86" | "arm", "32", false) => "gdal_i686-unknown-linux-gnu.rs",
         ("x86", "32", true) => "gdal_i686-pc-windows-gnu.rs",
         _ => panic!(
-            "No pre-built bindings available for target: {} ptr_size: {} is_windows: {}",
-            target_arch, ptr_size, is_windows
+            "No pre-built bindings available for target: {target_arch} ptr_size: {ptr_size} is_windows: {is_windows}",
         ),
     };
     let bindings_path = PathBuf::from(format!(
