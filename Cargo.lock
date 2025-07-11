@@ -729,9 +729,9 @@ dependencies = [
 
 [[package]]
 name = "libsqlite3-sys"
-version = "0.30.1"
+version = "0.32.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2e99fb7a497b1e3339bc746195567ed8d3e24945ecd636e3619d20b9de9e9149"
+checksum = "fbb8270bb4060bd76c6e96f20c52d80620f1d82a3470885694e41e0f81ef6fe7"
 dependencies = [
  "cc",
  "pkg-config",
@@ -1038,9 +1038,9 @@ dependencies = [
 
 [[package]]
 name = "proj-sys"
-version = "0.25.0"
+version = "0.26.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "533a4ed2ab59f7605ecea26db7ed76572d30aed9d2a6a90738bc7f7e7b5a11d8"
+checksum = "a208129995443a4c475464c33308274be1578993b0ad266c9139188ed0dc7e91"
 dependencies = [
  "cmake",
  "flate2",
