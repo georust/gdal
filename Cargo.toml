@@ -30,7 +30,7 @@ bitflags = "2.4"
 semver = "1.0"
 
 [dev-dependencies]
-tempfile = "3.8"
+tempfile = "3.21"
 # Only used in the example
 arrow = { version = "=54.2.1", default-features = false, features = ["ffi"] }
 arrow-arith = { version = "=54.2.1" }
