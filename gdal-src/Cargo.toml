@@ -1,6 +1,6 @@
 [package]
 name = "gdal-src"
-version = "0.2.1+3.10.3"
+version = "0.3.0+3.11.4"
 edition = "2021"
 links = "gdal_src"
 description = "Build script for compiling GDAL from source."

@@ -2,9 +2,9 @@
 
 ## Unreleased
 
-### Fixed
+### Added
 
-  - Bump referenced gdal version to 3.10.3
+  - Add pre-built bindings for GDAL 3.11 ([#663](https://github.com/georust/gdal/pull/663))
 
 ## 0.18
 

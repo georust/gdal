@@ -29,8 +29,10 @@ fn test_manually_registering_drivers() {
     assert!(Dataset::open(fixture("tinymarble.tif")).is_ok());
 
     let driver = DriverManager::get_driver_by_name("GTiff").unwrap();
-
     DriverManager::deregister_driver(&driver);
+    if let Ok(driver) = DriverManager::get_driver_by_name("LIBERTIFF") {
+        DriverManager::deregister_driver(&driver);
+    }
 
     assert!(Dataset::open(fixture("tinymarble.tif")).is_err());
 

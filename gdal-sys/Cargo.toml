@@ -11,10 +11,10 @@ rust-version = "1.64"
 links = "gdal"
 
 [dependencies]
-gdal-src = { version = "0.2.0", path = "../gdal-src/", optional = true }
+gdal-src = { version = "0.3.0", path = "../gdal-src/", optional = true }
 
 [build-dependencies]
-bindgen = { version = "0.71", optional = true }
+bindgen = { version = "0.72", optional = true }
 pkg-config = "0.3"
 semver = "1.0"
 

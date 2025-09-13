@@ -38,7 +38,7 @@ As a general rule, only GDAL versions in Ubuntu LTS-1 (previous LTS version, tha
 `gdal-sys` might support earlier versions using the `bindgen` feature flag, but `gdal` does not.
 
 Building this crate assumes a compatible version of GDAL is installed with the corresponding header files and shared libraries.
-This repository includes pre-generated bindings for GDAL 3.4 through 3.10 (see the `gdal-sys/prebuilt-bindings` directory).
+This repository includes pre-generated bindings for GDAL 3.4 through 3.11 (see the `gdal-sys/prebuilt-bindings` directory).
 If you're compiling against another version of GDAL, you can enable the `bindgen` feature flag to have the bindings generated on the fly.
 
 ## Community
