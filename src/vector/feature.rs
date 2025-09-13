@@ -608,7 +608,7 @@ impl<'a> Feature<'a> {
         count as usize
     }
 
-    pub fn fields(&self) -> FieldValueIterator {
+    pub fn fields(&self) -> FieldValueIterator<'_> {
         FieldValueIterator::with_feature(self)
     }
 }

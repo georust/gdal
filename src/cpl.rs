@@ -257,7 +257,7 @@ impl CslStringList {
     }
 
     /// Get an iterator over the `name=value` elements of the list.
-    pub fn iter(&self) -> CslStringListIterator {
+    pub fn iter(&self) -> CslStringListIterator<'_> {
         CslStringListIterator::new(self)
     }
 

@@ -234,7 +234,7 @@ pub trait LayerAccess: Sized {
     /// Not all drivers support this efficiently; however, the call should always work if the
     /// feature exists, as a fallback implementation just scans all the features in the layer
     /// looking for the desired feature.
-    fn feature(&self, fid: u64) -> Option<Feature> {
+    fn feature(&self, fid: u64) -> Option<Feature<'_>> {
         let c_feature = unsafe { gdal_sys::OGR_L_GetFeature(self.c_layer(), fid as i64) };
         if c_feature.is_null() {
             None
@@ -248,7 +248,7 @@ pub trait LayerAccess: Sized {
     /// This method doesn't reset the layer, but the returned iterator does so when dropped.
     ///
     /// The iterator also borrows the layer mutably, preventing other overlapping borrows.
-    fn features(&mut self) -> FeatureIterator {
+    fn features(&mut self) -> FeatureIterator<'_> {
         FeatureIterator::_with_layer(self)
     }
 
@@ -572,7 +572,7 @@ impl FieldDefn {
 
 /// [Layer] related methods for [Dataset].
 impl Dataset {
-    fn child_layer(&self, c_layer: OGRLayerH) -> Layer {
+    fn child_layer(&self, c_layer: OGRLayerH) -> Layer<'_> {
         unsafe { Layer::from_c_layer(self, c_layer) }
     }
 
@@ -589,7 +589,7 @@ impl Dataset {
     ///
     /// Applies to vector datasets, and fetches by the given
     /// _0-based_ index.
-    pub fn layer(&self, idx: usize) -> Result<Layer> {
+    pub fn layer(&self, idx: usize) -> Result<Layer<'_>> {
         let idx = c_int::try_from(idx)?;
         let c_layer = unsafe { gdal_sys::GDALDatasetGetLayer(self.c_dataset(), idx) };
         if c_layer.is_null() {
@@ -612,7 +612,7 @@ impl Dataset {
     }
 
     /// Fetch a layer by name.
-    pub fn layer_by_name(&self, name: &str) -> Result<Layer> {
+    pub fn layer_by_name(&self, name: &str) -> Result<Layer<'_>> {
         let c_name = CString::new(name)?;
         let c_layer =
             unsafe { gdal_sys::GDALDatasetGetLayerByName(self.c_dataset(), c_name.as_ptr()) };
@@ -634,7 +634,7 @@ impl Dataset {
     }
 
     /// Returns an iterator over the layers of the dataset.
-    pub fn layers(&self) -> LayerIterator {
+    pub fn layers(&self) -> LayerIterator<'_> {
         LayerIterator::with_dataset(self)
     }
 
@@ -667,7 +667,7 @@ impl Dataset {
     ///     ..Default::default()
     /// }).unwrap();
     /// ```
-    pub fn create_layer(&mut self, options: LayerOptions<'_>) -> Result<Layer> {
+    pub fn create_layer(&mut self, options: LayerOptions<'_>) -> Result<Layer<'_>> {
         let c_name = CString::new(options.name)?;
         let c_srs = match options.srs {
             Some(srs) => srs.to_c_hsrs(),

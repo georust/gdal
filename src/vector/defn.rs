@@ -36,7 +36,7 @@ impl Defn {
     }
 
     /// Iterate over the field schema of this layer.
-    pub fn fields(&self) -> FieldIterator {
+    pub fn fields(&self) -> FieldIterator<'_> {
         let total = unsafe { gdal_sys::OGR_FD_GetFieldCount(self.c_defn) } as isize;
         FieldIterator {
             defn: self,
@@ -47,7 +47,7 @@ impl Defn {
     }
 
     /// Iterate over the geometry field schema of this layer.
-    pub fn geom_fields(&self) -> GeomFieldIterator {
+    pub fn geom_fields(&self) -> GeomFieldIterator<'_> {
         let total = unsafe { gdal_sys::OGR_FD_GetGeomFieldCount(self.c_defn) } as isize;
         GeomFieldIterator {
             defn: self,

@@ -221,7 +221,7 @@ pub trait Metadata: MajorObject {
     /// DERIVED_SUBDATASETS: DERIVED_SUBDATASET_1_NAME=DERIVED_SUBDATASET:LOGAMPLITUDE:fixtures/tinymarble.tif
     /// DERIVED_SUBDATASETS: DERIVED_SUBDATASET_1_DESC=log10 of amplitude of input bands from fixtures/tinymarble.tif
     /// ```
-    fn metadata(&self) -> MetadataIter
+    fn metadata(&self) -> MetadataIter<'_>
     where
         Self: Sized,
     {
