@@ -103,7 +103,7 @@ impl Dataset {
         query: S,
         spatial_filter: Option<&Geometry>,
         dialect: Dialect,
-    ) -> Result<Option<ResultSet>> {
+    ) -> Result<Option<ResultSet<'_>>> {
         let query = CString::new(query.as_ref())?;
 
         let dialect_c_str = match dialect {
@@ -120,7 +120,7 @@ impl Dataset {
         query: CString,
         spatial_filter: Option<&Geometry>,
         dialect_c_str: Option<&CStr>,
-    ) -> Result<Option<sql::ResultSet>> {
+    ) -> Result<Option<sql::ResultSet<'_>>> {
         let mut filter_geom: OGRGeometryH = std::ptr::null_mut();
 
         let dialect_ptr = match dialect_c_str {

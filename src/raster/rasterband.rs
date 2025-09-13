@@ -30,7 +30,7 @@ impl Dataset {
     ///
     /// # Errors
     /// Returns an error if the band cannot be read, including in the case the index is 0.
-    pub fn rasterband(&self, band_index: usize) -> Result<RasterBand> {
+    pub fn rasterband(&self, band_index: usize) -> Result<RasterBand<'_>> {
         let band_index = c_int::try_from(band_index)?;
 
         unsafe {
@@ -56,7 +56,7 @@ impl Dataset {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn rasterbands(&self) -> impl Iterator<Item = Result<RasterBand>> {
+    pub fn rasterbands(&self) -> impl Iterator<Item = Result<RasterBand<'_>>> {
         (1..=self.raster_count()).map(|idx| self.rasterband(idx))
     }
 
@@ -855,7 +855,7 @@ impl<'a> RasterBand<'a> {
     }
 
     /// Get the color table for this band if it has one.
-    pub fn color_table(&self) -> Option<ColorTable> {
+    pub fn color_table(&self) -> Option<ColorTable<'_>> {
         let c_color_table = unsafe { gdal_sys::GDALGetRasterColorTable(self.c_rasterband) };
         if c_color_table.is_null() {
             return None;
@@ -978,7 +978,7 @@ impl<'a> RasterBand<'a> {
     }
 
     /// Open the mask-`Rasterband`
-    pub fn open_mask_band(&self) -> Result<RasterBand> {
+    pub fn open_mask_band(&self) -> Result<RasterBand<'_>> {
         unsafe {
             let mask_band_ptr = gdal_sys::GDALGetMaskBand(self.c_rasterband);
             if mask_band_ptr.is_null() {

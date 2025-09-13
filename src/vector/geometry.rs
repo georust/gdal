@@ -293,7 +293,7 @@ impl Geometry {
     }
 
     /// Get a reference to the geometry at given `index`
-    pub fn get_geometry(&self, index: usize) -> GeometryRef {
+    pub fn get_geometry(&self, index: usize) -> GeometryRef<'_> {
         let geom = unsafe { self.get_unowned_geometry(index) };
         GeometryRef {
             geom,

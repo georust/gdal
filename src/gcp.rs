@@ -141,7 +141,7 @@ impl Dataset {
     /// Fetch GCPs.
     ///
     /// See: [`GDALDataset::GetGCPs`](https://gdal.org/api/gdaldataset_cpp.html#_CPPv4N11GDALDataset7GetGCPsEv)
-    pub fn gcps(&self) -> &[GcpRef] {
+    pub fn gcps(&self) -> &[GcpRef<'_>] {
         let len = unsafe { gdal_sys::GDALGetGCPCount(self.c_dataset()) };
         if len == 0 {
             return &[];

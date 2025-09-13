@@ -99,7 +99,7 @@ impl<'a> MDArray<'a> {
         unsafe { GDALMDArrayGetTotalElementsCount(self.c_mdarray) }
     }
 
-    pub fn dimensions(&self) -> Result<Vec<Dimension>> {
+    pub fn dimensions(&self) -> Result<Vec<Dimension<'_>>> {
         let mut num_dimensions: usize = 0;
 
         let c_dimensions = unsafe { GDALMDArrayGetDimensions(self.c_mdarray, &mut num_dimensions) };
@@ -509,7 +509,7 @@ impl<'a> Group<'a> {
         }
     }
 
-    pub fn open_md_array(&self, name: &str, options: CslStringList) -> Result<MDArray> {
+    pub fn open_md_array(&self, name: &str, options: CslStringList) -> Result<MDArray<'_>> {
         let name = CString::new(name)?;
 
         unsafe {
@@ -551,7 +551,7 @@ impl<'a> Group<'a> {
         }
     }
 
-    pub fn dimensions(&self, options: CslStringList) -> Result<Vec<Dimension>> {
+    pub fn dimensions(&self, options: CslStringList) -> Result<Vec<Dimension<'_>>> {
         unsafe {
             let mut num_dimensions: usize = 0;
             let c_dimensions =
@@ -622,7 +622,7 @@ impl<'a> Dimension<'a> {
         _string(c_ptr).unwrap_or_default()
     }
 
-    pub fn indexing_variable(&self) -> MDArray {
+    pub fn indexing_variable(&self) -> MDArray<'_> {
         unsafe {
             let c_md_array = GDALDimensionGetIndexingVariable(self.c_dimension);
 
@@ -823,7 +823,7 @@ impl Dataset {
     /// You must have opened the dataset with the `GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER`
     /// flag in order for it to work.
     ///
-    pub fn root_group(&self) -> Result<Group> {
+    pub fn root_group(&self) -> Result<Group<'_>> {
         unsafe {
             let c_group = gdal_sys::GDALDatasetGetRootGroup(self.c_dataset());
             if c_group.is_null() {
