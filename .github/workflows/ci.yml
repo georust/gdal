@@ -156,15 +156,15 @@ jobs:
       # drivers do not change the rust code
       # enable `driver_sqlite` to force statically linking libsqlite3 for proj
       - name: Check with Clippy (bundled)
-        run: cargo clippy --all-targets --features "gdal-sys/bundled gdal-src gdal-src/driver_sqlite" -- -D warnings
+        run: cargo clippy --all-targets --features bundled -- -D warnings
       # we only build tests here as we have disabled features
       # that are required for running tests
       - name: Build bundled gdal (minimal features)
         # we use cargo test --no-run here because
         # tests do not pass due to missing libgeos but we want to have a complete build (including linking)
-        run: cargo test --features "gdal-sys/bundled gdal-src gdal-src/driver_sqlite" --no-run
+        run: cargo test --features bundled --no-run
       - name: Test bundled (all features)
-        run: cargo test --features "gdal-sys/bundled gdal-src gdal-src/all_drivers gdal-src/geos_static"
+        run: cargo test --features bundled_all
       - name: Check that all files necessary to build gdal are included
         if: matrix.os != 'macos-13'
         run: cargo package -p gdal-src -F all_drivers

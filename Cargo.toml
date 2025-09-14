@@ -16,6 +16,8 @@ rust-version = "1.80"
 default = []
 bindgen = ["gdal-sys/bindgen"]
 array = ["ndarray"]
+bundled = ["gdal-sys/bundled", "gdal-src", "gdal-src/driver_sqlite"]
+bundled_all = ["gdal-sys/bundled", "gdal-src", "gdal-src/all_drivers", "gdal-src/geos_static"]
 
 [dependencies]
 thiserror = "2.0"
