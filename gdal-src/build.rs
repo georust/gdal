@@ -332,6 +332,9 @@ fn main() {
         config.cxxflag("-DPROJ_DLL=");
         // that windows library is somehow required
         println!("cargo:rustc-link-lib=Wbemuuid");
+        // proj uses these two on Windows
+        println!("cargo:rustc-link-lib=Ole32");
+        println!("cargo:rustc-link-lib=Shell32");
     }
 
     let res = config.build();
