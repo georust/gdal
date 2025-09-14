@@ -172,13 +172,13 @@ pub type GInt64 = GIntBig;
 pub type GUInt64 = GUIntBig;
 pub type GPtrDiff_t = GIntBig;
 pub type CSLConstList = *mut *mut ::std::ffi::c_char;
-unsafe extern "C" {
+extern "C" {
     pub fn CPLAtomicAdd(
         ptr: *mut ::std::ffi::c_int,
         increment: ::std::ffi::c_int,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLAtomicCompareAndExchange(
         ptr: *mut ::std::ffi::c_int,
         oldval: ::std::ffi::c_int,
@@ -192,28 +192,28 @@ pub type GDALProgressFunc = ::std::option::Option<
         pProgressArg: *mut ::std::ffi::c_void,
     ) -> ::std::ffi::c_int,
 >;
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDummyProgress(
         arg1: f64,
         arg2: *const ::std::ffi::c_char,
         arg3: *mut ::std::ffi::c_void,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALTermProgress(
         arg1: f64,
         arg2: *const ::std::ffi::c_char,
         arg3: *mut ::std::ffi::c_void,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALScaledProgress(
         arg1: f64,
         arg2: *const ::std::ffi::c_char,
         arg3: *mut ::std::ffi::c_void,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALCreateScaledProgress(
         arg1: f64,
         arg2: f64,
@@ -221,7 +221,7 @@ unsafe extern "C" {
         arg4: *mut ::std::ffi::c_void,
     ) -> *mut ::std::ffi::c_void;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDestroyScaledProgress(arg1: *mut ::std::ffi::c_void);
 }
 #[repr(C)]
@@ -264,29 +264,29 @@ const _: () = {
     ["Offset of field: stat::__glibc_reserved"]
         [::std::mem::offset_of!(stat, __glibc_reserved) - 120usize];
 };
-unsafe extern "C" {
+extern "C" {
     pub fn VSIFOpen(arg1: *const ::std::ffi::c_char, arg2: *const ::std::ffi::c_char) -> *mut FILE;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIFClose(arg1: *mut FILE) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIFSeek(
         arg1: *mut FILE,
         arg2: ::std::ffi::c_long,
         arg3: ::std::ffi::c_int,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIFTell(arg1: *mut FILE) -> ::std::ffi::c_long;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIRewind(arg1: *mut FILE);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIFFlush(arg1: *mut FILE);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIFRead(
         arg1: *mut ::std::ffi::c_void,
         arg2: usize,
@@ -294,7 +294,7 @@ unsafe extern "C" {
         arg4: *mut FILE,
     ) -> usize;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIFWrite(
         arg1: *const ::std::ffi::c_void,
         arg2: usize,
@@ -302,33 +302,33 @@ unsafe extern "C" {
         arg4: *mut FILE,
     ) -> usize;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIFGets(
         arg1: *mut ::std::ffi::c_char,
         arg2: ::std::ffi::c_int,
         arg3: *mut FILE,
     ) -> *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIFPuts(arg1: *const ::std::ffi::c_char, arg2: *mut FILE) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIFPrintf(arg1: *mut FILE, arg2: *const ::std::ffi::c_char, ...) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIFGetc(arg1: *mut FILE) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIFPutc(arg1: ::std::ffi::c_int, arg2: *mut FILE) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIUngetc(arg1: ::std::ffi::c_int, arg2: *mut FILE) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIFEof(arg1: *mut FILE) -> ::std::ffi::c_int;
 }
 pub type VSIStatBuf = stat;
-unsafe extern "C" {
+extern "C" {
     pub fn VSIStat(arg1: *const ::std::ffi::c_char, arg2: *mut VSIStatBuf) -> ::std::ffi::c_int;
 }
 pub type vsi_l_offset = GUIntBig;
@@ -338,20 +338,20 @@ pub struct VSIVirtualHandle {
     _unused: [u8; 0],
 }
 pub type VSILFILE = VSIVirtualHandle;
-unsafe extern "C" {
+extern "C" {
     pub fn VSIFOpenL(
         arg1: *const ::std::ffi::c_char,
         arg2: *const ::std::ffi::c_char,
     ) -> *mut VSILFILE;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIFOpenExL(
         arg1: *const ::std::ffi::c_char,
         arg2: *const ::std::ffi::c_char,
         arg3: ::std::ffi::c_int,
     ) -> *mut VSILFILE;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIFOpenEx2L(
         arg1: *const ::std::ffi::c_char,
         arg2: *const ::std::ffi::c_char,
@@ -359,23 +359,23 @@ unsafe extern "C" {
         arg4: CSLConstList,
     ) -> *mut VSILFILE;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIFCloseL(arg1: *mut VSILFILE) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIFSeekL(
         arg1: *mut VSILFILE,
         arg2: vsi_l_offset,
         arg3: ::std::ffi::c_int,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIFTellL(arg1: *mut VSILFILE) -> vsi_l_offset;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIRewindL(arg1: *mut VSILFILE);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIFReadL(
         arg1: *mut ::std::ffi::c_void,
         arg2: usize,
@@ -383,7 +383,7 @@ unsafe extern "C" {
         arg4: *mut VSILFILE,
     ) -> usize;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIFReadMultiRangeL(
         nRanges: ::std::ffi::c_int,
         ppData: *mut *mut ::std::ffi::c_void,
@@ -392,7 +392,7 @@ unsafe extern "C" {
         arg1: *mut VSILFILE,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIFWriteL(
         arg1: *const ::std::ffi::c_void,
         arg2: usize,
@@ -400,29 +400,29 @@ unsafe extern "C" {
         arg4: *mut VSILFILE,
     ) -> usize;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIFClearErrL(arg1: *mut VSILFILE);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIFErrorL(arg1: *mut VSILFILE) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIFEofL(arg1: *mut VSILFILE) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIFTruncateL(arg1: *mut VSILFILE, arg2: vsi_l_offset) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIFFlushL(arg1: *mut VSILFILE) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIFPrintfL(
         arg1: *mut VSILFILE,
         arg2: *const ::std::ffi::c_char,
         ...
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIFPutcL(arg1: ::std::ffi::c_int, arg2: *mut VSILFILE) -> ::std::ffi::c_int;
 }
 pub mod VSIRangeStatus {
@@ -431,14 +431,14 @@ pub mod VSIRangeStatus {
     pub const VSI_RANGE_STATUS_DATA: Type = 1;
     pub const VSI_RANGE_STATUS_HOLE: Type = 2;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIFGetRangeStatusL(
         fp: *mut VSILFILE,
         nStart: vsi_l_offset,
         nLength: vsi_l_offset,
     ) -> VSIRangeStatus::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIIngestFile(
         fp: *mut VSILFILE,
         pszFilename: *const ::std::ffi::c_char,
@@ -447,7 +447,7 @@ unsafe extern "C" {
         nMaxSize: GIntBig,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIOverwriteFile(
         fpTarget: *mut VSILFILE,
         pszSourceFilename: *const ::std::ffi::c_char,
@@ -459,71 +459,71 @@ pub struct stat64 {
     _unused: [u8; 0],
 }
 pub type VSIStatBufL = stat64;
-unsafe extern "C" {
+extern "C" {
     pub fn VSIStatL(arg1: *const ::std::ffi::c_char, arg2: *mut VSIStatBufL) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIStatExL(
         pszFilename: *const ::std::ffi::c_char,
         psStatBuf: *mut VSIStatBufL,
         nFlags: ::std::ffi::c_int,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIIsCaseSensitiveFS(pszFilename: *const ::std::ffi::c_char) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSISupportsSparseFiles(pszPath: *const ::std::ffi::c_char) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIIsLocal(pszPath: *const ::std::ffi::c_char) -> bool;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIGetCanonicalFilename(pszPath: *const ::std::ffi::c_char) -> *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSISupportsSequentialWrite(
         pszPath: *const ::std::ffi::c_char,
         bAllowLocalTempFile: bool,
     ) -> bool;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSISupportsRandomWrite(
         pszPath: *const ::std::ffi::c_char,
         bAllowLocalTempFile: bool,
     ) -> bool;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIHasOptimizedReadMultiRange(pszPath: *const ::std::ffi::c_char) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIGetActualURL(pszFilename: *const ::std::ffi::c_char) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIGetSignedURL(
         pszFilename: *const ::std::ffi::c_char,
         papszOptions: CSLConstList,
     ) -> *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIGetFileSystemOptions(
         pszFilename: *const ::std::ffi::c_char,
     ) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIGetFileSystemsPrefixes() -> *mut *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIFGetNativeFileDescriptorL(arg1: *mut VSILFILE) -> *mut ::std::ffi::c_void;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIGetFileMetadata(
         pszFilename: *const ::std::ffi::c_char,
         pszDomain: *const ::std::ffi::c_char,
         papszOptions: CSLConstList,
     ) -> *mut *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSISetFileMetadata(
         pszFilename: *const ::std::ffi::c_char,
         papszMetadata: CSLConstList,
@@ -531,85 +531,85 @@ unsafe extern "C" {
         papszOptions: CSLConstList,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSISetPathSpecificOption(
         pszPathPrefix: *const ::std::ffi::c_char,
         pszKey: *const ::std::ffi::c_char,
         pszValue: *const ::std::ffi::c_char,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIClearPathSpecificOptions(pszPathPrefix: *const ::std::ffi::c_char);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIGetPathSpecificOption(
         pszPath: *const ::std::ffi::c_char,
         pszKey: *const ::std::ffi::c_char,
         pszDefault: *const ::std::ffi::c_char,
     ) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSISetCredential(
         pszPathPrefix: *const ::std::ffi::c_char,
         pszKey: *const ::std::ffi::c_char,
         pszValue: *const ::std::ffi::c_char,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIClearCredentials(pszPathPrefix: *const ::std::ffi::c_char);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIGetCredential(
         pszPath: *const ::std::ffi::c_char,
         pszKey: *const ::std::ffi::c_char,
         pszDefault: *const ::std::ffi::c_char,
     ) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSICalloc(arg1: usize, arg2: usize) -> *mut ::std::ffi::c_void;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIMalloc(arg1: usize) -> *mut ::std::ffi::c_void;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIFree(arg1: *mut ::std::ffi::c_void);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIRealloc(arg1: *mut ::std::ffi::c_void, arg2: usize) -> *mut ::std::ffi::c_void;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIStrdup(arg1: *const ::std::ffi::c_char) -> *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIMallocAligned(nAlignment: usize, nSize: usize) -> *mut ::std::ffi::c_void;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIMallocAlignedAuto(nSize: usize) -> *mut ::std::ffi::c_void;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIFreeAligned(ptr: *mut ::std::ffi::c_void);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIMallocAlignedAutoVerbose(
         nSize: usize,
         pszFile: *const ::std::ffi::c_char,
         nLine: ::std::ffi::c_int,
     ) -> *mut ::std::ffi::c_void;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIMalloc2(nSize1: usize, nSize2: usize) -> *mut ::std::ffi::c_void;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIMalloc3(nSize1: usize, nSize2: usize, nSize3: usize) -> *mut ::std::ffi::c_void;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIMallocVerbose(
         nSize: usize,
         pszFile: *const ::std::ffi::c_char,
         nLine: ::std::ffi::c_int,
     ) -> *mut ::std::ffi::c_void;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIMalloc2Verbose(
         nSize1: usize,
         nSize2: usize,
@@ -617,7 +617,7 @@ unsafe extern "C" {
         nLine: ::std::ffi::c_int,
     ) -> *mut ::std::ffi::c_void;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIMalloc3Verbose(
         nSize1: usize,
         nSize2: usize,
@@ -626,7 +626,7 @@ unsafe extern "C" {
         nLine: ::std::ffi::c_int,
     ) -> *mut ::std::ffi::c_void;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSICallocVerbose(
         nCount: usize,
         nSize: usize,
@@ -634,7 +634,7 @@ unsafe extern "C" {
         nLine: ::std::ffi::c_int,
     ) -> *mut ::std::ffi::c_void;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIReallocVerbose(
         pOldPtr: *mut ::std::ffi::c_void,
         nNewSize: usize,
@@ -642,35 +642,35 @@ unsafe extern "C" {
         nLine: ::std::ffi::c_int,
     ) -> *mut ::std::ffi::c_void;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIStrdupVerbose(
         pszStr: *const ::std::ffi::c_char,
         pszFile: *const ::std::ffi::c_char,
         nLine: ::std::ffi::c_int,
     ) -> *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLGetPhysicalRAM() -> GIntBig;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLGetUsablePhysicalRAM() -> GIntBig;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIReadDir(arg1: *const ::std::ffi::c_char) -> *mut *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIReadDirRecursive(pszPath: *const ::std::ffi::c_char) -> *mut *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIReadDirEx(
         pszPath: *const ::std::ffi::c_char,
         nMaxFiles: ::std::ffi::c_int,
     ) -> *mut *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSISiblingFiles(pszPath: *const ::std::ffi::c_char) -> *mut *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIGlob(
         pszPattern: *const ::std::ffi::c_char,
         papszOptions: *const *const ::std::ffi::c_char,
@@ -678,7 +678,7 @@ unsafe extern "C" {
         pProgressData: *mut ::std::ffi::c_void,
     ) -> *mut *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIGetDirectorySeparator(
         pszPath: *const ::std::ffi::c_char,
     ) -> *const ::std::ffi::c_char;
@@ -688,7 +688,7 @@ unsafe extern "C" {
 pub struct VSIDIR {
     _unused: [u8; 0],
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIOpenDir(
         pszPath: *const ::std::ffi::c_char,
         nRecurseDepth: ::std::ffi::c_int,
@@ -725,43 +725,43 @@ const _: () = {
     ["Offset of field: VSIDIREntry::papszExtra"]
         [::std::mem::offset_of!(VSIDIREntry, papszExtra) - 40usize];
 };
-unsafe extern "C" {
+extern "C" {
     pub fn VSIGetNextDirEntry(dir: *mut VSIDIR) -> *const VSIDIREntry;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSICloseDir(dir: *mut VSIDIR);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIMkdir(
         pszPathname: *const ::std::ffi::c_char,
         mode: ::std::ffi::c_long,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIMkdirRecursive(
         pszPathname: *const ::std::ffi::c_char,
         mode: ::std::ffi::c_long,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIRmdir(pszDirname: *const ::std::ffi::c_char) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIRmdirRecursive(pszDirname: *const ::std::ffi::c_char) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIUnlink(pszFilename: *const ::std::ffi::c_char) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIUnlinkBatch(papszFiles: CSLConstList) -> *mut ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIRename(
         oldpath: *const ::std::ffi::c_char,
         newpath: *const ::std::ffi::c_char,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIMove(
         oldpath: *const ::std::ffi::c_char,
         newpath: *const ::std::ffi::c_char,
@@ -770,7 +770,7 @@ unsafe extern "C" {
         pProgressData: *mut ::std::ffi::c_void,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSICopyFile(
         pszSource: *const ::std::ffi::c_char,
         pszTarget: *const ::std::ffi::c_char,
@@ -781,7 +781,7 @@ unsafe extern "C" {
         pProgressData: *mut ::std::ffi::c_void,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSICopyFileRestartable(
         pszSource: *const ::std::ffi::c_char,
         pszTarget: *const ::std::ffi::c_char,
@@ -792,7 +792,7 @@ unsafe extern "C" {
         pProgressData: *mut ::std::ffi::c_void,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSISync(
         pszSource: *const ::std::ffi::c_char,
         pszTarget: *const ::std::ffi::c_char,
@@ -802,7 +802,7 @@ unsafe extern "C" {
         ppapszOutputs: *mut *mut *mut ::std::ffi::c_char,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIMultipartUploadGetCapabilities(
         pszFilename: *const ::std::ffi::c_char,
         pbNonSequentialUploadSupported: *mut ::std::ffi::c_int,
@@ -813,13 +813,13 @@ unsafe extern "C" {
         pnMaxPartCount: *mut ::std::ffi::c_int,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIMultipartUploadStart(
         pszFilename: *const ::std::ffi::c_char,
         papszOptions: CSLConstList,
     ) -> *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIMultipartUploadAddPart(
         pszFilename: *const ::std::ffi::c_char,
         pszUploadId: *const ::std::ffi::c_char,
@@ -830,7 +830,7 @@ unsafe extern "C" {
         papszOptions: CSLConstList,
     ) -> *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIMultipartUploadEnd(
         pszFilename: *const ::std::ffi::c_char,
         pszUploadId: *const ::std::ffi::c_char,
@@ -840,133 +840,133 @@ unsafe extern "C" {
         papszOptions: CSLConstList,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIMultipartUploadAbort(
         pszFilename: *const ::std::ffi::c_char,
         pszUploadId: *const ::std::ffi::c_char,
         papszOptions: CSLConstList,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIAbortPendingUploads(pszFilename: *const ::std::ffi::c_char) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIStrerror(arg1: ::std::ffi::c_int) -> *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIGetDiskFreeSpace(pszDirname: *const ::std::ffi::c_char) -> GIntBig;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSINetworkStatsReset();
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSINetworkStatsGetAsSerializedJSON(
         papszOptions: *mut *mut ::std::ffi::c_char,
     ) -> *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIInstallMemFileHandler();
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIInstallLargeFileHandler();
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIInstallSubFileHandler();
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIInstallCurlFileHandler();
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSICurlClearCache();
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSICurlPartialClearCache(pszFilenamePrefix: *const ::std::ffi::c_char);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIInstallCurlStreamingFileHandler();
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIInstallS3FileHandler();
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIInstallS3StreamingFileHandler();
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIInstallGSFileHandler();
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIInstallGSStreamingFileHandler();
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIInstallAzureFileHandler();
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIInstallAzureStreamingFileHandler();
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIInstallADLSFileHandler();
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIInstallOSSFileHandler();
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIInstallOSSStreamingFileHandler();
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIInstallSwiftFileHandler();
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIInstallSwiftStreamingFileHandler();
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIInstall7zFileHandler();
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIInstallRarFileHandler();
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIInstallGZipFileHandler();
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIInstallZipFileHandler();
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIInstallStdinHandler();
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIInstallHdfsHandler();
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIInstallWebHdfsHandler();
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIInstallStdoutHandler();
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIInstallSparseFileHandler();
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIInstallTarFileHandler();
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIInstallCachedFileHandler();
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIInstallCryptFileHandler();
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSISetCryptKey(pabyKey: *const GByte, nKeySize: ::std::ffi::c_int);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSICleanupFileManager();
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIDuplicateFileSystemHandler(
         pszSourceFSName: *const ::std::ffi::c_char,
         pszNewFSName: *const ::std::ffi::c_char,
     ) -> bool;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIFileFromMemBuffer(
         pszFilename: *const ::std::ffi::c_char,
         pabyData: *mut GByte,
@@ -974,14 +974,14 @@ unsafe extern "C" {
         bTakeOwnership: ::std::ffi::c_int,
     ) -> *mut VSILFILE;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIGetMemFileBuffer(
         pszFilename: *const ::std::ffi::c_char,
         pnDataLength: *mut vsi_l_offset,
         bUnlinkAndSeize: ::std::ffi::c_int,
     ) -> *mut GByte;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIMemGenerateHiddenFilename(
         pszFilename: *const ::std::ffi::c_char,
     ) -> *const ::std::ffi::c_char;
@@ -994,7 +994,7 @@ pub type VSIWriteFunction = ::std::option::Option<
         stream: *mut FILE,
     ) -> usize,
 >;
-unsafe extern "C" {
+extern "C" {
     pub fn VSIStdoutSetRedirection(pFct: VSIWriteFunction, stream: *mut FILE);
 }
 pub type VSIFilesystemPluginStatCallback = ::std::option::Option<
@@ -1203,31 +1203,31 @@ const _: () = {
     ["Offset of field: VSIFilesystemPluginCallbacksStruct::clear_err"]
         [::std::mem::offset_of!(VSIFilesystemPluginCallbacksStruct, clear_err) - 184usize];
 };
-unsafe extern "C" {
+extern "C" {
     pub fn VSIAllocFilesystemPluginCallbacksStruct() -> *mut VSIFilesystemPluginCallbacksStruct;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIFreeFilesystemPluginCallbacksStruct(poCb: *mut VSIFilesystemPluginCallbacksStruct);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIInstallPluginHandler(
         pszPrefix: *const ::std::ffi::c_char,
         poCb: *const VSIFilesystemPluginCallbacksStruct,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIRemovePluginHandler(pszPrefix: *const ::std::ffi::c_char) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSITime(arg1: *mut ::std::ffi::c_ulong) -> ::std::ffi::c_ulong;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSICTime(arg1: ::std::ffi::c_ulong) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSIGMTime(pnTime: *const time_t, poBrokenTime: *mut tm) -> *mut tm;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn VSILocalTime(pnTime: *const time_t, poBrokenTime: *mut tm) -> *mut tm;
 }
 pub mod CPLErr {
@@ -1239,7 +1239,7 @@ pub mod CPLErr {
     pub const CE_Fatal: Type = 4;
 }
 pub type CPLErrorNum = ::std::ffi::c_int;
-unsafe extern "C" {
+extern "C" {
     pub fn CPLError(
         eErrClass: CPLErr::Type,
         err_no: CPLErrorNum,
@@ -1247,7 +1247,7 @@ unsafe extern "C" {
         ...
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLErrorV(
         arg1: CPLErr::Type,
         arg2: CPLErrorNum,
@@ -1255,148 +1255,148 @@ unsafe extern "C" {
         arg4: *mut __va_list_tag,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLEmergencyError(arg1: *const ::std::ffi::c_char) -> !;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLErrorReset();
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLGetLastErrorNo() -> CPLErrorNum;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLGetLastErrorType() -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLGetLastErrorMsg() -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLGetErrorCounter() -> GUInt32;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLGetErrorHandlerUserData() -> *mut ::std::ffi::c_void;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLErrorSetState(
         eErrClass: CPLErr::Type,
         err_no: CPLErrorNum,
         pszMsg: *const ::std::ffi::c_char,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLCallPreviousHandler(
         eErrClass: CPLErr::Type,
         err_no: CPLErrorNum,
         pszMsg: *const ::std::ffi::c_char,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLCleanupErrorMutex();
 }
 pub type CPLErrorHandler = ::std::option::Option<
     unsafe extern "C" fn(arg1: CPLErr::Type, arg2: CPLErrorNum, arg3: *const ::std::ffi::c_char),
 >;
-unsafe extern "C" {
+extern "C" {
     pub fn CPLLoggingErrorHandler(
         arg1: CPLErr::Type,
         arg2: CPLErrorNum,
         arg3: *const ::std::ffi::c_char,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLDefaultErrorHandler(
         arg1: CPLErr::Type,
         arg2: CPLErrorNum,
         arg3: *const ::std::ffi::c_char,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLQuietErrorHandler(
         arg1: CPLErr::Type,
         arg2: CPLErrorNum,
         arg3: *const ::std::ffi::c_char,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLQuietWarningsErrorHandler(
         arg1: CPLErr::Type,
         arg2: CPLErrorNum,
         arg3: *const ::std::ffi::c_char,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLTurnFailureIntoWarning(bOn: ::std::ffi::c_int);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLGetErrorHandler(ppUserData: *mut *mut ::std::ffi::c_void) -> CPLErrorHandler;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLSetErrorHandler(arg1: CPLErrorHandler) -> CPLErrorHandler;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLSetErrorHandlerEx(
         arg1: CPLErrorHandler,
         arg2: *mut ::std::ffi::c_void,
     ) -> CPLErrorHandler;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLPushErrorHandler(arg1: CPLErrorHandler);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLPushErrorHandlerEx(arg1: CPLErrorHandler, arg2: *mut ::std::ffi::c_void);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLSetCurrentErrorHandlerCatchDebug(bCatchDebug: ::std::ffi::c_int);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLPopErrorHandler();
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLDebug(arg1: *const ::std::ffi::c_char, arg2: *const ::std::ffi::c_char, ...);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLDebugProgress(arg1: *const ::std::ffi::c_char, arg2: *const ::std::ffi::c_char, ...);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLVerifyConfiguration();
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLIsDebugEnabled() -> bool;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLGetConfigOption(
         arg1: *const ::std::ffi::c_char,
         arg2: *const ::std::ffi::c_char,
     ) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLGetThreadLocalConfigOption(
         arg1: *const ::std::ffi::c_char,
         arg2: *const ::std::ffi::c_char,
     ) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLGetGlobalConfigOption(
         arg1: *const ::std::ffi::c_char,
         arg2: *const ::std::ffi::c_char,
     ) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLSetConfigOption(arg1: *const ::std::ffi::c_char, arg2: *const ::std::ffi::c_char);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLSetThreadLocalConfigOption(
         pszKey: *const ::std::ffi::c_char,
         pszValue: *const ::std::ffi::c_char,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLDeclareKnownConfigOption(
         pszKey: *const ::std::ffi::c_char,
         pszDefinition: *const ::std::ffi::c_char,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLGetKnownConfigOptions() -> *mut *mut ::std::ffi::c_char;
 }
 pub type CPLSetConfigOptionSubscriber = ::std::option::Option<
@@ -1407,75 +1407,75 @@ pub type CPLSetConfigOptionSubscriber = ::std::option::Option<
         pUserData: *mut ::std::ffi::c_void,
     ),
 >;
-unsafe extern "C" {
+extern "C" {
     pub fn CPLSubscribeToSetConfigOption(
         pfnCallback: CPLSetConfigOptionSubscriber,
         pUserData: *mut ::std::ffi::c_void,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLUnsubscribeToSetConfigOption(nSubscriberId: ::std::ffi::c_int);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLFreeConfig();
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLGetConfigOptions() -> *mut *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLSetConfigOptions(papszConfigOptions: *const *const ::std::ffi::c_char);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLGetThreadLocalConfigOptions() -> *mut *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLSetThreadLocalConfigOptions(papszConfigOptions: *const *const ::std::ffi::c_char);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLLoadConfigOptionsFromFile(
         pszFilename: *const ::std::ffi::c_char,
         bOverrideEnvVars: ::std::ffi::c_int,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLLoadConfigOptionsFromPredefinedFiles();
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLMalloc(arg1: usize) -> *mut ::std::ffi::c_void;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLCalloc(arg1: usize, arg2: usize) -> *mut ::std::ffi::c_void;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLRealloc(arg1: *mut ::std::ffi::c_void, arg2: usize) -> *mut ::std::ffi::c_void;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLStrdup(arg1: *const ::std::ffi::c_char) -> *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLStrlwr(arg1: *mut ::std::ffi::c_char) -> *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLFGets(
         arg1: *mut ::std::ffi::c_char,
         arg2: ::std::ffi::c_int,
         arg3: *mut FILE,
     ) -> *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLReadLine(arg1: *mut FILE) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLReadLineL(arg1: *mut VSILFILE) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLReadLine2L(
         arg1: *mut VSILFILE,
         arg2: ::std::ffi::c_int,
         arg3: CSLConstList,
     ) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLReadLine3L(
         arg1: *mut VSILFILE,
         arg2: ::std::ffi::c_int,
@@ -1483,39 +1483,39 @@ unsafe extern "C" {
         arg4: CSLConstList,
     ) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLAtof(arg1: *const ::std::ffi::c_char) -> f64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLAtofDelim(arg1: *const ::std::ffi::c_char, arg2: ::std::ffi::c_char) -> f64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLStrtod(arg1: *const ::std::ffi::c_char, arg2: *mut *mut ::std::ffi::c_char) -> f64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLStrtodM(arg1: *const ::std::ffi::c_char, arg2: *mut *mut ::std::ffi::c_char) -> f64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLStrtodDelim(
         arg1: *const ::std::ffi::c_char,
         arg2: *mut *mut ::std::ffi::c_char,
         arg3: ::std::ffi::c_char,
     ) -> f64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLStrtof(arg1: *const ::std::ffi::c_char, arg2: *mut *mut ::std::ffi::c_char) -> f32;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLStrtofDelim(
         arg1: *const ::std::ffi::c_char,
         arg2: *mut *mut ::std::ffi::c_char,
         arg3: ::std::ffi::c_char,
     ) -> f32;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLAtofM(arg1: *const ::std::ffi::c_char) -> f64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLScanString(
         arg1: *const ::std::ffi::c_char,
         arg2: ::std::ffi::c_int,
@@ -1523,69 +1523,69 @@ unsafe extern "C" {
         arg4: ::std::ffi::c_int,
     ) -> *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLScanDouble(arg1: *const ::std::ffi::c_char, arg2: ::std::ffi::c_int) -> f64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLScanLong(
         arg1: *const ::std::ffi::c_char,
         arg2: ::std::ffi::c_int,
     ) -> ::std::ffi::c_long;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLScanULong(
         arg1: *const ::std::ffi::c_char,
         arg2: ::std::ffi::c_int,
     ) -> ::std::ffi::c_ulong;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLScanUIntBig(arg1: *const ::std::ffi::c_char, arg2: ::std::ffi::c_int) -> GUIntBig;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLAtoGIntBig(pszString: *const ::std::ffi::c_char) -> GIntBig;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLAtoGIntBigEx(
         pszString: *const ::std::ffi::c_char,
         bWarn: ::std::ffi::c_int,
         pbOverflow: *mut ::std::ffi::c_int,
     ) -> GIntBig;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLScanPointer(
         arg1: *const ::std::ffi::c_char,
         arg2: ::std::ffi::c_int,
     ) -> *mut ::std::ffi::c_void;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLPrintString(
         arg1: *mut ::std::ffi::c_char,
         arg2: *const ::std::ffi::c_char,
         arg3: ::std::ffi::c_int,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLPrintStringFill(
         arg1: *mut ::std::ffi::c_char,
         arg2: *const ::std::ffi::c_char,
         arg3: ::std::ffi::c_int,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLPrintInt32(
         arg1: *mut ::std::ffi::c_char,
         arg2: GInt32,
         arg3: ::std::ffi::c_int,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLPrintUIntBig(
         arg1: *mut ::std::ffi::c_char,
         arg2: GUIntBig,
         arg3: ::std::ffi::c_int,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLPrintDouble(
         arg1: *mut ::std::ffi::c_char,
         arg2: *const ::std::ffi::c_char,
@@ -1593,7 +1593,7 @@ unsafe extern "C" {
         arg4: *const ::std::ffi::c_char,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLPrintTime(
         arg1: *mut ::std::ffi::c_char,
         arg2: ::std::ffi::c_int,
@@ -1602,109 +1602,109 @@ unsafe extern "C" {
         arg5: *const ::std::ffi::c_char,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLPrintPointer(
         arg1: *mut ::std::ffi::c_char,
         arg2: *mut ::std::ffi::c_void,
         arg3: ::std::ffi::c_int,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLGetSymbol(
         arg1: *const ::std::ffi::c_char,
         arg2: *const ::std::ffi::c_char,
     ) -> *mut ::std::ffi::c_void;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLGetExecPath(
         pszPathBuf: *mut ::std::ffi::c_char,
         nMaxLength: ::std::ffi::c_int,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLGetPath(arg1: *const ::std::ffi::c_char) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLGetDirname(arg1: *const ::std::ffi::c_char) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLGetBasename(arg1: *const ::std::ffi::c_char) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLGetExtension(arg1: *const ::std::ffi::c_char) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLFormFilename(
         pszPath: *const ::std::ffi::c_char,
         pszBasename: *const ::std::ffi::c_char,
         pszExtension: *const ::std::ffi::c_char,
     ) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLFormCIFilename(
         pszPath: *const ::std::ffi::c_char,
         pszBasename: *const ::std::ffi::c_char,
         pszExtension: *const ::std::ffi::c_char,
     ) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLResetExtension(
         arg1: *const ::std::ffi::c_char,
         arg2: *const ::std::ffi::c_char,
     ) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLProjectRelativeFilename(
         pszProjectDir: *const ::std::ffi::c_char,
         pszSecondaryFilename: *const ::std::ffi::c_char,
     ) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLCleanTrailingSlash(arg1: *const ::std::ffi::c_char) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLGenerateTempFilename(pszStem: *const ::std::ffi::c_char)
         -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLExpandTilde(pszFilename: *const ::std::ffi::c_char) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLLaunderForFilename(
         pszName: *const ::std::ffi::c_char,
         pszOutputPath: *const ::std::ffi::c_char,
     ) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLGetCurrentDir() -> *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLGetFilename(arg1: *const ::std::ffi::c_char) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLIsFilenameRelative(pszFilename: *const ::std::ffi::c_char) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLExtractRelativePath(
         arg1: *const ::std::ffi::c_char,
         arg2: *const ::std::ffi::c_char,
         arg3: *mut ::std::ffi::c_int,
     ) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLCorrespondingPaths(
         pszOldFilename: *const ::std::ffi::c_char,
         pszNewFilename: *const ::std::ffi::c_char,
         papszFileList: *mut *mut ::std::ffi::c_char,
     ) -> *mut *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLCheckForFile(
         pszFilename: *mut ::std::ffi::c_char,
         papszSiblingList: *mut *mut ::std::ffi::c_char,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLGetHomeDir() -> *const ::std::ffi::c_char;
 }
 pub type CPLFileFinder = ::std::option::Option<
@@ -1713,34 +1713,34 @@ pub type CPLFileFinder = ::std::option::Option<
         arg2: *const ::std::ffi::c_char,
     ) -> *const ::std::ffi::c_char,
 >;
-unsafe extern "C" {
+extern "C" {
     pub fn CPLFindFile(
         pszClass: *const ::std::ffi::c_char,
         pszBasename: *const ::std::ffi::c_char,
     ) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLDefaultFindFile(
         pszClass: *const ::std::ffi::c_char,
         pszBasename: *const ::std::ffi::c_char,
     ) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLPushFileFinder(pfnFinder: CPLFileFinder);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLPopFileFinder() -> CPLFileFinder;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLPushFinderLocation(arg1: *const ::std::ffi::c_char);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLPopFinderLocation();
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLFinderClean();
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLStat(arg1: *const ::std::ffi::c_char, arg2: *mut VSIStatBuf) -> ::std::ffi::c_int;
 }
 #[repr(C)]
@@ -1767,70 +1767,70 @@ const _: () = {
     ["Offset of field: CPLSharedFileInfo::pszAccess"]
         [::std::mem::offset_of!(CPLSharedFileInfo, pszAccess) - 24usize];
 };
-unsafe extern "C" {
+extern "C" {
     pub fn CPLOpenShared(
         arg1: *const ::std::ffi::c_char,
         arg2: *const ::std::ffi::c_char,
         arg3: ::std::ffi::c_int,
     ) -> *mut FILE;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLCloseShared(arg1: *mut FILE);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLGetSharedList(arg1: *mut ::std::ffi::c_int) -> *mut CPLSharedFileInfo;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLDumpSharedList(arg1: *mut FILE);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLCleanupSharedFileMutex();
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLDMSToDec(is: *const ::std::ffi::c_char) -> f64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLDecToDMS(
         dfAngle: f64,
         pszAxis: *const ::std::ffi::c_char,
         nPrecision: ::std::ffi::c_int,
     ) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLPackedDMSToDec(arg1: f64) -> f64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLDecToPackedDMS(dfDec: f64) -> f64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLStringToComplex(
         pszString: *const ::std::ffi::c_char,
         pdfReal: *mut f64,
         pdfImag: *mut f64,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLUnlinkTree(arg1: *const ::std::ffi::c_char) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLCopyFile(
         pszNewPath: *const ::std::ffi::c_char,
         pszOldPath: *const ::std::ffi::c_char,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLCopyTree(
         pszNewPath: *const ::std::ffi::c_char,
         pszOldPath: *const ::std::ffi::c_char,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLMoveFile(
         pszNewPath: *const ::std::ffi::c_char,
         pszOldPath: *const ::std::ffi::c_char,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLSymlink(
         pszOldPath: *const ::std::ffi::c_char,
         pszNewPath: *const ::std::ffi::c_char,
@@ -1851,40 +1851,40 @@ pub struct CPLLockFileStruct {
     _unused: [u8; 0],
 }
 pub type CPLLockFileHandle = *mut CPLLockFileStruct;
-unsafe extern "C" {
+extern "C" {
     pub fn CPLLockFileEx(
         pszLockFileName: *const ::std::ffi::c_char,
         phLockFileHandle: *mut CPLLockFileHandle,
         papszOptions: CSLConstList,
     ) -> CPLLockFileStatus::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLUnlockFileEx(hLockFileHandle: CPLLockFileHandle);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLCreateZip(
         pszZipFilename: *const ::std::ffi::c_char,
         papszOptions: *mut *mut ::std::ffi::c_char,
     ) -> *mut ::std::ffi::c_void;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLCreateFileInZip(
         hZip: *mut ::std::ffi::c_void,
         pszFilename: *const ::std::ffi::c_char,
         papszOptions: *mut *mut ::std::ffi::c_char,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLWriteFileInZip(
         hZip: *mut ::std::ffi::c_void,
         pBuffer: *const ::std::ffi::c_void,
         nBufferSize: ::std::ffi::c_int,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLCloseFileInZip(hZip: *mut ::std::ffi::c_void) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLAddFileInZip(
         hZip: *mut ::std::ffi::c_void,
         pszArchiveFilename: *const ::std::ffi::c_char,
@@ -1895,10 +1895,10 @@ unsafe extern "C" {
         pProgressData: *mut ::std::ffi::c_void,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLCloseZip(hZip: *mut ::std::ffi::c_void) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLZLibDeflate(
         ptr: *const ::std::ffi::c_void,
         nBytes: usize,
@@ -1908,7 +1908,7 @@ unsafe extern "C" {
         pnOutBytes: *mut usize,
     ) -> *mut ::std::ffi::c_void;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLZLibInflate(
         ptr: *const ::std::ffi::c_void,
         nBytes: usize,
@@ -1917,7 +1917,7 @@ unsafe extern "C" {
         pnOutBytes: *mut usize,
     ) -> *mut ::std::ffi::c_void;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLZLibInflateEx(
         ptr: *const ::std::ffi::c_void,
         nBytes: usize,
@@ -1927,62 +1927,62 @@ unsafe extern "C" {
         pnOutBytes: *mut usize,
     ) -> *mut ::std::ffi::c_void;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLValidateXML(
         pszXMLFilename: *const ::std::ffi::c_char,
         pszXSDFilename: *const ::std::ffi::c_char,
         papszOptions: CSLConstList,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLsetlocale(
         category: ::std::ffi::c_int,
         locale: *const ::std::ffi::c_char,
     ) -> *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLCleanupSetlocaleMutex();
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLIsPowerOfTwo(i: ::std::ffi::c_uint) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLIsInteractive(f: *mut FILE) -> bool;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CSLAddString(
         papszStrList: *mut *mut ::std::ffi::c_char,
         pszNewString: *const ::std::ffi::c_char,
     ) -> *mut *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CSLAddStringMayFail(
         papszStrList: *mut *mut ::std::ffi::c_char,
         pszNewString: *const ::std::ffi::c_char,
     ) -> *mut *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CSLCount(papszStrList: CSLConstList) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CSLGetField(arg1: CSLConstList, arg2: ::std::ffi::c_int) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CSLDestroy(papszStrList: *mut *mut ::std::ffi::c_char);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CSLDuplicate(papszStrList: CSLConstList) -> *mut *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CSLMerge(
         papszOrig: *mut *mut ::std::ffi::c_char,
         papszOverride: CSLConstList,
     ) -> *mut *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CSLTokenizeString(pszString: *const ::std::ffi::c_char) -> *mut *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CSLTokenizeStringComplex(
         pszString: *const ::std::ffi::c_char,
         pszDelimiter: *const ::std::ffi::c_char,
@@ -1990,20 +1990,20 @@ unsafe extern "C" {
         bAllowEmptyTokens: ::std::ffi::c_int,
     ) -> *mut *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CSLTokenizeString2(
         pszString: *const ::std::ffi::c_char,
         pszDelimiter: *const ::std::ffi::c_char,
         nCSLTFlags: ::std::ffi::c_int,
     ) -> *mut *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CSLPrint(papszStrList: CSLConstList, fpOut: *mut FILE) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CSLLoad(pszFname: *const ::std::ffi::c_char) -> *mut *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CSLLoad2(
         pszFname: *const ::std::ffi::c_char,
         nMaxLines: ::std::ffi::c_int,
@@ -2011,27 +2011,27 @@ unsafe extern "C" {
         papszOptions: CSLConstList,
     ) -> *mut *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CSLSave(
         papszStrList: CSLConstList,
         pszFname: *const ::std::ffi::c_char,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CSLInsertStrings(
         papszStrList: *mut *mut ::std::ffi::c_char,
         nInsertAtLineNo: ::std::ffi::c_int,
         papszNewLines: CSLConstList,
     ) -> *mut *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CSLInsertString(
         papszStrList: *mut *mut ::std::ffi::c_char,
         nInsertAtLineNo: ::std::ffi::c_int,
         pszNewLine: *const ::std::ffi::c_char,
     ) -> *mut *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CSLRemoveStrings(
         papszStrList: *mut *mut ::std::ffi::c_char,
         nFirstLineToDelete: ::std::ffi::c_int,
@@ -2039,150 +2039,150 @@ unsafe extern "C" {
         ppapszRetStrings: *mut *mut *mut ::std::ffi::c_char,
     ) -> *mut *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CSLFindString(
         papszList: CSLConstList,
         pszTarget: *const ::std::ffi::c_char,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CSLFindStringCaseSensitive(
         papszList: CSLConstList,
         pszTarget: *const ::std::ffi::c_char,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CSLPartialFindString(
         papszHaystack: CSLConstList,
         pszNeedle: *const ::std::ffi::c_char,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CSLFindName(
         papszStrList: CSLConstList,
         pszName: *const ::std::ffi::c_char,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CSLFetchBoolean(
         papszStrList: CSLConstList,
         pszKey: *const ::std::ffi::c_char,
         bDefault: ::std::ffi::c_int,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CSLTestBoolean(pszValue: *const ::std::ffi::c_char) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLTestBoolean(pszValue: *const ::std::ffi::c_char) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLTestBool(pszValue: *const ::std::ffi::c_char) -> bool;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLFetchBool(
         papszStrList: CSLConstList,
         pszKey: *const ::std::ffi::c_char,
         bDefault: bool,
     ) -> bool;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLParseMemorySize(
         pszValue: *const ::std::ffi::c_char,
         pnValue: *mut GIntBig,
         pbUnitSpecified: *mut bool,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLParseNameValue(
         pszNameValue: *const ::std::ffi::c_char,
         ppszKey: *mut *mut ::std::ffi::c_char,
     ) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLParseNameValueSep(
         pszNameValue: *const ::std::ffi::c_char,
         ppszKey: *mut *mut ::std::ffi::c_char,
         chSep: ::std::ffi::c_char,
     ) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CSLFetchNameValue(
         papszStrList: CSLConstList,
         pszName: *const ::std::ffi::c_char,
     ) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CSLFetchNameValueDef(
         papszStrList: CSLConstList,
         pszName: *const ::std::ffi::c_char,
         pszDefault: *const ::std::ffi::c_char,
     ) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CSLFetchNameValueMultiple(
         papszStrList: CSLConstList,
         pszName: *const ::std::ffi::c_char,
     ) -> *mut *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CSLAddNameValue(
         papszStrList: *mut *mut ::std::ffi::c_char,
         pszName: *const ::std::ffi::c_char,
         pszValue: *const ::std::ffi::c_char,
     ) -> *mut *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CSLSetNameValue(
         papszStrList: *mut *mut ::std::ffi::c_char,
         pszName: *const ::std::ffi::c_char,
         pszValue: *const ::std::ffi::c_char,
     ) -> *mut *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CSLSetNameValueSeparator(
         papszStrList: *mut *mut ::std::ffi::c_char,
         pszSeparator: *const ::std::ffi::c_char,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CSLParseCommandLine(
         pszCommandLine: *const ::std::ffi::c_char,
     ) -> *mut *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLEscapeString(
         pszString: *const ::std::ffi::c_char,
         nLength: ::std::ffi::c_int,
         nScheme: ::std::ffi::c_int,
     ) -> *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLUnescapeString(
         pszString: *const ::std::ffi::c_char,
         pnLength: *mut ::std::ffi::c_int,
         nScheme: ::std::ffi::c_int,
     ) -> *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLBinaryToHex(
         nBytes: ::std::ffi::c_int,
         pabyData: *const GByte,
     ) -> *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLHexToBinary(
         pszHex: *const ::std::ffi::c_char,
         pnBytes: *mut ::std::ffi::c_int,
     ) -> *mut GByte;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLBase64Encode(
         nBytes: ::std::ffi::c_int,
         pabyData: *const GByte,
     ) -> *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLBase64DecodeInPlace(pszBase64: *mut GByte) -> ::std::ffi::c_int;
 }
 pub mod CPLValueType {
@@ -2191,33 +2191,33 @@ pub mod CPLValueType {
     pub const CPL_VALUE_REAL: Type = 1;
     pub const CPL_VALUE_INTEGER: Type = 2;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLGetValueType(pszValue: *const ::std::ffi::c_char) -> CPLValueType::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLToupper(c: ::std::ffi::c_int) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLTolower(c: ::std::ffi::c_int) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLStrlcpy(
         pszDest: *mut ::std::ffi::c_char,
         pszSrc: *const ::std::ffi::c_char,
         nDestSize: usize,
     ) -> usize;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLStrlcat(
         pszDest: *mut ::std::ffi::c_char,
         pszSrc: *const ::std::ffi::c_char,
         nDestSize: usize,
     ) -> usize;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLStrnlen(pszStr: *const ::std::ffi::c_char, nMaxLen: usize) -> usize;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLvsnprintf(
         str_: *mut ::std::ffi::c_char,
         size: usize,
@@ -2225,7 +2225,7 @@ unsafe extern "C" {
         args: *mut __va_list_tag,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLsnprintf(
         str_: *mut ::std::ffi::c_char,
         size: usize,
@@ -2233,96 +2233,96 @@ unsafe extern "C" {
         ...
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLsprintf(
         str_: *mut ::std::ffi::c_char,
         fmt: *const ::std::ffi::c_char,
         ...
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLprintf(fmt: *const ::std::ffi::c_char, ...) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLsscanf(
         str_: *const ::std::ffi::c_char,
         fmt: *const ::std::ffi::c_char,
         ...
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLSPrintf(fmt: *const ::std::ffi::c_char, ...) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CSLAppendPrintf(
         papszStrList: *mut *mut ::std::ffi::c_char,
         fmt: *const ::std::ffi::c_char,
         ...
     ) -> *mut *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLVASPrintf(
         buf: *mut *mut ::std::ffi::c_char,
         fmt: *const ::std::ffi::c_char,
         args: *mut __va_list_tag,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLEncodingCharSize(pszEncoding: *const ::std::ffi::c_char) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLClearRecodeWarningFlags();
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLRecode(
         pszSource: *const ::std::ffi::c_char,
         pszSrcEncoding: *const ::std::ffi::c_char,
         pszDstEncoding: *const ::std::ffi::c_char,
     ) -> *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLRecodeFromWChar(
         pwszSource: *const wchar_t,
         pszSrcEncoding: *const ::std::ffi::c_char,
         pszDstEncoding: *const ::std::ffi::c_char,
     ) -> *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLRecodeToWChar(
         pszSource: *const ::std::ffi::c_char,
         pszSrcEncoding: *const ::std::ffi::c_char,
         pszDstEncoding: *const ::std::ffi::c_char,
     ) -> *mut wchar_t;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLIsUTF8(
         pabyData: *const ::std::ffi::c_char,
         nLen: ::std::ffi::c_int,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLIsASCII(pabyData: *const ::std::ffi::c_char, nLen: usize) -> bool;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLForceToASCII(
         pabyData: *const ::std::ffi::c_char,
         nLen: ::std::ffi::c_int,
         chReplacementChar: ::std::ffi::c_char,
     ) -> *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLUTF8ForceToASCII(
         pszStr: *const ::std::ffi::c_char,
         chReplacementChar: ::std::ffi::c_char,
     ) -> *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLStrlenUTF8(pszUTF8Str: *const ::std::ffi::c_char) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLStrlenUTF8Ex(pszUTF8Str: *const ::std::ffi::c_char) -> usize;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLCanRecode(
         pszTestStr: *const ::std::ffi::c_char,
         pszSrcEncoding: *const ::std::ffi::c_char,
@@ -2352,66 +2352,66 @@ pub type CPLHashSetIterEltFunc = ::std::option::Option<
         user_data: *mut ::std::ffi::c_void,
     ) -> ::std::ffi::c_int,
 >;
-unsafe extern "C" {
+extern "C" {
     pub fn CPLHashSetNew(
         fnHashFunc: CPLHashSetHashFunc,
         fnEqualFunc: CPLHashSetEqualFunc,
         fnFreeEltFunc: CPLHashSetFreeEltFunc,
     ) -> *mut CPLHashSet;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLHashSetDestroy(set: *mut CPLHashSet);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLHashSetClear(set: *mut CPLHashSet);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLHashSetSize(set: *const CPLHashSet) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLHashSetForeach(
         set: *mut CPLHashSet,
         fnIterFunc: CPLHashSetIterEltFunc,
         user_data: *mut ::std::ffi::c_void,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLHashSetInsert(
         set: *mut CPLHashSet,
         elt: *mut ::std::ffi::c_void,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLHashSetLookup(
         set: *mut CPLHashSet,
         elt: *const ::std::ffi::c_void,
     ) -> *mut ::std::ffi::c_void;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLHashSetRemove(
         set: *mut CPLHashSet,
         elt: *const ::std::ffi::c_void,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLHashSetRemoveDeferRehash(
         set: *mut CPLHashSet,
         elt: *const ::std::ffi::c_void,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLHashSetHashPointer(elt: *const ::std::ffi::c_void) -> ::std::ffi::c_ulong;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLHashSetEqualPointer(
         elt1: *const ::std::ffi::c_void,
         elt2: *const ::std::ffi::c_void,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLHashSetHashStr(pszStr: *const ::std::ffi::c_void) -> ::std::ffi::c_ulong;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLHashSetEqualStr(
         pszStr1: *const ::std::ffi::c_void,
         pszStr2: *const ::std::ffi::c_void,
@@ -2431,35 +2431,35 @@ const _: () = {
     ["Offset of field: _CPLList::pData"][::std::mem::offset_of!(_CPLList, pData) - 0usize];
     ["Offset of field: _CPLList::psNext"][::std::mem::offset_of!(_CPLList, psNext) - 8usize];
 };
-unsafe extern "C" {
+extern "C" {
     pub fn CPLListAppend(psList: *mut CPLList, pData: *mut ::std::ffi::c_void) -> *mut CPLList;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLListInsert(
         psList: *mut CPLList,
         pData: *mut ::std::ffi::c_void,
         nPosition: ::std::ffi::c_int,
     ) -> *mut CPLList;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLListGetLast(psList: *mut CPLList) -> *mut CPLList;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLListGet(psList: *mut CPLList, nPosition: ::std::ffi::c_int) -> *mut CPLList;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLListCount(psList: *const CPLList) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLListRemove(psList: *mut CPLList, nPosition: ::std::ffi::c_int) -> *mut CPLList;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLListDestroy(psList: *mut CPLList);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLListGetNext(psElement: *const CPLList) -> *mut CPLList;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLListGetData(psElement: *const CPLList) -> *mut ::std::ffi::c_void;
 }
 pub mod CPLXMLNodeType {
@@ -2488,97 +2488,97 @@ const _: () = {
     ["Offset of field: CPLXMLNode::psNext"][::std::mem::offset_of!(CPLXMLNode, psNext) - 16usize];
     ["Offset of field: CPLXMLNode::psChild"][::std::mem::offset_of!(CPLXMLNode, psChild) - 24usize];
 };
-unsafe extern "C" {
+extern "C" {
     pub fn CPLParseXMLString(arg1: *const ::std::ffi::c_char) -> *mut CPLXMLNode;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLDestroyXMLNode(arg1: *mut CPLXMLNode);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLGetXMLNode(
         poRoot: *mut CPLXMLNode,
         pszPath: *const ::std::ffi::c_char,
     ) -> *mut CPLXMLNode;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLSearchXMLNode(
         poRoot: *mut CPLXMLNode,
         pszTarget: *const ::std::ffi::c_char,
     ) -> *mut CPLXMLNode;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLGetXMLValue(
         poRoot: *const CPLXMLNode,
         pszPath: *const ::std::ffi::c_char,
         pszDefault: *const ::std::ffi::c_char,
     ) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLCreateXMLNode(
         poParent: *mut CPLXMLNode,
         eType: CPLXMLNodeType::Type,
         pszText: *const ::std::ffi::c_char,
     ) -> *mut CPLXMLNode;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLSerializeXMLTree(psNode: *const CPLXMLNode) -> *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLAddXMLChild(psParent: *mut CPLXMLNode, psChild: *mut CPLXMLNode);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLRemoveXMLChild(
         psParent: *mut CPLXMLNode,
         psChild: *mut CPLXMLNode,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLAddXMLSibling(psOlderSibling: *mut CPLXMLNode, psNewSibling: *mut CPLXMLNode);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLCreateXMLElementAndValue(
         psParent: *mut CPLXMLNode,
         pszName: *const ::std::ffi::c_char,
         pszValue: *const ::std::ffi::c_char,
     ) -> *mut CPLXMLNode;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLAddXMLAttributeAndValue(
         psParent: *mut CPLXMLNode,
         pszName: *const ::std::ffi::c_char,
         pszValue: *const ::std::ffi::c_char,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLCloneXMLTree(psTree: *const CPLXMLNode) -> *mut CPLXMLNode;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLSetXMLValue(
         psRoot: *mut CPLXMLNode,
         pszPath: *const ::std::ffi::c_char,
         pszValue: *const ::std::ffi::c_char,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLStripXMLNamespace(
         psRoot: *mut CPLXMLNode,
         pszNameSpace: *const ::std::ffi::c_char,
         bRecurse: ::std::ffi::c_int,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLCleanXMLElementName(arg1: *mut ::std::ffi::c_char);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLParseXMLFile(pszFilename: *const ::std::ffi::c_char) -> *mut CPLXMLNode;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLSerializeXMLTreeToFile(
         psTree: *const CPLXMLNode,
         pszFilename: *const ::std::ffi::c_char,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLXMLNodeGetRAMUsageEstimate(psNode: *const CPLXMLNode) -> usize;
 }
 #[repr(C)]
@@ -2627,80 +2627,80 @@ pub type CPLQuadTreeDumpFeatureFunc = ::std::option::Option<
         pUserData: *mut ::std::ffi::c_void,
     ),
 >;
-unsafe extern "C" {
+extern "C" {
     pub fn CPLQuadTreeCreate(
         pGlobalBounds: *const CPLRectObj,
         pfnGetBounds: CPLQuadTreeGetBoundsFunc,
     ) -> *mut CPLQuadTree;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLQuadTreeCreateEx(
         pGlobalBounds: *const CPLRectObj,
         pfnGetBounds: CPLQuadTreeGetBoundsExFunc,
         pUserData: *mut ::std::ffi::c_void,
     ) -> *mut CPLQuadTree;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLQuadTreeDestroy(hQuadtree: *mut CPLQuadTree);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLQuadTreeSetBucketCapacity(
         hQuadtree: *mut CPLQuadTree,
         nBucketCapacity: ::std::ffi::c_int,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLQuadTreeForceUseOfSubNodes(hQuadTree: *mut CPLQuadTree);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLQuadTreeGetAdvisedMaxDepth(nExpectedFeatures: ::std::ffi::c_int)
         -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLQuadTreeSetMaxDepth(hQuadtree: *mut CPLQuadTree, nMaxDepth: ::std::ffi::c_int);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLQuadTreeInsert(hQuadtree: *mut CPLQuadTree, hFeature: *mut ::std::ffi::c_void);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLQuadTreeInsertWithBounds(
         hQuadtree: *mut CPLQuadTree,
         hFeature: *mut ::std::ffi::c_void,
         psBounds: *const CPLRectObj,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLQuadTreeRemove(
         hQuadtree: *mut CPLQuadTree,
         hFeature: *mut ::std::ffi::c_void,
         psBounds: *const CPLRectObj,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLQuadTreeSearch(
         hQuadtree: *const CPLQuadTree,
         pAoi: *const CPLRectObj,
         pnFeatureCount: *mut ::std::ffi::c_int,
     ) -> *mut *mut ::std::ffi::c_void;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLQuadTreeHasMatch(hQuadtree: *const CPLQuadTree, pAoi: *const CPLRectObj) -> bool;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLQuadTreeForeach(
         hQuadtree: *const CPLQuadTree,
         pfnForeach: CPLQuadTreeForeachFunc,
         pUserData: *mut ::std::ffi::c_void,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLQuadTreeDump(
         hQuadtree: *const CPLQuadTree,
         pfnDumpFeatureFunc: CPLQuadTreeDumpFeatureFunc,
         pUserData: *mut ::std::ffi::c_void,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLQuadTreeGetStats(
         hQuadtree: *const CPLQuadTree,
         pnFeatureCount: *mut ::std::ffi::c_int,
@@ -2843,10 +2843,10 @@ pub mod CPLVirtualMemAccessMode {
     pub const VIRTUALMEM_READONLY_ENFORCED: Type = 1;
     pub const VIRTUALMEM_READWRITE: Type = 2;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLGetPageSize() -> usize;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLVirtualMemNew(
         nSize: usize,
         nCacheSize: usize,
@@ -2859,10 +2859,10 @@ unsafe extern "C" {
         pCbkUserData: *mut ::std::ffi::c_void,
     ) -> *mut CPLVirtualMem;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLIsVirtualMemFileMapAvailable() -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLVirtualMemFileMapNew(
         fp: *mut VSILFILE,
         nOffset: vsi_l_offset,
@@ -2872,7 +2872,7 @@ unsafe extern "C" {
         pCbkUserData: *mut ::std::ffi::c_void,
     ) -> *mut CPLVirtualMem;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLVirtualMemDerivedNew(
         pVMemBase: *mut CPLVirtualMem,
         nOffset: vsi_l_offset,
@@ -2881,34 +2881,34 @@ unsafe extern "C" {
         pCbkUserData: *mut ::std::ffi::c_void,
     ) -> *mut CPLVirtualMem;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLVirtualMemFree(ctxt: *mut CPLVirtualMem);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLVirtualMemGetAddr(ctxt: *mut CPLVirtualMem) -> *mut ::std::ffi::c_void;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLVirtualMemGetSize(ctxt: *mut CPLVirtualMem) -> usize;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLVirtualMemIsFileMapping(ctxt: *mut CPLVirtualMem) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLVirtualMemGetAccessMode(ctxt: *mut CPLVirtualMem) -> CPLVirtualMemAccessMode::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLVirtualMemGetPageSize(ctxt: *mut CPLVirtualMem) -> usize;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLVirtualMemIsAccessThreadSafe(ctxt: *mut CPLVirtualMem) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLVirtualMemDeclareThread(ctxt: *mut CPLVirtualMem);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLVirtualMemUnDeclareThread(ctxt: *mut CPLVirtualMem);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLVirtualMemPin(
         ctxt: *mut CPLVirtualMem,
         pAddr: *mut ::std::ffi::c_void,
@@ -2916,7 +2916,7 @@ unsafe extern "C" {
         bWriteOp: ::std::ffi::c_int,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLVirtualMemManagerTerminate();
 }
 #[repr(C)]
@@ -2957,19 +2957,19 @@ const _: () = {
     ["Offset of field: OGREnvelope3D::MinZ"][::std::mem::offset_of!(OGREnvelope3D, MinZ) - 32usize];
     ["Offset of field: OGREnvelope3D::MaxZ"][::std::mem::offset_of!(OGREnvelope3D, MaxZ) - 40usize];
 };
-unsafe extern "C" {
+extern "C" {
     pub fn OGRMalloc(arg1: usize) -> *mut ::std::ffi::c_void;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGRCalloc(arg1: usize, arg2: usize) -> *mut ::std::ffi::c_void;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGRRealloc(arg1: *mut ::std::ffi::c_void, arg2: usize) -> *mut ::std::ffi::c_void;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGRStrdup(arg1: *const ::std::ffi::c_char) -> *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGRFree(arg1: *mut ::std::ffi::c_void);
 }
 pub mod OGRwkbGeometryType {
@@ -3052,69 +3052,69 @@ pub mod OGRwkbVariant {
     pub const wkbVariantIso: Type = 1;
     pub const wkbVariantPostGIS1: Type = 2;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGRGeometryTypeToName(eType: OGRwkbGeometryType::Type) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGRMergeGeometryTypes(
         eMain: OGRwkbGeometryType::Type,
         eExtra: OGRwkbGeometryType::Type,
     ) -> OGRwkbGeometryType::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGRMergeGeometryTypesEx(
         eMain: OGRwkbGeometryType::Type,
         eExtra: OGRwkbGeometryType::Type,
         bAllowPromotingToCurves: ::std::ffi::c_int,
     ) -> OGRwkbGeometryType::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_GT_Flatten(eType: OGRwkbGeometryType::Type) -> OGRwkbGeometryType::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_GT_SetZ(eType: OGRwkbGeometryType::Type) -> OGRwkbGeometryType::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_GT_SetM(eType: OGRwkbGeometryType::Type) -> OGRwkbGeometryType::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_GT_SetModifier(
         eType: OGRwkbGeometryType::Type,
         bSetZ: ::std::ffi::c_int,
         bSetM: ::std::ffi::c_int,
     ) -> OGRwkbGeometryType::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_GT_HasZ(eType: OGRwkbGeometryType::Type) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_GT_HasM(eType: OGRwkbGeometryType::Type) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_GT_IsSubClassOf(
         eType: OGRwkbGeometryType::Type,
         eSuperType: OGRwkbGeometryType::Type,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_GT_IsCurve(arg1: OGRwkbGeometryType::Type) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_GT_IsSurface(arg1: OGRwkbGeometryType::Type) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_GT_IsNonLinear(arg1: OGRwkbGeometryType::Type) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_GT_GetCollection(eType: OGRwkbGeometryType::Type) -> OGRwkbGeometryType::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_GT_GetSingle(eType: OGRwkbGeometryType::Type) -> OGRwkbGeometryType::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_GT_GetCurve(eType: OGRwkbGeometryType::Type) -> OGRwkbGeometryType::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_GT_GetLinear(eType: OGRwkbGeometryType::Type) -> OGRwkbGeometryType::Type;
 }
 pub mod OGRwkbByteOrder {
@@ -3323,10 +3323,10 @@ const _: () = {
     ["Offset of field: OGRField::Set"][::std::mem::offset_of!(OGRField, Set) - 0usize];
     ["Offset of field: OGRField::Date"][::std::mem::offset_of!(OGRField, Date) - 0usize];
 };
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_GET_MS(fSec: f32) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGRParseDate(
         pszInput: *const ::std::ffi::c_char,
         psOutput: *mut OGRField,
@@ -3386,50 +3386,50 @@ pub mod OGRFieldDomainMergePolicy {
     pub const OFDMP_SUM: Type = 1;
     pub const OFDMP_GEOMETRY_WEIGHTED: Type = 2;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALVersionInfo(arg1: *const ::std::ffi::c_char) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALCheckVersion(
         nVersionMajor: ::std::ffi::c_int,
         nVersionMinor: ::std::ffi::c_int,
         pszCallingComponentName: *const ::std::ffi::c_char,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGRGetGEOSVersion(
         pnMajor: *mut ::std::ffi::c_int,
         pnMinor: *mut ::std::ffi::c_int,
         pnPatch: *mut ::std::ffi::c_int,
     ) -> bool;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGRGeomCoordinatePrecisionCreate() -> OGRGeomCoordinatePrecisionH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGRGeomCoordinatePrecisionDestroy(arg1: OGRGeomCoordinatePrecisionH);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGRGeomCoordinatePrecisionGetXYResolution(arg1: OGRGeomCoordinatePrecisionH) -> f64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGRGeomCoordinatePrecisionGetZResolution(arg1: OGRGeomCoordinatePrecisionH) -> f64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGRGeomCoordinatePrecisionGetMResolution(arg1: OGRGeomCoordinatePrecisionH) -> f64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGRGeomCoordinatePrecisionGetFormats(
         arg1: OGRGeomCoordinatePrecisionH,
     ) -> *mut *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGRGeomCoordinatePrecisionGetFormatSpecificOptions(
         arg1: OGRGeomCoordinatePrecisionH,
         pszFormatName: *const ::std::ffi::c_char,
     ) -> CSLConstList;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGRGeomCoordinatePrecisionSet(
         arg1: OGRGeomCoordinatePrecisionH,
         dfXYResolution: f64,
@@ -3437,7 +3437,7 @@ unsafe extern "C" {
         dfMResolution: f64,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGRGeomCoordinatePrecisionSetFromMeter(
         arg1: OGRGeomCoordinatePrecisionH,
         hSRS: OGRSpatialReferenceH,
@@ -3446,14 +3446,14 @@ unsafe extern "C" {
         dfMResolution: f64,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGRGeomCoordinatePrecisionSetFormatSpecificOptions(
         arg1: OGRGeomCoordinatePrecisionH,
         pszFormatName: *const ::std::ffi::c_char,
         papszOptions: CSLConstList,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_CreateFromWkb(
         arg1: *const ::std::ffi::c_void,
         arg2: OGRSpatialReferenceH,
@@ -3461,7 +3461,7 @@ unsafe extern "C" {
         arg4: ::std::ffi::c_int,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_CreateFromWkbEx(
         arg1: *const ::std::ffi::c_void,
         arg2: OGRSpatialReferenceH,
@@ -3469,14 +3469,14 @@ unsafe extern "C" {
         arg4: usize,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_CreateFromWkt(
         arg1: *mut *mut ::std::ffi::c_char,
         arg2: OGRSpatialReferenceH,
         arg3: *mut OGRGeometryH,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_CreateFromFgf(
         arg1: *const ::std::ffi::c_void,
         arg2: OGRSpatialReferenceH,
@@ -3485,13 +3485,13 @@ unsafe extern "C" {
         arg5: *mut ::std::ffi::c_int,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_DestroyGeometry(arg1: OGRGeometryH);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_CreateGeometry(arg1: OGRwkbGeometryType::Type) -> OGRGeometryH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_ApproximateArcAngles(
         dfCenterX: f64,
         dfCenterY: f64,
@@ -3504,388 +3504,388 @@ unsafe extern "C" {
         dfMaxAngleStepSizeDegrees: f64,
     ) -> OGRGeometryH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_ForceToPolygon(arg1: OGRGeometryH) -> OGRGeometryH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_ForceToLineString(arg1: OGRGeometryH) -> OGRGeometryH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_ForceToMultiPolygon(arg1: OGRGeometryH) -> OGRGeometryH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_ForceToMultiPoint(arg1: OGRGeometryH) -> OGRGeometryH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_ForceToMultiLineString(arg1: OGRGeometryH) -> OGRGeometryH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_ForceTo(
         hGeom: OGRGeometryH,
         eTargetType: OGRwkbGeometryType::Type,
         papszOptions: *mut *mut ::std::ffi::c_char,
     ) -> OGRGeometryH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_RemoveLowerDimensionSubGeoms(hGeom: OGRGeometryH) -> OGRGeometryH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_GetDimension(arg1: OGRGeometryH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_GetCoordinateDimension(arg1: OGRGeometryH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_CoordinateDimension(arg1: OGRGeometryH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_SetCoordinateDimension(arg1: OGRGeometryH, arg2: ::std::ffi::c_int);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_Is3D(arg1: OGRGeometryH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_IsMeasured(arg1: OGRGeometryH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_Set3D(arg1: OGRGeometryH, arg2: ::std::ffi::c_int);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_SetMeasured(arg1: OGRGeometryH, arg2: ::std::ffi::c_int);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_Clone(arg1: OGRGeometryH) -> OGRGeometryH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_GetEnvelope(arg1: OGRGeometryH, arg2: *mut OGREnvelope);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_GetEnvelope3D(arg1: OGRGeometryH, arg2: *mut OGREnvelope3D);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_ImportFromWkb(
         arg1: OGRGeometryH,
         arg2: *const ::std::ffi::c_void,
         arg3: ::std::ffi::c_int,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_ExportToWkb(
         arg1: OGRGeometryH,
         arg2: OGRwkbByteOrder::Type,
         arg3: *mut ::std::ffi::c_uchar,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_ExportToIsoWkb(
         arg1: OGRGeometryH,
         arg2: OGRwkbByteOrder::Type,
         arg3: *mut ::std::ffi::c_uchar,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGRwkbExportOptionsCreate() -> *mut OGRwkbExportOptions;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGRwkbExportOptionsDestroy(arg1: *mut OGRwkbExportOptions);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGRwkbExportOptionsSetByteOrder(
         arg1: *mut OGRwkbExportOptions,
         arg2: OGRwkbByteOrder::Type,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGRwkbExportOptionsSetVariant(arg1: *mut OGRwkbExportOptions, arg2: OGRwkbVariant::Type);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGRwkbExportOptionsSetPrecision(
         arg1: *mut OGRwkbExportOptions,
         arg2: OGRGeomCoordinatePrecisionH,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_ExportToWkbEx(
         arg1: OGRGeometryH,
         arg2: *mut ::std::ffi::c_uchar,
         arg3: *const OGRwkbExportOptions,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_WkbSize(hGeom: OGRGeometryH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_WkbSizeEx(hGeom: OGRGeometryH) -> usize;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_ImportFromWkt(
         arg1: OGRGeometryH,
         arg2: *mut *mut ::std::ffi::c_char,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_ExportToWkt(
         arg1: OGRGeometryH,
         arg2: *mut *mut ::std::ffi::c_char,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_ExportToIsoWkt(
         arg1: OGRGeometryH,
         arg2: *mut *mut ::std::ffi::c_char,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_GetGeometryType(arg1: OGRGeometryH) -> OGRwkbGeometryType::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_GetGeometryName(arg1: OGRGeometryH) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_DumpReadable(arg1: OGRGeometryH, arg2: *mut FILE, arg3: *const ::std::ffi::c_char);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_FlattenTo2D(arg1: OGRGeometryH);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_CloseRings(arg1: OGRGeometryH);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_CreateFromGML(arg1: *const ::std::ffi::c_char) -> OGRGeometryH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_ExportToGML(arg1: OGRGeometryH) -> *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_ExportToGMLEx(
         arg1: OGRGeometryH,
         papszOptions: *mut *mut ::std::ffi::c_char,
     ) -> *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_CreateFromGMLTree(arg1: *const CPLXMLNode) -> OGRGeometryH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_ExportToGMLTree(arg1: OGRGeometryH) -> *mut CPLXMLNode;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_ExportEnvelopeToGMLTree(arg1: OGRGeometryH) -> *mut CPLXMLNode;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_ExportToKML(
         arg1: OGRGeometryH,
         pszAltitudeMode: *const ::std::ffi::c_char,
     ) -> *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_ExportToJson(arg1: OGRGeometryH) -> *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_ExportToJsonEx(
         arg1: OGRGeometryH,
         papszOptions: *mut *mut ::std::ffi::c_char,
     ) -> *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_CreateGeometryFromJson(arg1: *const ::std::ffi::c_char) -> OGRGeometryH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_CreateGeometryFromEsriJson(arg1: *const ::std::ffi::c_char) -> OGRGeometryH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_AssignSpatialReference(arg1: OGRGeometryH, arg2: OGRSpatialReferenceH);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_GetSpatialReference(arg1: OGRGeometryH) -> OGRSpatialReferenceH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_Transform(arg1: OGRGeometryH, arg2: OGRCoordinateTransformationH) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_TransformTo(arg1: OGRGeometryH, arg2: OGRSpatialReferenceH) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_GeomTransformer_Create(
         arg1: OGRCoordinateTransformationH,
         papszOptions: CSLConstList,
     ) -> OGRGeomTransformerH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_GeomTransformer_Transform(
         hTransformer: OGRGeomTransformerH,
         hGeom: OGRGeometryH,
     ) -> OGRGeometryH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_GeomTransformer_Destroy(hTransformer: OGRGeomTransformerH);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_Simplify(hThis: OGRGeometryH, tolerance: f64) -> OGRGeometryH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_SimplifyPreserveTopology(hThis: OGRGeometryH, tolerance: f64) -> OGRGeometryH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_DelaunayTriangulation(
         hThis: OGRGeometryH,
         dfTolerance: f64,
         bOnlyEdges: ::std::ffi::c_int,
     ) -> OGRGeometryH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_Segmentize(hGeom: OGRGeometryH, dfMaxLength: f64);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_Intersects(arg1: OGRGeometryH, arg2: OGRGeometryH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_Equals(arg1: OGRGeometryH, arg2: OGRGeometryH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_Disjoint(arg1: OGRGeometryH, arg2: OGRGeometryH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_Touches(arg1: OGRGeometryH, arg2: OGRGeometryH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_Crosses(arg1: OGRGeometryH, arg2: OGRGeometryH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_Within(arg1: OGRGeometryH, arg2: OGRGeometryH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_Contains(arg1: OGRGeometryH, arg2: OGRGeometryH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_Overlaps(arg1: OGRGeometryH, arg2: OGRGeometryH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_Boundary(arg1: OGRGeometryH) -> OGRGeometryH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_ConvexHull(arg1: OGRGeometryH) -> OGRGeometryH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_ConcaveHull(arg1: OGRGeometryH, dfRatio: f64, bAllowHoles: bool) -> OGRGeometryH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_Buffer(
         arg1: OGRGeometryH,
         dfDist: f64,
         nQuadSegs: ::std::ffi::c_int,
     ) -> OGRGeometryH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_BufferEx(
         arg1: OGRGeometryH,
         dfDist: f64,
         papszOptions: CSLConstList,
     ) -> OGRGeometryH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_Intersection(arg1: OGRGeometryH, arg2: OGRGeometryH) -> OGRGeometryH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_Union(arg1: OGRGeometryH, arg2: OGRGeometryH) -> OGRGeometryH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_UnionCascaded(arg1: OGRGeometryH) -> OGRGeometryH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_UnaryUnion(arg1: OGRGeometryH) -> OGRGeometryH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_PointOnSurface(arg1: OGRGeometryH) -> OGRGeometryH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_Difference(arg1: OGRGeometryH, arg2: OGRGeometryH) -> OGRGeometryH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_SymDifference(arg1: OGRGeometryH, arg2: OGRGeometryH) -> OGRGeometryH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_Distance(arg1: OGRGeometryH, arg2: OGRGeometryH) -> f64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_Distance3D(arg1: OGRGeometryH, arg2: OGRGeometryH) -> f64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_Length(arg1: OGRGeometryH) -> f64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_GeodesicLength(arg1: OGRGeometryH) -> f64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_Area(arg1: OGRGeometryH) -> f64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_GeodesicArea(arg1: OGRGeometryH) -> f64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_IsClockwise(hGeom: OGRGeometryH) -> bool;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_Centroid(arg1: OGRGeometryH, arg2: OGRGeometryH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_Value(arg1: OGRGeometryH, dfDistance: f64) -> OGRGeometryH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_Empty(arg1: OGRGeometryH);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_IsEmpty(arg1: OGRGeometryH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_IsValid(arg1: OGRGeometryH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_MakeValid(arg1: OGRGeometryH) -> OGRGeometryH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_MakeValidEx(arg1: OGRGeometryH, arg2: CSLConstList) -> OGRGeometryH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_Normalize(arg1: OGRGeometryH) -> OGRGeometryH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_IsSimple(arg1: OGRGeometryH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_IsRing(arg1: OGRGeometryH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_SetPrecision(
         arg1: OGRGeometryH,
         dfGridSize: f64,
         nFlags: ::std::ffi::c_int,
     ) -> OGRGeometryH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_Polygonize(arg1: OGRGeometryH) -> OGRGeometryH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_BuildArea(arg1: OGRGeometryH) -> OGRGeometryH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_Intersect(arg1: OGRGeometryH, arg2: OGRGeometryH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_Equal(arg1: OGRGeometryH, arg2: OGRGeometryH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_SymmetricDifference(arg1: OGRGeometryH, arg2: OGRGeometryH) -> OGRGeometryH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_GetArea(arg1: OGRGeometryH) -> f64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_GetBoundary(arg1: OGRGeometryH) -> OGRGeometryH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_GetPointCount(arg1: OGRGeometryH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_GetPoints(
         hGeom: OGRGeometryH,
         pabyX: *mut ::std::ffi::c_void,
@@ -3896,7 +3896,7 @@ unsafe extern "C" {
         nZStride: ::std::ffi::c_int,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_GetPointsZM(
         hGeom: OGRGeometryH,
         pabyX: *mut ::std::ffi::c_void,
@@ -3909,19 +3909,19 @@ unsafe extern "C" {
         nMStride: ::std::ffi::c_int,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_GetX(arg1: OGRGeometryH, arg2: ::std::ffi::c_int) -> f64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_GetY(arg1: OGRGeometryH, arg2: ::std::ffi::c_int) -> f64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_GetZ(arg1: OGRGeometryH, arg2: ::std::ffi::c_int) -> f64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_GetM(arg1: OGRGeometryH, arg2: ::std::ffi::c_int) -> f64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_GetPoint(
         arg1: OGRGeometryH,
         iPoint: ::std::ffi::c_int,
@@ -3930,7 +3930,7 @@ unsafe extern "C" {
         arg4: *mut f64,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_GetPointZM(
         arg1: OGRGeometryH,
         iPoint: ::std::ffi::c_int,
@@ -3940,10 +3940,10 @@ unsafe extern "C" {
         arg5: *mut f64,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_SetPointCount(hGeom: OGRGeometryH, nNewPointCount: ::std::ffi::c_int);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_SetPoint(
         arg1: OGRGeometryH,
         iPoint: ::std::ffi::c_int,
@@ -3952,10 +3952,10 @@ unsafe extern "C" {
         arg4: f64,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_SetPoint_2D(arg1: OGRGeometryH, iPoint: ::std::ffi::c_int, arg2: f64, arg3: f64);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_SetPointM(
         arg1: OGRGeometryH,
         iPoint: ::std::ffi::c_int,
@@ -3964,7 +3964,7 @@ unsafe extern "C" {
         arg4: f64,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_SetPointZM(
         arg1: OGRGeometryH,
         iPoint: ::std::ffi::c_int,
@@ -3974,19 +3974,19 @@ unsafe extern "C" {
         arg5: f64,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_AddPoint(arg1: OGRGeometryH, arg2: f64, arg3: f64, arg4: f64);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_AddPoint_2D(arg1: OGRGeometryH, arg2: f64, arg3: f64);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_AddPointM(arg1: OGRGeometryH, arg2: f64, arg3: f64, arg4: f64);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_AddPointZM(arg1: OGRGeometryH, arg2: f64, arg3: f64, arg4: f64, arg5: f64);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_SetPoints(
         hGeom: OGRGeometryH,
         nPointsIn: ::std::ffi::c_int,
@@ -3998,7 +3998,7 @@ unsafe extern "C" {
         nZStride: ::std::ffi::c_int,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_SetPointsZM(
         hGeom: OGRGeometryH,
         nPointsIn: ::std::ffi::c_int,
@@ -4012,48 +4012,48 @@ unsafe extern "C" {
         nMStride: ::std::ffi::c_int,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_SwapXY(hGeom: OGRGeometryH);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_GetGeometryCount(arg1: OGRGeometryH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_GetGeometryRef(arg1: OGRGeometryH, arg2: ::std::ffi::c_int) -> OGRGeometryH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_AddGeometry(arg1: OGRGeometryH, arg2: OGRGeometryH) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_AddGeometryDirectly(arg1: OGRGeometryH, arg2: OGRGeometryH) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_RemoveGeometry(
         arg1: OGRGeometryH,
         arg2: ::std::ffi::c_int,
         arg3: ::std::ffi::c_int,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_HasCurveGeometry(
         arg1: OGRGeometryH,
         bLookForNonLinear: ::std::ffi::c_int,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_GetLinearGeometry(
         hGeom: OGRGeometryH,
         dfMaxAngleStepSizeDegrees: f64,
         papszOptions: *mut *mut ::std::ffi::c_char,
     ) -> OGRGeometryH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_G_GetCurveGeometry(
         hGeom: OGRGeometryH,
         papszOptions: *mut *mut ::std::ffi::c_char,
     ) -> OGRGeometryH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGRBuildPolygonFromEdges(
         hLinesAsCollection: OGRGeometryH,
         bBestEffort: ::std::ffi::c_int,
@@ -4062,99 +4062,99 @@ unsafe extern "C" {
         peErr: *mut OGRErr::Type,
     ) -> OGRGeometryH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGRSetGenerate_DB2_V72_BYTE_ORDER(
         bGenerate_DB2_V72_BYTE_ORDER: ::std::ffi::c_int,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGRGetGenerate_DB2_V72_BYTE_ORDER() -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGRSetNonLinearGeometriesEnabledFlag(bFlag: ::std::ffi::c_int);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGRGetNonLinearGeometriesEnabledFlag() -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGRHasPreparedGeometrySupport() -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGRCreatePreparedGeometry(hGeom: OGRGeometryH) -> OGRPreparedGeometryH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGRDestroyPreparedGeometry(hPreparedGeom: OGRPreparedGeometryH);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGRPreparedGeometryIntersects(
         hPreparedGeom: OGRPreparedGeometryH,
         hOtherGeom: OGRGeometryH,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGRPreparedGeometryContains(
         hPreparedGeom: OGRPreparedGeometryH,
         hOtherGeom: OGRGeometryH,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_Fld_Create(
         arg1: *const ::std::ffi::c_char,
         arg2: OGRFieldType::Type,
     ) -> OGRFieldDefnH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_Fld_Destroy(arg1: OGRFieldDefnH);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_Fld_SetName(arg1: OGRFieldDefnH, arg2: *const ::std::ffi::c_char);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_Fld_GetNameRef(arg1: OGRFieldDefnH) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_Fld_SetAlternativeName(arg1: OGRFieldDefnH, arg2: *const ::std::ffi::c_char);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_Fld_GetAlternativeNameRef(arg1: OGRFieldDefnH) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_Fld_GetType(arg1: OGRFieldDefnH) -> OGRFieldType::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_Fld_SetType(arg1: OGRFieldDefnH, arg2: OGRFieldType::Type);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_Fld_GetSubType(arg1: OGRFieldDefnH) -> OGRFieldSubType::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_Fld_SetSubType(arg1: OGRFieldDefnH, arg2: OGRFieldSubType::Type);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_Fld_GetJustify(arg1: OGRFieldDefnH) -> OGRJustification::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_Fld_SetJustify(arg1: OGRFieldDefnH, arg2: OGRJustification::Type);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_Fld_GetWidth(arg1: OGRFieldDefnH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_Fld_SetWidth(arg1: OGRFieldDefnH, arg2: ::std::ffi::c_int);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_Fld_GetPrecision(arg1: OGRFieldDefnH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_Fld_SetPrecision(arg1: OGRFieldDefnH, arg2: ::std::ffi::c_int);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_Fld_GetTZFlag(arg1: OGRFieldDefnH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_Fld_SetTZFlag(arg1: OGRFieldDefnH, arg2: ::std::ffi::c_int);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_Fld_Set(
         arg1: OGRFieldDefnH,
         arg2: *const ::std::ffi::c_char,
@@ -4164,346 +4164,346 @@ unsafe extern "C" {
         arg6: OGRJustification::Type,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_Fld_IsIgnored(hDefn: OGRFieldDefnH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_Fld_SetIgnored(hDefn: OGRFieldDefnH, arg1: ::std::ffi::c_int);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_Fld_IsNullable(hDefn: OGRFieldDefnH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_Fld_SetNullable(hDefn: OGRFieldDefnH, arg1: ::std::ffi::c_int);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_Fld_SetGenerated(hDefn: OGRFieldDefnH, arg1: ::std::ffi::c_int);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_Fld_IsGenerated(hDefn: OGRFieldDefnH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_Fld_IsUnique(hDefn: OGRFieldDefnH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_Fld_SetUnique(hDefn: OGRFieldDefnH, arg1: ::std::ffi::c_int);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_Fld_GetDefault(hDefn: OGRFieldDefnH) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_Fld_SetDefault(hDefn: OGRFieldDefnH, arg1: *const ::std::ffi::c_char);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_Fld_IsDefaultDriverSpecific(hDefn: OGRFieldDefnH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_Fld_GetDomainName(hDefn: OGRFieldDefnH) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_Fld_SetDomainName(hDefn: OGRFieldDefnH, arg1: *const ::std::ffi::c_char);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_Fld_GetComment(hDefn: OGRFieldDefnH) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_Fld_SetComment(hDefn: OGRFieldDefnH, arg1: *const ::std::ffi::c_char);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_GetFieldTypeName(arg1: OGRFieldType::Type) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_GetFieldTypeByName(arg1: *const ::std::ffi::c_char) -> OGRFieldType::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_GetFieldSubTypeName(arg1: OGRFieldSubType::Type) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_GetFieldSubTypeByName(arg1: *const ::std::ffi::c_char) -> OGRFieldSubType::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_AreTypeSubTypeCompatible(
         eType: OGRFieldType::Type,
         eSubType: OGRFieldSubType::Type,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_GFld_Create(
         arg1: *const ::std::ffi::c_char,
         arg2: OGRwkbGeometryType::Type,
     ) -> OGRGeomFieldDefnH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_GFld_Destroy(arg1: OGRGeomFieldDefnH);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_GFld_SetName(arg1: OGRGeomFieldDefnH, arg2: *const ::std::ffi::c_char);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_GFld_GetNameRef(arg1: OGRGeomFieldDefnH) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_GFld_GetType(arg1: OGRGeomFieldDefnH) -> OGRwkbGeometryType::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_GFld_SetType(arg1: OGRGeomFieldDefnH, arg2: OGRwkbGeometryType::Type);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_GFld_GetSpatialRef(arg1: OGRGeomFieldDefnH) -> OGRSpatialReferenceH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_GFld_SetSpatialRef(arg1: OGRGeomFieldDefnH, hSRS: OGRSpatialReferenceH);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_GFld_IsNullable(hDefn: OGRGeomFieldDefnH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_GFld_SetNullable(hDefn: OGRGeomFieldDefnH, arg1: ::std::ffi::c_int);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_GFld_IsIgnored(hDefn: OGRGeomFieldDefnH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_GFld_SetIgnored(hDefn: OGRGeomFieldDefnH, arg1: ::std::ffi::c_int);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_GFld_GetCoordinatePrecision(arg1: OGRGeomFieldDefnH) -> OGRGeomCoordinatePrecisionH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_GFld_SetCoordinatePrecision(
         arg1: OGRGeomFieldDefnH,
         arg2: OGRGeomCoordinatePrecisionH,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_FD_Create(arg1: *const ::std::ffi::c_char) -> OGRFeatureDefnH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_FD_Destroy(arg1: OGRFeatureDefnH);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_FD_Release(arg1: OGRFeatureDefnH);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_FD_GetName(arg1: OGRFeatureDefnH) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_FD_GetFieldCount(arg1: OGRFeatureDefnH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_FD_GetFieldDefn(arg1: OGRFeatureDefnH, arg2: ::std::ffi::c_int) -> OGRFieldDefnH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_FD_GetFieldIndex(
         arg1: OGRFeatureDefnH,
         arg2: *const ::std::ffi::c_char,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_FD_AddFieldDefn(arg1: OGRFeatureDefnH, arg2: OGRFieldDefnH);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_FD_DeleteFieldDefn(
         hDefn: OGRFeatureDefnH,
         iField: ::std::ffi::c_int,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_FD_ReorderFieldDefns(
         hDefn: OGRFeatureDefnH,
         panMap: *const ::std::ffi::c_int,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_FD_GetGeomType(arg1: OGRFeatureDefnH) -> OGRwkbGeometryType::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_FD_SetGeomType(arg1: OGRFeatureDefnH, arg2: OGRwkbGeometryType::Type);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_FD_IsGeometryIgnored(arg1: OGRFeatureDefnH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_FD_SetGeometryIgnored(arg1: OGRFeatureDefnH, arg2: ::std::ffi::c_int);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_FD_IsStyleIgnored(arg1: OGRFeatureDefnH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_FD_SetStyleIgnored(arg1: OGRFeatureDefnH, arg2: ::std::ffi::c_int);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_FD_Reference(arg1: OGRFeatureDefnH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_FD_Dereference(arg1: OGRFeatureDefnH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_FD_GetReferenceCount(arg1: OGRFeatureDefnH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_FD_GetGeomFieldCount(hFDefn: OGRFeatureDefnH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_FD_GetGeomFieldDefn(
         hFDefn: OGRFeatureDefnH,
         i: ::std::ffi::c_int,
     ) -> OGRGeomFieldDefnH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_FD_GetGeomFieldIndex(
         hFDefn: OGRFeatureDefnH,
         pszName: *const ::std::ffi::c_char,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_FD_AddGeomFieldDefn(hFDefn: OGRFeatureDefnH, hGFldDefn: OGRGeomFieldDefnH);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_FD_DeleteGeomFieldDefn(
         hFDefn: OGRFeatureDefnH,
         iGeomField: ::std::ffi::c_int,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_FD_IsSame(
         hFDefn: OGRFeatureDefnH,
         hOtherFDefn: OGRFeatureDefnH,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_Create(arg1: OGRFeatureDefnH) -> OGRFeatureH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_Destroy(arg1: OGRFeatureH);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_GetDefnRef(arg1: OGRFeatureH) -> OGRFeatureDefnH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_SetGeometryDirectly(arg1: OGRFeatureH, arg2: OGRGeometryH) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_SetGeometry(arg1: OGRFeatureH, arg2: OGRGeometryH) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_GetGeometryRef(arg1: OGRFeatureH) -> OGRGeometryH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_StealGeometry(arg1: OGRFeatureH) -> OGRGeometryH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_StealGeometryEx(arg1: OGRFeatureH, iGeomField: ::std::ffi::c_int) -> OGRGeometryH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_Clone(arg1: OGRFeatureH) -> OGRFeatureH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_Equal(arg1: OGRFeatureH, arg2: OGRFeatureH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_GetFieldCount(arg1: OGRFeatureH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_GetFieldDefnRef(arg1: OGRFeatureH, arg2: ::std::ffi::c_int) -> OGRFieldDefnH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_GetFieldIndex(
         arg1: OGRFeatureH,
         arg2: *const ::std::ffi::c_char,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_IsFieldSet(arg1: OGRFeatureH, arg2: ::std::ffi::c_int) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_UnsetField(arg1: OGRFeatureH, arg2: ::std::ffi::c_int);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_IsFieldNull(arg1: OGRFeatureH, arg2: ::std::ffi::c_int) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_IsFieldSetAndNotNull(
         arg1: OGRFeatureH,
         arg2: ::std::ffi::c_int,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_SetFieldNull(arg1: OGRFeatureH, arg2: ::std::ffi::c_int);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_GetRawFieldRef(arg1: OGRFeatureH, arg2: ::std::ffi::c_int) -> *mut OGRField;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_RawField_IsUnset(arg1: *const OGRField) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_RawField_IsNull(arg1: *const OGRField) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_RawField_SetUnset(arg1: *mut OGRField);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_RawField_SetNull(arg1: *mut OGRField);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_GetFieldAsInteger(arg1: OGRFeatureH, arg2: ::std::ffi::c_int)
         -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_GetFieldAsInteger64(arg1: OGRFeatureH, arg2: ::std::ffi::c_int) -> GIntBig;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_GetFieldAsDouble(arg1: OGRFeatureH, arg2: ::std::ffi::c_int) -> f64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_GetFieldAsString(
         arg1: OGRFeatureH,
         arg2: ::std::ffi::c_int,
     ) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_GetFieldAsISO8601DateTime(
         arg1: OGRFeatureH,
         arg2: ::std::ffi::c_int,
         arg3: CSLConstList,
     ) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_GetFieldAsIntegerList(
         arg1: OGRFeatureH,
         arg2: ::std::ffi::c_int,
         arg3: *mut ::std::ffi::c_int,
     ) -> *const ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_GetFieldAsInteger64List(
         arg1: OGRFeatureH,
         arg2: ::std::ffi::c_int,
         arg3: *mut ::std::ffi::c_int,
     ) -> *const GIntBig;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_GetFieldAsDoubleList(
         arg1: OGRFeatureH,
         arg2: ::std::ffi::c_int,
         arg3: *mut ::std::ffi::c_int,
     ) -> *const f64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_GetFieldAsStringList(
         arg1: OGRFeatureH,
         arg2: ::std::ffi::c_int,
     ) -> *mut *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_GetFieldAsBinary(
         arg1: OGRFeatureH,
         arg2: ::std::ffi::c_int,
         arg3: *mut ::std::ffi::c_int,
     ) -> *mut GByte;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_GetFieldAsDateTime(
         arg1: OGRFeatureH,
         arg2: ::std::ffi::c_int,
@@ -4516,7 +4516,7 @@ unsafe extern "C" {
         arg9: *mut ::std::ffi::c_int,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_GetFieldAsDateTimeEx(
         hFeat: OGRFeatureH,
         iField: ::std::ffi::c_int,
@@ -4529,27 +4529,27 @@ unsafe extern "C" {
         pnTZFlag: *mut ::std::ffi::c_int,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_SetFieldInteger(
         arg1: OGRFeatureH,
         arg2: ::std::ffi::c_int,
         arg3: ::std::ffi::c_int,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_SetFieldInteger64(arg1: OGRFeatureH, arg2: ::std::ffi::c_int, arg3: GIntBig);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_SetFieldDouble(arg1: OGRFeatureH, arg2: ::std::ffi::c_int, arg3: f64);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_SetFieldString(
         arg1: OGRFeatureH,
         arg2: ::std::ffi::c_int,
         arg3: *const ::std::ffi::c_char,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_SetFieldIntegerList(
         arg1: OGRFeatureH,
         arg2: ::std::ffi::c_int,
@@ -4557,7 +4557,7 @@ unsafe extern "C" {
         arg4: *const ::std::ffi::c_int,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_SetFieldInteger64List(
         arg1: OGRFeatureH,
         arg2: ::std::ffi::c_int,
@@ -4565,7 +4565,7 @@ unsafe extern "C" {
         arg4: *const GIntBig,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_SetFieldDoubleList(
         arg1: OGRFeatureH,
         arg2: ::std::ffi::c_int,
@@ -4573,13 +4573,13 @@ unsafe extern "C" {
         arg4: *const f64,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_SetFieldStringList(arg1: OGRFeatureH, arg2: ::std::ffi::c_int, arg3: CSLConstList);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_SetFieldRaw(arg1: OGRFeatureH, arg2: ::std::ffi::c_int, arg3: *const OGRField);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_SetFieldBinary(
         arg1: OGRFeatureH,
         arg2: ::std::ffi::c_int,
@@ -4587,7 +4587,7 @@ unsafe extern "C" {
         arg4: *const ::std::ffi::c_void,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_SetFieldDateTime(
         arg1: OGRFeatureH,
         arg2: ::std::ffi::c_int,
@@ -4600,7 +4600,7 @@ unsafe extern "C" {
         arg9: ::std::ffi::c_int,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_SetFieldDateTimeEx(
         arg1: OGRFeatureH,
         arg2: ::std::ffi::c_int,
@@ -4613,61 +4613,61 @@ unsafe extern "C" {
         arg9: ::std::ffi::c_int,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_GetGeomFieldCount(hFeat: OGRFeatureH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_GetGeomFieldDefnRef(
         hFeat: OGRFeatureH,
         iField: ::std::ffi::c_int,
     ) -> OGRGeomFieldDefnH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_GetGeomFieldIndex(
         hFeat: OGRFeatureH,
         pszName: *const ::std::ffi::c_char,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_GetGeomFieldRef(hFeat: OGRFeatureH, iField: ::std::ffi::c_int) -> OGRGeometryH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_SetGeomFieldDirectly(
         hFeat: OGRFeatureH,
         iField: ::std::ffi::c_int,
         hGeom: OGRGeometryH,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_SetGeomField(
         hFeat: OGRFeatureH,
         iField: ::std::ffi::c_int,
         hGeom: OGRGeometryH,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_GetFID(arg1: OGRFeatureH) -> GIntBig;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_SetFID(arg1: OGRFeatureH, arg2: GIntBig) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_DumpReadable(arg1: OGRFeatureH, arg2: *mut FILE);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_DumpReadableAsString(
         arg1: OGRFeatureH,
         arg2: CSLConstList,
     ) -> *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_SetFrom(
         arg1: OGRFeatureH,
         arg2: OGRFeatureH,
         arg3: ::std::ffi::c_int,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_SetFromWithMap(
         arg1: OGRFeatureH,
         arg2: OGRFeatureH,
@@ -4675,87 +4675,87 @@ unsafe extern "C" {
         arg4: *const ::std::ffi::c_int,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_GetStyleString(arg1: OGRFeatureH) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_SetStyleString(arg1: OGRFeatureH, arg2: *const ::std::ffi::c_char);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_SetStyleStringDirectly(arg1: OGRFeatureH, arg2: *mut ::std::ffi::c_char);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_GetStyleTable(arg1: OGRFeatureH) -> OGRStyleTableH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_SetStyleTableDirectly(arg1: OGRFeatureH, arg2: OGRStyleTableH);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_SetStyleTable(arg1: OGRFeatureH, arg2: OGRStyleTableH);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_GetNativeData(arg1: OGRFeatureH) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_SetNativeData(arg1: OGRFeatureH, arg2: *const ::std::ffi::c_char);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_GetNativeMediaType(arg1: OGRFeatureH) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_SetNativeMediaType(arg1: OGRFeatureH, arg2: *const ::std::ffi::c_char);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_FillUnsetWithDefault(
         hFeat: OGRFeatureH,
         bNotNullableOnly: ::std::ffi::c_int,
         papszOptions: *mut *mut ::std::ffi::c_char,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_F_Validate(
         arg1: OGRFeatureH,
         nValidateFlags: ::std::ffi::c_int,
         bEmitError: ::std::ffi::c_int,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_FldDomain_Destroy(arg1: OGRFieldDomainH);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_FldDomain_GetName(arg1: OGRFieldDomainH) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_FldDomain_GetDescription(arg1: OGRFieldDomainH) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_FldDomain_GetDomainType(arg1: OGRFieldDomainH) -> OGRFieldDomainType::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_FldDomain_GetFieldType(arg1: OGRFieldDomainH) -> OGRFieldType::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_FldDomain_GetFieldSubType(arg1: OGRFieldDomainH) -> OGRFieldSubType::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_FldDomain_GetSplitPolicy(arg1: OGRFieldDomainH) -> OGRFieldDomainSplitPolicy::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_FldDomain_SetSplitPolicy(
         arg1: OGRFieldDomainH,
         arg2: OGRFieldDomainSplitPolicy::Type,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_FldDomain_GetMergePolicy(arg1: OGRFieldDomainH) -> OGRFieldDomainMergePolicy::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_FldDomain_SetMergePolicy(
         arg1: OGRFieldDomainH,
         arg2: OGRFieldDomainMergePolicy::Type,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_CodedFldDomain_Create(
         pszName: *const ::std::ffi::c_char,
         pszDescription: *const ::std::ffi::c_char,
@@ -4764,10 +4764,10 @@ unsafe extern "C" {
         enumeration: *const OGRCodedValue,
     ) -> OGRFieldDomainH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_CodedFldDomain_GetEnumeration(arg1: OGRFieldDomainH) -> *const OGRCodedValue;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_RangeFldDomain_Create(
         pszName: *const ::std::ffi::c_char,
         pszDescription: *const ::std::ffi::c_char,
@@ -4779,19 +4779,19 @@ unsafe extern "C" {
         bMaxIsInclusive: bool,
     ) -> OGRFieldDomainH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_RangeFldDomain_GetMin(
         arg1: OGRFieldDomainH,
         pbIsInclusiveOut: *mut bool,
     ) -> *const OGRField;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_RangeFldDomain_GetMax(
         arg1: OGRFieldDomainH,
         pbIsInclusiveOut: *mut bool,
     ) -> *const OGRField;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_GlobFldDomain_Create(
         pszName: *const ::std::ffi::c_char,
         pszDescription: *const ::std::ffi::c_char,
@@ -4800,13 +4800,13 @@ unsafe extern "C" {
         pszGlob: *const ::std::ffi::c_char,
     ) -> OGRFieldDomainH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_GlobFldDomain_GetGlob(arg1: OGRFieldDomainH) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_GetName(arg1: OGRLayerH) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_GetGeomType(arg1: OGRLayerH) -> OGRwkbGeometryType::Type;
 }
 #[repr(C)]
@@ -4825,7 +4825,7 @@ const _: () = {
     ["Offset of field: OGRGeometryTypeCounter::nCount"]
         [::std::mem::offset_of!(OGRGeometryTypeCounter, nCount) - 8usize];
 };
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_GetGeometryTypes(
         hLayer: OGRLayerH,
         iGeomField: ::std::ffi::c_int,
@@ -4835,23 +4835,23 @@ unsafe extern "C" {
         pProgressData: *mut ::std::ffi::c_void,
     ) -> *mut OGRGeometryTypeCounter;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_GetSpatialFilter(arg1: OGRLayerH) -> OGRGeometryH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_SetSpatialFilter(arg1: OGRLayerH, arg2: OGRGeometryH);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_SetSpatialFilterRect(arg1: OGRLayerH, arg2: f64, arg3: f64, arg4: f64, arg5: f64);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_SetSpatialFilterEx(
         arg1: OGRLayerH,
         iGeomField: ::std::ffi::c_int,
         hGeom: OGRGeometryH,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_SetSpatialFilterRectEx(
         arg1: OGRLayerH,
         iGeomField: ::std::ffi::c_int,
@@ -4861,26 +4861,26 @@ unsafe extern "C" {
         dfMaxY: f64,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_SetAttributeFilter(
         arg1: OGRLayerH,
         arg2: *const ::std::ffi::c_char,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_ResetReading(arg1: OGRLayerH);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_GetNextFeature(arg1: OGRLayerH) -> OGRFeatureH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_GetArrowStream(
         hLayer: OGRLayerH,
         out_stream: *mut ArrowArrayStream,
         papszOptions: *mut *mut ::std::ffi::c_char,
     ) -> bool;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_IsArrowSchemaSupported(
         hLayer: OGRLayerH,
         schema: *const ArrowSchema,
@@ -4888,14 +4888,14 @@ unsafe extern "C" {
         ppszErrorMsg: *mut *mut ::std::ffi::c_char,
     ) -> bool;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_CreateFieldFromArrowSchema(
         hLayer: OGRLayerH,
         schema: *const ArrowSchema,
         papszOptions: *mut *mut ::std::ffi::c_char,
     ) -> bool;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_WriteArrowBatch(
         hLayer: OGRLayerH,
         schema: *const ArrowSchema,
@@ -4903,25 +4903,25 @@ unsafe extern "C" {
         papszOptions: *mut *mut ::std::ffi::c_char,
     ) -> bool;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_SetNextByIndex(arg1: OGRLayerH, arg2: GIntBig) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_GetFeature(arg1: OGRLayerH, arg2: GIntBig) -> OGRFeatureH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_SetFeature(arg1: OGRLayerH, arg2: OGRFeatureH) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_CreateFeature(arg1: OGRLayerH, arg2: OGRFeatureH) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_DeleteFeature(arg1: OGRLayerH, arg2: GIntBig) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_UpsertFeature(arg1: OGRLayerH, arg2: OGRFeatureH) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_UpdateFeature(
         arg1: OGRLayerH,
         arg2: OGRFeatureH,
@@ -4932,44 +4932,44 @@ unsafe extern "C" {
         bUpdateStyleString: bool,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_GetLayerDefn(arg1: OGRLayerH) -> OGRFeatureDefnH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_GetSpatialRef(arg1: OGRLayerH) -> OGRSpatialReferenceH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_GetSupportedSRSList(
         hLayer: OGRLayerH,
         iGeomField: ::std::ffi::c_int,
         pnCount: *mut ::std::ffi::c_int,
     ) -> *mut OGRSpatialReferenceH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_SetActiveSRS(
         hLayer: OGRLayerH,
         iGeomField: ::std::ffi::c_int,
         hSRS: OGRSpatialReferenceH,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_FindFieldIndex(
         arg1: OGRLayerH,
         arg2: *const ::std::ffi::c_char,
         bExactMatch: ::std::ffi::c_int,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_GetFeatureCount(arg1: OGRLayerH, arg2: ::std::ffi::c_int) -> GIntBig;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_GetExtent(
         arg1: OGRLayerH,
         arg2: *mut OGREnvelope,
         arg3: ::std::ffi::c_int,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_GetExtentEx(
         arg1: OGRLayerH,
         iGeomField: ::std::ffi::c_int,
@@ -4977,7 +4977,7 @@ unsafe extern "C" {
         bForce: ::std::ffi::c_int,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_GetExtent3D(
         hLayer: OGRLayerH,
         iGeomField: ::std::ffi::c_int,
@@ -4985,40 +4985,40 @@ unsafe extern "C" {
         bForce: ::std::ffi::c_int,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_TestCapability(
         arg1: OGRLayerH,
         arg2: *const ::std::ffi::c_char,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_CreateField(
         arg1: OGRLayerH,
         arg2: OGRFieldDefnH,
         arg3: ::std::ffi::c_int,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_CreateGeomField(
         hLayer: OGRLayerH,
         hFieldDefn: OGRGeomFieldDefnH,
         bForce: ::std::ffi::c_int,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_DeleteField(arg1: OGRLayerH, iField: ::std::ffi::c_int) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_ReorderFields(arg1: OGRLayerH, panMap: *mut ::std::ffi::c_int) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_ReorderField(
         arg1: OGRLayerH,
         iOldFieldPos: ::std::ffi::c_int,
         iNewFieldPos: ::std::ffi::c_int,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_AlterFieldDefn(
         arg1: OGRLayerH,
         iField: ::std::ffi::c_int,
@@ -5026,7 +5026,7 @@ unsafe extern "C" {
         nFlags: ::std::ffi::c_int,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_AlterGeomFieldDefn(
         arg1: OGRLayerH,
         iField: ::std::ffi::c_int,
@@ -5034,55 +5034,55 @@ unsafe extern "C" {
         nFlags: ::std::ffi::c_int,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_StartTransaction(arg1: OGRLayerH) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_CommitTransaction(arg1: OGRLayerH) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_RollbackTransaction(arg1: OGRLayerH) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_Rename(hLayer: OGRLayerH, pszNewName: *const ::std::ffi::c_char) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_Reference(arg1: OGRLayerH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_Dereference(arg1: OGRLayerH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_GetRefCount(arg1: OGRLayerH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_SyncToDisk(arg1: OGRLayerH) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_GetFeaturesRead(arg1: OGRLayerH) -> GIntBig;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_GetFIDColumn(arg1: OGRLayerH) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_GetGeometryColumn(arg1: OGRLayerH) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_GetStyleTable(arg1: OGRLayerH) -> OGRStyleTableH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_SetStyleTableDirectly(arg1: OGRLayerH, arg2: OGRStyleTableH);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_SetStyleTable(arg1: OGRLayerH, arg2: OGRStyleTableH);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_SetIgnoredFields(
         arg1: OGRLayerH,
         arg2: *mut *const ::std::ffi::c_char,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_Intersection(
         arg1: OGRLayerH,
         arg2: OGRLayerH,
@@ -5092,7 +5092,7 @@ unsafe extern "C" {
         arg6: *mut ::std::ffi::c_void,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_Union(
         arg1: OGRLayerH,
         arg2: OGRLayerH,
@@ -5102,7 +5102,7 @@ unsafe extern "C" {
         arg6: *mut ::std::ffi::c_void,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_SymDifference(
         arg1: OGRLayerH,
         arg2: OGRLayerH,
@@ -5112,7 +5112,7 @@ unsafe extern "C" {
         arg6: *mut ::std::ffi::c_void,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_Identity(
         arg1: OGRLayerH,
         arg2: OGRLayerH,
@@ -5122,7 +5122,7 @@ unsafe extern "C" {
         arg6: *mut ::std::ffi::c_void,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_Update(
         arg1: OGRLayerH,
         arg2: OGRLayerH,
@@ -5132,7 +5132,7 @@ unsafe extern "C" {
         arg6: *mut ::std::ffi::c_void,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_Clip(
         arg1: OGRLayerH,
         arg2: OGRLayerH,
@@ -5142,7 +5142,7 @@ unsafe extern "C" {
         arg6: *mut ::std::ffi::c_void,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_Erase(
         arg1: OGRLayerH,
         arg2: OGRLayerH,
@@ -5152,31 +5152,31 @@ unsafe extern "C" {
         arg6: *mut ::std::ffi::c_void,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_DS_Destroy(arg1: OGRDataSourceH);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_DS_GetName(arg1: OGRDataSourceH) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_DS_GetLayerCount(arg1: OGRDataSourceH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_DS_GetLayer(arg1: OGRDataSourceH, arg2: ::std::ffi::c_int) -> OGRLayerH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_DS_GetLayerByName(
         arg1: OGRDataSourceH,
         arg2: *const ::std::ffi::c_char,
     ) -> OGRLayerH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_DS_DeleteLayer(arg1: OGRDataSourceH, arg2: ::std::ffi::c_int) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_DS_GetDriver(arg1: OGRDataSourceH) -> OGRSFDriverH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_DS_CreateLayer(
         arg1: OGRDataSourceH,
         arg2: *const ::std::ffi::c_char,
@@ -5185,7 +5185,7 @@ unsafe extern "C" {
         arg5: *mut *mut ::std::ffi::c_char,
     ) -> OGRLayerH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_DS_CopyLayer(
         arg1: OGRDataSourceH,
         arg2: OGRLayerH,
@@ -5193,13 +5193,13 @@ unsafe extern "C" {
         arg4: *mut *mut ::std::ffi::c_char,
     ) -> OGRLayerH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_DS_TestCapability(
         arg1: OGRDataSourceH,
         arg2: *const ::std::ffi::c_char,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_DS_ExecuteSQL(
         arg1: OGRDataSourceH,
         arg2: *const ::std::ffi::c_char,
@@ -5207,57 +5207,57 @@ unsafe extern "C" {
         arg4: *const ::std::ffi::c_char,
     ) -> OGRLayerH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_DS_ReleaseResultSet(arg1: OGRDataSourceH, arg2: OGRLayerH);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_DS_Reference(arg1: OGRDataSourceH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_DS_Dereference(arg1: OGRDataSourceH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_DS_GetRefCount(arg1: OGRDataSourceH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_DS_GetSummaryRefCount(arg1: OGRDataSourceH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_DS_SyncToDisk(arg1: OGRDataSourceH) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_DS_GetStyleTable(arg1: OGRDataSourceH) -> OGRStyleTableH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_DS_SetStyleTableDirectly(arg1: OGRDataSourceH, arg2: OGRStyleTableH);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_DS_SetStyleTable(arg1: OGRDataSourceH, arg2: OGRStyleTableH);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_Dr_GetName(arg1: OGRSFDriverH) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_Dr_Open(
         arg1: OGRSFDriverH,
         arg2: *const ::std::ffi::c_char,
         arg3: ::std::ffi::c_int,
     ) -> OGRDataSourceH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_Dr_TestCapability(
         arg1: OGRSFDriverH,
         arg2: *const ::std::ffi::c_char,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_Dr_CreateDataSource(
         arg1: OGRSFDriverH,
         arg2: *const ::std::ffi::c_char,
         arg3: *mut *mut ::std::ffi::c_char,
     ) -> OGRDataSourceH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_Dr_CopyDataSource(
         arg1: OGRSFDriverH,
         arg2: OGRDataSourceH,
@@ -5265,154 +5265,154 @@ unsafe extern "C" {
         arg4: *mut *mut ::std::ffi::c_char,
     ) -> OGRDataSourceH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_Dr_DeleteDataSource(
         arg1: OGRSFDriverH,
         arg2: *const ::std::ffi::c_char,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGROpen(
         arg1: *const ::std::ffi::c_char,
         arg2: ::std::ffi::c_int,
         arg3: *mut OGRSFDriverH,
     ) -> OGRDataSourceH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGROpenShared(
         arg1: *const ::std::ffi::c_char,
         arg2: ::std::ffi::c_int,
         arg3: *mut OGRSFDriverH,
     ) -> OGRDataSourceH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGRReleaseDataSource(arg1: OGRDataSourceH) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGRRegisterDriver(arg1: OGRSFDriverH);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGRDeregisterDriver(arg1: OGRSFDriverH);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGRGetDriverCount() -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGRGetDriver(arg1: ::std::ffi::c_int) -> OGRSFDriverH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGRGetDriverByName(arg1: *const ::std::ffi::c_char) -> OGRSFDriverH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGRGetOpenDSCount() -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGRGetOpenDS(iDS: ::std::ffi::c_int) -> OGRDataSourceH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGRRegisterAll();
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGRCleanupAll();
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_SM_Create(hStyleTable: OGRStyleTableH) -> OGRStyleMgrH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_SM_Destroy(hSM: OGRStyleMgrH);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_SM_InitFromFeature(
         hSM: OGRStyleMgrH,
         hFeat: OGRFeatureH,
     ) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_SM_InitStyleString(
         hSM: OGRStyleMgrH,
         pszStyleString: *const ::std::ffi::c_char,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_SM_GetPartCount(
         hSM: OGRStyleMgrH,
         pszStyleString: *const ::std::ffi::c_char,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_SM_GetPart(
         hSM: OGRStyleMgrH,
         nPartId: ::std::ffi::c_int,
         pszStyleString: *const ::std::ffi::c_char,
     ) -> OGRStyleToolH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_SM_AddPart(hSM: OGRStyleMgrH, hST: OGRStyleToolH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_SM_AddStyle(
         hSM: OGRStyleMgrH,
         pszStyleName: *const ::std::ffi::c_char,
         pszStyleString: *const ::std::ffi::c_char,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_ST_Create(eClassId: OGRSTClassId) -> OGRStyleToolH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_ST_Destroy(hST: OGRStyleToolH);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_ST_GetType(hST: OGRStyleToolH) -> OGRSTClassId;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_ST_GetUnit(hST: OGRStyleToolH) -> OGRSTUnitId;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_ST_SetUnit(hST: OGRStyleToolH, eUnit: OGRSTUnitId, dfGroundPaperScale: f64);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_ST_GetParamStr(
         hST: OGRStyleToolH,
         eParam: ::std::ffi::c_int,
         bValueIsNull: *mut ::std::ffi::c_int,
     ) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_ST_GetParamNum(
         hST: OGRStyleToolH,
         eParam: ::std::ffi::c_int,
         bValueIsNull: *mut ::std::ffi::c_int,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_ST_GetParamDbl(
         hST: OGRStyleToolH,
         eParam: ::std::ffi::c_int,
         bValueIsNull: *mut ::std::ffi::c_int,
     ) -> f64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_ST_SetParamStr(
         hST: OGRStyleToolH,
         eParam: ::std::ffi::c_int,
         pszValue: *const ::std::ffi::c_char,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_ST_SetParamNum(
         hST: OGRStyleToolH,
         eParam: ::std::ffi::c_int,
         nValue: ::std::ffi::c_int,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_ST_SetParamDbl(hST: OGRStyleToolH, eParam: ::std::ffi::c_int, dfValue: f64);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_ST_GetStyleString(hST: OGRStyleToolH) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_ST_GetRGBFromString(
         hST: OGRStyleToolH,
         pszColor: *const ::std::ffi::c_char,
@@ -5422,44 +5422,44 @@ unsafe extern "C" {
         pnAlpha: *mut ::std::ffi::c_int,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_STBL_Create() -> OGRStyleTableH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_STBL_Destroy(hSTBL: OGRStyleTableH);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_STBL_AddStyle(
         hStyleTable: OGRStyleTableH,
         pszName: *const ::std::ffi::c_char,
         pszStyleString: *const ::std::ffi::c_char,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_STBL_SaveStyleTable(
         hStyleTable: OGRStyleTableH,
         pszFilename: *const ::std::ffi::c_char,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_STBL_LoadStyleTable(
         hStyleTable: OGRStyleTableH,
         pszFilename: *const ::std::ffi::c_char,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_STBL_Find(
         hStyleTable: OGRStyleTableH,
         pszName: *const ::std::ffi::c_char,
     ) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_STBL_ResetStyleStringReading(hStyleTable: OGRStyleTableH);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_STBL_GetNextStyle(hStyleTable: OGRStyleTableH) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_STBL_GetLastStyleName(hStyleTable: OGRStyleTableH) -> *const ::std::ffi::c_char;
 }
 pub mod GDALDataType {
@@ -5483,47 +5483,47 @@ pub mod GDALDataType {
     pub const GDT_CFloat64: Type = 11;
     pub const GDT_TypeCount: Type = 17;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetDataTypeSize(arg1: GDALDataType::Type) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetDataTypeSizeBits(eDataType: GDALDataType::Type) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetDataTypeSizeBytes(arg1: GDALDataType::Type) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDataTypeIsComplex(arg1: GDALDataType::Type) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDataTypeIsInteger(arg1: GDALDataType::Type) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDataTypeIsFloating(arg1: GDALDataType::Type) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDataTypeIsSigned(arg1: GDALDataType::Type) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetDataTypeName(arg1: GDALDataType::Type) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetDataTypeByName(arg1: *const ::std::ffi::c_char) -> GDALDataType::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDataTypeUnion(
         arg1: GDALDataType::Type,
         arg2: GDALDataType::Type,
     ) -> GDALDataType::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDataTypeUnionWithValue(
         eDT: GDALDataType::Type,
         dValue: f64,
         bComplex: ::std::ffi::c_int,
     ) -> GDALDataType::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALFindDataType(
         nBits: ::std::ffi::c_int,
         bSigned: ::std::ffi::c_int,
@@ -5531,11 +5531,11 @@ unsafe extern "C" {
         bComplex: ::std::ffi::c_int,
     ) -> GDALDataType::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALFindDataTypeForValue(dValue: f64, bComplex: ::std::ffi::c_int)
         -> GDALDataType::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALAdjustValueToDataType(
         eDT: GDALDataType::Type,
         dfValue: f64,
@@ -5543,16 +5543,16 @@ unsafe extern "C" {
         pbRounded: *mut ::std::ffi::c_int,
     ) -> f64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALIsValueExactAs(dfValue: f64, eDT: GDALDataType::Type) -> bool;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALIsValueInRangeOf(dfValue: f64, eDT: GDALDataType::Type) -> bool;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetNonComplexDataType(arg1: GDALDataType::Type) -> GDALDataType::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDataTypeIsConversionLossy(
         eTypeFrom: GDALDataType::Type,
         eTypeTo: GDALDataType::Type,
@@ -5566,11 +5566,11 @@ pub mod GDALAsyncStatusType {
     pub const GARIO_COMPLETE: Type = 3;
     pub const GARIO_TypeCount: Type = 4;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetAsyncStatusTypeName(arg1: GDALAsyncStatusType::Type)
         -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetAsyncStatusTypeByName(
         arg1: *const ::std::ffi::c_char,
     ) -> GDALAsyncStatusType::Type;
@@ -5680,11 +5680,11 @@ pub mod GDALColorInterp {
     pub const GCI_SAR_Reserved_2: Type = 39;
     pub const GCI_Max: Type = 39;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetColorInterpretationName(arg1: GDALColorInterp::Type)
         -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetColorInterpretationByName(
         pszName: *const ::std::ffi::c_char,
     ) -> GDALColorInterp::Type;
@@ -5696,7 +5696,7 @@ pub mod GDALPaletteInterp {
     pub const GPI_CMYK: Type = 2;
     pub const GPI_HLS: Type = 3;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetPaletteInterpretationName(
         arg1: GDALPaletteInterp::Type,
     ) -> *const ::std::ffi::c_char;
@@ -5713,16 +5713,16 @@ pub mod GDALExtendedDataTypeSubType {
     pub const GEDTST_NONE: Type = 0;
     pub const GEDTST_JSON: Type = 1;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALAllRegister();
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRegisterPlugins();
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRegisterPlugin(name: *const ::std::ffi::c_char) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALCreate(
         hDriver: GDALDriverH,
         arg1: *const ::std::ffi::c_char,
@@ -5733,7 +5733,7 @@ unsafe extern "C" {
         arg6: CSLConstList,
     ) -> GDALDatasetH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALCreateCopy(
         arg1: GDALDriverH,
         arg2: *const ::std::ffi::c_char,
@@ -5744,13 +5744,13 @@ unsafe extern "C" {
         arg7: *mut ::std::ffi::c_void,
     ) -> GDALDatasetH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALIdentifyDriver(
         pszFilename: *const ::std::ffi::c_char,
         papszFileList: CSLConstList,
     ) -> GDALDriverH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALIdentifyDriverEx(
         pszFilename: *const ::std::ffi::c_char,
         nIdentifyFlags: ::std::ffi::c_uint,
@@ -5758,16 +5758,16 @@ unsafe extern "C" {
         papszFileList: *const *const ::std::ffi::c_char,
     ) -> GDALDriverH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALOpen(
         pszFilename: *const ::std::ffi::c_char,
         eAccess: GDALAccess::Type,
     ) -> GDALDatasetH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALOpenShared(arg1: *const ::std::ffi::c_char, arg2: GDALAccess::Type) -> GDALDatasetH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALOpenEx(
         pszFilename: *const ::std::ffi::c_char,
         nOpenFlags: ::std::ffi::c_uint,
@@ -5776,60 +5776,60 @@ unsafe extern "C" {
         papszSiblingFiles: *const *const ::std::ffi::c_char,
     ) -> GDALDatasetH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDumpOpenDatasets(arg1: *mut FILE) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetDriverByName(arg1: *const ::std::ffi::c_char) -> GDALDriverH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetDriverCount() -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetDriver(arg1: ::std::ffi::c_int) -> GDALDriverH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALCreateDriver() -> GDALDriverH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDestroyDriver(arg1: GDALDriverH);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRegisterDriver(arg1: GDALDriverH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDeregisterDriver(arg1: GDALDriverH);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDestroyDriverManager();
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDestroy();
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDeleteDataset(arg1: GDALDriverH, arg2: *const ::std::ffi::c_char) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRenameDataset(
         arg1: GDALDriverH,
         pszNewName: *const ::std::ffi::c_char,
         pszOldName: *const ::std::ffi::c_char,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALCopyDatasetFiles(
         arg1: GDALDriverH,
         pszNewName: *const ::std::ffi::c_char,
         pszOldName: *const ::std::ffi::c_char,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALValidateCreationOptions(
         arg1: GDALDriverH,
         papszCreationOptions: CSLConstList,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetOutputDriversForDatasetName(
         pszDestFilename: *const ::std::ffi::c_char,
         nFlagRasterVector: ::std::ffi::c_int,
@@ -5837,22 +5837,22 @@ unsafe extern "C" {
         bEmitWarning: bool,
     ) -> *mut *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDriverHasOpenOption(
         arg1: GDALDriverH,
         pszOpenOptionName: *const ::std::ffi::c_char,
     ) -> bool;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetDriverShortName(arg1: GDALDriverH) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetDriverLongName(arg1: GDALDriverH) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetDriverHelpTopic(arg1: GDALDriverH) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetDriverCreationOptionList(arg1: GDALDriverH) -> *const ::std::ffi::c_char;
 }
 #[repr(C)]
@@ -5879,16 +5879,16 @@ const _: () = {
     ["Offset of field: GDAL_GCP::dfGCPY"][::std::mem::offset_of!(GDAL_GCP, dfGCPY) - 40usize];
     ["Offset of field: GDAL_GCP::dfGCPZ"][::std::mem::offset_of!(GDAL_GCP, dfGCPZ) - 48usize];
 };
-unsafe extern "C" {
+extern "C" {
     pub fn GDALInitGCPs(arg1: ::std::ffi::c_int, arg2: *mut GDAL_GCP);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDeinitGCPs(arg1: ::std::ffi::c_int, arg2: *mut GDAL_GCP);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDuplicateGCPs(arg1: ::std::ffi::c_int, arg2: *const GDAL_GCP) -> *mut GDAL_GCP;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGCPsToGeoTransform(
         nGCPCount: ::std::ffi::c_int,
         pasGCPs: *const GDAL_GCP,
@@ -5896,13 +5896,13 @@ unsafe extern "C" {
         bApproxOK: ::std::ffi::c_int,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALInvGeoTransform(
         padfGeoTransformIn: *const f64,
         padfInvGeoTransformOut: *mut f64,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALApplyGeoTransform(
         arg1: *const f64,
         arg2: f64,
@@ -5911,27 +5911,27 @@ unsafe extern "C" {
         arg5: *mut f64,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALComposeGeoTransforms(
         padfGeoTransform1: *const f64,
         padfGeoTransform2: *const f64,
         padfGeoTransformOut: *mut f64,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGCPsToHomography(
         nGCPCount: ::std::ffi::c_int,
         pasGCPs: *const GDAL_GCP,
         padfHomography: *mut f64,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALInvHomography(
         padfHomographyIn: *const f64,
         padfInvHomographyOut: *mut f64,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALApplyHomography(
         arg1: *const f64,
         arg2: f64,
@@ -5940,37 +5940,37 @@ unsafe extern "C" {
         arg5: *mut f64,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALComposeHomographies(
         padfHomography1: *const f64,
         padfHomography2: *const f64,
         padfHomographyOut: *mut f64,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetMetadataDomainList(hObject: GDALMajorObjectH) -> *mut *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetMetadata(
         arg1: GDALMajorObjectH,
         arg2: *const ::std::ffi::c_char,
     ) -> *mut *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALSetMetadata(
         arg1: GDALMajorObjectH,
         arg2: CSLConstList,
         arg3: *const ::std::ffi::c_char,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetMetadataItem(
         arg1: GDALMajorObjectH,
         arg2: *const ::std::ffi::c_char,
         arg3: *const ::std::ffi::c_char,
     ) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALSetMetadataItem(
         arg1: GDALMajorObjectH,
         arg2: *const ::std::ffi::c_char,
@@ -5978,55 +5978,55 @@ unsafe extern "C" {
         arg4: *const ::std::ffi::c_char,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetDescription(arg1: GDALMajorObjectH) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALSetDescription(arg1: GDALMajorObjectH, arg2: *const ::std::ffi::c_char);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetDatasetDriver(arg1: GDALDatasetH) -> GDALDriverH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetFileList(arg1: GDALDatasetH) -> *mut *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALClose(arg1: GDALDatasetH) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetRasterXSize(arg1: GDALDatasetH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetRasterYSize(arg1: GDALDatasetH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetRasterCount(arg1: GDALDatasetH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetRasterBand(arg1: GDALDatasetH, arg2: ::std::ffi::c_int) -> GDALRasterBandH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDatasetIsThreadSafe(
         arg1: GDALDatasetH,
         nScopeFlags: ::std::ffi::c_int,
         papszOptions: CSLConstList,
     ) -> bool;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetThreadSafeDataset(
         arg1: GDALDatasetH,
         nScopeFlags: ::std::ffi::c_int,
         papszOptions: CSLConstList,
     ) -> GDALDatasetH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALAddBand(
         hDS: GDALDatasetH,
         eType: GDALDataType::Type,
         papszOptions: CSLConstList,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALBeginAsyncReader(
         hDS: GDALDatasetH,
         nXOff: ::std::ffi::c_int,
@@ -6045,10 +6045,10 @@ unsafe extern "C" {
         papszOptions: CSLConstList,
     ) -> GDALAsyncReaderH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALEndAsyncReader(hDS: GDALDatasetH, hAsynchReaderH: GDALAsyncReaderH);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDatasetRasterIO(
         hDS: GDALDatasetH,
         eRWFlag: GDALRWFlag::Type,
@@ -6067,7 +6067,7 @@ unsafe extern "C" {
         nBandSpace: ::std::ffi::c_int,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDatasetRasterIOEx(
         hDS: GDALDatasetH,
         eRWFlag: GDALRWFlag::Type,
@@ -6087,7 +6087,7 @@ unsafe extern "C" {
         psExtraArg: *mut GDALRasterIOExtraArg,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDatasetAdviseRead(
         hDS: GDALDatasetH,
         nDSXOff: ::std::ffi::c_int,
@@ -6102,7 +6102,7 @@ unsafe extern "C" {
         papszOptions: CSLConstList,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDatasetGetCompressionFormats(
         hDS: GDALDatasetH,
         nXOff: ::std::ffi::c_int,
@@ -6113,7 +6113,7 @@ unsafe extern "C" {
         panBandList: *const ::std::ffi::c_int,
     ) -> *mut *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDatasetReadCompressedData(
         hDS: GDALDatasetH,
         pszFormat: *const ::std::ffi::c_char,
@@ -6128,25 +6128,25 @@ unsafe extern "C" {
         ppszDetailedFormat: *mut *mut ::std::ffi::c_char,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetProjectionRef(arg1: GDALDatasetH) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetSpatialRef(arg1: GDALDatasetH) -> OGRSpatialReferenceH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALSetProjection(arg1: GDALDatasetH, arg2: *const ::std::ffi::c_char) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALSetSpatialRef(arg1: GDALDatasetH, arg2: OGRSpatialReferenceH) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetGeoTransform(arg1: GDALDatasetH, arg2: *mut f64) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALSetGeoTransform(arg1: GDALDatasetH, arg2: *mut f64) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDatasetGeolocationToPixelLine(
         arg1: GDALDatasetH,
         dfGeolocX: f64,
@@ -6157,19 +6157,19 @@ unsafe extern "C" {
         papszTransformerOptions: CSLConstList,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetGCPCount(arg1: GDALDatasetH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetGCPProjection(arg1: GDALDatasetH) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetGCPSpatialRef(arg1: GDALDatasetH) -> OGRSpatialReferenceH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetGCPs(arg1: GDALDatasetH) -> *const GDAL_GCP;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALSetGCPs(
         arg1: GDALDatasetH,
         arg2: ::std::ffi::c_int,
@@ -6177,7 +6177,7 @@ unsafe extern "C" {
         arg4: *const ::std::ffi::c_char,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALSetGCPs2(
         arg1: GDALDatasetH,
         arg2: ::std::ffi::c_int,
@@ -6185,22 +6185,22 @@ unsafe extern "C" {
         arg4: OGRSpatialReferenceH,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetInternalHandle(
         arg1: GDALDatasetH,
         arg2: *const ::std::ffi::c_char,
     ) -> *mut ::std::ffi::c_void;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALReferenceDataset(arg1: GDALDatasetH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDereferenceDataset(arg1: GDALDatasetH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALReleaseDataset(arg1: GDALDatasetH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALBuildOverviews(
         arg1: GDALDatasetH,
         arg2: *const ::std::ffi::c_char,
@@ -6212,7 +6212,7 @@ unsafe extern "C" {
         arg8: *mut ::std::ffi::c_void,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALBuildOverviewsEx(
         arg1: GDALDatasetH,
         arg2: *const ::std::ffi::c_char,
@@ -6225,22 +6225,22 @@ unsafe extern "C" {
         papszOptions: CSLConstList,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetOpenDatasets(hDS: *mut *mut GDALDatasetH, pnCount: *mut ::std::ffi::c_int);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetAccess(hDS: GDALDatasetH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALFlushCache(hDS: GDALDatasetH) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDropCache(hDS: GDALDatasetH) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALCreateDatasetMaskBand(hDS: GDALDatasetH, nFlags: ::std::ffi::c_int) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDatasetCopyWholeRaster(
         hSrcDS: GDALDatasetH,
         hDstDS: GDALDatasetH,
@@ -6249,7 +6249,7 @@ unsafe extern "C" {
         pProgressData: *mut ::std::ffi::c_void,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRasterBandCopyWholeRaster(
         hSrcBand: GDALRasterBandH,
         hDstBand: GDALRasterBandH,
@@ -6258,7 +6258,7 @@ unsafe extern "C" {
         pProgressData: *mut ::std::ffi::c_void,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRegenerateOverviews(
         hSrcBand: GDALRasterBandH,
         nOverviewCount: ::std::ffi::c_int,
@@ -6268,7 +6268,7 @@ unsafe extern "C" {
         pProgressData: *mut ::std::ffi::c_void,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRegenerateOverviewsEx(
         hSrcBand: GDALRasterBandH,
         nOverviewCount: ::std::ffi::c_int,
@@ -6279,31 +6279,31 @@ unsafe extern "C" {
         papszOptions: CSLConstList,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDatasetGetLayerCount(arg1: GDALDatasetH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDatasetGetLayer(arg1: GDALDatasetH, arg2: ::std::ffi::c_int) -> OGRLayerH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGR_L_GetDataset(hLayer: OGRLayerH) -> GDALDatasetH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDatasetGetLayerByName(
         arg1: GDALDatasetH,
         arg2: *const ::std::ffi::c_char,
     ) -> OGRLayerH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDatasetIsLayerPrivate(
         arg1: GDALDatasetH,
         arg2: ::std::ffi::c_int,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDatasetDeleteLayer(arg1: GDALDatasetH, arg2: ::std::ffi::c_int) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDatasetCreateLayer(
         arg1: GDALDatasetH,
         arg2: *const ::std::ffi::c_char,
@@ -6312,7 +6312,7 @@ unsafe extern "C" {
         arg5: CSLConstList,
     ) -> OGRLayerH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDatasetCreateLayerFromGeomFieldDefn(
         arg1: GDALDatasetH,
         arg2: *const ::std::ffi::c_char,
@@ -6320,7 +6320,7 @@ unsafe extern "C" {
         arg4: CSLConstList,
     ) -> OGRLayerH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDatasetCopyLayer(
         arg1: GDALDatasetH,
         arg2: OGRLayerH,
@@ -6328,10 +6328,10 @@ unsafe extern "C" {
         arg4: CSLConstList,
     ) -> OGRLayerH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDatasetResetReading(arg1: GDALDatasetH);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDatasetGetNextFeature(
         hDS: GDALDatasetH,
         phBelongingLayer: *mut OGRLayerH,
@@ -6340,13 +6340,13 @@ unsafe extern "C" {
         pProgressData: *mut ::std::ffi::c_void,
     ) -> OGRFeatureH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDatasetTestCapability(
         arg1: GDALDatasetH,
         arg2: *const ::std::ffi::c_char,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDatasetExecuteSQL(
         arg1: GDALDatasetH,
         arg2: *const ::std::ffi::c_char,
@@ -6354,96 +6354,96 @@ unsafe extern "C" {
         arg4: *const ::std::ffi::c_char,
     ) -> OGRLayerH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDatasetAbortSQL(arg1: GDALDatasetH) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDatasetReleaseResultSet(arg1: GDALDatasetH, arg2: OGRLayerH);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDatasetGetStyleTable(arg1: GDALDatasetH) -> OGRStyleTableH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDatasetSetStyleTableDirectly(arg1: GDALDatasetH, arg2: OGRStyleTableH);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDatasetSetStyleTable(arg1: GDALDatasetH, arg2: OGRStyleTableH);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDatasetStartTransaction(
         hDS: GDALDatasetH,
         bForce: ::std::ffi::c_int,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDatasetCommitTransaction(hDS: GDALDatasetH) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDatasetRollbackTransaction(hDS: GDALDatasetH) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDatasetClearStatistics(hDS: GDALDatasetH);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDatasetGetFieldDomainNames(
         arg1: GDALDatasetH,
         arg2: CSLConstList,
     ) -> *mut *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDatasetGetFieldDomain(
         hDS: GDALDatasetH,
         pszName: *const ::std::ffi::c_char,
     ) -> OGRFieldDomainH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDatasetAddFieldDomain(
         hDS: GDALDatasetH,
         hFieldDomain: OGRFieldDomainH,
         ppszFailureReason: *mut *mut ::std::ffi::c_char,
     ) -> bool;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDatasetDeleteFieldDomain(
         hDS: GDALDatasetH,
         pszName: *const ::std::ffi::c_char,
         ppszFailureReason: *mut *mut ::std::ffi::c_char,
     ) -> bool;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDatasetUpdateFieldDomain(
         hDS: GDALDatasetH,
         hFieldDomain: OGRFieldDomainH,
         ppszFailureReason: *mut *mut ::std::ffi::c_char,
     ) -> bool;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDatasetGetRelationshipNames(
         arg1: GDALDatasetH,
         arg2: CSLConstList,
     ) -> *mut *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDatasetGetRelationship(
         hDS: GDALDatasetH,
         pszName: *const ::std::ffi::c_char,
     ) -> GDALRelationshipH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDatasetAddRelationship(
         hDS: GDALDatasetH,
         hRelationship: GDALRelationshipH,
         ppszFailureReason: *mut *mut ::std::ffi::c_char,
     ) -> bool;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDatasetDeleteRelationship(
         hDS: GDALDatasetH,
         pszName: *const ::std::ffi::c_char,
         ppszFailureReason: *mut *mut ::std::ffi::c_char,
     ) -> bool;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDatasetUpdateRelationship(
         hDS: GDALDatasetH,
         hRelationship: GDALRelationshipH,
@@ -6459,33 +6459,33 @@ pub type GDALQueryLoggerFunc = ::std::option::Option<
         pQueryLoggerArg: *mut ::std::ffi::c_void,
     ),
 >;
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDatasetSetQueryLoggerFunc(
         hDS: GDALDatasetH,
         pfnQueryLoggerFunc: GDALQueryLoggerFunc,
         poQueryLoggerArg: *mut ::std::ffi::c_void,
     ) -> bool;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetSubdatasetInfo(pszFileName: *const ::std::ffi::c_char) -> GDALSubdatasetInfoH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALSubdatasetInfoGetPathComponent(
         hInfo: GDALSubdatasetInfoH,
     ) -> *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALSubdatasetInfoGetSubdatasetComponent(
         hInfo: GDALSubdatasetInfoH,
     ) -> *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALSubdatasetInfoModifyPathComponent(
         hInfo: GDALSubdatasetInfoH,
         pszNewPath: *const ::std::ffi::c_char,
     ) -> *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDestroySubdatasetInfo(hInfo: GDALSubdatasetInfoH);
 }
 pub type GDALDerivedPixelFunc = ::std::option::Option<
@@ -6515,17 +6515,17 @@ pub type GDALDerivedPixelFuncWithArgs = ::std::option::Option<
         papszFunctionArgs: CSLConstList,
     ) -> CPLErr::Type,
 >;
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetRasterDataType(arg1: GDALRasterBandH) -> GDALDataType::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetBlockSize(
         arg1: GDALRasterBandH,
         pnXSize: *mut ::std::ffi::c_int,
         pnYSize: *mut ::std::ffi::c_int,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetActualBlockSize(
         arg1: GDALRasterBandH,
         nXBlockOff: ::std::ffi::c_int,
@@ -6534,7 +6534,7 @@ unsafe extern "C" {
         pnYValid: *mut ::std::ffi::c_int,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRasterAdviseRead(
         hRB: GDALRasterBandH,
         nDSXOff: ::std::ffi::c_int,
@@ -6547,7 +6547,7 @@ unsafe extern "C" {
         papszOptions: CSLConstList,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRasterIO(
         hRBand: GDALRasterBandH,
         eRWFlag: GDALRWFlag::Type,
@@ -6563,7 +6563,7 @@ unsafe extern "C" {
         nLineSpace: ::std::ffi::c_int,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRasterIOEx(
         hRBand: GDALRasterBandH,
         eRWFlag: GDALRWFlag::Type,
@@ -6580,7 +6580,7 @@ unsafe extern "C" {
         psExtraArg: *mut GDALRasterIOExtraArg,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALReadBlock(
         arg1: GDALRasterBandH,
         arg2: ::std::ffi::c_int,
@@ -6588,7 +6588,7 @@ unsafe extern "C" {
         arg4: *mut ::std::ffi::c_void,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALWriteBlock(
         arg1: GDALRasterBandH,
         arg2: ::std::ffi::c_int,
@@ -6596,85 +6596,85 @@ unsafe extern "C" {
         arg4: *mut ::std::ffi::c_void,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetRasterBandXSize(arg1: GDALRasterBandH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetRasterBandYSize(arg1: GDALRasterBandH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetRasterAccess(arg1: GDALRasterBandH) -> GDALAccess::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetBandNumber(arg1: GDALRasterBandH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetBandDataset(arg1: GDALRasterBandH) -> GDALDatasetH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetRasterColorInterpretation(arg1: GDALRasterBandH) -> GDALColorInterp::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALSetRasterColorInterpretation(
         arg1: GDALRasterBandH,
         arg2: GDALColorInterp::Type,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetRasterColorTable(arg1: GDALRasterBandH) -> GDALColorTableH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALSetRasterColorTable(arg1: GDALRasterBandH, arg2: GDALColorTableH) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALHasArbitraryOverviews(arg1: GDALRasterBandH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetOverviewCount(arg1: GDALRasterBandH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetOverview(arg1: GDALRasterBandH, arg2: ::std::ffi::c_int) -> GDALRasterBandH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetRasterNoDataValue(arg1: GDALRasterBandH, arg2: *mut ::std::ffi::c_int) -> f64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetRasterNoDataValueAsInt64(
         arg1: GDALRasterBandH,
         arg2: *mut ::std::ffi::c_int,
     ) -> i64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetRasterNoDataValueAsUInt64(
         arg1: GDALRasterBandH,
         arg2: *mut ::std::ffi::c_int,
     ) -> u64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALSetRasterNoDataValue(arg1: GDALRasterBandH, arg2: f64) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALSetRasterNoDataValueAsInt64(arg1: GDALRasterBandH, arg2: i64) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALSetRasterNoDataValueAsUInt64(arg1: GDALRasterBandH, arg2: u64) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDeleteRasterNoDataValue(arg1: GDALRasterBandH) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetRasterCategoryNames(arg1: GDALRasterBandH) -> *mut *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALSetRasterCategoryNames(arg1: GDALRasterBandH, arg2: CSLConstList) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetRasterMinimum(arg1: GDALRasterBandH, pbSuccess: *mut ::std::ffi::c_int) -> f64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetRasterMaximum(arg1: GDALRasterBandH, pbSuccess: *mut ::std::ffi::c_int) -> f64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetRasterStatistics(
         arg1: GDALRasterBandH,
         bApproxOK: ::std::ffi::c_int,
@@ -6685,7 +6685,7 @@ unsafe extern "C" {
         pdfStdDev: *mut f64,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALComputeRasterStatistics(
         arg1: GDALRasterBandH,
         bApproxOK: ::std::ffi::c_int,
@@ -6697,7 +6697,7 @@ unsafe extern "C" {
         pProgressData: *mut ::std::ffi::c_void,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALSetRasterStatistics(
         hBand: GDALRasterBandH,
         dfMin: f64,
@@ -6706,38 +6706,38 @@ unsafe extern "C" {
         dfStdDev: f64,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRasterBandAsMDArray(arg1: GDALRasterBandH) -> GDALMDArrayH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetRasterUnitType(arg1: GDALRasterBandH) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALSetRasterUnitType(
         hBand: GDALRasterBandH,
         pszNewValue: *const ::std::ffi::c_char,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetRasterOffset(arg1: GDALRasterBandH, pbSuccess: *mut ::std::ffi::c_int) -> f64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALSetRasterOffset(hBand: GDALRasterBandH, dfNewOffset: f64) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetRasterScale(arg1: GDALRasterBandH, pbSuccess: *mut ::std::ffi::c_int) -> f64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALSetRasterScale(hBand: GDALRasterBandH, dfNewOffset: f64) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALComputeRasterMinMax(
         hBand: GDALRasterBandH,
         bApproxOK: ::std::ffi::c_int,
         adfMinMax: *mut f64,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALComputeRasterMinMaxLocation(
         hBand: GDALRasterBandH,
         pdfMin: *mut f64,
@@ -6748,13 +6748,13 @@ unsafe extern "C" {
         pnMaxY: *mut ::std::ffi::c_int,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALFlushRasterCache(hBand: GDALRasterBandH) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDropRasterCache(hBand: GDALRasterBandH) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetRasterHistogram(
         hBand: GDALRasterBandH,
         dfMin: f64,
@@ -6767,7 +6767,7 @@ unsafe extern "C" {
         pProgressData: *mut ::std::ffi::c_void,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetRasterHistogramEx(
         hBand: GDALRasterBandH,
         dfMin: f64,
@@ -6780,7 +6780,7 @@ unsafe extern "C" {
         pProgressData: *mut ::std::ffi::c_void,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetDefaultHistogram(
         hBand: GDALRasterBandH,
         pdfMin: *mut f64,
@@ -6792,7 +6792,7 @@ unsafe extern "C" {
         pProgressData: *mut ::std::ffi::c_void,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetDefaultHistogramEx(
         hBand: GDALRasterBandH,
         pdfMin: *mut f64,
@@ -6804,7 +6804,7 @@ unsafe extern "C" {
         pProgressData: *mut ::std::ffi::c_void,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALSetDefaultHistogram(
         hBand: GDALRasterBandH,
         dfMin: f64,
@@ -6813,7 +6813,7 @@ unsafe extern "C" {
         panHistogram: *mut ::std::ffi::c_int,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALSetDefaultHistogramEx(
         hBand: GDALRasterBandH,
         dfMin: f64,
@@ -6822,30 +6822,30 @@ unsafe extern "C" {
         panHistogram: *mut GUIntBig,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetRandomRasterSample(
         arg1: GDALRasterBandH,
         arg2: ::std::ffi::c_int,
         arg3: *mut f32,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetRasterSampleOverview(
         arg1: GDALRasterBandH,
         arg2: ::std::ffi::c_int,
     ) -> GDALRasterBandH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetRasterSampleOverviewEx(arg1: GDALRasterBandH, arg2: GUIntBig) -> GDALRasterBandH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALFillRaster(
         hBand: GDALRasterBandH,
         dfRealValue: f64,
         dfImaginaryValue: f64,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALComputeBandStats(
         hBand: GDALRasterBandH,
         nSampleStep: ::std::ffi::c_int,
@@ -6855,7 +6855,7 @@ unsafe extern "C" {
         pProgressData: *mut ::std::ffi::c_void,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALOverviewMagnitudeCorrection(
         hBaseBand: GDALRasterBandH,
         nOverviewCount: ::std::ffi::c_int,
@@ -6864,29 +6864,29 @@ unsafe extern "C" {
         pProgressData: *mut ::std::ffi::c_void,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetDefaultRAT(hBand: GDALRasterBandH) -> GDALRasterAttributeTableH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALSetDefaultRAT(
         arg1: GDALRasterBandH,
         arg2: GDALRasterAttributeTableH,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALAddDerivedBandPixelFunc(
         pszName: *const ::std::ffi::c_char,
         pfnPixelFunc: GDALDerivedPixelFunc,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALAddDerivedBandPixelFuncWithArgs(
         pszName: *const ::std::ffi::c_char,
         pfnPixelFunc: GDALDerivedPixelFuncWithArgs,
         pszMetadata: *const ::std::ffi::c_char,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRasterInterpolateAtPoint(
         hBand: GDALRasterBandH,
         dfPixel: f64,
@@ -6896,7 +6896,7 @@ unsafe extern "C" {
         pdfImagValue: *mut f64,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRasterInterpolateAtGeolocation(
         hBand: GDALRasterBandH,
         dfGeolocX: f64,
@@ -6958,7 +6958,7 @@ pub type GDALVRTProcessedDatasetFuncProcess = ::std::option::Option<
         papszExtra: CSLConstList,
     ) -> CPLErr::Type,
 >;
-unsafe extern "C" {
+extern "C" {
     pub fn GDALVRTRegisterProcessedDatasetFunc(
         pszFuncName: *const ::std::ffi::c_char,
         pUserData: *mut ::std::ffi::c_void,
@@ -6974,19 +6974,19 @@ unsafe extern "C" {
         papszOptions: CSLConstList,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetMaskBand(hBand: GDALRasterBandH) -> GDALRasterBandH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetMaskFlags(hBand: GDALRasterBandH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALCreateMaskBand(hBand: GDALRasterBandH, nFlags: ::std::ffi::c_int) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALIsMaskBand(hBand: GDALRasterBandH) -> bool;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetDataCoverageStatus(
         hBand: GDALRasterBandH,
         nXOff: ::std::ffi::c_int,
@@ -6997,7 +6997,7 @@ unsafe extern "C" {
         pdfDataPct: *mut f64,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALARGetNextUpdatedRegion(
         hARIO: GDALAsyncReaderH,
         dfTimeout: f64,
@@ -7007,20 +7007,20 @@ unsafe extern "C" {
         pnYBufSize: *mut ::std::ffi::c_int,
     ) -> GDALAsyncStatusType::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALARLockBuffer(hARIO: GDALAsyncReaderH, dfTimeout: f64) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALARUnlockBuffer(hARIO: GDALAsyncReaderH);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGeneralCmdLineProcessor(
         nArgc: ::std::ffi::c_int,
         ppapszArgv: *mut *mut *mut ::std::ffi::c_char,
         nOptions: ::std::ffi::c_int,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALSwapWords(
         pData: *mut ::std::ffi::c_void,
         nWordSize: ::std::ffi::c_int,
@@ -7028,7 +7028,7 @@ unsafe extern "C" {
         nWordSkip: ::std::ffi::c_int,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALSwapWordsEx(
         pData: *mut ::std::ffi::c_void,
         nWordSize: ::std::ffi::c_int,
@@ -7036,7 +7036,7 @@ unsafe extern "C" {
         nWordSkip: ::std::ffi::c_int,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALCopyWords(
         pSrcData: *const ::std::ffi::c_void,
         eSrcType: GDALDataType::Type,
@@ -7047,7 +7047,7 @@ unsafe extern "C" {
         nWordCount: ::std::ffi::c_int,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALCopyWords64(
         pSrcData: *const ::std::ffi::c_void,
         eSrcType: GDALDataType::Type,
@@ -7058,7 +7058,7 @@ unsafe extern "C" {
         nWordCount: GPtrDiff_t,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALCopyBits(
         pabySrcData: *const GByte,
         nSrcOffset: ::std::ffi::c_int,
@@ -7070,7 +7070,7 @@ unsafe extern "C" {
         nStepCount: ::std::ffi::c_int,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDeinterleave(
         pSourceBuffer: *const ::std::ffi::c_void,
         eSourceDT: GDALDataType::Type,
@@ -7080,7 +7080,7 @@ unsafe extern "C" {
         nIters: usize,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALTranspose2D(
         pSrc: *const ::std::ffi::c_void,
         eSrcType: GDALDataType::Type,
@@ -7090,27 +7090,27 @@ unsafe extern "C" {
         nSrcHeight: usize,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetNoDataReplacementValue(arg1: GDALDataType::Type, arg2: f64) -> f64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALLoadWorldFile(arg1: *const ::std::ffi::c_char, arg2: *mut f64) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALReadWorldFile(
         arg1: *const ::std::ffi::c_char,
         arg2: *const ::std::ffi::c_char,
         arg3: *mut f64,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALWriteWorldFile(
         arg1: *const ::std::ffi::c_char,
         arg2: *const ::std::ffi::c_char,
         arg3: *mut f64,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALLoadTabFile(
         arg1: *const ::std::ffi::c_char,
         arg2: *mut f64,
@@ -7119,7 +7119,7 @@ unsafe extern "C" {
         arg5: *mut *mut GDAL_GCP,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALReadTabFile(
         arg1: *const ::std::ffi::c_char,
         arg2: *mut f64,
@@ -7128,7 +7128,7 @@ unsafe extern "C" {
         arg5: *mut *mut GDAL_GCP,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALLoadOziMapFile(
         arg1: *const ::std::ffi::c_char,
         arg2: *mut f64,
@@ -7137,7 +7137,7 @@ unsafe extern "C" {
         arg5: *mut *mut GDAL_GCP,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALReadOziMapFile(
         arg1: *const ::std::ffi::c_char,
         arg2: *mut f64,
@@ -7146,17 +7146,17 @@ unsafe extern "C" {
         arg5: *mut *mut GDAL_GCP,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDecToDMS(
         arg1: f64,
         arg2: *const ::std::ffi::c_char,
         arg3: ::std::ffi::c_int,
     ) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALPackedDMSToDec(arg1: f64) -> f64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDecToPackedDMS(arg1: f64) -> f64;
 }
 #[repr(C)]
@@ -7291,10 +7291,10 @@ const _: () = {
     ["Offset of field: GDALRPCInfoV2::dfERR_RAND"]
         [::std::mem::offset_of!(GDALRPCInfoV2, dfERR_RAND) - 760usize];
 };
-unsafe extern "C" {
+extern "C" {
     pub fn GDALExtractRPCInfoV1(arg1: CSLConstList, arg2: *mut GDALRPCInfoV1) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALExtractRPCInfoV2(arg1: CSLConstList, arg2: *mut GDALRPCInfoV2) -> ::std::ffi::c_int;
 }
 #[repr(C)]
@@ -7314,42 +7314,42 @@ const _: () = {
     ["Offset of field: GDALColorEntry::c3"][::std::mem::offset_of!(GDALColorEntry, c3) - 4usize];
     ["Offset of field: GDALColorEntry::c4"][::std::mem::offset_of!(GDALColorEntry, c4) - 6usize];
 };
-unsafe extern "C" {
+extern "C" {
     pub fn GDALCreateColorTable(arg1: GDALPaletteInterp::Type) -> GDALColorTableH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDestroyColorTable(arg1: GDALColorTableH);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALCloneColorTable(arg1: GDALColorTableH) -> GDALColorTableH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetPaletteInterpretation(arg1: GDALColorTableH) -> GDALPaletteInterp::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetColorEntryCount(arg1: GDALColorTableH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetColorEntry(
         arg1: GDALColorTableH,
         arg2: ::std::ffi::c_int,
     ) -> *const GDALColorEntry;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetColorEntryAsRGB(
         arg1: GDALColorTableH,
         arg2: ::std::ffi::c_int,
         arg3: *mut GDALColorEntry,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALSetColorEntry(
         arg1: GDALColorTableH,
         arg2: ::std::ffi::c_int,
         arg3: *const GDALColorEntry,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALCreateColorRamp(
         hTable: GDALColorTableH,
         nStartIndex: ::std::ffi::c_int,
@@ -7391,64 +7391,64 @@ pub mod GDALRATTableType {
     pub const GRTT_THEMATIC: Type = 0;
     pub const GRTT_ATHEMATIC: Type = 1;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALCreateRasterAttributeTable() -> GDALRasterAttributeTableH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDestroyRasterAttributeTable(arg1: GDALRasterAttributeTableH);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRATGetColumnCount(arg1: GDALRasterAttributeTableH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRATGetNameOfCol(
         arg1: GDALRasterAttributeTableH,
         arg2: ::std::ffi::c_int,
     ) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRATGetUsageOfCol(
         arg1: GDALRasterAttributeTableH,
         arg2: ::std::ffi::c_int,
     ) -> GDALRATFieldUsage::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRATGetTypeOfCol(
         arg1: GDALRasterAttributeTableH,
         arg2: ::std::ffi::c_int,
     ) -> GDALRATFieldType::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRATGetColOfUsage(
         arg1: GDALRasterAttributeTableH,
         arg2: GDALRATFieldUsage::Type,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRATGetRowCount(arg1: GDALRasterAttributeTableH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRATGetValueAsString(
         arg1: GDALRasterAttributeTableH,
         arg2: ::std::ffi::c_int,
         arg3: ::std::ffi::c_int,
     ) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRATGetValueAsInt(
         arg1: GDALRasterAttributeTableH,
         arg2: ::std::ffi::c_int,
         arg3: ::std::ffi::c_int,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRATGetValueAsDouble(
         arg1: GDALRasterAttributeTableH,
         arg2: ::std::ffi::c_int,
         arg3: ::std::ffi::c_int,
     ) -> f64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRATSetValueAsString(
         arg1: GDALRasterAttributeTableH,
         arg2: ::std::ffi::c_int,
@@ -7456,7 +7456,7 @@ unsafe extern "C" {
         arg4: *const ::std::ffi::c_char,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRATSetValueAsInt(
         arg1: GDALRasterAttributeTableH,
         arg2: ::std::ffi::c_int,
@@ -7464,7 +7464,7 @@ unsafe extern "C" {
         arg4: ::std::ffi::c_int,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRATSetValueAsDouble(
         arg1: GDALRasterAttributeTableH,
         arg2: ::std::ffi::c_int,
@@ -7472,10 +7472,10 @@ unsafe extern "C" {
         arg4: f64,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRATChangesAreWrittenToFile(hRAT: GDALRasterAttributeTableH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRATValuesIOAsDouble(
         hRAT: GDALRasterAttributeTableH,
         eRWFlag: GDALRWFlag::Type,
@@ -7485,7 +7485,7 @@ unsafe extern "C" {
         pdfData: *mut f64,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRATValuesIOAsInteger(
         hRAT: GDALRasterAttributeTableH,
         eRWFlag: GDALRWFlag::Type,
@@ -7495,7 +7495,7 @@ unsafe extern "C" {
         pnData: *mut ::std::ffi::c_int,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRATValuesIOAsString(
         hRAT: GDALRasterAttributeTableH,
         eRWFlag: GDALRWFlag::Type,
@@ -7505,10 +7505,10 @@ unsafe extern "C" {
         papszStrList: *mut *mut ::std::ffi::c_char,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRATSetRowCount(arg1: GDALRasterAttributeTableH, arg2: ::std::ffi::c_int);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRATCreateColumn(
         arg1: GDALRasterAttributeTableH,
         arg2: *const ::std::ffi::c_char,
@@ -7516,54 +7516,54 @@ unsafe extern "C" {
         arg4: GDALRATFieldUsage::Type,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRATSetLinearBinning(
         arg1: GDALRasterAttributeTableH,
         arg2: f64,
         arg3: f64,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRATGetLinearBinning(
         arg1: GDALRasterAttributeTableH,
         arg2: *mut f64,
         arg3: *mut f64,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRATSetTableType(
         hRAT: GDALRasterAttributeTableH,
         eInTableType: GDALRATTableType::Type,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRATGetTableType(hRAT: GDALRasterAttributeTableH) -> GDALRATTableType::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRATInitializeFromColorTable(
         arg1: GDALRasterAttributeTableH,
         arg2: GDALColorTableH,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRATTranslateToColorTable(
         arg1: GDALRasterAttributeTableH,
         nEntryCount: ::std::ffi::c_int,
     ) -> GDALColorTableH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRATDumpReadable(arg1: GDALRasterAttributeTableH, arg2: *mut FILE);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRATClone(arg1: GDALRasterAttributeTableH) -> GDALRasterAttributeTableH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRATSerializeJSON(arg1: GDALRasterAttributeTableH) -> *mut ::std::ffi::c_void;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRATGetRowOfValue(arg1: GDALRasterAttributeTableH, arg2: f64) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRATRemoveStatistics(arg1: GDALRasterAttributeTableH);
 }
 pub mod GDALRelationshipCardinality {
@@ -7579,7 +7579,7 @@ pub mod GDALRelationshipType {
     pub const GRT_ASSOCIATION: Type = 1;
     pub const GRT_AGGREGATION: Type = 2;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRelationshipCreate(
         arg1: *const ::std::ffi::c_char,
         arg2: *const ::std::ffi::c_char,
@@ -7587,127 +7587,127 @@ unsafe extern "C" {
         arg4: GDALRelationshipCardinality::Type,
     ) -> GDALRelationshipH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDestroyRelationship(arg1: GDALRelationshipH);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRelationshipGetName(arg1: GDALRelationshipH) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRelationshipGetCardinality(
         arg1: GDALRelationshipH,
     ) -> GDALRelationshipCardinality::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRelationshipGetLeftTableName(arg1: GDALRelationshipH) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRelationshipGetRightTableName(arg1: GDALRelationshipH) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRelationshipGetMappingTableName(
         arg1: GDALRelationshipH,
     ) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRelationshipSetMappingTableName(
         arg1: GDALRelationshipH,
         arg2: *const ::std::ffi::c_char,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRelationshipGetLeftTableFields(
         arg1: GDALRelationshipH,
     ) -> *mut *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRelationshipGetRightTableFields(
         arg1: GDALRelationshipH,
     ) -> *mut *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRelationshipSetLeftTableFields(arg1: GDALRelationshipH, arg2: CSLConstList);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRelationshipSetRightTableFields(arg1: GDALRelationshipH, arg2: CSLConstList);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRelationshipGetLeftMappingTableFields(
         arg1: GDALRelationshipH,
     ) -> *mut *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRelationshipGetRightMappingTableFields(
         arg1: GDALRelationshipH,
     ) -> *mut *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRelationshipSetLeftMappingTableFields(arg1: GDALRelationshipH, arg2: CSLConstList);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRelationshipSetRightMappingTableFields(arg1: GDALRelationshipH, arg2: CSLConstList);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRelationshipGetType(arg1: GDALRelationshipH) -> GDALRelationshipType::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRelationshipSetType(arg1: GDALRelationshipH, arg2: GDALRelationshipType::Type);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRelationshipGetForwardPathLabel(
         arg1: GDALRelationshipH,
     ) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRelationshipSetForwardPathLabel(
         arg1: GDALRelationshipH,
         arg2: *const ::std::ffi::c_char,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRelationshipGetBackwardPathLabel(
         arg1: GDALRelationshipH,
     ) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRelationshipSetBackwardPathLabel(
         arg1: GDALRelationshipH,
         arg2: *const ::std::ffi::c_char,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRelationshipGetRelatedTableType(
         arg1: GDALRelationshipH,
     ) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRelationshipSetRelatedTableType(
         arg1: GDALRelationshipH,
         arg2: *const ::std::ffi::c_char,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALSetCacheMax(nBytes: ::std::ffi::c_int);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetCacheMax() -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetCacheUsed() -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALSetCacheMax64(nBytes: GIntBig);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetCacheMax64() -> GIntBig;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetCacheUsed64() -> GIntBig;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALFlushCacheBlock() -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDatasetGetVirtualMem(
         hDS: GDALDatasetH,
         eRWFlag: GDALRWFlag::Type,
@@ -7729,7 +7729,7 @@ unsafe extern "C" {
         papszOptions: CSLConstList,
     ) -> *mut CPLVirtualMem;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRasterBandGetVirtualMem(
         hBand: GDALRasterBandH,
         eRWFlag: GDALRWFlag::Type,
@@ -7748,7 +7748,7 @@ unsafe extern "C" {
         papszOptions: CSLConstList,
     ) -> *mut CPLVirtualMem;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetVirtualMemAuto(
         hBand: GDALRasterBandH,
         eRWFlag: GDALRWFlag::Type,
@@ -7763,7 +7763,7 @@ pub mod GDALTileOrganization {
     pub const GTO_BIT: Type = 1;
     pub const GTO_BSQ: Type = 2;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDatasetGetTiledVirtualMem(
         hDS: GDALDatasetH,
         eRWFlag: GDALRWFlag::Type,
@@ -7782,7 +7782,7 @@ unsafe extern "C" {
         papszOptions: CSLConstList,
     ) -> *mut CPLVirtualMem;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRasterBandGetTiledVirtualMem(
         hBand: GDALRasterBandH,
         eRWFlag: GDALRWFlag::Type,
@@ -7798,7 +7798,7 @@ unsafe extern "C" {
         papszOptions: CSLConstList,
     ) -> *mut CPLVirtualMem;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALCreatePansharpenedVRT(
         pszXML: *const ::std::ffi::c_char,
         hPanchroBand: GDALRasterBandH,
@@ -7806,13 +7806,13 @@ unsafe extern "C" {
         pahInputSpectralBands: *mut GDALRasterBandH,
     ) -> GDALDatasetH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetJPEG2000Structure(
         pszFilename: *const ::std::ffi::c_char,
         papszOptions: CSLConstList,
     ) -> *mut CPLXMLNode;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALCreateMultiDimensional(
         hDriver: GDALDriverH,
         pszName: *const ::std::ffi::c_char,
@@ -7820,19 +7820,19 @@ unsafe extern "C" {
         papszOptions: CSLConstList,
     ) -> GDALDatasetH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALExtendedDataTypeCreate(eType: GDALDataType::Type) -> GDALExtendedDataTypeH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALExtendedDataTypeCreateString(nMaxStringLength: usize) -> GDALExtendedDataTypeH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALExtendedDataTypeCreateStringEx(
         nMaxStringLength: usize,
         eSubType: GDALExtendedDataTypeSubType::Type,
     ) -> GDALExtendedDataTypeH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALExtendedDataTypeCreateCompound(
         pszName: *const ::std::ffi::c_char,
         nTotalSize: usize,
@@ -7840,113 +7840,113 @@ unsafe extern "C" {
         comps: *const GDALEDTComponentH,
     ) -> GDALExtendedDataTypeH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALExtendedDataTypeRelease(hEDT: GDALExtendedDataTypeH);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALExtendedDataTypeGetName(hEDT: GDALExtendedDataTypeH) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALExtendedDataTypeGetClass(
         hEDT: GDALExtendedDataTypeH,
     ) -> GDALExtendedDataTypeClass::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALExtendedDataTypeGetNumericDataType(
         hEDT: GDALExtendedDataTypeH,
     ) -> GDALDataType::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALExtendedDataTypeGetSize(hEDT: GDALExtendedDataTypeH) -> usize;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALExtendedDataTypeGetMaxStringLength(hEDT: GDALExtendedDataTypeH) -> usize;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALExtendedDataTypeGetComponents(
         hEDT: GDALExtendedDataTypeH,
         pnCount: *mut usize,
     ) -> *mut GDALEDTComponentH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALExtendedDataTypeFreeComponents(components: *mut GDALEDTComponentH, nCount: usize);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALExtendedDataTypeCanConvertTo(
         hSourceEDT: GDALExtendedDataTypeH,
         hTargetEDT: GDALExtendedDataTypeH,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALExtendedDataTypeEquals(
         hFirstEDT: GDALExtendedDataTypeH,
         hSecondEDT: GDALExtendedDataTypeH,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALExtendedDataTypeGetSubType(
         hEDT: GDALExtendedDataTypeH,
     ) -> GDALExtendedDataTypeSubType::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALEDTComponentCreate(
         pszName: *const ::std::ffi::c_char,
         nOffset: usize,
         hType: GDALExtendedDataTypeH,
     ) -> GDALEDTComponentH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALEDTComponentRelease(hComp: GDALEDTComponentH);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALEDTComponentGetName(hComp: GDALEDTComponentH) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALEDTComponentGetOffset(hComp: GDALEDTComponentH) -> usize;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALEDTComponentGetType(hComp: GDALEDTComponentH) -> GDALExtendedDataTypeH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDatasetGetRootGroup(hDS: GDALDatasetH) -> GDALGroupH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGroupRelease(hGroup: GDALGroupH);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGroupGetName(hGroup: GDALGroupH) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGroupGetFullName(hGroup: GDALGroupH) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGroupGetMDArrayNames(
         hGroup: GDALGroupH,
         papszOptions: CSLConstList,
     ) -> *mut *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGroupGetMDArrayFullNamesRecursive(
         hGroup: GDALGroupH,
         papszGroupOptions: CSLConstList,
         papszArrayOptions: CSLConstList,
     ) -> *mut *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGroupOpenMDArray(
         hGroup: GDALGroupH,
         pszMDArrayName: *const ::std::ffi::c_char,
         papszOptions: CSLConstList,
     ) -> GDALMDArrayH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGroupOpenMDArrayFromFullname(
         hGroup: GDALGroupH,
         pszMDArrayName: *const ::std::ffi::c_char,
         papszOptions: CSLConstList,
     ) -> GDALMDArrayH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGroupResolveMDArray(
         hGroup: GDALGroupH,
         pszName: *const ::std::ffi::c_char,
@@ -7954,77 +7954,77 @@ unsafe extern "C" {
         papszOptions: CSLConstList,
     ) -> GDALMDArrayH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGroupGetGroupNames(
         hGroup: GDALGroupH,
         papszOptions: CSLConstList,
     ) -> *mut *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGroupOpenGroup(
         hGroup: GDALGroupH,
         pszSubGroupName: *const ::std::ffi::c_char,
         papszOptions: CSLConstList,
     ) -> GDALGroupH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGroupOpenGroupFromFullname(
         hGroup: GDALGroupH,
         pszMDArrayName: *const ::std::ffi::c_char,
         papszOptions: CSLConstList,
     ) -> GDALGroupH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGroupGetVectorLayerNames(
         hGroup: GDALGroupH,
         papszOptions: CSLConstList,
     ) -> *mut *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGroupOpenVectorLayer(
         hGroup: GDALGroupH,
         pszVectorLayerName: *const ::std::ffi::c_char,
         papszOptions: CSLConstList,
     ) -> OGRLayerH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGroupGetDimensions(
         hGroup: GDALGroupH,
         pnCount: *mut usize,
         papszOptions: CSLConstList,
     ) -> *mut GDALDimensionH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGroupGetAttribute(
         hGroup: GDALGroupH,
         pszName: *const ::std::ffi::c_char,
     ) -> GDALAttributeH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGroupGetAttributes(
         hGroup: GDALGroupH,
         pnCount: *mut usize,
         papszOptions: CSLConstList,
     ) -> *mut GDALAttributeH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGroupGetStructuralInfo(hGroup: GDALGroupH) -> CSLConstList;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGroupCreateGroup(
         hGroup: GDALGroupH,
         pszSubGroupName: *const ::std::ffi::c_char,
         papszOptions: CSLConstList,
     ) -> GDALGroupH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGroupDeleteGroup(
         hGroup: GDALGroupH,
         pszName: *const ::std::ffi::c_char,
         papszOptions: CSLConstList,
     ) -> bool;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGroupCreateDimension(
         hGroup: GDALGroupH,
         pszName: *const ::std::ffi::c_char,
@@ -8034,7 +8034,7 @@ unsafe extern "C" {
         papszOptions: CSLConstList,
     ) -> GDALDimensionH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGroupCreateMDArray(
         hGroup: GDALGroupH,
         pszName: *const ::std::ffi::c_char,
@@ -8044,14 +8044,14 @@ unsafe extern "C" {
         papszOptions: CSLConstList,
     ) -> GDALMDArrayH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGroupDeleteMDArray(
         hGroup: GDALGroupH,
         pszName: *const ::std::ffi::c_char,
         papszOptions: CSLConstList,
     ) -> bool;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGroupCreateAttribute(
         hGroup: GDALGroupH,
         pszName: *const ::std::ffi::c_char,
@@ -8061,48 +8061,48 @@ unsafe extern "C" {
         papszOptions: CSLConstList,
     ) -> GDALAttributeH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGroupDeleteAttribute(
         hGroup: GDALGroupH,
         pszName: *const ::std::ffi::c_char,
         papszOptions: CSLConstList,
     ) -> bool;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGroupRename(hGroup: GDALGroupH, pszNewName: *const ::std::ffi::c_char) -> bool;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGroupSubsetDimensionFromSelection(
         hGroup: GDALGroupH,
         pszSelection: *const ::std::ffi::c_char,
         papszOptions: CSLConstList,
     ) -> GDALGroupH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALMDArrayRelease(hMDArray: GDALMDArrayH);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALMDArrayGetName(hArray: GDALMDArrayH) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALMDArrayGetFullName(hArray: GDALMDArrayH) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALMDArrayGetTotalElementsCount(hArray: GDALMDArrayH) -> GUInt64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALMDArrayGetDimensionCount(hArray: GDALMDArrayH) -> usize;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALMDArrayGetDimensions(
         hArray: GDALMDArrayH,
         pnCount: *mut usize,
     ) -> *mut GDALDimensionH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALMDArrayGetDataType(hArray: GDALMDArrayH) -> GDALExtendedDataTypeH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALMDArrayRead(
         hArray: GDALMDArrayH,
         arrayStartIdx: *const GUInt64,
@@ -8115,7 +8115,7 @@ unsafe extern "C" {
         nDstBufferllocSize: usize,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALMDArrayWrite(
         hArray: GDALMDArrayH,
         arrayStartIdx: *const GUInt64,
@@ -8128,14 +8128,14 @@ unsafe extern "C" {
         nSrcBufferllocSize: usize,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALMDArrayAdviseRead(
         hArray: GDALMDArrayH,
         arrayStartIdx: *const GUInt64,
         count: *const usize,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALMDArrayAdviseReadEx(
         hArray: GDALMDArrayH,
         arrayStartIdx: *const GUInt64,
@@ -8143,20 +8143,20 @@ unsafe extern "C" {
         papszOptions: CSLConstList,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALMDArrayGetAttribute(
         hArray: GDALMDArrayH,
         pszName: *const ::std::ffi::c_char,
     ) -> GDALAttributeH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALMDArrayGetAttributes(
         hArray: GDALMDArrayH,
         pnCount: *mut usize,
         papszOptions: CSLConstList,
     ) -> *mut GDALAttributeH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALMDArrayCreateAttribute(
         hArray: GDALMDArrayH,
         pszName: *const ::std::ffi::c_char,
@@ -8166,163 +8166,163 @@ unsafe extern "C" {
         papszOptions: CSLConstList,
     ) -> GDALAttributeH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALMDArrayDeleteAttribute(
         hArray: GDALMDArrayH,
         pszName: *const ::std::ffi::c_char,
         papszOptions: CSLConstList,
     ) -> bool;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALMDArrayResize(
         hArray: GDALMDArrayH,
         panNewDimSizes: *const GUInt64,
         papszOptions: CSLConstList,
     ) -> bool;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALMDArrayGetRawNoDataValue(hArray: GDALMDArrayH) -> *const ::std::ffi::c_void;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALMDArrayGetNoDataValueAsDouble(
         hArray: GDALMDArrayH,
         pbHasNoDataValue: *mut ::std::ffi::c_int,
     ) -> f64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALMDArrayGetNoDataValueAsInt64(
         hArray: GDALMDArrayH,
         pbHasNoDataValue: *mut ::std::ffi::c_int,
     ) -> i64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALMDArrayGetNoDataValueAsUInt64(
         hArray: GDALMDArrayH,
         pbHasNoDataValue: *mut ::std::ffi::c_int,
     ) -> u64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALMDArraySetRawNoDataValue(
         hArray: GDALMDArrayH,
         arg1: *const ::std::ffi::c_void,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALMDArraySetNoDataValueAsDouble(
         hArray: GDALMDArrayH,
         dfNoDataValue: f64,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALMDArraySetNoDataValueAsInt64(
         hArray: GDALMDArrayH,
         nNoDataValue: i64,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALMDArraySetNoDataValueAsUInt64(
         hArray: GDALMDArrayH,
         nNoDataValue: u64,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALMDArraySetScale(hArray: GDALMDArrayH, dfScale: f64) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALMDArraySetScaleEx(
         hArray: GDALMDArrayH,
         dfScale: f64,
         eStorageType: GDALDataType::Type,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALMDArrayGetScale(hArray: GDALMDArrayH, pbHasValue: *mut ::std::ffi::c_int) -> f64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALMDArrayGetScaleEx(
         hArray: GDALMDArrayH,
         pbHasValue: *mut ::std::ffi::c_int,
         peStorageType: *mut GDALDataType::Type,
     ) -> f64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALMDArraySetOffset(hArray: GDALMDArrayH, dfOffset: f64) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALMDArraySetOffsetEx(
         hArray: GDALMDArrayH,
         dfOffset: f64,
         eStorageType: GDALDataType::Type,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALMDArrayGetOffset(hArray: GDALMDArrayH, pbHasValue: *mut ::std::ffi::c_int) -> f64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALMDArrayGetOffsetEx(
         hArray: GDALMDArrayH,
         pbHasValue: *mut ::std::ffi::c_int,
         peStorageType: *mut GDALDataType::Type,
     ) -> f64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALMDArrayGetBlockSize(hArray: GDALMDArrayH, pnCount: *mut usize) -> *mut GUInt64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALMDArraySetUnit(
         hArray: GDALMDArrayH,
         arg1: *const ::std::ffi::c_char,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALMDArrayGetUnit(hArray: GDALMDArrayH) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALMDArraySetSpatialRef(
         arg1: GDALMDArrayH,
         arg2: OGRSpatialReferenceH,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALMDArrayGetSpatialRef(hArray: GDALMDArrayH) -> OGRSpatialReferenceH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALMDArrayGetProcessingChunkSize(
         hArray: GDALMDArrayH,
         pnCount: *mut usize,
         nMaxChunkMemory: usize,
     ) -> *mut usize;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALMDArrayGetStructuralInfo(hArray: GDALMDArrayH) -> CSLConstList;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALMDArrayGetView(
         hArray: GDALMDArrayH,
         pszViewExpr: *const ::std::ffi::c_char,
     ) -> GDALMDArrayH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALMDArrayTranspose(
         hArray: GDALMDArrayH,
         nNewAxisCount: usize,
         panMapNewAxisToOldAxis: *const ::std::ffi::c_int,
     ) -> GDALMDArrayH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALMDArrayGetUnscaled(hArray: GDALMDArrayH) -> GDALMDArrayH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALMDArrayGetMask(hArray: GDALMDArrayH, papszOptions: CSLConstList) -> GDALMDArrayH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALMDArrayAsClassicDataset(
         hArray: GDALMDArrayH,
         iXDim: usize,
         iYDim: usize,
     ) -> GDALDatasetH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALMDArrayAsClassicDatasetEx(
         hArray: GDALMDArrayH,
         iXDim: usize,
@@ -8331,7 +8331,7 @@ unsafe extern "C" {
         papszOptions: CSLConstList,
     ) -> GDALDatasetH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALMDArrayGetStatistics(
         hArray: GDALMDArrayH,
         arg1: GDALDatasetH,
@@ -8346,7 +8346,7 @@ unsafe extern "C" {
         pProgressData: *mut ::std::ffi::c_void,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALMDArrayComputeStatistics(
         hArray: GDALMDArrayH,
         arg1: GDALDatasetH,
@@ -8360,7 +8360,7 @@ unsafe extern "C" {
         pProgressData: *mut ::std::ffi::c_void,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALMDArrayComputeStatisticsEx(
         hArray: GDALMDArrayH,
         arg1: GDALDatasetH,
@@ -8375,7 +8375,7 @@ unsafe extern "C" {
         papszOptions: CSLConstList,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALMDArrayGetResampled(
         hArray: GDALMDArrayH,
         nNewDimCount: usize,
@@ -8385,7 +8385,7 @@ unsafe extern "C" {
         papszOptions: CSLConstList,
     ) -> GDALMDArrayH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALMDArrayGetGridded(
         hArray: GDALMDArrayH,
         pszGridOptions: *const ::std::ffi::c_char,
@@ -8394,13 +8394,13 @@ unsafe extern "C" {
         papszOptions: CSLConstList,
     ) -> GDALMDArrayH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALMDArrayGetCoordinateVariables(
         hArray: GDALMDArrayH,
         pnCount: *mut usize,
     ) -> *mut GDALMDArrayH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALMDArrayGetMeshGrid(
         pahInputArrays: *const GDALMDArrayH,
         nCountInputArrays: usize,
@@ -8408,16 +8408,16 @@ unsafe extern "C" {
         papszOptions: CSLConstList,
     ) -> *mut GDALMDArrayH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALReleaseArrays(arrays: *mut GDALMDArrayH, nCount: usize);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALMDArrayCache(hArray: GDALMDArrayH, papszOptions: CSLConstList) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALMDArrayRename(hArray: GDALMDArrayH, pszNewName: *const ::std::ffi::c_char) -> bool;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALCreateRasterAttributeTableFromMDArrays(
         eTableType: GDALRATTableType::Type,
         nArrays: ::std::ffi::c_int,
@@ -8425,159 +8425,159 @@ unsafe extern "C" {
         paeUsages: *const GDALRATFieldUsage::Type,
     ) -> GDALRasterAttributeTableH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALAttributeRelease(hAttr: GDALAttributeH);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALReleaseAttributes(attributes: *mut GDALAttributeH, nCount: usize);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALAttributeGetName(hAttr: GDALAttributeH) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALAttributeGetFullName(hAttr: GDALAttributeH) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALAttributeGetTotalElementsCount(hAttr: GDALAttributeH) -> GUInt64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALAttributeGetDimensionCount(hAttr: GDALAttributeH) -> usize;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALAttributeGetDimensionsSize(
         hAttr: GDALAttributeH,
         pnCount: *mut usize,
     ) -> *mut GUInt64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALAttributeGetDataType(hAttr: GDALAttributeH) -> GDALExtendedDataTypeH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALAttributeReadAsRaw(hAttr: GDALAttributeH, pnSize: *mut usize) -> *mut GByte;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALAttributeFreeRawResult(hAttr: GDALAttributeH, raw: *mut GByte, nSize: usize);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALAttributeReadAsString(hAttr: GDALAttributeH) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALAttributeReadAsInt(hAttr: GDALAttributeH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALAttributeReadAsInt64(hAttr: GDALAttributeH) -> i64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALAttributeReadAsDouble(hAttr: GDALAttributeH) -> f64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALAttributeReadAsStringArray(hAttr: GDALAttributeH) -> *mut *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALAttributeReadAsIntArray(
         hAttr: GDALAttributeH,
         pnCount: *mut usize,
     ) -> *mut ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALAttributeReadAsInt64Array(hAttr: GDALAttributeH, pnCount: *mut usize) -> *mut i64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALAttributeReadAsDoubleArray(hAttr: GDALAttributeH, pnCount: *mut usize) -> *mut f64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALAttributeWriteRaw(
         hAttr: GDALAttributeH,
         arg1: *const ::std::ffi::c_void,
         arg2: usize,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALAttributeWriteString(
         hAttr: GDALAttributeH,
         arg1: *const ::std::ffi::c_char,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALAttributeWriteStringArray(
         hAttr: GDALAttributeH,
         arg1: CSLConstList,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALAttributeWriteInt(
         hAttr: GDALAttributeH,
         arg1: ::std::ffi::c_int,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALAttributeWriteIntArray(
         hAttr: GDALAttributeH,
         arg1: *const ::std::ffi::c_int,
         arg2: usize,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALAttributeWriteInt64(hAttr: GDALAttributeH, arg1: i64) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALAttributeWriteInt64Array(
         hAttr: GDALAttributeH,
         arg1: *const i64,
         arg2: usize,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALAttributeWriteDouble(hAttr: GDALAttributeH, arg1: f64) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALAttributeWriteDoubleArray(
         hAttr: GDALAttributeH,
         arg1: *const f64,
         arg2: usize,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALAttributeRename(
         hAttr: GDALAttributeH,
         pszNewName: *const ::std::ffi::c_char,
     ) -> bool;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDimensionRelease(hDim: GDALDimensionH);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALReleaseDimensions(dims: *mut GDALDimensionH, nCount: usize);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDimensionGetName(hDim: GDALDimensionH) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDimensionGetFullName(hDim: GDALDimensionH) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDimensionGetType(hDim: GDALDimensionH) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDimensionGetDirection(hDim: GDALDimensionH) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDimensionGetSize(hDim: GDALDimensionH) -> GUInt64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDimensionGetIndexingVariable(hDim: GDALDimensionH) -> GDALMDArrayH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDimensionSetIndexingVariable(
         hDim: GDALDimensionH,
         hArray: GDALMDArrayH,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDimensionRename(hDim: GDALDimensionH, pszNewName: *const ::std::ffi::c_char)
         -> bool;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALComputeMedianCutPCT(
         hRed: GDALRasterBandH,
         hGreen: GDALRasterBandH,
@@ -8595,7 +8595,7 @@ unsafe extern "C" {
         pProgressArg: *mut ::std::ffi::c_void,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDitherRGB2PCT(
         hRed: GDALRasterBandH,
         hGreen: GDALRasterBandH,
@@ -8606,7 +8606,7 @@ unsafe extern "C" {
         pProgressArg: *mut ::std::ffi::c_void,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALChecksumImage(
         hBand: GDALRasterBandH,
         nXOff: ::std::ffi::c_int,
@@ -8615,7 +8615,7 @@ unsafe extern "C" {
         nYSize: ::std::ffi::c_int,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALComputeProximity(
         hSrcBand: GDALRasterBandH,
         hProximityBand: GDALRasterBandH,
@@ -8624,7 +8624,7 @@ unsafe extern "C" {
         pProgressArg: *mut ::std::ffi::c_void,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALFillNodata(
         hTargetBand: GDALRasterBandH,
         hMaskBand: GDALRasterBandH,
@@ -8636,7 +8636,7 @@ unsafe extern "C" {
         pProgressArg: *mut ::std::ffi::c_void,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALPolygonize(
         hSrcBand: GDALRasterBandH,
         hMaskBand: GDALRasterBandH,
@@ -8647,7 +8647,7 @@ unsafe extern "C" {
         pProgressArg: *mut ::std::ffi::c_void,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALFPolygonize(
         hSrcBand: GDALRasterBandH,
         hMaskBand: GDALRasterBandH,
@@ -8658,7 +8658,7 @@ unsafe extern "C" {
         pProgressArg: *mut ::std::ffi::c_void,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALSieveFilter(
         hSrcBand: GDALRasterBandH,
         hMaskBand: GDALRasterBandH,
@@ -8681,10 +8681,10 @@ pub type GDALTransformerFunc = ::std::option::Option<
         panSuccess: *mut ::std::ffi::c_int,
     ) -> ::std::ffi::c_int,
 >;
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDestroyTransformer(pTransformerArg: *mut ::std::ffi::c_void);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALUseTransformer(
         pTransformerArg: *mut ::std::ffi::c_void,
         bDstToSrc: ::std::ffi::c_int,
@@ -8695,17 +8695,17 @@ unsafe extern "C" {
         panSuccess: *mut ::std::ffi::c_int,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALCreateSimilarTransformer(
         psTransformerArg: *mut ::std::ffi::c_void,
         dfSrcRatioX: f64,
         dfSrcRatioY: f64,
     ) -> *mut ::std::ffi::c_void;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetGenImgProjTranformerOptionList() -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALCreateGenImgProjTransformer(
         hSrcDS: GDALDatasetH,
         pszSrcWKT: *const ::std::ffi::c_char,
@@ -8716,14 +8716,14 @@ unsafe extern "C" {
         nOrder: ::std::ffi::c_int,
     ) -> *mut ::std::ffi::c_void;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALCreateGenImgProjTransformer2(
         hSrcDS: GDALDatasetH,
         hDstDS: GDALDatasetH,
         papszOptions: CSLConstList,
     ) -> *mut ::std::ffi::c_void;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALCreateGenImgProjTransformer3(
         pszSrcWKT: *const ::std::ffi::c_char,
         padfSrcGeoTransform: *const f64,
@@ -8731,7 +8731,7 @@ unsafe extern "C" {
         padfDstGeoTransform: *const f64,
     ) -> *mut ::std::ffi::c_void;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALCreateGenImgProjTransformer4(
         hSrcSRS: OGRSpatialReferenceH,
         padfSrcGeoTransform: *const f64,
@@ -8740,16 +8740,16 @@ unsafe extern "C" {
         papszOptions: *const *const ::std::ffi::c_char,
     ) -> *mut ::std::ffi::c_void;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALSetGenImgProjTransformerDstGeoTransform(
         arg1: *mut ::std::ffi::c_void,
         arg2: *const f64,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDestroyGenImgProjTransformer(arg1: *mut ::std::ffi::c_void);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGenImgProjTransform(
         pTransformArg: *mut ::std::ffi::c_void,
         bDstToSrc: ::std::ffi::c_int,
@@ -8760,29 +8760,29 @@ unsafe extern "C" {
         panSuccess: *mut ::std::ffi::c_int,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALSetTransformerDstGeoTransform(arg1: *mut ::std::ffi::c_void, arg2: *const f64);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGetTransformerDstGeoTransform(arg1: *mut ::std::ffi::c_void, arg2: *mut f64);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALCreateReprojectionTransformer(
         pszSrcWKT: *const ::std::ffi::c_char,
         pszDstWKT: *const ::std::ffi::c_char,
     ) -> *mut ::std::ffi::c_void;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALCreateReprojectionTransformerEx(
         hSrcSRS: OGRSpatialReferenceH,
         hDstSRS: OGRSpatialReferenceH,
         papszOptions: *const *const ::std::ffi::c_char,
     ) -> *mut ::std::ffi::c_void;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDestroyReprojectionTransformer(arg1: *mut ::std::ffi::c_void);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALReprojectionTransform(
         pTransformArg: *mut ::std::ffi::c_void,
         bDstToSrc: ::std::ffi::c_int,
@@ -8793,7 +8793,7 @@ unsafe extern "C" {
         panSuccess: *mut ::std::ffi::c_int,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALCreateGCPTransformer(
         nGCPCount: ::std::ffi::c_int,
         pasGCPList: *const GDAL_GCP,
@@ -8801,7 +8801,7 @@ unsafe extern "C" {
         bReversed: ::std::ffi::c_int,
     ) -> *mut ::std::ffi::c_void;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALCreateGCPRefineTransformer(
         nGCPCount: ::std::ffi::c_int,
         pasGCPList: *const GDAL_GCP,
@@ -8811,10 +8811,10 @@ unsafe extern "C" {
         minimumGcps: ::std::ffi::c_int,
     ) -> *mut ::std::ffi::c_void;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDestroyGCPTransformer(pTransformArg: *mut ::std::ffi::c_void);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGCPTransform(
         pTransformArg: *mut ::std::ffi::c_void,
         bDstToSrc: ::std::ffi::c_int,
@@ -8825,19 +8825,19 @@ unsafe extern "C" {
         panSuccess: *mut ::std::ffi::c_int,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALCreateHomographyTransformer(adfHomography: *mut f64) -> *mut ::std::ffi::c_void;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALCreateHomographyTransformerFromGCPs(
         nGCPCount: ::std::ffi::c_int,
         pasGCPList: *const GDAL_GCP,
     ) -> *mut ::std::ffi::c_void;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDestroyHomographyTransformer(pTransformArg: *mut ::std::ffi::c_void);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALHomographyTransform(
         pTransformArg: *mut ::std::ffi::c_void,
         bDstToSrc: ::std::ffi::c_int,
@@ -8848,17 +8848,17 @@ unsafe extern "C" {
         panSuccess: *mut ::std::ffi::c_int,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALCreateTPSTransformer(
         nGCPCount: ::std::ffi::c_int,
         pasGCPList: *const GDAL_GCP,
         bReversed: ::std::ffi::c_int,
     ) -> *mut ::std::ffi::c_void;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDestroyTPSTransformer(pTransformArg: *mut ::std::ffi::c_void);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALTPSTransform(
         pTransformArg: *mut ::std::ffi::c_void,
         bDstToSrc: ::std::ffi::c_int,
@@ -8869,7 +8869,7 @@ unsafe extern "C" {
         panSuccess: *mut ::std::ffi::c_int,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALCreateRPCTransformerV1(
         psRPC: *mut GDALRPCInfoV1,
         bReversed: ::std::ffi::c_int,
@@ -8877,7 +8877,7 @@ unsafe extern "C" {
         papszOptions: *mut *mut ::std::ffi::c_char,
     ) -> *mut ::std::ffi::c_void;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALCreateRPCTransformerV2(
         psRPC: *const GDALRPCInfoV2,
         bReversed: ::std::ffi::c_int,
@@ -8885,10 +8885,10 @@ unsafe extern "C" {
         papszOptions: CSLConstList,
     ) -> *mut ::std::ffi::c_void;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDestroyRPCTransformer(pTransformArg: *mut ::std::ffi::c_void);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRPCTransform(
         pTransformArg: *mut ::std::ffi::c_void,
         bDstToSrc: ::std::ffi::c_int,
@@ -8899,17 +8899,17 @@ unsafe extern "C" {
         panSuccess: *mut ::std::ffi::c_int,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALCreateGeoLocTransformer(
         hBaseDS: GDALDatasetH,
         papszGeolocationInfo: *mut *mut ::std::ffi::c_char,
         bReversed: ::std::ffi::c_int,
     ) -> *mut ::std::ffi::c_void;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDestroyGeoLocTransformer(pTransformArg: *mut ::std::ffi::c_void);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGeoLocTransform(
         pTransformArg: *mut ::std::ffi::c_void,
         bDstToSrc: ::std::ffi::c_int,
@@ -8920,23 +8920,23 @@ unsafe extern "C" {
         panSuccess: *mut ::std::ffi::c_int,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALCreateApproxTransformer(
         pfnRawTransformer: GDALTransformerFunc,
         pRawTransformerArg: *mut ::std::ffi::c_void,
         dfMaxError: f64,
     ) -> *mut ::std::ffi::c_void;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALApproxTransformerOwnsSubtransformer(
         pCBData: *mut ::std::ffi::c_void,
         bOwnFlag: ::std::ffi::c_int,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDestroyApproxTransformer(pApproxArg: *mut ::std::ffi::c_void);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALApproxTransform(
         pTransformArg: *mut ::std::ffi::c_void,
         bDstToSrc: ::std::ffi::c_int,
@@ -8947,7 +8947,7 @@ unsafe extern "C" {
         panSuccess: *mut ::std::ffi::c_int,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALSimpleImageWarp(
         hSrcDS: GDALDatasetH,
         hDstDS: GDALDatasetH,
@@ -8960,7 +8960,7 @@ unsafe extern "C" {
         papszWarpOptions: *mut *mut ::std::ffi::c_char,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALSuggestedWarpOutput(
         hSrcDS: GDALDatasetH,
         pfnTransformer: GDALTransformerFunc,
@@ -8970,7 +8970,7 @@ unsafe extern "C" {
         pnLines: *mut ::std::ffi::c_int,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALSuggestedWarpOutput2(
         hSrcDS: GDALDatasetH,
         pfnTransformer: GDALTransformerFunc,
@@ -8982,20 +8982,20 @@ unsafe extern "C" {
         nOptions: ::std::ffi::c_int,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALSerializeTransformer(
         pfnFunc: GDALTransformerFunc,
         pTransformArg: *mut ::std::ffi::c_void,
     ) -> *mut CPLXMLNode;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDeserializeTransformer(
         psTree: *mut CPLXMLNode,
         ppfnFunc: *mut GDALTransformerFunc,
         ppTransformArg: *mut *mut ::std::ffi::c_void,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALTransformGeolocations(
         hXBand: GDALRasterBandH,
         hYBand: GDALRasterBandH,
@@ -9017,7 +9017,7 @@ pub type GDALContourWriter = ::std::option::Option<
     ) -> CPLErr::Type,
 >;
 pub type GDALContourGeneratorH = *mut ::std::ffi::c_void;
-unsafe extern "C" {
+extern "C" {
     pub fn GDAL_CG_Create(
         nWidth: ::std::ffi::c_int,
         nHeight: ::std::ffi::c_int,
@@ -9029,13 +9029,13 @@ unsafe extern "C" {
         pCBData: *mut ::std::ffi::c_void,
     ) -> GDALContourGeneratorH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDAL_CG_FeedLine(hCG: GDALContourGeneratorH, padfScanline: *mut f64) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDAL_CG_Destroy(hCG: GDALContourGeneratorH);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OGRContourWriter(
         arg1: f64,
         arg2: ::std::ffi::c_int,
@@ -9044,7 +9044,7 @@ unsafe extern "C" {
         pInfo: *mut ::std::ffi::c_void,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALContourGenerate(
         hBand: GDALRasterBandH,
         dfContourInterval: f64,
@@ -9060,7 +9060,7 @@ unsafe extern "C" {
         pProgressArg: *mut ::std::ffi::c_void,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALContourGenerateEx(
         hBand: GDALRasterBandH,
         hLayer: *mut ::std::ffi::c_void,
@@ -9082,7 +9082,7 @@ pub mod GDALViewshedOutputType {
     pub const GVOT_MIN_TARGET_HEIGHT_FROM_DEM: Type = 2;
     pub const GVOT_MIN_TARGET_HEIGHT_FROM_GROUND: Type = 3;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALViewshedGenerate(
         hBand: GDALRasterBandH,
         pszDriverName: *const ::std::ffi::c_char,
@@ -9105,7 +9105,7 @@ unsafe extern "C" {
         papszExtraOptions: CSLConstList,
     ) -> GDALDatasetH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALIsLineOfSightVisible(
         arg1: GDALRasterBandH,
         xA: ::std::ffi::c_int,
@@ -9119,7 +9119,7 @@ unsafe extern "C" {
         papszOptions: CSLConstList,
     ) -> bool;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRasterizeGeometries(
         hDS: GDALDatasetH,
         nBandCount: ::std::ffi::c_int,
@@ -9134,7 +9134,7 @@ unsafe extern "C" {
         pProgressArg: *mut ::std::ffi::c_void,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRasterizeGeometriesInt64(
         hDS: GDALDatasetH,
         nBandCount: ::std::ffi::c_int,
@@ -9149,7 +9149,7 @@ unsafe extern "C" {
         pProgressArg: *mut ::std::ffi::c_void,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRasterizeLayers(
         hDS: GDALDatasetH,
         nBandCount: ::std::ffi::c_int,
@@ -9164,7 +9164,7 @@ unsafe extern "C" {
         pProgressArg: *mut ::std::ffi::c_void,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRasterizeLayersBuf(
         pData: *mut ::std::ffi::c_void,
         nBufXSize: ::std::ffi::c_int,
@@ -9198,7 +9198,7 @@ pub mod GDALGridAlgorithm {
     pub const GGA_Linear: Type = 10;
     pub const GGA_InverseDistanceToAPowerNearestNeighbor: Type = 11;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGridCreate(
         arg1: GDALGridAlgorithm::Type,
         arg2: *const ::std::ffi::c_void,
@@ -9223,7 +9223,7 @@ unsafe extern "C" {
 pub struct GDALGridContext {
     _unused: [u8; 0],
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGridContextCreate(
         eAlgorithm: GDALGridAlgorithm::Type,
         poOptions: *const ::std::ffi::c_void,
@@ -9234,10 +9234,10 @@ unsafe extern "C" {
         bCallerWillKeepPointArraysAlive: ::std::ffi::c_int,
     ) -> *mut GDALGridContext;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGridContextFree(psContext: *mut GDALGridContext);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGridContextProcess(
         psContext: *mut GDALGridContext,
         dfXMin: f64,
@@ -9252,7 +9252,7 @@ unsafe extern "C" {
         pProgressArg: *mut ::std::ffi::c_void,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALComputeMatchingPoints(
         hFirstImage: GDALDatasetH,
         hSecondImage: GDALDatasetH,
@@ -9322,24 +9322,24 @@ const _: () = {
     ["Offset of field: GDALTriangulation::pasFacetCoefficients"]
         [::std::mem::offset_of!(GDALTriangulation, pasFacetCoefficients) - 16usize];
 };
-unsafe extern "C" {
+extern "C" {
     pub fn GDALHasTriangulation() -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALTriangulationCreateDelaunay(
         nPoints: ::std::ffi::c_int,
         padfX: *const f64,
         padfY: *const f64,
     ) -> *mut GDALTriangulation;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALTriangulationComputeBarycentricCoefficients(
         psDT: *mut GDALTriangulation,
         padfX: *const f64,
         padfY: *const f64,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALTriangulationComputeBarycentricCoordinates(
         psDT: *const GDALTriangulation,
         nFacetIdx: ::std::ffi::c_int,
@@ -9350,7 +9350,7 @@ unsafe extern "C" {
         pdfL3: *mut f64,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALTriangulationFindFacetBruteForce(
         psDT: *const GDALTriangulation,
         dfX: f64,
@@ -9358,7 +9358,7 @@ unsafe extern "C" {
         panOutputFacetIdx: *mut ::std::ffi::c_int,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALTriangulationFindFacetDirected(
         psDT: *const GDALTriangulation,
         nFacetIdx: ::std::ffi::c_int,
@@ -9367,16 +9367,16 @@ unsafe extern "C" {
         panOutputFacetIdx: *mut ::std::ffi::c_int,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALTriangulationFree(psDT: *mut GDALTriangulation);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALOpenVerticalShiftGrid(
         pszProj4Geoidgrids: *const ::std::ffi::c_char,
         pbError: *mut ::std::ffi::c_int,
     ) -> GDALDatasetH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALApplyVerticalShiftGrid(
         hSrcDataset: GDALDatasetH,
         hGridDataset: GDALDatasetH,
@@ -9396,16 +9396,16 @@ pub struct GDALInfoOptions {
 pub struct GDALInfoOptionsForBinary {
     _unused: [u8; 0],
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALInfoOptionsNew(
         papszArgv: *mut *mut ::std::ffi::c_char,
         psOptionsForBinary: *mut GDALInfoOptionsForBinary,
     ) -> *mut GDALInfoOptions;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALInfoOptionsFree(psOptions: *mut GDALInfoOptions);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALInfo(
         hDataset: GDALDatasetH,
         psOptions: *const GDALInfoOptions,
@@ -9421,23 +9421,23 @@ pub struct GDALTranslateOptions {
 pub struct GDALTranslateOptionsForBinary {
     _unused: [u8; 0],
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALTranslateOptionsNew(
         papszArgv: *mut *mut ::std::ffi::c_char,
         psOptionsForBinary: *mut GDALTranslateOptionsForBinary,
     ) -> *mut GDALTranslateOptions;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALTranslateOptionsFree(psOptions: *mut GDALTranslateOptions);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALTranslateOptionsSetProgress(
         psOptions: *mut GDALTranslateOptions,
         pfnProgress: GDALProgressFunc,
         pProgressData: *mut ::std::ffi::c_void,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALTranslate(
         pszDestFilename: *const ::std::ffi::c_char,
         hSrcDataset: GDALDatasetH,
@@ -9455,36 +9455,36 @@ pub struct GDALWarpAppOptions {
 pub struct GDALWarpAppOptionsForBinary {
     _unused: [u8; 0],
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALWarpAppOptionsNew(
         papszArgv: *mut *mut ::std::ffi::c_char,
         psOptionsForBinary: *mut GDALWarpAppOptionsForBinary,
     ) -> *mut GDALWarpAppOptions;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALWarpAppOptionsFree(psOptions: *mut GDALWarpAppOptions);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALWarpAppOptionsSetProgress(
         psOptions: *mut GDALWarpAppOptions,
         pfnProgress: GDALProgressFunc,
         pProgressData: *mut ::std::ffi::c_void,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALWarpAppOptionsSetQuiet(
         psOptions: *mut GDALWarpAppOptions,
         bQuiet: ::std::ffi::c_int,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALWarpAppOptionsSetWarpOption(
         psOptions: *mut GDALWarpAppOptions,
         pszKey: *const ::std::ffi::c_char,
         pszValue: *const ::std::ffi::c_char,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALWarp(
         pszDest: *const ::std::ffi::c_char,
         hDstDS: GDALDatasetH,
@@ -9504,23 +9504,23 @@ pub struct GDALVectorTranslateOptions {
 pub struct GDALVectorTranslateOptionsForBinary {
     _unused: [u8; 0],
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALVectorTranslateOptionsNew(
         papszArgv: *mut *mut ::std::ffi::c_char,
         psOptionsForBinary: *mut GDALVectorTranslateOptionsForBinary,
     ) -> *mut GDALVectorTranslateOptions;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALVectorTranslateOptionsFree(psOptions: *mut GDALVectorTranslateOptions);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALVectorTranslateOptionsSetProgress(
         psOptions: *mut GDALVectorTranslateOptions,
         pfnProgress: GDALProgressFunc,
         pProgressData: *mut ::std::ffi::c_void,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALVectorTranslate(
         pszDest: *const ::std::ffi::c_char,
         hDstDS: GDALDatasetH,
@@ -9540,23 +9540,23 @@ pub struct GDALDEMProcessingOptions {
 pub struct GDALDEMProcessingOptionsForBinary {
     _unused: [u8; 0],
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDEMProcessingOptionsNew(
         papszArgv: *mut *mut ::std::ffi::c_char,
         psOptionsForBinary: *mut GDALDEMProcessingOptionsForBinary,
     ) -> *mut GDALDEMProcessingOptions;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDEMProcessingOptionsFree(psOptions: *mut GDALDEMProcessingOptions);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDEMProcessingOptionsSetProgress(
         psOptions: *mut GDALDEMProcessingOptions,
         pfnProgress: GDALProgressFunc,
         pProgressData: *mut ::std::ffi::c_void,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDEMProcessing(
         pszDestFilename: *const ::std::ffi::c_char,
         hSrcDataset: GDALDatasetH,
@@ -9576,23 +9576,23 @@ pub struct GDALNearblackOptions {
 pub struct GDALNearblackOptionsForBinary {
     _unused: [u8; 0],
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALNearblackOptionsNew(
         papszArgv: *mut *mut ::std::ffi::c_char,
         psOptionsForBinary: *mut GDALNearblackOptionsForBinary,
     ) -> *mut GDALNearblackOptions;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALNearblackOptionsFree(psOptions: *mut GDALNearblackOptions);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALNearblackOptionsSetProgress(
         psOptions: *mut GDALNearblackOptions,
         pfnProgress: GDALProgressFunc,
         pProgressData: *mut ::std::ffi::c_void,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALNearblack(
         pszDest: *const ::std::ffi::c_char,
         hDstDS: GDALDatasetH,
@@ -9611,23 +9611,23 @@ pub struct GDALGridOptions {
 pub struct GDALGridOptionsForBinary {
     _unused: [u8; 0],
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGridOptionsNew(
         papszArgv: *mut *mut ::std::ffi::c_char,
         psOptionsForBinary: *mut GDALGridOptionsForBinary,
     ) -> *mut GDALGridOptions;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGridOptionsFree(psOptions: *mut GDALGridOptions);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGridOptionsSetProgress(
         psOptions: *mut GDALGridOptions,
         pfnProgress: GDALProgressFunc,
         pProgressData: *mut ::std::ffi::c_void,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALGrid(
         pszDest: *const ::std::ffi::c_char,
         hSrcDS: GDALDatasetH,
@@ -9645,29 +9645,29 @@ pub struct GDALContourOptions {
 pub struct GDALContourOptionsForBinary {
     _unused: [u8; 0],
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALContourOptionsNew(
         papszArgv: *mut *mut ::std::ffi::c_char,
         psOptionsForBinary: *mut GDALContourOptionsForBinary,
     ) -> *mut GDALContourOptions;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALContourOptionsFree(psOptions: *mut GDALContourOptions);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALContourOptionsSetProgress(
         psOptions: *mut GDALContourOptions,
         pfnProgress: GDALProgressFunc,
         pProgressData: *mut ::std::ffi::c_void,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALContourOptionsSetDestDataSource(
         psOptions: *mut GDALContourOptions,
         pszDestDatasource: *const ::std::ffi::c_char,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALContourProcessOptions(
         psOptions: *mut GDALContourOptions,
         ppapszStringOptions: *mut *mut *mut ::std::ffi::c_char,
@@ -9687,23 +9687,23 @@ pub struct GDALRasterizeOptions {
 pub struct GDALRasterizeOptionsForBinary {
     _unused: [u8; 0],
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRasterizeOptionsNew(
         papszArgv: *mut *mut ::std::ffi::c_char,
         psOptionsForBinary: *mut GDALRasterizeOptionsForBinary,
     ) -> *mut GDALRasterizeOptions;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRasterizeOptionsFree(psOptions: *mut GDALRasterizeOptions);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRasterizeOptionsSetProgress(
         psOptions: *mut GDALRasterizeOptions,
         pfnProgress: GDALProgressFunc,
         pProgressData: *mut ::std::ffi::c_void,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALRasterize(
         pszDest: *const ::std::ffi::c_char,
         hDstDS: GDALDatasetH,
@@ -9722,23 +9722,23 @@ pub struct GDALFootprintOptions {
 pub struct GDALFootprintOptionsForBinary {
     _unused: [u8; 0],
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALFootprintOptionsNew(
         papszArgv: *mut *mut ::std::ffi::c_char,
         psOptionsForBinary: *mut GDALFootprintOptionsForBinary,
     ) -> *mut GDALFootprintOptions;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALFootprintOptionsFree(psOptions: *mut GDALFootprintOptions);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALFootprintOptionsSetProgress(
         psOptions: *mut GDALFootprintOptions,
         pfnProgress: GDALProgressFunc,
         pProgressData: *mut ::std::ffi::c_void,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALFootprint(
         pszDest: *const ::std::ffi::c_char,
         hDstDS: GDALDatasetH,
@@ -9757,23 +9757,23 @@ pub struct GDALBuildVRTOptions {
 pub struct GDALBuildVRTOptionsForBinary {
     _unused: [u8; 0],
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALBuildVRTOptionsNew(
         papszArgv: *mut *mut ::std::ffi::c_char,
         psOptionsForBinary: *mut GDALBuildVRTOptionsForBinary,
     ) -> *mut GDALBuildVRTOptions;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALBuildVRTOptionsFree(psOptions: *mut GDALBuildVRTOptions);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALBuildVRTOptionsSetProgress(
         psOptions: *mut GDALBuildVRTOptions,
         pfnProgress: GDALProgressFunc,
         pProgressData: *mut ::std::ffi::c_void,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALBuildVRT(
         pszDest: *const ::std::ffi::c_char,
         nSrcCount: ::std::ffi::c_int,
@@ -9793,16 +9793,16 @@ pub struct GDALMultiDimInfoOptions {
 pub struct GDALMultiDimInfoOptionsForBinary {
     _unused: [u8; 0],
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALMultiDimInfoOptionsNew(
         papszArgv: *mut *mut ::std::ffi::c_char,
         psOptionsForBinary: *mut GDALMultiDimInfoOptionsForBinary,
     ) -> *mut GDALMultiDimInfoOptions;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALMultiDimInfoOptionsFree(psOptions: *mut GDALMultiDimInfoOptions);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALMultiDimInfo(
         hDataset: GDALDatasetH,
         psOptions: *const GDALMultiDimInfoOptions,
@@ -9818,23 +9818,23 @@ pub struct GDALMultiDimTranslateOptions {
 pub struct GDALMultiDimTranslateOptionsForBinary {
     _unused: [u8; 0],
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALMultiDimTranslateOptionsNew(
         papszArgv: *mut *mut ::std::ffi::c_char,
         psOptionsForBinary: *mut GDALMultiDimTranslateOptionsForBinary,
     ) -> *mut GDALMultiDimTranslateOptions;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALMultiDimTranslateOptionsFree(psOptions: *mut GDALMultiDimTranslateOptions);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALMultiDimTranslateOptionsSetProgress(
         psOptions: *mut GDALMultiDimTranslateOptions,
         pfnProgress: GDALProgressFunc,
         pProgressData: *mut ::std::ffi::c_void,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALMultiDimTranslate(
         pszDest: *const ::std::ffi::c_char,
         hDstDataset: GDALDatasetH,
@@ -9854,16 +9854,16 @@ pub struct GDALVectorInfoOptions {
 pub struct GDALVectorInfoOptionsForBinary {
     _unused: [u8; 0],
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALVectorInfoOptionsNew(
         papszArgv: *mut *mut ::std::ffi::c_char,
         psOptionsForBinary: *mut GDALVectorInfoOptionsForBinary,
     ) -> *mut GDALVectorInfoOptions;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALVectorInfoOptionsFree(psOptions: *mut GDALVectorInfoOptions);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALVectorInfo(
         hDataset: GDALDatasetH,
         psOptions: *const GDALVectorInfoOptions,
@@ -9879,23 +9879,23 @@ pub struct GDALTileIndexOptions {
 pub struct GDALTileIndexOptionsForBinary {
     _unused: [u8; 0],
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALTileIndexOptionsNew(
         papszArgv: *mut *mut ::std::ffi::c_char,
         psOptionsForBinary: *mut GDALTileIndexOptionsForBinary,
     ) -> *mut GDALTileIndexOptions;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALTileIndexOptionsSetProgress(
         psOptions: *mut GDALTileIndexOptions,
         pfnProgress: GDALProgressFunc,
         pProgressData: *mut ::std::ffi::c_void,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALTileIndexOptionsFree(psOptions: *mut GDALTileIndexOptions);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALTileIndex(
         pszDest: *const ::std::ffi::c_char,
         nSrcCount: ::std::ffi::c_int,
@@ -9914,83 +9914,83 @@ pub mod OGRAxisOrientation {
     pub const OAO_Up: Type = 5;
     pub const OAO_Down: Type = 6;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRAxisEnumToName(eOrientation: OGRAxisOrientation::Type) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetPROJSearchPaths(papszPaths: *const *const ::std::ffi::c_char);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRGetPROJSearchPaths() -> *mut *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetPROJAuxDbPaths(papszPaths: *const *const ::std::ffi::c_char);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRGetPROJAuxDbPaths() -> *mut *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetPROJEnableNetwork(enabled: ::std::ffi::c_int);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRGetPROJEnableNetwork() -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRGetPROJVersion(
         pnMajor: *mut ::std::ffi::c_int,
         pnMinor: *mut ::std::ffi::c_int,
         pnPatch: *mut ::std::ffi::c_int,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRNewSpatialReference(arg1: *const ::std::ffi::c_char) -> OGRSpatialReferenceH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRCloneGeogCS(arg1: OGRSpatialReferenceH) -> OGRSpatialReferenceH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRClone(arg1: OGRSpatialReferenceH) -> OGRSpatialReferenceH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRDestroySpatialReference(arg1: OGRSpatialReferenceH);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRReference(arg1: OGRSpatialReferenceH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRDereference(arg1: OGRSpatialReferenceH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRRelease(arg1: OGRSpatialReferenceH);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRValidate(arg1: OGRSpatialReferenceH) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRImportFromEPSG(arg1: OGRSpatialReferenceH, arg2: ::std::ffi::c_int) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRImportFromEPSGA(arg1: OGRSpatialReferenceH, arg2: ::std::ffi::c_int) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRImportFromWkt(
         arg1: OGRSpatialReferenceH,
         arg2: *mut *mut ::std::ffi::c_char,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRImportFromProj4(
         arg1: OGRSpatialReferenceH,
         arg2: *const ::std::ffi::c_char,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRImportFromESRI(
         arg1: OGRSpatialReferenceH,
         arg2: *mut *mut ::std::ffi::c_char,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRImportFromPCI(
         hSRS: OGRSpatialReferenceH,
         arg1: *const ::std::ffi::c_char,
@@ -9998,7 +9998,7 @@ unsafe extern "C" {
         arg3: *mut f64,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRImportFromUSGS(
         arg1: OGRSpatialReferenceH,
         arg2: ::std::ffi::c_long,
@@ -10007,20 +10007,20 @@ unsafe extern "C" {
         arg5: ::std::ffi::c_long,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRImportFromXML(
         arg1: OGRSpatialReferenceH,
         arg2: *const ::std::ffi::c_char,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRImportFromDict(
         arg1: OGRSpatialReferenceH,
         arg2: *const ::std::ffi::c_char,
         arg3: *const ::std::ffi::c_char,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRImportFromPanorama(
         arg1: OGRSpatialReferenceH,
         arg2: ::std::ffi::c_long,
@@ -10029,19 +10029,19 @@ unsafe extern "C" {
         arg5: *mut f64,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRImportFromOzi(
         arg1: OGRSpatialReferenceH,
         arg2: *const *const ::std::ffi::c_char,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRImportFromMICoordSys(
         arg1: OGRSpatialReferenceH,
         arg2: *const ::std::ffi::c_char,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRImportFromERM(
         arg1: OGRSpatialReferenceH,
         arg2: *const ::std::ffi::c_char,
@@ -10049,53 +10049,53 @@ unsafe extern "C" {
         arg4: *const ::std::ffi::c_char,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRImportFromUrl(
         arg1: OGRSpatialReferenceH,
         arg2: *const ::std::ffi::c_char,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRImportFromCF1(
         arg1: OGRSpatialReferenceH,
         papszKeyValues: CSLConstList,
         pszUnits: *const ::std::ffi::c_char,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRExportToWkt(
         arg1: OGRSpatialReferenceH,
         arg2: *mut *mut ::std::ffi::c_char,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRExportToWktEx(
         arg1: OGRSpatialReferenceH,
         ppszResult: *mut *mut ::std::ffi::c_char,
         papszOptions: *const *const ::std::ffi::c_char,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRExportToPrettyWkt(
         arg1: OGRSpatialReferenceH,
         arg2: *mut *mut ::std::ffi::c_char,
         arg3: ::std::ffi::c_int,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRExportToPROJJSON(
         hSRS: OGRSpatialReferenceH,
         ppszReturn: *mut *mut ::std::ffi::c_char,
         papszOptions: *const *const ::std::ffi::c_char,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRExportToProj4(
         arg1: OGRSpatialReferenceH,
         arg2: *mut *mut ::std::ffi::c_char,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRExportToPCI(
         arg1: OGRSpatialReferenceH,
         arg2: *mut *mut ::std::ffi::c_char,
@@ -10103,7 +10103,7 @@ unsafe extern "C" {
         arg4: *mut *mut f64,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRExportToUSGS(
         arg1: OGRSpatialReferenceH,
         arg2: *mut ::std::ffi::c_long,
@@ -10112,14 +10112,14 @@ unsafe extern "C" {
         arg5: *mut ::std::ffi::c_long,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRExportToXML(
         arg1: OGRSpatialReferenceH,
         arg2: *mut *mut ::std::ffi::c_char,
         arg3: *const ::std::ffi::c_char,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRExportToPanorama(
         arg1: OGRSpatialReferenceH,
         arg2: *mut ::std::ffi::c_long,
@@ -10129,13 +10129,13 @@ unsafe extern "C" {
         arg6: *mut f64,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRExportToMICoordSys(
         arg1: OGRSpatialReferenceH,
         arg2: *mut *mut ::std::ffi::c_char,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRExportToERM(
         arg1: OGRSpatialReferenceH,
         arg2: *mut ::std::ffi::c_char,
@@ -10143,7 +10143,7 @@ unsafe extern "C" {
         arg4: *mut ::std::ffi::c_char,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRExportToCF1(
         arg1: OGRSpatialReferenceH,
         ppszGridMappingName: *mut *mut ::std::ffi::c_char,
@@ -10152,60 +10152,60 @@ unsafe extern "C" {
         papszOptions: CSLConstList,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRMorphToESRI(arg1: OGRSpatialReferenceH) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRMorphFromESRI(arg1: OGRSpatialReferenceH) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRStripVertical(arg1: OGRSpatialReferenceH) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRConvertToOtherProjection(
         hSRS: OGRSpatialReferenceH,
         pszTargetProjection: *const ::std::ffi::c_char,
         papszOptions: *const *const ::std::ffi::c_char,
     ) -> OGRSpatialReferenceH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRGetName(hSRS: OGRSpatialReferenceH) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetAttrValue(
         hSRS: OGRSpatialReferenceH,
         pszNodePath: *const ::std::ffi::c_char,
         pszNewNodeValue: *const ::std::ffi::c_char,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRGetAttrValue(
         hSRS: OGRSpatialReferenceH,
         pszName: *const ::std::ffi::c_char,
         iChild: ::std::ffi::c_int,
     ) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetAngularUnits(
         arg1: OGRSpatialReferenceH,
         arg2: *const ::std::ffi::c_char,
         arg3: f64,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRGetAngularUnits(
         arg1: OGRSpatialReferenceH,
         arg2: *mut *mut ::std::ffi::c_char,
     ) -> f64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetLinearUnits(
         arg1: OGRSpatialReferenceH,
         arg2: *const ::std::ffi::c_char,
         arg3: f64,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetTargetLinearUnits(
         arg1: OGRSpatialReferenceH,
         arg2: *const ::std::ffi::c_char,
@@ -10213,132 +10213,132 @@ unsafe extern "C" {
         arg4: f64,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetLinearUnitsAndUpdateParameters(
         arg1: OGRSpatialReferenceH,
         arg2: *const ::std::ffi::c_char,
         arg3: f64,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRGetLinearUnits(arg1: OGRSpatialReferenceH, arg2: *mut *mut ::std::ffi::c_char)
         -> f64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRGetTargetLinearUnits(
         arg1: OGRSpatialReferenceH,
         arg2: *const ::std::ffi::c_char,
         arg3: *mut *mut ::std::ffi::c_char,
     ) -> f64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRGetPrimeMeridian(
         arg1: OGRSpatialReferenceH,
         arg2: *mut *mut ::std::ffi::c_char,
     ) -> f64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRIsGeographic(arg1: OGRSpatialReferenceH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRIsDerivedGeographic(arg1: OGRSpatialReferenceH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRIsLocal(arg1: OGRSpatialReferenceH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRIsProjected(arg1: OGRSpatialReferenceH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRIsDerivedProjected(arg1: OGRSpatialReferenceH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRIsCompound(arg1: OGRSpatialReferenceH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRIsGeocentric(arg1: OGRSpatialReferenceH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRIsVertical(arg1: OGRSpatialReferenceH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRIsDynamic(arg1: OGRSpatialReferenceH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRHasPointMotionOperation(arg1: OGRSpatialReferenceH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRIsSameGeogCS(
         arg1: OGRSpatialReferenceH,
         arg2: OGRSpatialReferenceH,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRIsSameVertCS(
         arg1: OGRSpatialReferenceH,
         arg2: OGRSpatialReferenceH,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRIsSame(arg1: OGRSpatialReferenceH, arg2: OGRSpatialReferenceH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRIsSameEx(
         arg1: OGRSpatialReferenceH,
         arg2: OGRSpatialReferenceH,
         papszOptions: *const *const ::std::ffi::c_char,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetCoordinateEpoch(hSRS: OGRSpatialReferenceH, dfCoordinateEpoch: f64);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRGetCoordinateEpoch(hSRS: OGRSpatialReferenceH) -> f64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetLocalCS(
         hSRS: OGRSpatialReferenceH,
         pszName: *const ::std::ffi::c_char,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetProjCS(
         hSRS: OGRSpatialReferenceH,
         pszName: *const ::std::ffi::c_char,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetGeocCS(
         hSRS: OGRSpatialReferenceH,
         pszName: *const ::std::ffi::c_char,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetWellKnownGeogCS(
         hSRS: OGRSpatialReferenceH,
         pszName: *const ::std::ffi::c_char,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetFromUserInput(
         hSRS: OGRSpatialReferenceH,
         arg1: *const ::std::ffi::c_char,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetFromUserInputEx(
         hSRS: OGRSpatialReferenceH,
         arg1: *const ::std::ffi::c_char,
         papszOptions: CSLConstList,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRCopyGeogCSFrom(
         hSRS: OGRSpatialReferenceH,
         hSrcSRS: OGRSpatialReferenceH,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetTOWGS84(
         hSRS: OGRSpatialReferenceH,
         arg1: f64,
@@ -10350,17 +10350,17 @@ unsafe extern "C" {
         arg7: f64,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRGetTOWGS84(
         hSRS: OGRSpatialReferenceH,
         arg1: *mut f64,
         arg2: ::std::ffi::c_int,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRAddGuessedTOWGS84(hSRS: OGRSpatialReferenceH) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetCompoundCS(
         hSRS: OGRSpatialReferenceH,
         pszName: *const ::std::ffi::c_char,
@@ -10368,19 +10368,19 @@ unsafe extern "C" {
         hVertSRS: OGRSpatialReferenceH,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRPromoteTo3D(
         hSRS: OGRSpatialReferenceH,
         pszName: *const ::std::ffi::c_char,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRDemoteTo2D(
         hSRS: OGRSpatialReferenceH,
         pszName: *const ::std::ffi::c_char,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetGeogCS(
         hSRS: OGRSpatialReferenceH,
         pszGeogName: *const ::std::ffi::c_char,
@@ -10394,7 +10394,7 @@ unsafe extern "C" {
         dfConvertToRadians: f64,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetVertCS(
         hSRS: OGRSpatialReferenceH,
         pszVertCSName: *const ::std::ffi::c_char,
@@ -10402,16 +10402,16 @@ unsafe extern "C" {
         nVertDatumType: ::std::ffi::c_int,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRGetSemiMajor(arg1: OGRSpatialReferenceH, arg2: *mut OGRErr::Type) -> f64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRGetSemiMinor(arg1: OGRSpatialReferenceH, arg2: *mut OGRErr::Type) -> f64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRGetInvFlattening(arg1: OGRSpatialReferenceH, arg2: *mut OGRErr::Type) -> f64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetAuthority(
         hSRS: OGRSpatialReferenceH,
         pszTargetKey: *const ::std::ffi::c_char,
@@ -10419,19 +10419,19 @@ unsafe extern "C" {
         nCode: ::std::ffi::c_int,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRGetAuthorityCode(
         hSRS: OGRSpatialReferenceH,
         pszTargetKey: *const ::std::ffi::c_char,
     ) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRGetAuthorityName(
         hSRS: OGRSpatialReferenceH,
         pszTargetKey: *const ::std::ffi::c_char,
     ) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRGetAreaOfUse(
         hSRS: OGRSpatialReferenceH,
         pdfWestLongitudeDeg: *mut f64,
@@ -10441,20 +10441,20 @@ unsafe extern "C" {
         ppszAreaName: *mut *const ::std::ffi::c_char,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetProjection(
         arg1: OGRSpatialReferenceH,
         arg2: *const ::std::ffi::c_char,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetProjParm(
         arg1: OGRSpatialReferenceH,
         arg2: *const ::std::ffi::c_char,
         arg3: f64,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRGetProjParm(
         hSRS: OGRSpatialReferenceH,
         pszParamName: *const ::std::ffi::c_char,
@@ -10462,14 +10462,14 @@ unsafe extern "C" {
         arg1: *mut OGRErr::Type,
     ) -> f64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetNormProjParm(
         arg1: OGRSpatialReferenceH,
         arg2: *const ::std::ffi::c_char,
         arg3: f64,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRGetNormProjParm(
         hSRS: OGRSpatialReferenceH,
         pszParamName: *const ::std::ffi::c_char,
@@ -10477,27 +10477,27 @@ unsafe extern "C" {
         arg1: *mut OGRErr::Type,
     ) -> f64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetUTM(
         hSRS: OGRSpatialReferenceH,
         nZone: ::std::ffi::c_int,
         bNorth: ::std::ffi::c_int,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRGetUTMZone(
         hSRS: OGRSpatialReferenceH,
         pbNorth: *mut ::std::ffi::c_int,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetStatePlane(
         hSRS: OGRSpatialReferenceH,
         nZone: ::std::ffi::c_int,
         bNAD83: ::std::ffi::c_int,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetStatePlaneWithUnits(
         hSRS: OGRSpatialReferenceH,
         nZone: ::std::ffi::c_int,
@@ -10506,10 +10506,10 @@ unsafe extern "C" {
         dfOverrideUnit: f64,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRAutoIdentifyEPSG(hSRS: OGRSpatialReferenceH) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRFindMatches(
         hSRS: OGRSpatialReferenceH,
         papszOptions: *mut *mut ::std::ffi::c_char,
@@ -10517,16 +10517,16 @@ unsafe extern "C" {
         ppanMatchConfidence: *mut *mut ::std::ffi::c_int,
     ) -> *mut OGRSpatialReferenceH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRFreeSRSArray(pahSRS: *mut OGRSpatialReferenceH);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSREPSGTreatsAsLatLong(hSRS: OGRSpatialReferenceH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSREPSGTreatsAsNorthingEasting(hSRS: OGRSpatialReferenceH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRGetAxis(
         hSRS: OGRSpatialReferenceH,
         pszTargetKey: *const ::std::ffi::c_char,
@@ -10534,10 +10534,10 @@ unsafe extern "C" {
         peOrientation: *mut OGRAxisOrientation::Type,
     ) -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRGetAxesCount(hSRS: OGRSpatialReferenceH) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetAxes(
         hSRS: OGRSpatialReferenceH,
         pszTargetKey: *const ::std::ffi::c_char,
@@ -10553,29 +10553,29 @@ pub mod OSRAxisMappingStrategy {
     pub const OAMS_AUTHORITY_COMPLIANT: Type = 1;
     pub const OAMS_CUSTOM: Type = 2;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRGetAxisMappingStrategy(hSRS: OGRSpatialReferenceH) -> OSRAxisMappingStrategy::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetAxisMappingStrategy(
         hSRS: OGRSpatialReferenceH,
         strategy: OSRAxisMappingStrategy::Type,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRGetDataAxisToSRSAxisMapping(
         hSRS: OGRSpatialReferenceH,
         pnCount: *mut ::std::ffi::c_int,
     ) -> *const ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetDataAxisToSRSAxisMapping(
         hSRS: OGRSpatialReferenceH,
         nMappingSize: ::std::ffi::c_int,
         panMapping: *const ::std::ffi::c_int,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetACEA(
         hSRS: OGRSpatialReferenceH,
         dfStdP1: f64,
@@ -10586,7 +10586,7 @@ unsafe extern "C" {
         dfFalseNorthing: f64,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetAE(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -10595,7 +10595,7 @@ unsafe extern "C" {
         dfFalseNorthing: f64,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetBonne(
         hSRS: OGRSpatialReferenceH,
         dfStandardParallel: f64,
@@ -10604,7 +10604,7 @@ unsafe extern "C" {
         dfFalseNorthing: f64,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetCEA(
         hSRS: OGRSpatialReferenceH,
         dfStdP1: f64,
@@ -10613,7 +10613,7 @@ unsafe extern "C" {
         dfFalseNorthing: f64,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetCS(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -10622,7 +10622,7 @@ unsafe extern "C" {
         dfFalseNorthing: f64,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetEC(
         hSRS: OGRSpatialReferenceH,
         dfStdP1: f64,
@@ -10633,7 +10633,7 @@ unsafe extern "C" {
         dfFalseNorthing: f64,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetEckert(
         hSRS: OGRSpatialReferenceH,
         nVariation: ::std::ffi::c_int,
@@ -10642,7 +10642,7 @@ unsafe extern "C" {
         dfFalseNorthing: f64,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetEckertIV(
         hSRS: OGRSpatialReferenceH,
         dfCentralMeridian: f64,
@@ -10650,7 +10650,7 @@ unsafe extern "C" {
         dfFalseNorthing: f64,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetEckertVI(
         hSRS: OGRSpatialReferenceH,
         dfCentralMeridian: f64,
@@ -10658,7 +10658,7 @@ unsafe extern "C" {
         dfFalseNorthing: f64,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetEquirectangular(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -10667,7 +10667,7 @@ unsafe extern "C" {
         dfFalseNorthing: f64,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetEquirectangular2(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -10677,7 +10677,7 @@ unsafe extern "C" {
         dfFalseNorthing: f64,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetGS(
         hSRS: OGRSpatialReferenceH,
         dfCentralMeridian: f64,
@@ -10685,7 +10685,7 @@ unsafe extern "C" {
         dfFalseNorthing: f64,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetGH(
         hSRS: OGRSpatialReferenceH,
         dfCentralMeridian: f64,
@@ -10693,10 +10693,10 @@ unsafe extern "C" {
         dfFalseNorthing: f64,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetIGH(hSRS: OGRSpatialReferenceH) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetGEOS(
         hSRS: OGRSpatialReferenceH,
         dfCentralMeridian: f64,
@@ -10705,7 +10705,7 @@ unsafe extern "C" {
         dfFalseNorthing: f64,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetGaussSchreiberTMercator(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -10715,7 +10715,7 @@ unsafe extern "C" {
         dfFalseNorthing: f64,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetGnomonic(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -10724,7 +10724,7 @@ unsafe extern "C" {
         dfFalseNorthing: f64,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetHOM(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -10736,7 +10736,7 @@ unsafe extern "C" {
         dfFalseNorthing: f64,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetHOMAC(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -10748,7 +10748,7 @@ unsafe extern "C" {
         dfFalseNorthing: f64,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetHOM2PNO(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -10761,7 +10761,7 @@ unsafe extern "C" {
         dfFalseNorthing: f64,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetIWMPolyconic(
         hSRS: OGRSpatialReferenceH,
         dfLat1: f64,
@@ -10771,7 +10771,7 @@ unsafe extern "C" {
         dfFalseNorthing: f64,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetKrovak(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -10783,7 +10783,7 @@ unsafe extern "C" {
         dfFalseNorthing: f64,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetLAEA(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -10792,7 +10792,7 @@ unsafe extern "C" {
         dfFalseNorthing: f64,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetLCC(
         hSRS: OGRSpatialReferenceH,
         dfStdP1: f64,
@@ -10803,7 +10803,7 @@ unsafe extern "C" {
         dfFalseNorthing: f64,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetLCC1SP(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -10813,7 +10813,7 @@ unsafe extern "C" {
         dfFalseNorthing: f64,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetLCCB(
         hSRS: OGRSpatialReferenceH,
         dfStdP1: f64,
@@ -10824,7 +10824,7 @@ unsafe extern "C" {
         dfFalseNorthing: f64,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetMC(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -10833,7 +10833,7 @@ unsafe extern "C" {
         dfFalseNorthing: f64,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetMercator(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -10843,7 +10843,7 @@ unsafe extern "C" {
         dfFalseNorthing: f64,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetMercator2SP(
         hSRS: OGRSpatialReferenceH,
         dfStdP1: f64,
@@ -10853,7 +10853,7 @@ unsafe extern "C" {
         dfFalseNorthing: f64,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetMollweide(
         hSRS: OGRSpatialReferenceH,
         dfCentralMeridian: f64,
@@ -10861,7 +10861,7 @@ unsafe extern "C" {
         dfFalseNorthing: f64,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetNZMG(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -10870,7 +10870,7 @@ unsafe extern "C" {
         dfFalseNorthing: f64,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetOS(
         hSRS: OGRSpatialReferenceH,
         dfOriginLat: f64,
@@ -10880,7 +10880,7 @@ unsafe extern "C" {
         dfFalseNorthing: f64,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetOrthographic(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -10889,7 +10889,7 @@ unsafe extern "C" {
         dfFalseNorthing: f64,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetPolyconic(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -10898,7 +10898,7 @@ unsafe extern "C" {
         dfFalseNorthing: f64,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetPS(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -10908,7 +10908,7 @@ unsafe extern "C" {
         dfFalseNorthing: f64,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetRobinson(
         hSRS: OGRSpatialReferenceH,
         dfCenterLong: f64,
@@ -10916,7 +10916,7 @@ unsafe extern "C" {
         dfFalseNorthing: f64,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetSinusoidal(
         hSRS: OGRSpatialReferenceH,
         dfCenterLong: f64,
@@ -10924,7 +10924,7 @@ unsafe extern "C" {
         dfFalseNorthing: f64,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetStereographic(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -10934,7 +10934,7 @@ unsafe extern "C" {
         dfFalseNorthing: f64,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetSOC(
         hSRS: OGRSpatialReferenceH,
         dfLatitudeOfOrigin: f64,
@@ -10943,7 +10943,7 @@ unsafe extern "C" {
         dfFalseNorthing: f64,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetTM(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -10953,7 +10953,7 @@ unsafe extern "C" {
         dfFalseNorthing: f64,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetTMVariant(
         hSRS: OGRSpatialReferenceH,
         pszVariantName: *const ::std::ffi::c_char,
@@ -10964,7 +10964,7 @@ unsafe extern "C" {
         dfFalseNorthing: f64,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetTMG(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -10973,7 +10973,7 @@ unsafe extern "C" {
         dfFalseNorthing: f64,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetTMSO(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
@@ -10983,7 +10983,7 @@ unsafe extern "C" {
         dfFalseNorthing: f64,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetTPED(
         hSRS: OGRSpatialReferenceH,
         dfLat1: f64,
@@ -10994,7 +10994,7 @@ unsafe extern "C" {
         dfFalseNorthing: f64,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetVDG(
         hSRS: OGRSpatialReferenceH,
         dfCenterLong: f64,
@@ -11002,7 +11002,7 @@ unsafe extern "C" {
         dfFalseNorthing: f64,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetWagner(
         hSRS: OGRSpatialReferenceH,
         nVariation: ::std::ffi::c_int,
@@ -11011,14 +11011,14 @@ unsafe extern "C" {
         dfFalseNorthing: f64,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetQSC(
         hSRS: OGRSpatialReferenceH,
         dfCenterLat: f64,
         dfCenterLong: f64,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetSCH(
         hSRS: OGRSpatialReferenceH,
         dfPegLat: f64,
@@ -11027,7 +11027,7 @@ unsafe extern "C" {
         dfPegHgt: f64,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRSetVerticalPerspective(
         hSRS: OGRSpatialReferenceH,
         dfTopoOriginLat: f64,
@@ -11038,13 +11038,13 @@ unsafe extern "C" {
         dfFalseNorthing: f64,
     ) -> OGRErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRCalcInvFlattening(dfSemiMajor: f64, dfSemiMinor: f64) -> f64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRCalcSemiMinorFromInvFlattening(dfSemiMajor: f64, dfInvFlattening: f64) -> f64;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRCleanup();
 }
 pub mod OSRCRSType {
@@ -11104,36 +11104,36 @@ const _: () = {
 pub struct OSRCRSListParameters {
     _unused: [u8; 0],
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRGetCRSInfoListFromDatabase(
         pszAuthName: *const ::std::ffi::c_char,
         params: *const OSRCRSListParameters,
         pnOutResultCount: *mut ::std::ffi::c_int,
     ) -> *mut *mut OSRCRSInfo;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRDestroyCRSInfoList(list: *mut *mut OSRCRSInfo);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OSRGetAuthorityListFromDatabase() -> *mut *mut ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OCTNewCoordinateTransformation(
         hSourceSRS: OGRSpatialReferenceH,
         hTargetSRS: OGRSpatialReferenceH,
     ) -> OGRCoordinateTransformationH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OCTNewCoordinateTransformationOptions() -> OGRCoordinateTransformationOptionsH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OCTCoordinateTransformationOptionsSetOperation(
         hOptions: OGRCoordinateTransformationOptionsH,
         pszCO: *const ::std::ffi::c_char,
         bReverseCO: ::std::ffi::c_int,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OCTCoordinateTransformationOptionsSetAreaOfInterest(
         hOptions: OGRCoordinateTransformationOptionsH,
         dfWestLongitudeDeg: f64,
@@ -11142,50 +11142,50 @@ unsafe extern "C" {
         dfNorthLatitudeDeg: f64,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OCTCoordinateTransformationOptionsSetDesiredAccuracy(
         hOptions: OGRCoordinateTransformationOptionsH,
         dfAccuracy: f64,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OCTCoordinateTransformationOptionsSetBallparkAllowed(
         hOptions: OGRCoordinateTransformationOptionsH,
         bAllowBallpark: ::std::ffi::c_int,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OCTCoordinateTransformationOptionsSetOnlyBest(
         hOptions: OGRCoordinateTransformationOptionsH,
         bOnlyBest: bool,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OCTDestroyCoordinateTransformationOptions(arg1: OGRCoordinateTransformationOptionsH);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OCTNewCoordinateTransformationEx(
         hSourceSRS: OGRSpatialReferenceH,
         hTargetSRS: OGRSpatialReferenceH,
         hOptions: OGRCoordinateTransformationOptionsH,
     ) -> OGRCoordinateTransformationH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OCTClone(hTransform: OGRCoordinateTransformationH) -> OGRCoordinateTransformationH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OCTGetSourceCS(hTransform: OGRCoordinateTransformationH) -> OGRSpatialReferenceH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OCTGetTargetCS(hTransform: OGRCoordinateTransformationH) -> OGRSpatialReferenceH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OCTGetInverse(hTransform: OGRCoordinateTransformationH) -> OGRCoordinateTransformationH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OCTDestroyCoordinateTransformation(arg1: OGRCoordinateTransformationH);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OCTTransform(
         hCT: OGRCoordinateTransformationH,
         nCount: ::std::ffi::c_int,
@@ -11194,7 +11194,7 @@ unsafe extern "C" {
         z: *mut f64,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OCTTransformEx(
         hCT: OGRCoordinateTransformationH,
         nCount: ::std::ffi::c_int,
@@ -11204,7 +11204,7 @@ unsafe extern "C" {
         pabSuccess: *mut ::std::ffi::c_int,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OCTTransform4D(
         hCT: OGRCoordinateTransformationH,
         nCount: ::std::ffi::c_int,
@@ -11215,7 +11215,7 @@ unsafe extern "C" {
         pabSuccess: *mut ::std::ffi::c_int,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OCTTransform4DWithErrorCodes(
         hCT: OGRCoordinateTransformationH,
         nCount: ::std::ffi::c_int,
@@ -11226,7 +11226,7 @@ unsafe extern "C" {
         panErrorCodes: *mut ::std::ffi::c_int,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn OCTTransformBounds(
         hCT: OGRCoordinateTransformationH,
         xmin: f64,
@@ -11241,13 +11241,13 @@ unsafe extern "C" {
     ) -> ::std::ffi::c_int;
 }
 pub type CPLThreadFunc = ::std::option::Option<unsafe extern "C" fn(arg1: *mut ::std::ffi::c_void)>;
-unsafe extern "C" {
+extern "C" {
     pub fn CPLLockFile(
         pszPath: *const ::std::ffi::c_char,
         dfWaitInSeconds: f64,
     ) -> *mut ::std::ffi::c_void;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLUnlockFile(hLock: *mut ::std::ffi::c_void);
 }
 #[repr(C)]
@@ -11268,41 +11268,41 @@ pub struct _CPLJoinableThread {
     _unused: [u8; 0],
 }
 pub type CPLJoinableThread = _CPLJoinableThread;
-unsafe extern "C" {
+extern "C" {
     pub fn CPLCreateMutex() -> *mut CPLMutex;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLCreateMutexEx(nOptions: ::std::ffi::c_int) -> *mut CPLMutex;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLCreateOrAcquireMutex(
         arg1: *mut *mut CPLMutex,
         dfWaitInSeconds: f64,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLCreateOrAcquireMutexEx(
         arg1: *mut *mut CPLMutex,
         dfWaitInSeconds: f64,
         nOptions: ::std::ffi::c_int,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLAcquireMutex(hMutex: *mut CPLMutex, dfWaitInSeconds: f64) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLReleaseMutex(hMutex: *mut CPLMutex);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLDestroyMutex(hMutex: *mut CPLMutex);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLCleanupMasterMutex();
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLCreateCond() -> *mut CPLCond;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLCondWait(hCond: *mut CPLCond, hMutex: *mut CPLMutex);
 }
 pub mod CPLCondTimedWaitReason {
@@ -11311,50 +11311,50 @@ pub mod CPLCondTimedWaitReason {
     pub const COND_TIMED_WAIT_TIME_OUT: Type = 1;
     pub const COND_TIMED_WAIT_OTHER: Type = 2;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLCondTimedWait(
         hCond: *mut CPLCond,
         hMutex: *mut CPLMutex,
         dfWaitInSeconds: f64,
     ) -> CPLCondTimedWaitReason::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLCondSignal(hCond: *mut CPLCond);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLCondBroadcast(hCond: *mut CPLCond);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLDestroyCond(hCond: *mut CPLCond);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLGetPID() -> GIntBig;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLGetCurrentProcessID() -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLCreateThread(
         pfnMain: CPLThreadFunc,
         pArg: *mut ::std::ffi::c_void,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLCreateJoinableThread(
         pfnMain: CPLThreadFunc,
         pArg: *mut ::std::ffi::c_void,
     ) -> *mut CPLJoinableThread;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLJoinThread(hJoinableThread: *mut CPLJoinableThread);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLSleep(dfWaitInSeconds: f64);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLGetThreadingModel() -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLGetNumCPUs() -> ::std::ffi::c_int;
 }
 #[repr(C)]
@@ -11369,37 +11369,37 @@ pub mod CPLLockType {
     pub const LOCK_ADAPTIVE_MUTEX: Type = 1;
     pub const LOCK_SPIN: Type = 2;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLCreateLock(eType: CPLLockType::Type) -> *mut CPLLock;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLCreateOrAcquireLock(
         arg1: *mut *mut CPLLock,
         eType: CPLLockType::Type,
     ) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLAcquireLock(arg1: *mut CPLLock) -> ::std::ffi::c_int;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLReleaseLock(arg1: *mut CPLLock);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLDestroyLock(arg1: *mut CPLLock);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLLockSetDebugPerf(arg1: *mut CPLLock, bEnableIn: ::std::ffi::c_int);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLGetTLS(nIndex: ::std::ffi::c_int) -> *mut ::std::ffi::c_void;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLGetTLSEx(
         nIndex: ::std::ffi::c_int,
         pbMemoryErrorOccurred: *mut ::std::ffi::c_int,
     ) -> *mut ::std::ffi::c_void;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLSetTLS(
         nIndex: ::std::ffi::c_int,
         pData: *mut ::std::ffi::c_void,
@@ -11408,14 +11408,14 @@ unsafe extern "C" {
 }
 pub type CPLTLSFreeFunc =
     ::std::option::Option<unsafe extern "C" fn(pData: *mut ::std::ffi::c_void)>;
-unsafe extern "C" {
+extern "C" {
     pub fn CPLSetTLSWithFreeFunc(
         nIndex: ::std::ffi::c_int,
         pData: *mut ::std::ffi::c_void,
         pfnFree: CPLTLSFreeFunc,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLSetTLSWithFreeFuncEx(
         nIndex: ::std::ffi::c_int,
         pData: *mut ::std::ffi::c_void,
@@ -11423,7 +11423,7 @@ unsafe extern "C" {
         pbMemoryErrorOccurred: *mut ::std::ffi::c_int,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn CPLCleanupTLS();
 }
 pub mod GDALResampleAlg {
@@ -11458,7 +11458,7 @@ pub type GDALMaskFunc = ::std::option::Option<
         pMask: *mut ::std::ffi::c_void,
     ) -> ::std::ffi::c_int,
 >;
-unsafe extern "C" {
+extern "C" {
     pub fn GDALWarpNoDataMasker(
         pMaskFuncArg: *mut ::std::ffi::c_void,
         nBandCount: ::std::ffi::c_int,
@@ -11473,7 +11473,7 @@ unsafe extern "C" {
         pbOutAllValid: *mut ::std::ffi::c_int,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALWarpDstAlphaMasker(
         pMaskFuncArg: *mut ::std::ffi::c_void,
         nBandCount: ::std::ffi::c_int,
@@ -11487,7 +11487,7 @@ unsafe extern "C" {
         pValidityMask: *mut ::std::ffi::c_void,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALWarpSrcAlphaMasker(
         pMaskFuncArg: *mut ::std::ffi::c_void,
         nBandCount: ::std::ffi::c_int,
@@ -11502,7 +11502,7 @@ unsafe extern "C" {
         pbOutAllOpaque: *mut ::std::ffi::c_int,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALWarpSrcMaskMasker(
         pMaskFuncArg: *mut ::std::ffi::c_void,
         nBandCount: ::std::ffi::c_int,
@@ -11516,7 +11516,7 @@ unsafe extern "C" {
         pValidityMask: *mut ::std::ffi::c_void,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALWarpCutlineMasker(
         pMaskFuncArg: *mut ::std::ffi::c_void,
         nBandCount: ::std::ffi::c_int,
@@ -11530,7 +11530,7 @@ unsafe extern "C" {
         pValidityMask: *mut ::std::ffi::c_void,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALWarpCutlineMaskerEx(
         pMaskFuncArg: *mut ::std::ffi::c_void,
         nBandCount: ::std::ffi::c_int,
@@ -11678,49 +11678,49 @@ const _: () = {
     ["Offset of field: GDALWarpOptions::eTieStrategy"]
         [::std::mem::offset_of!(GDALWarpOptions, eTieStrategy) - 264usize];
 };
-unsafe extern "C" {
+extern "C" {
     pub fn GDALWarpGetOptionList() -> *const ::std::ffi::c_char;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALCreateWarpOptions() -> *mut GDALWarpOptions;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDestroyWarpOptions(arg1: *mut GDALWarpOptions);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALCloneWarpOptions(arg1: *const GDALWarpOptions) -> *mut GDALWarpOptions;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALWarpInitDstNoDataReal(arg1: *mut GDALWarpOptions, dNoDataReal: f64);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALWarpInitSrcNoDataReal(arg1: *mut GDALWarpOptions, dNoDataReal: f64);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALWarpInitNoDataReal(arg1: *mut GDALWarpOptions, dNoDataReal: f64);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALWarpInitDstNoDataImag(arg1: *mut GDALWarpOptions, dNoDataImag: f64);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALWarpInitSrcNoDataImag(arg1: *mut GDALWarpOptions, dNoDataImag: f64);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALWarpResolveWorkingDataType(arg1: *mut GDALWarpOptions);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALWarpInitDefaultBandMapping(
         arg1: *mut GDALWarpOptions,
         nBandCount: ::std::ffi::c_int,
     );
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALSerializeWarpOptions(arg1: *const GDALWarpOptions) -> *mut CPLXMLNode;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDeserializeWarpOptions(arg1: *mut CPLXMLNode) -> *mut GDALWarpOptions;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALReprojectImage(
         hSrcDS: GDALDatasetH,
         pszSrcWKT: *const ::std::ffi::c_char,
@@ -11734,7 +11734,7 @@ unsafe extern "C" {
         psOptions: *mut GDALWarpOptions,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALCreateAndReprojectImage(
         hSrcDS: GDALDatasetH,
         pszSrcWKT: *const ::std::ffi::c_char,
@@ -11750,7 +11750,7 @@ unsafe extern "C" {
         psOptions: *mut GDALWarpOptions,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALAutoCreateWarpedVRT(
         hSrcDS: GDALDatasetH,
         pszSrcWKT: *const ::std::ffi::c_char,
@@ -11760,7 +11760,7 @@ unsafe extern "C" {
         psOptions: *const GDALWarpOptions,
     ) -> GDALDatasetH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALAutoCreateWarpedVRTEx(
         hSrcDS: GDALDatasetH,
         pszSrcWKT: *const ::std::ffi::c_char,
@@ -11771,7 +11771,7 @@ unsafe extern "C" {
         papszTransformerOptions: CSLConstList,
     ) -> GDALDatasetH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALCreateWarpedVRT(
         hSrcDS: GDALDatasetH,
         nPixels: ::std::ffi::c_int,
@@ -11780,17 +11780,17 @@ unsafe extern "C" {
         psOptions: *mut GDALWarpOptions,
     ) -> GDALDatasetH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALInitializeWarpedVRT(hDS: GDALDatasetH, psWO: *mut GDALWarpOptions) -> CPLErr::Type;
 }
 pub type GDALWarpOperationH = *mut ::std::ffi::c_void;
-unsafe extern "C" {
+extern "C" {
     pub fn GDALCreateWarpOperation(arg1: *const GDALWarpOptions) -> GDALWarpOperationH;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALDestroyWarpOperation(arg1: GDALWarpOperationH);
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALChunkAndWarpImage(
         arg1: GDALWarpOperationH,
         arg2: ::std::ffi::c_int,
@@ -11799,7 +11799,7 @@ unsafe extern "C" {
         arg5: ::std::ffi::c_int,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALChunkAndWarpMulti(
         arg1: GDALWarpOperationH,
         arg2: ::std::ffi::c_int,
@@ -11808,7 +11808,7 @@ unsafe extern "C" {
         arg5: ::std::ffi::c_int,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALWarpRegion(
         arg1: GDALWarpOperationH,
         arg2: ::std::ffi::c_int,
@@ -11821,7 +11821,7 @@ unsafe extern "C" {
         arg9: ::std::ffi::c_int,
     ) -> CPLErr::Type;
 }
-unsafe extern "C" {
+extern "C" {
     pub fn GDALWarpRegionToBuffer(
         arg1: GDALWarpOperationH,
         arg2: ::std::ffi::c_int,
