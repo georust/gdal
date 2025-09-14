@@ -750,7 +750,7 @@ mod tests {
 
     fn ds_with_layer<F>(ds_name: &str, layer_name: &str, f: F)
     where
-        F: Fn(Layer),
+        F: Fn(Layer<'_>),
     {
         let ds = Dataset::open(fixture(ds_name)).unwrap();
         let layer = ds.layer_by_name(layer_name).unwrap();
@@ -759,7 +759,7 @@ mod tests {
 
     fn with_layer<F>(name: &str, f: F)
     where
-        F: Fn(Layer),
+        F: Fn(Layer<'_>),
     {
         let ds = Dataset::open(fixture(name)).unwrap();
         let layer = ds.layer(0).unwrap();
@@ -777,14 +777,14 @@ mod tests {
 
     fn with_features<F>(name: &str, f: F)
     where
-        F: Fn(FeatureIterator),
+        F: Fn(FeatureIterator<'_>),
     {
         with_layer(name, |mut layer| f(layer.features()));
     }
 
     fn with_feature<F>(name: &str, fid: u64, f: F)
     where
-        F: Fn(Feature),
+        F: Fn(Feature<'_>),
     {
         with_layer(name, |layer| f(layer.feature(fid).unwrap()));
     }
