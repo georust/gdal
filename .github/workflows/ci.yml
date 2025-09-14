@@ -55,11 +55,6 @@ jobs:
           curl --proto '=https' --tlsv1.2 --retry 10 --retry-connrefused -fsSL "https://sh.rustup.rs" | sh -s -- --profile minimal --default-toolchain none -y
           echo "${CARGO_HOME:-$HOME/.cargo}/bin" >> $GITHUB_PATH
 
-      - name: Setup building
-        run: |
-          export CC="clang-9"
-          export CXX="clang++-9"
-
       - name: Install stable
         run: |
           rustup install --no-self-update --profile minimal stable
