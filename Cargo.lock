@@ -571,9 +571,9 @@ dependencies = [
 
 [[package]]
 name = "hdf5-metno-sys"
-version = "0.9.1"
+version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1e7be8ee30e5034ee48dd30bc85a2fdde6e1ec0e5e19598409e8e9955eab14af"
+checksum = "de20d5ba22c244493bdfefb91d8e9de08e3e58d96a792532da5e0df545aed279"
 dependencies = [
  "hdf5-metno-src",
  "libc",
@@ -729,9 +729,9 @@ dependencies = [
 
 [[package]]
 name = "libsqlite3-sys"
-version = "0.32.0"
+version = "0.35.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fbb8270bb4060bd76c6e96f20c52d80620f1d82a3470885694e41e0f81ef6fe7"
+checksum = "133c182a6a2c87864fe97778797e46c7e999672690dc9fa3ee8e241aa4a9c13f"
 dependencies = [
  "cc",
  "pkg-config",
@@ -829,9 +829,9 @@ dependencies = [
 
 [[package]]
 name = "netcdf-src"
-version = "0.4.1"
+version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "db385e065fef89907fbc08858dddadf7a0e219b654333e7ce31260641a2238b3"
+checksum = "7055e22df9f87c2931ac0e845028637fdab77ac8098b5dc5d4768e52932c7cd0"
 dependencies = [
  "cmake",
  "hdf5-metno-sys",
@@ -840,9 +840,9 @@ dependencies = [
 
 [[package]]
 name = "netcdf-sys"
-version = "0.8.1"
+version = "0.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e848a01eaee33a1c3f0b2b2e92f03c7fcface4384c0f7cef00024954f19c7868"
+checksum = "6fb81047c7e146ae97620a1523e5fd136d53efb2c4aaaf34222fdacad8a5913c"
 dependencies = [
  "curl-sys",
  "hdf5-metno-sys",
@@ -1038,9 +1038,9 @@ dependencies = [
 
 [[package]]
 name = "proj-sys"
-version = "0.26.0"
+version = "0.27.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a208129995443a4c475464c33308274be1578993b0ad266c9139188ed0dc7e91"
+checksum = "48ffa255a853264169516c9fc21f524446aca5b091daab6052f2a9b3e5e90359"
 dependencies = [
  "cmake",
  "flate2",
@@ -1148,15 +1148,15 @@ checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
 
 [[package]]
 name = "semver"
-version = "1.0.26"
+version = "1.0.27"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "56e6fa9c48d24d85fb3de5ad847117517440f6beceb7798af16b4a87d616b8d0"
+checksum = "d767eb0aabc880b29956c35734170f26ed551a859dbd361d140cdbeca61ab1e2"
 
 [[package]]
 name = "serde"
-version = "1.0.221"
+version = "1.0.222"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "341877e04a22458705eb4e131a1508483c877dca2792b3781d4e5d8a6019ec43"
+checksum = "aab69e3f5be1836a1fe0aca0b286e5a5b38f262d6c9e8acd2247818751fcc8fb"
 dependencies = [
  "serde_core",
  "serde_derive",
@@ -1164,18 +1164,18 @@ dependencies = [
 
 [[package]]
 name = "serde_core"
-version = "1.0.221"
+version = "1.0.222"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0c459bc0a14c840cb403fc14b148620de1e0778c96ecd6e0c8c3cacb6d8d00fe"
+checksum = "3f8ebec5eea07db7df9342aa712db2138f019d9ab3454a60a680579a6f841b80"
 dependencies = [
  "serde_derive",
 ]
 
 [[package]]
 name = "serde_derive"
-version = "1.0.221"
+version = "1.0.222"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d6185cf75117e20e62b1ff867b9518577271e58abe0037c40bb4794969355ab0"
+checksum = "b5f61630fe26d0ff555e6c37dc445ab2f15871c8a11ace3cf471b3195d3e4f49"
 dependencies = [
  "proc-macro2",
  "quote",
