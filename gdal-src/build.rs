@@ -330,8 +330,6 @@ fn main() {
         // see
         // https://github.com/OSGeo/PROJ/commit/6e9b324ab7bf5909df7e68409e060282db14fa54#diff-af8fe2f9d33a9c3408ff7683bfebd1e2334b4506f559add92406be3e150268fb
         config.cxxflag("-DPROJ_DLL=");
-        // that windows library is somehow required
-        println!("cargo:rustc-link-lib=Wbemuuid");
         // proj uses these two on Windows
         println!("cargo:rustc-link-lib=Ole32");
         println!("cargo:rustc-link-lib=Shell32");
