@@ -1198,4 +1198,138 @@ mod tests {
             }
         );
     }
+
+    #[test]
+    #[cfg_attr(feature = "gdal-src", ignore)]
+    fn test_use_root_group_after_dataset_close() {
+        let fixture = "/vsizip/fixtures/byte_no_cf.zarr.zip";
+        let root_group;
+
+        {
+            let dataset_options = DatasetOptions {
+                open_flags: GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER,
+                allowed_drivers: None,
+                open_options: None,
+                sibling_files: None,
+            };
+            let dataset = Dataset::open_ex(fixture, dataset_options).unwrap();
+            root_group = dataset.root_group().unwrap();
+        } // the dataset should go out of scope here and be closed
+
+        let md_array = root_group
+            .open_md_array("byte_no_cf", CslStringList::new())
+            .unwrap();
+        let values = md_array.read_as::<u8>(vec![0, 0], vec![20, 20]).unwrap();
+        assert_eq!(values.len(), 20 * 20);
+    }
+
+    #[test]
+    #[cfg_attr(feature = "gdal-src", ignore)]
+    fn test_use_subgroup_after_group_free() {
+        let fixture = "/vsizip/fixtures/cf_nasa_4326.zarr.zip";
+        let science_group;
+
+        {
+            let dataset_options = DatasetOptions {
+                open_flags: GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER,
+                allowed_drivers: None,
+                open_options: None,
+                sibling_files: None,
+            };
+            let dataset = Dataset::open_ex(fixture, dataset_options).unwrap();
+            let root_group = dataset.root_group().unwrap();
+            science_group = root_group
+                .open_group("science", CslStringList::new())
+                .unwrap();
+        } // the dataset and root group should go out of scope here and be deallocated
+
+        let grid_group = science_group
+            .open_group("grids", CslStringList::new())
+            .unwrap();
+        let data_group = grid_group.open_group("data", CslStringList::new()).unwrap();
+        let temp_md_array = data_group
+            .open_md_array("temp", CslStringList::new())
+            .unwrap();
+        let temp_values = temp_md_array
+            .read_as::<f64>(vec![0, 0], vec![15, 11])
+            .unwrap();
+        assert_eq!(temp_values.len(), 15 * 11);
+    }
+
+    #[test]
+    #[cfg_attr(feature = "gdal-src", ignore)]
+    fn test_use_md_array_after_group_free() {
+        let fixture = "/vsizip/fixtures/byte_no_cf.zarr.zip";
+        let md_array;
+
+        {
+            let dataset_options = DatasetOptions {
+                open_flags: GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER,
+                allowed_drivers: None,
+                open_options: None,
+                sibling_files: None,
+            };
+            let dataset = Dataset::open_ex(fixture, dataset_options).unwrap();
+            let root_group = dataset.root_group().unwrap();
+            md_array = root_group
+                .open_md_array("byte_no_cf", CslStringList::new())
+                .unwrap();
+        } // the dataset and root group should go out of scope here and be deallocated
+
+        let values = md_array.read_as::<u8>(vec![0, 0], vec![20, 20]).unwrap();
+        assert_eq!(values.len(), 20 * 20);
+    }
+
+    #[test]
+    #[cfg_attr(feature = "gdal-src", ignore)]
+    fn test_use_attribute_after_group_free() {
+        let fixture = "/vsizip/fixtures/cf_nasa_4326.zarr.zip";
+        let standard_name;
+
+        {
+            let dataset_options = DatasetOptions {
+                open_flags: GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER,
+                allowed_drivers: None,
+                open_options: None,
+                sibling_files: None,
+            };
+            let dataset = Dataset::open_ex(fixture, dataset_options).unwrap();
+            let root_group = dataset.root_group().unwrap();
+            let science_group = root_group
+                .open_group("science", CslStringList::new())
+                .unwrap();
+            let grid_group = science_group
+                .open_group("grids", CslStringList::new())
+                .unwrap();
+            let data_group = grid_group.open_group("data", CslStringList::new()).unwrap();
+            let temp_md_array = data_group
+                .open_md_array("temp", CslStringList::new())
+                .unwrap();
+            standard_name = temp_md_array.attribute("standard_name").unwrap();
+        } // the dataset, all groups, and the mdarray should go out of scope here and be deallocated
+
+        assert_eq!(standard_name.read_as_string(), "air_temperature");
+    }
+
+    #[test]
+    #[cfg_attr(feature = "gdal-src", ignore)]
+    fn test_use_dimension_after_group_free() {
+        let fixture = "/vsizip/fixtures/byte_no_cf.zarr.zip";
+        let dimensions;
+
+        {
+            let dataset_options = DatasetOptions {
+                open_flags: GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER,
+                allowed_drivers: None,
+                open_options: None,
+                sibling_files: None,
+            };
+            let dataset = Dataset::open_ex(fixture, dataset_options).unwrap();
+            let root_group = dataset.root_group().unwrap();
+            dimensions = root_group.dimensions(CslStringList::new()).unwrap();
+        } // the dataset and root group should go out of scope here and be deallocated
+
+        let dimension_names: Vec<_> = dimensions.into_iter().map(|dim| dim.name()).collect();
+        assert_eq!(dimension_names, ["X", "Y"]);
+    }
 }
