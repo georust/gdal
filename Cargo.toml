@@ -35,7 +35,7 @@ tempfile = "3.8"
 arrow = { version = "56.1", default-features = false, features = ["ffi"] }
 arrow-arith = { version = "56.1" }
 arrow-array = { version = "56.1" }
-arrow-buffer = { version = "56.1" }
+arrow-buffer = { version = "56.2" }
 arrow-cast = { version = "56.1" }
 arrow-data = { version = "56.1" }
 arrow-ord = { version = "56.1" }
