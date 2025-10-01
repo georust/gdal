@@ -33,16 +33,6 @@ semver = "1.0"
 tempfile = "3.8"
 # Only used in the example
 arrow = { version = "56.2", default-features = false, features = ["ffi"] }
-arrow-arith = { version = "56.2" }
-arrow-array = { version = "56.2" }
-arrow-buffer = { version = "56.2" }
-arrow-cast = { version = "56.2" }
-arrow-data = { version = "56.2" }
-arrow-ord = { version = "56.2" }
-arrow-row = { version = "56.2" }
-arrow-schema = { version = "56.2" }
-arrow-select = { version = "56.2" }
-arrow-string = { version = "56.2" }
 
 [workspace]
 members = ["gdal-src", "gdal-sys"]

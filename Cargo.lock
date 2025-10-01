@@ -432,16 +432,6 @@ name = "gdal"
 version = "0.18.0"
 dependencies = [
  "arrow",
- "arrow-arith",
- "arrow-array",
- "arrow-buffer",
- "arrow-cast",
- "arrow-data",
- "arrow-ord",
- "arrow-row",
- "arrow-schema",
- "arrow-select",
- "arrow-string",
  "bitflags",
  "chrono",
  "gdal-src",
