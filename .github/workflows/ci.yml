@@ -122,7 +122,7 @@ jobs:
         os:
           - ubuntu-latest
           - windows-latest
-          - macos-13 # x86_64
+          - macos-14 # for x86_64
           - macos-15 # aarch64
     env:
       CMAKE_POLICY_VERSION_MINIMUM: 3.5
@@ -148,19 +148,34 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y sqlite3
+      - name: Install x86_64-apple-darwin target
+        if: matrix.os == 'macos-14'
+        run: rustup target add x86_64-apple-darwin
       # use the minimal driver set for clippy as the other
       # drivers do not change the rust code
       # enable `driver_sqlite` to force statically linking libsqlite3 for proj
       - name: Check with Clippy (bundled)
+        if: matrix.os != 'macos-14'
         run: cargo clippy --all-targets --features "gdal-sys/bundled gdal-src gdal-src/driver_sqlite" -- -D warnings
+      - name: Check with Clippy (bundled, x86_64-apple-darwin)
+        if: matrix.os == 'macos-14'
+        run: cargo clippy --target x86_64-apple-darwin --all-targets --features "gdal-sys/bundled gdal-src gdal-src/driver_sqlite" -- -D warnings
       # we only build tests here as we have disabled features
       # that are required for running tests
       - name: Build bundled gdal (minimal features)
+        if: matrix.os != 'macos-14'
         # we use cargo test --no-run here because
         # tests do not pass due to missing libgeos but we want to have a complete build (including linking)
         run: cargo test --features "gdal-sys/bundled gdal-src gdal-src/driver_sqlite" --no-run
+      - name: Build bundled gdal (minimal features, x86_64-apple-darwin)
+        if: matrix.os == 'macos-14'
+        run: cargo test --target x86_64-apple-darwin --features "gdal-sys/bundled gdal-src gdal-src/driver_sqlite" --no-run
       - name: Test bundled (all features)
+        if: matrix.os != 'macos-14'
         run: cargo test --features "gdal-sys/bundled gdal-src gdal-src/all_drivers gdal-src/geos_static"
+      - name: Test bundled (all features, x86_64-apple-darwin)
+        if: matrix.os == 'macos-14'
+        run: cargo test --target x86_64-apple-darwin --features "gdal-sys/bundled gdal-src gdal-src/all_drivers gdal-src/geos_static"
       - name: Check that all files necessary to build gdal are included
-        if: matrix.os != 'macos-13'
+        if: matrix.os != 'macos-14'
         run: cargo package -p gdal-src -F all_drivers
