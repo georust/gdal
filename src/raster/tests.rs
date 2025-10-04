@@ -888,3 +888,11 @@ fn test_resample_str() {
         assert_eq!(parsed.unwrap(), e, "{stringed}");
     }
 }
+
+#[test]
+fn test_checksum() -> Result<()> {
+    let dataset = Dataset::open(fixture("tinymarble.tif"))?;
+    let band = dataset.rasterband(1)?;
+    assert_eq!(band.checksum((0, 0), band.size())?, 44419);
+    Ok(())
+}

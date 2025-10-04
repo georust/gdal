@@ -5,6 +5,7 @@
 ### Added
 
   - Add pre-built bindings for GDAL 3.11 ([#663](https://github.com/georust/gdal/pull/663))
+  - Add `RasterBand::checksum` ([#676](https://github.com/georust/gdal/pull/676))
 
 ## 0.18
 
@@ -66,7 +67,7 @@
 
    - <https://github.com/georust/gdal/pull/539>
 
-- Added `Rasterband::fill`
+- Added `RasterBand::fill`
   - <https://github.com/georust/gdal/pull/528>
 
 - Added `Dataset::rasterbands`.
@@ -100,8 +101,8 @@
 - Implemented `IntoIterator`, `Index` and `IndexMut` for `Buffer<T>`.
 - **Breaking**: `Buffer<T>::size` is now private and accessed via `Buffer<T>::shape().
 - **Breaking**: `Buffer<T>::data` is now private and accessed via `Buffer<T>::data().
-- **Breaking**: Removed `Rasterband::read_as_array`, changed signature of `Rasterband::read_block` to return a `Buffer<T>`.
-- **Breaking**: `Rasterband::write` and `Rasterband::write_block` now require a `&mut Buffer<T>` to handle possible case of drivers temporarily mutating input buffer.
+- **Breaking**: Removed `RasterBand::read_as_array`, changed signature of `RasterBand::read_block` to return a `Buffer<T>`.
+- **Breaking**: `RasterBand::write` and `RasterBand::write_block` now require a `&mut Buffer<T>` to handle possible case of drivers temporarily mutating input buffer.
 
   - <https://github.com/georust/gdal/pull/494>
 
@@ -110,7 +111,7 @@
   - <https://github.com/georust/gdal/pull/501>
   - <https://github.com/georust/gdal/pull/502>
 
-- **Breaking**: Changed a number of APIs using `isize` when `usize` is semantically more appropriate: `Driver::create.*`, `Rasterband::overview`, `Dataset::{layer|into_layer|layer_count}`.
+- **Breaking**: Changed a number of APIs using `isize` when `usize` is semantically more appropriate: `Driver::create.*`, `RasterBand::overview`, `Dataset::{layer|into_layer|layer_count}`.
 
   - <https://github.com/georust/gdal/pull/497>
 
@@ -272,7 +273,7 @@
 
   - <https://github.com/georust/gdal/pull/362>
 
-- Added `Rasterband::c_rasterband` to obtain the raw C pointer to `GDALRasterBandH`
+- Added `RasterBand::c_rasterband` to obtain the raw C pointer to `GDALRasterBandH`
 
   - <https://github.com/georust/gdal/pull/359>
 
@@ -443,7 +444,7 @@
 
   - <https://github.com/georust/gdal/pull/295>
 
-- Add `Rasterband::set_scale` and `Rasterband::set_offset` methods
+- Add `RasterBand::set_scale` and `RasterBand::set_offset` methods
 
   - <https://github.com/georust/gdal/pull/294>
 
