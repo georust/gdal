@@ -1160,6 +1160,38 @@ impl<'a> RasterBand<'a> {
             _ => Err(_last_cpl_err(rv)),
         }
     }
+
+    /// Compute a checksum for an image region.
+    ///
+    /// # Arguments
+    /// * `window` - the window position from top left
+    /// * `window_size` - the window size
+    ///
+    /// # Notes
+    ///
+    /// Floating-point data is converted to 32bit integer, so the fractional parts
+    /// will not affect the checksum. Real and imaginary components of complex bands
+    /// influence the result.
+    ///
+    /// See also:
+    /// [`GDALChecksumImage`](https://gdal.org/en/stable/api/gdal_alg.html#_CPPv417GDALChecksumImage15GDALRasterBandHiiii)
+    pub fn checksum(&self, window: (isize, isize), window_size: (usize, usize)) -> Result<u16> {
+        let rv = unsafe {
+            gdal_sys::GDALChecksumImage(
+                self.c_rasterband,
+                window.0.try_into()?,
+                window.1.try_into()?,
+                window_size.0.try_into()?,
+                window_size.1.try_into()?,
+            )
+        };
+        if rv == -1 {
+            let cpl_err = unsafe { gdal_sys::CPLGetLastErrorType() };
+            Err(_last_cpl_err(cpl_err))
+        } else {
+            Ok(rv as u16)
+        }
+    }
 }
 
 #[derive(Debug, PartialEq)]
