@@ -7,7 +7,7 @@ use std::{
 use gdal_sys::{CPLErr, GDALDatasetH, GDALMajorObjectH};
 
 use crate::cpl::CslStringList;
-use crate::errors::*;
+use crate::errors::{GdalError, Result};
 use crate::options::DatasetOptions;
 use crate::raster::RasterCreationOptions;
 use crate::utils::{_last_cpl_err, _last_null_pointer_err, _path_to_c_string, _string};

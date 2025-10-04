@@ -1,10 +1,12 @@
 //! GDAL Error Types
 
-use std::ffi::c_int;
 use std::num::TryFromIntError;
+use std::{ffi::c_int, fmt::Display};
 use thiserror::Error;
 
 use gdal_sys::{CPLErr, OGRErr, OGRFieldType, OGRwkbGeometryType};
+
+use crate::Dataset;
 
 pub type Result<T> = std::result::Result<T, GdalError>;
 
@@ -84,6 +86,31 @@ pub enum GdalError {
     IntConversionError(#[from] TryFromIntError),
     #[error("Buffer length {0} does not match raster size {1:?}")]
     BufferSizeMismatch(usize, (usize, usize)),
+    #[error("Dataset is not thread-safe")]
+    DatasetNotThreadSafe,
+}
+
+#[derive(Debug)]
+pub struct DatasetNotThreadSafeError(pub(crate) Dataset);
+
+impl DatasetNotThreadSafeError {
+    pub fn into_inner(self) -> Dataset {
+        self.0
+    }
+}
+
+impl From<DatasetNotThreadSafeError> for GdalError {
+    fn from(_: DatasetNotThreadSafeError) -> Self {
+        Self::DatasetNotThreadSafe
+    }
+}
+
+impl std::error::Error for DatasetNotThreadSafeError {}
+
+impl Display for DatasetNotThreadSafeError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        Display::fmt("dataset is not thread-safe", f)
+    }
 }
 
 /// A wrapper for [`CPLErr::Type`] that reflects it as an enum
