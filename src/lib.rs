@@ -120,6 +120,8 @@ pub mod raster;
 pub mod spatial_ref;
 #[cfg(test)]
 pub mod test_utils;
+#[cfg(any(major_ge_4, all(major_is_3, minor_ge_10)))]
+mod thread_safe;
 mod utils;
 pub mod vector;
 pub mod version;
@@ -128,6 +130,8 @@ pub mod vsi;
 pub use dataset::{Dataset, DatasetCapability};
 pub use geo_transform::{GeoTransform, GeoTransformEx};
 pub use options::{DatasetOptions, GdalOpenFlags};
+#[cfg(any(major_ge_4, all(major_is_3, minor_ge_10)))]
+pub use thread_safe::ThreadSafeDataset;
 
 pub use driver::{Driver, DriverManager, DriverType};
 pub use gcp::{Gcp, GcpRef};

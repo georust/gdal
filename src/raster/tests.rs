@@ -893,6 +893,7 @@ fn test_resample_str() {
 fn test_checksum() -> Result<()> {
     let dataset = Dataset::open(fixture("tinymarble.tif"))?;
     let band = dataset.rasterband(1)?;
-    assert_eq!(band.checksum((0, 0), band.size())?, 44419);
+    let checksum = band.checksum((0, 0), band.size())?;
+    assert_eq!(checksum, 44419);
     Ok(())
 }
