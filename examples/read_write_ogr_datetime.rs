@@ -19,7 +19,7 @@ fn run() -> gdal::errors::Result<()> {
     let mut ds = drv.create_vector_only(path.to_str().unwrap())?;
     let lyr = ds.create_layer(Default::default())?;
 
-    // Copy the origin layer shema to the destination layer:
+    // Copy the origin layer schema to the destination layer:
     for field in layer_a.defn().fields() {
         let field_defn = FieldDefn::new(&field.name(), field.field_type())?;
         field_defn.set_width(field.width());

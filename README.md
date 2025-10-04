@@ -34,7 +34,7 @@ Using the `gdal-sys` crate directly is normally not needed, but it can be useful
 
 ## Version support
 
-As a general rule, only GDAL versions in Ubuntu LTS-1 (previous LTS version, that is, GDAL 3.4 in 22.04 at this moment) are supported.
+As a general rule, only GDAL versions in Ubuntu LTS-1 (previous LTS version, that is, GDAL 3.4 in 22.04 at this moment) and newer are supported.
 `gdal-sys` might support earlier versions using the `bindgen` feature flag, but `gdal` does not.
 
 Building this crate assumes a compatible version of GDAL is installed with the corresponding header files and shared libraries.
