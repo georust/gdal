@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Breaking
+
+  - Bump `ndarray` dependency to 0.17 ([#678](https://github.com/georust/gdal/pull/678))
+
 ### Added
 
   - Add pre-built bindings for GDAL 3.11 ([#663](https://github.com/georust/gdal/pull/663))
