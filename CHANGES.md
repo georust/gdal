@@ -8,6 +8,7 @@
 
 ### Added
 
+  - Add pre-built bindings for GDAL 3.12 ([#684](https://github.com/georust/gdal/pull/663))
   - Add pre-built bindings for GDAL 3.11 ([#663](https://github.com/georust/gdal/pull/663))
   - Add `Dataset::try_into_thread_safe` ([#677](https://github.com/georust/gdal/pull/677))
   - Add `RasterBand::checksum` ([#676](https://github.com/georust/gdal/pull/676))
