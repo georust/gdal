@@ -243,6 +243,7 @@ pub struct RasterIOExtraArg {
     pub df_y_off: f64,
     pub df_x_size: f64,
     pub df_y_size: f64,
+    pub b_use_only_this_scale: bool,
 }
 
 impl Default for RasterIOExtraArg {
@@ -257,6 +258,7 @@ impl Default for RasterIOExtraArg {
             df_y_off: 0.0,
             df_x_size: 0.0,
             df_y_size: 0.0,
+            b_use_only_this_scale: false,
         }
     }
 }
@@ -273,6 +275,8 @@ impl From<RasterIOExtraArg> for GDALRasterIOExtraArg {
             df_y_off,
             df_x_size,
             df_y_size,
+            #[allow(unused)]
+            b_use_only_this_scale,
         } = arg;
 
         GDALRasterIOExtraArg {
@@ -285,6 +289,8 @@ impl From<RasterIOExtraArg> for GDALRasterIOExtraArg {
             dfYOff: df_y_off,
             dfXSize: df_x_size,
             dfYSize: df_y_size,
+            #[cfg(all(major_ge_3, minor_ge_12))]
+            bUseOnlyThisScale: if b_use_only_this_scale { 1 } else { 0 },
         }
     }
 }

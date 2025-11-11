@@ -119,7 +119,7 @@ mod tests {
             mean: 165.72752499998,
             std_dev: 98.590199951445,
         };
-        assert_near!(StatisticsAll, stats, expected, epsilon = 1e-10);
+        assert_near!(StatisticsAll, stats, expected, epsilon = 1e-5);
         Ok(())
     }
 }

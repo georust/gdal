@@ -60,4 +60,6 @@ check-cfg = [
     'cfg(minor_ge_8)',
     'cfg(minor_ge_9)',
     'cfg(minor_ge_10)',
+    'cfg(minor_ge_11)',
+    'cfg(minor_ge_12)',
 ]
