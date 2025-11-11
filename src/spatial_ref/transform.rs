@@ -291,9 +291,6 @@ mod tests {
 
     #[test]
     fn transform_ogr_geometry() {
-        //let expected_value = "POLYGON ((5509543.150809700600803 1716062.191619219258428,5467122.000330002978444 1980151.204280239529908,5623571.028492723591626 2010213.310253676958382,5671834.921544363722205 1746968.078280254499987,5509543.150809700600803 1716062.191619219258428))";
-        //let expected_value = "POLYGON ((5509543.15080969966948 1716062.191619222285226,5467122.000330002047122 1980151.204280242323875,5623571.028492721728981 2010213.31025367998518,5671834.921544362790883 1746968.078280256595463,5509543.15080969966948 1716062.191619222285226))";
-        let expected_value = "POLYGON ((5509543.1508097 1716062.19161922,5467122.00033 1980151.20428024,5623571.02849272 2010213.31025368,5671834.92154436 1746968.07828026,5509543.1508097 1716062.19161922))";
         let mut geom = Geometry::from_wkt(
             "POLYGON((23.43 37.58, 23.43 40.0, 25.29 40.0, 25.29 37.58, 23.43 37.58))",
         )
@@ -310,7 +307,18 @@ mod tests {
 
         let htransform = CoordTransform::new(&spatial_ref2, &spatial_ref1).unwrap();
         geom.transform_inplace(&htransform).unwrap();
-        assert_eq!(expected_value, geom.wkt().unwrap());
+        let ring = geom.get_geometry(0);
+        let mut points = Vec::new();
+        ring.get_points(&mut points);
+        assert_almost_eq(points[0].0, 5509543.1508097);
+        assert_almost_eq(points[0].1, 1716062.19161922);
+        assert_almost_eq(points[1].0, 5467122.00033);
+        assert_almost_eq(points[1].1, 1980151.20428024);
+        assert_almost_eq(points[2].0, 5623571.02849272);
+        assert_almost_eq(points[2].1, 2010213.31025368);
+        assert_almost_eq(points[3].0, 5671834.92154436);
+        assert_almost_eq(points[3].1, 1746968.07828026);
+        assert_eq!(points[4], points[0]);
     }
 
     #[test]
