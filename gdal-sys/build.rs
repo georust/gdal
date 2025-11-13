@@ -80,7 +80,7 @@ fn main() {
     // Otherwise docs.rs will explode due to not actually having libgdal installed.
     let use_latest = std::env::var("DOCS_RS").is_ok() || cfg!(feature = "bundled");
     let mut version = if use_latest {
-        Version::parse("3.11.0").ok()
+        Version::parse("3.12.0").ok()
     } else {
         env::var_os("GDAL_VERSION")
             .map(|vs| vs.to_string_lossy().to_string())
