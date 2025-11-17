@@ -1,8 +1,8 @@
-use std::ffi::CString;
+use std::ffi::{c_int, CString};
 use std::path::Path;
 use std::sync::Once;
 
-use gdal_sys::{self, CPLErr, GDALDriverH, GDALMajorObjectH};
+use gdal_sys::{CPLErr, GDALDriverH, GDALMajorObjectH};
 
 use crate::dataset::Dataset;
 use crate::gdal_major_object::MajorObject;
@@ -66,7 +66,7 @@ impl Driver {
     /// See also: [`long_name`](Self::long_name).
     pub fn short_name(&self) -> String {
         let rv = unsafe { gdal_sys::GDALGetDriverShortName(self.c_driver) };
-        _string(rv)
+        _string(rv).unwrap_or_default()
     }
 
     /// Return the short name of a driver.
@@ -76,7 +76,7 @@ impl Driver {
     /// See also: [`short_name`](Self::short_name`).
     pub fn long_name(&self) -> String {
         let rv = unsafe { gdal_sys::GDALGetDriverLongName(self.c_driver) };
-        _string(rv)
+        _string(rv).unwrap_or_default()
     }
 
     /// Create a new dataset of size (`size_x`, `size_y`) and `bands` band count,
@@ -145,7 +145,7 @@ impl Driver {
     /// [Per GDAL](https://gdal.org/api/gdaldriver_cpp.html#_CPPv4N10GDALDriver6CreateEPKciii12GDALDataType12CSLConstList),
     /// the set of legal options for `options` is driver specific, and there is no way to query in advance to establish the valid ones.
     ///
-    /// See also: [`RasterCreationOption`], [`create`](Self::create), [`create_with_band_type`](Self::create_with_band_type).
+    /// See also: [`RasterCreationOptions`], [`create`](Self::create), [`create_with_band_type`](Self::create_with_band_type).
     ///
     /// # Example
     ///
@@ -194,9 +194,9 @@ impl Driver {
         data_type: GdalDataType,
         options: &RasterCreationOptions,
     ) -> Result<Dataset> {
-        let size_x = libc::c_int::try_from(size_x)?;
-        let size_y = libc::c_int::try_from(size_y)?;
-        let bands = libc::c_int::try_from(bands)?;
+        let size_x = c_int::try_from(size_x)?;
+        let size_y = c_int::try_from(size_y)?;
+        let bands = c_int::try_from(bands)?;
 
         let c_filename = _path_to_c_string(filename)?;
         let c_dataset = unsafe {
@@ -634,12 +634,8 @@ mod tests {
         if let Ok(d) = DriverManager::get_driver_by_name("ESRI Shapefile") {
             test_driver(&d, "test.shp", DriverType::Vector);
             test_driver(&d, "my.test.shp", DriverType::Vector);
-            // `shp.zip` only supported from gdal version 3.1
-            // https://gdal.org/drivers/vector/shapefile.html#compressed-files
-            if cfg!(all(major_ge_3, minor_ge_1)) {
-                test_driver(&d, "test.shp.zip", DriverType::Vector);
-                test_driver(&d, "my.test.shp.zip", DriverType::Vector);
-            }
+            test_driver(&d, "test.shp.zip", DriverType::Vector);
+            test_driver(&d, "my.test.shp.zip", DriverType::Vector);
         }
 
         if let Ok(d) = DriverManager::get_driver_by_name("GTiff") {
@@ -669,12 +665,8 @@ mod tests {
         if DriverManager::get_driver_by_name("ESRI Shapefile").is_ok() {
             assert!(drivers("test.shp", true).contains("ESRI Shapefile"));
             assert!(drivers("my.test.shp", true).contains("ESRI Shapefile"));
-            // `shp.zip` only supported from gdal version 3.1
-            // https://gdal.org/drivers/vector/shapefile.html#compressed-files
-            if cfg!(all(major_ge_3, minor_ge_1)) {
-                assert!(drivers("test.shp.zip", true).contains("ESRI Shapefile"));
-                assert!(drivers("my.test.shp.zip", true).contains("ESRI Shapefile"));
-            }
+            assert!(drivers("test.shp.zip", true).contains("ESRI Shapefile"));
+            assert!(drivers("my.test.shp.zip", true).contains("ESRI Shapefile"));
         }
         if DriverManager::get_driver_by_name("GPKG").is_ok() {
             assert!(drivers("test.gpkg", true).contains("GPKG"));

@@ -1,10 +1,12 @@
 //! GDAL Error Types
 
-use libc::c_int;
 use std::num::TryFromIntError;
+use std::{ffi::c_int, fmt::Display};
 use thiserror::Error;
 
 use gdal_sys::{CPLErr, OGRErr, OGRFieldType, OGRwkbGeometryType};
+
+use crate::Dataset;
 
 pub type Result<T> = std::result::Result<T, GdalError>;
 
@@ -17,7 +19,6 @@ pub enum GdalError {
     #[error("StrUtf8Error")]
     StrUtf8Error(#[from] std::str::Utf8Error),
     #[cfg(feature = "ndarray")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "array")))]
     #[error("NdarrayShapeError")]
     NdarrayShapeError(#[from] ndarray::ShapeError),
     #[error("CPL error class: '{class:?}', error number: '{number}', error msg: '{msg}'")]
@@ -76,8 +77,6 @@ pub enum GdalError {
     BadArgument(String),
     #[error("Date conversion error: {0}")]
     DateError(String),
-
-    #[cfg(all(major_ge_3, minor_ge_1))]
     #[error("Unhandled type '{data_type}' on GDAL MD method {method_name}")]
     UnsupportedMdDataType {
         data_type: crate::raster::ExtendedDataTypeClass,
@@ -87,6 +86,31 @@ pub enum GdalError {
     IntConversionError(#[from] TryFromIntError),
     #[error("Buffer length {0} does not match raster size {1:?}")]
     BufferSizeMismatch(usize, (usize, usize)),
+    #[error("Dataset is not thread-safe")]
+    DatasetNotThreadSafe,
+}
+
+#[derive(Debug)]
+pub struct DatasetNotThreadSafeError(pub(crate) Dataset);
+
+impl DatasetNotThreadSafeError {
+    pub fn into_inner(self) -> Dataset {
+        self.0
+    }
+}
+
+impl From<DatasetNotThreadSafeError> for GdalError {
+    fn from(_: DatasetNotThreadSafeError) -> Self {
+        Self::DatasetNotThreadSafe
+    }
+}
+
+impl std::error::Error for DatasetNotThreadSafeError {}
+
+impl Display for DatasetNotThreadSafeError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        Display::fmt("dataset is not thread-safe", f)
+    }
 }
 
 /// A wrapper for [`CPLErr::Type`] that reflects it as an enum

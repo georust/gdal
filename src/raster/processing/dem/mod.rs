@@ -24,11 +24,16 @@
 
 #![deny(missing_docs)]
 
-use std::ffi::{CStr, CString};
-use std::path::Path;
-use std::ptr;
+use std::{
+    ffi::{c_int, CStr, CString},
+    path::Path,
+    ptr,
+};
 
-use libc::c_int;
+use crate::cpl::CslStringList;
+use crate::errors::Result;
+use crate::utils::{_last_cpl_err, _path_to_c_string};
+use crate::Dataset;
 
 pub use aspect::*;
 pub use color_relief::*;
@@ -39,11 +44,6 @@ pub use roughness::*;
 pub use slope::*;
 pub use tpi::*;
 pub use tri::*;
-
-use crate::cpl::CslStringList;
-use crate::errors::Result;
-use crate::utils::{_last_cpl_err, _path_to_c_string};
-use crate::Dataset;
 
 mod aspect;
 mod color_relief;

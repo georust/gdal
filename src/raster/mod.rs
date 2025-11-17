@@ -76,7 +76,6 @@
 
 pub use buffer::{Buffer, ByteBuffer};
 pub use create_options::RasterCreationOptions;
-#[cfg(all(major_ge_3, minor_ge_1))]
 pub use mdarray::{
     Attribute, Dimension, ExtendedDataType, ExtendedDataTypeClass, Group, MDArray, MdStatisticsAll,
 };
@@ -90,7 +89,6 @@ pub use warp::reproject;
 
 mod buffer;
 mod create_options;
-#[cfg(all(major_ge_3, minor_ge_1))]
 mod mdarray;
 pub mod processing;
 mod rasterband;

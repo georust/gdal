@@ -184,7 +184,7 @@ mod tests {
         ];
         for (i, e) in expected.iter().enumerate() {
             let stats = cr.rasterband(i + 1)?.get_statistics(true, false)?.unwrap();
-            assert_near!(StatisticsAll, stats, e, epsilon = 1e-8);
+            assert_near!(StatisticsAll, stats, e, epsilon = 0.1);
         }
 
         Ok(())

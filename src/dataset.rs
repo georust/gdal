@@ -1,15 +1,42 @@
-use std::{ffi::CString, ffi::NulError, path::Path, ptr};
+use std::{
+    ffi::{CStr, CString, NulError},
+    path::Path,
+    ptr,
+};
 
-use gdal_sys::{self, CPLErr, GDALDatasetH, GDALMajorObjectH};
+use gdal_sys::{CPLErr, GDALDatasetH, GDALMajorObjectH};
 
 use crate::cpl::CslStringList;
-use crate::errors::*;
+use crate::errors::{GdalError, Result};
 use crate::options::DatasetOptions;
 use crate::raster::RasterCreationOptions;
 use crate::utils::{_last_cpl_err, _last_null_pointer_err, _path_to_c_string, _string};
 use crate::{
     gdal_major_object::MajorObject, spatial_ref::SpatialRef, Driver, GeoTransform, Metadata,
 };
+
+pub struct DatasetCapability(&'static CStr);
+
+/// Dataset capabilities
+impl DatasetCapability {
+    /// Dataset can create new layers.
+    pub const CREATE_LAYER: DatasetCapability = DatasetCapability(c"CreateLayer");
+    /// Dataset can delete existing layers.
+    pub const DELETE_LAYER: DatasetCapability = DatasetCapability(c"DeleteLayer");
+    /// Layers of this datasource support CreateGeomField() just after layer creation.
+    pub const CREATE_GEOM_FIELD_AFTER_CREATE_LAYER: DatasetCapability =
+        DatasetCapability(c"CreateGeomFieldAfterCreateLayer");
+    /// Dataset supports curve geometries.
+    pub const CURVE_GEOMETRIES: DatasetCapability = DatasetCapability(c"CurveGeometries");
+    /// Dataset supports (efficient) transactions.
+    pub const TRANSACTIONS: DatasetCapability = DatasetCapability(c"Transactions");
+    /// Dataset supports transactions through emulation.
+    pub const EMULATED_TRANSACTIONS: DatasetCapability = DatasetCapability(c"EmulatedTransactions");
+    /// Dataset has a dedicated GetNextFeature() implementation, potentially returning features from layers in a non sequential way.
+    pub const RANDOM_LAYER_READ: DatasetCapability = DatasetCapability(c"RandomLayerRead");
+    /// Dataset supports calling CreateFeature() on layers in a non sequential way.
+    pub const RANDOM_LAYER_WRITE: DatasetCapability = DatasetCapability(c"RandomLayerWrite");
+}
 
 /// Wrapper around a [`GDALDataset`][GDALDataset] object.
 ///
@@ -208,7 +235,7 @@ impl Dataset {
     /// Fetch the projection definition string for this dataset.
     pub fn projection(&self) -> String {
         let rv = unsafe { gdal_sys::GDALGetProjectionRef(self.c_dataset) };
-        _string(rv)
+        _string(rv).unwrap_or_default()
     }
 
     /// Set the projection reference string for this dataset.
@@ -218,13 +245,21 @@ impl Dataset {
         Ok(())
     }
 
-    #[cfg(major_ge_3)]
     /// Get the spatial reference system for this dataset.
     pub fn spatial_ref(&self) -> Result<SpatialRef> {
-        unsafe { SpatialRef::from_c_obj(gdal_sys::GDALGetSpatialRef(self.c_dataset)) }
+        unsafe {
+            let spatial_ref = gdal_sys::GDALGetSpatialRef(self.c_dataset);
+            if spatial_ref.is_null() {
+                Err(GdalError::NullPointer {
+                    method_name: "GDALGetSpatialRef",
+                    msg: "Unable to get a spatial reference".to_string(),
+                })
+            } else {
+                SpatialRef::from_c_obj(spatial_ref)
+            }
+        }
     }
 
-    #[cfg(major_ge_3)]
     /// Set the spatial reference system for this dataset.
     pub fn set_spatial_ref(&mut self, spatial_ref: &SpatialRef) -> Result<()> {
         let rv = unsafe { gdal_sys::GDALSetSpatialRef(self.c_dataset, spatial_ref.to_c_hsrs()) };
@@ -319,6 +354,10 @@ impl Dataset {
         }
         Ok(transformation)
     }
+
+    pub fn has_capability(&self, capability: DatasetCapability) -> bool {
+        unsafe { gdal_sys::GDALDatasetTestCapability(self.c_dataset(), capability.0.as_ptr()) == 1 }
+    }
 }
 
 impl MajorObject for Dataset {
@@ -343,7 +382,8 @@ impl Drop for Dataset {
 mod tests {
     use gdal_sys::GDALAccess;
 
-    use crate::test_utils::fixture;
+    use crate::dataset::DatasetCapability;
+    use crate::test_utils::{fixture, open_gpkg_for_update};
     use crate::GdalOpenFlags;
 
     use super::*;
@@ -436,6 +476,19 @@ mod tests {
             },
         )
         .unwrap_err();
+    }
+
+    #[test]
+    fn test_dataset_capabilities() {
+        let ds = Dataset::open(fixture("poly.gpkg")).unwrap();
+        assert!(!ds.has_capability(DatasetCapability::CREATE_LAYER));
+        assert!(!ds.has_capability(DatasetCapability::DELETE_LAYER));
+        assert!(ds.has_capability(DatasetCapability::TRANSACTIONS));
+
+        let (_tmp_path, ds) = open_gpkg_for_update(&fixture("poly.gpkg"));
+        assert!(ds.has_capability(DatasetCapability::CREATE_LAYER));
+        assert!(ds.has_capability(DatasetCapability::DELETE_LAYER));
+        assert!(ds.has_capability(DatasetCapability::TRANSACTIONS));
     }
 
     #[test]

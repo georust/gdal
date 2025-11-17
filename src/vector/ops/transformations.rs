@@ -163,9 +163,9 @@ impl Geometry {
     /// They are defined as follows:
     ///
     /// * `METHOD=LINEWORK`: Combines all rings into a set of node-ed lines and then extracts
-    ///    valid polygons from that "linework".
+    ///   valid polygons from that "linework".
     /// * `METHOD=STRUCTURE`: First makes all rings valid, then merges shells and subtracts holes
-    ///    from shells to generate valid result. Assumes holes and shells are correctly categorized.
+    ///   from shells to generate valid result. Assumes holes and shells are correctly categorized.
     /// * `KEEP_COLLAPSED=YES/NO`. Only for `METHOD=STRUCTURE`.
     ///   - `NO` (default):  Collapses are converted to empty geometries
     ///   - `YES`: collapses are converted to a valid geometry of lower dimension
@@ -186,18 +186,7 @@ impl Geometry {
     /// # }
     /// ```
     pub fn make_valid(&self, opts: &CslStringList) -> Result<Geometry> {
-        #[cfg(all(major_ge_3, minor_ge_4))]
         let c_geom = unsafe { gdal_sys::OGR_G_MakeValidEx(self.c_geometry(), opts.as_ptr()) };
-
-        #[cfg(not(all(major_ge_3, minor_ge_4)))]
-        let c_geom = {
-            if !opts.is_empty() {
-                return Err(GdalError::BadArgument(
-                    "Options to make_valid require GDAL >= 3.4".into(),
-                ));
-            }
-            unsafe { gdal_sys::OGR_G_MakeValid(self.c_geometry()) }
-        };
 
         if c_geom.is_null() {
             Err(_last_null_pointer_err("OGR_G_MakeValid"))
@@ -293,7 +282,6 @@ mod tests {
         assert!(dst.unwrap().is_valid());
     }
 
-    #[cfg(all(major_ge_3, minor_ge_4))]
     #[test]
     /// Repairable case, but use extended options
     pub fn test_make_valid_ex() {

@@ -25,13 +25,13 @@ impl<'a> Deref for ResultSet<'a> {
     }
 }
 
-impl<'a> DerefMut for ResultSet<'a> {
+impl DerefMut for ResultSet<'_> {
     fn deref_mut(&mut self) -> &mut <Self as Deref>::Target {
         &mut self.layer
     }
 }
 
-impl<'a> Drop for ResultSet<'a> {
+impl Drop for ResultSet<'_> {
     fn drop(&mut self) {
         unsafe { gdal_sys::GDALDatasetReleaseResultSet(self.dataset, self.layer.c_layer()) };
     }
@@ -83,12 +83,13 @@ impl Dataset {
     /// let ds = Dataset::open(Path::new("fixtures/roads.geojson")).unwrap();
     /// let query = "SELECT kind, is_bridge, highway FROM roads WHERE highway = 'pedestrian'";
     /// let mut result_set = ds.execute_sql(query, None, sql::Dialect::DEFAULT).unwrap().unwrap();
+    /// let highway_idx = result_set.defn().field_index("highway").unwrap();
     ///
     /// assert_eq!(10, result_set.feature_count());
     ///
     /// for feature in result_set.features() {
     ///     let highway = feature
-    ///         .field("highway")
+    ///         .field(highway_idx)
     ///         .unwrap()
     ///         .unwrap()
     ///         .into_string()
@@ -102,7 +103,7 @@ impl Dataset {
         query: S,
         spatial_filter: Option<&Geometry>,
         dialect: Dialect,
-    ) -> Result<Option<ResultSet>> {
+    ) -> Result<Option<ResultSet<'_>>> {
         let query = CString::new(query.as_ref())?;
 
         let dialect_c_str = match dialect {
@@ -119,7 +120,7 @@ impl Dataset {
         query: CString,
         spatial_filter: Option<&Geometry>,
         dialect_c_str: Option<&CStr>,
-    ) -> Result<Option<sql::ResultSet>> {
+    ) -> Result<Option<sql::ResultSet<'_>>> {
         let mut filter_geom: OGRGeometryH = std::ptr::null_mut();
 
         let dialect_ptr = match dialect_c_str {
@@ -177,6 +178,7 @@ mod tests {
             .execute_sql(query, None, sql::Dialect::DEFAULT)
             .unwrap()
             .unwrap();
+        let highway_idx = result_set.defn().field_index("highway").unwrap();
 
         let field_names: HashSet<_> = result_set
             .defn()
@@ -194,7 +196,7 @@ mod tests {
 
         for feature in result_set.features() {
             let highway = feature
-                .field("highway")
+                .field(highway_idx)
                 .unwrap()
                 .unwrap()
                 .into_string()
@@ -213,6 +215,7 @@ mod tests {
             .execute_sql(query, Some(&bbox), sql::Dialect::DEFAULT)
             .unwrap()
             .unwrap();
+        let highway_idx = result_set.defn().field_index("highway").unwrap();
 
         assert_eq!(2, result_set.feature_count());
         let mut correct_fids = HashSet::new();
@@ -222,7 +225,7 @@ mod tests {
         let mut fids = HashSet::new();
         for feature in result_set.features() {
             let highway = feature
-                .field("highway")
+                .field(highway_idx)
                 .unwrap()
                 .unwrap()
                 .into_string()
@@ -236,6 +239,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(feature = "gdal-src", ignore)]
     fn test_sql_with_dialect() {
         let query = "SELECT * FROM roads WHERE highway = 'pedestrian' and NumPoints(GEOMETRY) = 3";
         let ds = Dataset::open(fixture("roads.geojson")).unwrap();
@@ -244,12 +248,13 @@ mod tests {
             .execute_sql(query, Some(&bbox), sql::Dialect::SQLITE)
             .unwrap()
             .unwrap();
+        let highway_idx = result_set.defn().field_index("highway").unwrap();
 
         assert_eq!(1, result_set.feature_count());
         let mut features: Vec<_> = result_set.features().collect();
         let feature = features.pop().unwrap();
         let highway = feature
-            .field("highway")
+            .field(highway_idx)
             .unwrap()
             .unwrap()
             .into_string()

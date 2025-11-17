@@ -1,0 +1,380 @@
+[package]
+name = "gdal-src"
+version = "0.4.0+3.12.0"
+edition = "2021"
+links = "gdal_src"
+description = "Build script for compiling GDAL from source."
+license-file = "source/LICENSE.TXT"
+repository = "https://github.com/georust/gdal/"
+include = [
+    "/build.rs",
+    "/Cargo.toml",
+    "/source/**/*.c",
+    "/source/**/*.cpp",
+    "/source/**/*.h.12",
+    "/source/**/*.h",
+    "/source/**/*.hpp",
+    "/source/**/*.in",
+    "/source/**/*.inc",
+    "/source/**/*.y",
+    "/source/**/CMakeLists.txt",
+    "/source/**/*.cmake",
+    "/source/apps/data",
+    "/source/cmake",
+    "/source/data",
+    "/source/frmts/drivers.ini",
+    "/source/frmts/vrt/data",
+    "/source/frmts/grib/data",
+    "/source/frmts/hdf5/data",
+    "/source/frmts/netcdf/data",
+    "/source/frmts/pcidsk/sdk/raster/rastertypes.hh",
+    "/source/gcore/data",
+    "/source/gcore/Version.rc",
+    "/source/gdal.cmake",
+    "/source/LICENSE.TXT",
+    "/source/ogr/data",
+    "/source/ogr/ogrsf_frmts/vrt/data",
+    "/source/ogr/ogrsf_frmts/s57/data",
+    "/source/ogr/ogrsf_frmts/dxf/data",
+    "/source/ogr/ogrsf_frmts/dgn/data",
+    "/source/ogr/ogrsf_frmts/vdv/data",
+    "/source/ogr/ogrsf_frmts/sxf/data",
+    "/source/scripts/gdal-bash-completion.sh",
+    "/src/lib.rs",
+]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+
+[dependencies]
+link-cplusplus = "1.0"
+proj-sys = { version = "0.27.0", features = ["bundled_proj"] }
+libsqlite3-sys = { version = ">=0.28.0,<0.36", features = [
+    "bundled",
+], optional = true }
+hdf5-sys = { package = "hdf5-metno-sys", version = "0.10.1", optional = true, features = [
+    "static",
+    "hl",
+    "deprecated",
+] }
+netcdf-sys = { version = "0.8.3", optional = true, features = ["static"] }
+pq-src = { version = "0.3.9", optional = true, default-features = false }
+curl-sys = { version = "0.4.84", features = ["static-curl"], optional = true }
+libz-sys = { version = "1.1.15", features = ["static"], optional = true }
+geos-sys = { version = "2.0.6", optional = true }
+# we need to depend directly on `geos-src` for the static
+# build as otherwise `DEP_GEOSSRC_ROOT` is not set
+geos-src = { version = "0.2.3", optional = true }
+
+[build-dependencies]
+cmake = "0.1.50"
+
+[features]
+default = []
+# force not building this crate
+nobuild = ["proj-sys/nobuild"]
+
+all_drivers = [
+    "internal_drivers",
+    "driver_sqlite",
+    "driver_gpkg",
+    "driver_vfk",
+    "driver_hdf5",
+    "driver_netcdf",
+    "driver_amigocloud",
+    "driver_carto",
+    "driver_daas",
+    "driver_eeda",
+    "driver_elastic",
+    "driver_ngw",
+    "driver_ogcapi",
+    "driver_plmosaic",
+    "driver_wcs",
+    "driver_wms",
+    "driver_wmts",
+    "driver_pg",
+    "driver_postgis_raster",
+]
+
+# note that libgeos is LGPL licensed
+# enabling this feature will means
+# that you statically link libgeos and
+# therefore makes your binary fall under
+# LGPL as well
+geos_static = ["geos", "geos-sys/static", "geos-src"]
+# as long as the `geos_static` feature
+# is not enabled that will only
+# dynamically link geos
+geos = ["geos-sys"]
+
+internal_drivers = [
+    # ogr internal,
+    "driver_avc",
+    "driver_cad",
+    "driver_csv",
+    "driver_dgn",
+    "driver_dxf",
+    "driver_edigeo",
+    "driver_flatgeobuf",
+    "driver_geoconcept",
+    "driver_geojson",
+    "driver_gmt",
+    "driver_gtfs",
+    "driver_jsonfg",
+    "driver_mapml",
+    "driver_openfilegdb",
+    "driver_pgdump",
+    "driver_ntf",
+    "driver_s57",
+    "driver_selafin",
+    "driver_shape",
+    "driver_sxf",
+    "driver_tab",
+    "driver_tiger",
+    "driver_vdv",
+    "driver_wasp",
+    # gdal internal
+    "driver_aaigrid",
+    "driver_adrg",
+    "driver_aigrid",
+    "driver_airsar",
+    "driver_blx",
+    "driver_bmp",
+    "driver_bsb",
+    "driver_cals",
+    "driver_ceos",
+    "driver_coasp",
+    "driver_cosar",
+    "driver_ctg",
+    "driver_derived",
+    "driver_dimap",
+    "driver_dted",
+    "driver_elas",
+    "driver_envisat",
+    "driver_ers",
+    "driver_fit",
+    "driver_gff",
+    "driver_gif",
+    "driver_grib",
+    "driver_gsg",
+    "driver_gtiff",
+    "driver_gxf",
+    "driver_hf2",
+    "driver_hfa",
+    "driver_ilwis",
+    "driver_iris",
+    "driver_jaxapalsar",
+    "driver_jdem",
+    "driver_jpeg",
+    "driver_kmlsuperoverlay",
+    "driver_l1b",
+    "driver_leveller",
+    "driver_map",
+    "driver_mrf",
+    "driver_msgn",
+    "driver_ngsgeoid",
+    "driver_nift",
+    "driver_northwood",
+    "driver_ozi",
+    "driver_pcidsk",
+    "driver_pcraster",
+    "driver_png",
+    "driver_prf",
+    "driver_r",
+    "driver_raw",
+    "driver_rik",
+    "driver_rmf",
+    "driver_rs2",
+    "driver_safe",
+    "driver_saga",
+    "driver_sar_ceos",
+    "driver_sentinel2",
+    "driver_sgi",
+    "driver_sigdem",
+    "driver_srtmhgt",
+    "driver_stacit",
+    "driver_stacta",
+    "driver_terragen",
+    "driver_tga",
+    "driver_til",
+    "driver_tsx",
+    "driver_usgsdem",
+    "driver_xpm",
+    "driver_xyz",
+    "driver_zmap",
+    # ogr and gdal
+    "driver_idrisi",
+    "driver_sdts",
+    "driver_vrt",
+    "driver_mem",
+]
+
+# ogr internal
+driver_avc = []
+driver_cad = []
+driver_csv = []
+driver_dgn = []
+driver_dxf = []
+driver_edigeo = []
+driver_flatgeobuf = []
+driver_geoconcept = []
+driver_geojson = []
+driver_gmt = []
+driver_gtfs = []
+driver_jsonfg = []
+driver_mapml = []
+driver_openfilegdb = []
+driver_pgdump = []
+driver_ntf = []
+driver_s57 = []
+driver_selafin = []
+driver_shape = []
+driver_sxf = []
+driver_tab = []
+driver_tiger = []
+driver_vdv = []
+driver_wasp = []
+
+#gdal internal
+driver_aaigrid = []
+driver_adrg = []
+driver_aigrid = []
+driver_airsar = []
+driver_blx = []
+driver_bmp = []
+driver_bsb = []
+driver_cals = []
+driver_ceos = []
+driver_coasp = []
+driver_cosar = []
+driver_ctg = []
+driver_derived = []
+driver_dimap = []
+driver_dted = []
+driver_elas = []
+driver_envisat = []
+driver_ers = []
+driver_fit = []
+driver_gff = []
+driver_gif = []
+driver_grib = []
+driver_gsg = []
+driver_gtiff = []
+driver_gxf = []
+driver_hf2 = []
+driver_hfa = []
+driver_ilwis = []
+driver_iris = []
+driver_jaxapalsar = []
+driver_jdem = []
+driver_jpeg = []
+driver_kmlsuperoverlay = []
+driver_l1b = []
+driver_leveller = []
+driver_map = []
+driver_mrf = []
+driver_msgn = []
+driver_ngsgeoid = []
+driver_nift = []
+driver_northwood = []
+driver_ozi = []
+driver_pcidsk = []
+driver_pcraster = []
+driver_pds = []
+driver_png = []
+driver_prf = []
+driver_r = []
+driver_raw = []
+driver_rik = []
+driver_rmf = []
+driver_rs2 = []
+driver_safe = []
+driver_saga = []
+driver_sar_ceos = []
+driver_sentinel2 = []
+driver_sgi = []
+driver_sigdem = []
+driver_srtmhgt = []
+driver_stacit = []
+driver_stacta = []
+driver_terragen = []
+driver_tga = []
+driver_til = []
+driver_tsx = []
+driver_usgsdem = []
+driver_xpm = []
+driver_xyz = []
+driver_zmap = []
+
+# ogr and gdal
+driver_idrisi = []
+driver_sdts = []
+driver_vrt = []
+driver_mem = []
+
+# external
+
+# sqlite
+driver_sqlite = ["dep:libsqlite3-sys"]
+driver_gpkg = ["driver_sqlite"]
+driver_vfk = ["driver_sqlite"]
+driver_rasterlite = []                 # unclear how to handle that
+
+# curl
+driver_amigocloud = ["curl-sys"]
+driver_carto = ["curl-sys"]
+driver_daas = ["curl-sys"]
+driver_eeda = ["curl-sys"]
+driver_elastic = ["curl-sys"]
+driver_ngw = ["curl-sys"]
+
+driver_ogcapi = ["curl-sys"]
+driver_plmosaic = ["curl-sys"]
+driver_wcs = ["curl-sys"]
+driver_wms = ["curl-sys"]
+driver_wmts = ["curl-sys"]
+
+# libexpat
+# (there exists no expat-sys crate)
+# driver_georss = []
+# driver_gml = []
+# driver_gpsbabel = []
+# driver_gpx = []
+# driver_jml = []
+# driver_kml = []
+# driver_lvbag = []
+# driver_ods = []
+# driver_svg = []
+# driver_xlsx = []
+
+# libmysqlclient
+# (there is currently no bundling support in libmysqlclient)
+# driver_mysql = []
+
+# libpq
+driver_pg = ["dep:pq-src"]
+driver_postgis_raster = ["driver_pg"]
+
+# libhdf5
+driver_hdf5 = ["dep:hdf5-sys", "dep:libz-sys"]
+
+# libnetcdf
+driver_netcdf = ["dep:netcdf-sys", "driver_hdf5", "dep:hdf5-sys"]
+
+# poppler
+#driver_pdf = []
+
+# combined
+# these are missing at least one dependency
+# driver_mvt = [] # requires sqlite + geos
+# driver_osm = [] # requires sqlite + libexpat
+# driver_zarr = [] # requires liblz4, libxz, libzstd and libblosc
+# driver_mbtiles = ["driver_sqlite", "driver_mvt"] # also requires mvt (so geos)
+# driver_pmtiles = ["driver_mvt"]  # depends on driver_mvt
+# driver_csw = ["curl-sys", "driver_gml"]  # depends on gml driver
+# driver_wfs = ["curl-sys", "driver_gml"]
+# driver_pds = ["driver_gml"]
+
+# unclear
+driver_http = []
+driver_arg = []

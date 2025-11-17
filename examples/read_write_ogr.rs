@@ -21,7 +21,7 @@ fn run() -> Result<()> {
     let mut ds = drv.create_vector_only(path.to_str().unwrap())?;
     let lyr = ds.create_layer(Default::default())?;
 
-    // Copy the origin layer shema to the destination layer:
+    // Copy the origin layer schema to the destination layer:
     for fd in &fields_defn {
         let field_defn = FieldDefn::new(&fd.0, fd.1)?;
         field_defn.set_width(fd.2);
@@ -52,9 +52,9 @@ fn run() -> Result<()> {
         }
 
         // copy each field value of the feature:
-        for fd in &fields_defn {
-            if let Some(value) = feature_a.field(&fd.0)? {
-                ft.set_field(&fd.0, &value)?;
+        for idx in 0..fields_defn.len() {
+            if let Some(value) = feature_a.field(idx)? {
+                ft.set_field(idx, &value)?;
             }
         }
         // Add the feature to the layer:

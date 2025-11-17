@@ -1,11 +1,14 @@
+use std::{
+    ffi::{c_char, c_void, CString},
+    ptr::null_mut,
+};
+
+use gdal_sys::OGRErr;
+
 use crate::errors::GdalError;
 use crate::errors::Result;
 use crate::utils::{_last_null_pointer_err, _string};
 use crate::vector::Geometry;
-use gdal_sys::OGRErr;
-use libc::c_char;
-use std::ffi::{c_void, CString};
-use std::ptr::null_mut;
 
 /// Methods supporting translation between GDAL [`Geometry`] and various text representations.
 ///
@@ -89,8 +92,23 @@ impl Geometry {
                 method_name: "OGR_G_ExportToWkt",
             });
         }
-        let wkt = _string(c_wkt);
-        unsafe { gdal_sys::OGRFree(c_wkt as *mut c_void) };
+        let wkt = _string(c_wkt).unwrap_or_default();
+        unsafe { gdal_sys::VSIFree(c_wkt as *mut c_void) };
+        Ok(wkt)
+    }
+
+    /// Serialize the geometry as SFSQL 1.2 / ISO SQL / MM Part 3 WKT.
+    pub fn iso_wkt(&self) -> Result<String> {
+        let mut c_wkt = null_mut();
+        let rv = unsafe { gdal_sys::OGR_G_ExportToIsoWkt(self.c_geometry(), &mut c_wkt) };
+        if rv != OGRErr::OGRERR_NONE {
+            return Err(GdalError::OgrError {
+                err: rv,
+                method_name: "OGR_G_ExportToIsoWkt",
+            });
+        }
+        let wkt = _string(c_wkt).unwrap_or_default();
+        unsafe { gdal_sys::VSIFree(c_wkt as *mut c_void) };
         Ok(wkt)
     }
 
@@ -101,6 +119,8 @@ impl Geometry {
         let wkb_size = unsafe { gdal_sys::OGR_G_WkbSize(self.c_geometry()) as usize };
         // We default to little-endian for now. A WKB string explicitly indicates the byte
         // order, so this is not a problem for interoperability.
+        //
+        // Consider using `Vec::MaybeUninit` in future.
         let byte_order = gdal_sys::OGRwkbByteOrder::wkbNDR;
         let mut wkb = vec![0; wkb_size];
         let rv =
@@ -114,17 +134,37 @@ impl Geometry {
         Ok(wkb)
     }
 
+    /// Serializes the geometry to SFSQL 1.2 / ISO SQL / MM Part 3
+    /// [WKB](https://en.wikipedia.org/wiki/Well-known_text_representation_of_geometry#Well-known_binary)
+    /// (Well-Known Binary) format.
+    pub fn iso_wkb(&self) -> Result<Vec<u8>> {
+        let wkb_size = unsafe { gdal_sys::OGR_G_WkbSize(self.c_geometry()) as usize };
+        // We default to little-endian for now. A WKB string explicitly indicates the byte
+        // order, so this is not a problem for interoperability.
+        //
+        // Consider using `Vec::MaybeUninit` in future.
+        let byte_order = gdal_sys::OGRwkbByteOrder::wkbNDR;
+        let mut wkb = vec![0; wkb_size];
+        let rv = unsafe {
+            gdal_sys::OGR_G_ExportToIsoWkb(self.c_geometry(), byte_order, wkb.as_mut_ptr())
+        };
+        if rv != gdal_sys::OGRErr::OGRERR_NONE {
+            return Err(GdalError::OgrError {
+                err: rv,
+                method_name: "OGR_G_ExportToIsoWkb",
+            });
+        }
+        Ok(wkb)
+    }
+
     /// Serialize the geometry as GeoJSON.
     ///
     /// See: [`OGR_G_ExportToJson`](https://gdal.org/api/vector_c_api.html#_CPPv418OGR_G_ExportToJson12OGRGeometryH)
     pub fn json(&self) -> Result<String> {
         let c_json = unsafe { gdal_sys::OGR_G_ExportToJson(self.c_geometry()) };
-        if c_json.is_null() {
-            return Err(_last_null_pointer_err("OGR_G_ExportToJson"));
-        };
-        let rv = _string(c_json);
+        let rv = _string(c_json).ok_or_else(|| _last_null_pointer_err("OGR_G_ExportToJson"));
         unsafe { gdal_sys::VSIFree(c_json as *mut c_void) };
-        Ok(rv)
+        rv
     }
 }
 
@@ -137,6 +177,15 @@ mod tests {
         let wkt = "POLYGON ((45.0 45.0, 45.0 50.0, 50.0 50.0, 50.0 45.0, 45.0 45.0))";
         let orig_geom = Geometry::from_wkt(wkt).unwrap();
         let wkb = orig_geom.wkb().unwrap();
+        let new_geom = Geometry::from_wkb(&wkb).unwrap();
+        assert_eq!(new_geom, orig_geom);
+    }
+
+    #[test]
+    pub fn test_iso_wkb() {
+        let wkt = "POLYGON ZM ((45.0 45.0 0.0 0.0, 45.0 50.0 0.0 0.25, 50.0 50.0 0.0 0.50, 50.0 45.0 0.0 0.75, 45.0 45.0 0.0 1.0))";
+        let orig_geom = Geometry::from_wkt(wkt).unwrap();
+        let wkb = orig_geom.iso_wkb().unwrap();
         let new_geom = Geometry::from_wkb(&wkb).unwrap();
         assert_eq!(new_geom, orig_geom);
     }

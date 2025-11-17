@@ -23,14 +23,13 @@
 //! Refer to [GDAL `ConfigOptions`](https://trac.osgeo.org/gdal/wiki/ConfigOptions) for
 //! a full list of options.
 
+use std::ffi::{c_char, c_void, CString};
+use std::sync::{LazyLock, Mutex};
+
 use gdal_sys::{CPLErr, CPLErrorNum, CPLGetErrorHandlerUserData};
-use libc::{c_char, c_void};
 
 use crate::errors::{CplErrType, Result};
 use crate::utils::_string;
-use once_cell::sync::Lazy;
-use std::ffi::CString;
-use std::sync::Mutex;
 
 /// Set a GDAL library configuration option
 ///
@@ -48,7 +47,7 @@ pub fn set_config_option(key: &str, value: &str) -> Result<()> {
 
 /// Get the value of a GDAL library configuration option
 ///
-/// If the config option specified by `key` is not found, the value passed in the `default` paramter is returned.
+/// If the config option specified by `key` is not found, the value passed in the `default` parameter is returned.
 ///
 /// Refer to [GDAL `ConfigOptions`](https://trac.osgeo.org/gdal/wiki/ConfigOptions) for
 /// a full list of options.
@@ -56,7 +55,7 @@ pub fn get_config_option(key: &str, default: &str) -> Result<String> {
     let c_key = CString::new(key.as_bytes())?;
     let c_default = CString::new(default.as_bytes())?;
     let rv = unsafe { gdal_sys::CPLGetConfigOption(c_key.as_ptr(), c_default.as_ptr()) };
-    Ok(_string(rv))
+    Ok(_string(rv).unwrap_or_else(|| default.to_string()))
 }
 
 /// Clear the value of a GDAL library configuration option
@@ -89,7 +88,7 @@ pub fn set_thread_local_config_option(key: &str, value: &str) -> Result<()> {
 /// Get the value of a GDAL library configuration option
 /// with **thread local** scope
 ///
-/// If the config option specified by `key` is not found, the value passed in the `default` paramter is returned.
+/// If the config option specified by `key` is not found, the value passed in the `default` parameter is returned.
 ///
 /// Refer to [GDAL `ConfigOptions`](https://trac.osgeo.org/gdal/wiki/ConfigOptions) for
 /// a full list of options.
@@ -97,7 +96,7 @@ pub fn get_thread_local_config_option(key: &str, default: &str) -> Result<String
     let c_key = CString::new(key.as_bytes())?;
     let c_default = CString::new(default.as_bytes())?;
     let rv = unsafe { gdal_sys::CPLGetThreadLocalConfigOption(c_key.as_ptr(), c_default.as_ptr()) };
-    Ok(_string(rv))
+    Ok(_string(rv).unwrap_or_else(|| default.to_string()))
 }
 
 /// Clear the value of a GDAL library configuration option
@@ -121,7 +120,8 @@ type ErrorCallbackType = dyn FnMut(CplErrType, i32, &str) + 'static + Send;
 type PinnedErrorCallback = Box<Box<ErrorCallbackType>>;
 
 /// Static variable that holds the current error callback function
-static ERROR_CALLBACK: Lazy<Mutex<Option<PinnedErrorCallback>>> = Lazy::new(Default::default);
+static ERROR_CALLBACK: LazyLock<Mutex<Option<PinnedErrorCallback>>> =
+    LazyLock::new(Default::default);
 
 /// Set a custom error handler for GDAL.
 /// Could be overwritten by setting a thread-local error handler.
@@ -141,7 +141,7 @@ where
         error_num: CPLErrorNum,
         error_msg_ptr: *const c_char,
     ) {
-        let error_msg = _string(error_msg_ptr);
+        let error_msg = _string(error_msg_ptr).unwrap_or_default();
         let error_type: CplErrType = error_type.into();
 
         // reconstruct callback from user data pointer
@@ -158,7 +158,7 @@ where
 
     let mut callback_lock = match ERROR_CALLBACK.lock() {
         Ok(guard) => guard,
-        // poisoning could only occur on `CPLSetErrorHandler(Ex)` panicing, thus the value must be valid nevertheless
+        // poisoning could only occur on `CPLSetErrorHandler(Ex)` panicking, thus the value must be valid nevertheless
         Err(poison_error) => poison_error.into_inner(),
     };
 
@@ -175,7 +175,7 @@ where
 pub fn remove_error_handler() {
     let mut callback_lock = match ERROR_CALLBACK.lock() {
         Ok(guard) => guard,
-        // poisoning could only occur on `CPLSetErrorHandler(Ex)` panicing, thus the value must be valid nevertheless
+        // poisoning could only occur on `CPLSetErrorHandler(Ex)` panicking, thus the value must be valid nevertheless
         Err(poison_error) => poison_error.into_inner(),
     };
 
@@ -217,7 +217,7 @@ mod tests {
             "128"
         );
         assert_eq!(
-            get_config_option("NON_EXISTANT_OPTION", "DEFAULT_VALUE")
+            get_config_option("NON_EXISTENT_OPTION", "DEFAULT_VALUE")
                 .unwrap_or_else(|_| "".to_string()),
             "DEFAULT_VALUE"
         );
@@ -256,7 +256,7 @@ mod tests {
         );
 
         assert_eq!(
-            get_thread_local_config_option("NON_EXISTANT_OPTION", "DEFAULT_VALUE")
+            get_thread_local_config_option("NON_EXISTENT_OPTION", "DEFAULT_VALUE")
                 .unwrap_or_else(|_| "".to_string()),
             "DEFAULT_VALUE"
         );

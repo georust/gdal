@@ -12,18 +12,28 @@ env:
   RUST_BACKTRACE: 1
 
 jobs:
+  typos:
+    name: Check spelling using Typos
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Check spelling
+        uses: crate-ci/typos@7436548694def3314aacd93ed06c721b1f91ea04 # v1.37.2
+
   gdal:
     strategy:
       matrix:
         version:
-          - 3.8.1
+          - 3.12.0
+          - 3.11.5
+          - 3.10.3
+          - 3.9.3
+          - 3.8.5
           - 3.7.3
           - 3.6.4
           - 3.5.3
           - 3.4.3
-          - 3.3.3
-          - 3.2.3
-          - 3.1.3 # latest is 3.1.4, but there's no published image
 
     runs-on: ubuntu-latest
     container:
@@ -33,7 +43,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Install build deps
         shell: bash
         run: |
@@ -46,11 +56,6 @@ jobs:
           curl --proto '=https' --tlsv1.2 --retry 10 --retry-connrefused -fsSL "https://sh.rustup.rs" | sh -s -- --profile minimal --default-toolchain none -y
           echo "${CARGO_HOME:-$HOME/.cargo}/bin" >> $GITHUB_PATH
 
-      - name: Setup building
-        run: |
-          export CC="clang-9"
-          export CXX="clang++-9"
-
       - name: Install stable
         run: |
           rustup install --no-self-update --profile minimal stable
@@ -61,38 +66,30 @@ jobs:
       - name: Check with Clippy
         run: cargo clippy --all-targets -- -D warnings
       - name: Check with Clippy (--all-features)
-        run: cargo clippy --all-targets --all-features -- -D warnings
+        run: cargo clippy --all-targets --features "default bindgen array" -- -D warnings
       - name: Build
         run: cargo build
       - name: Run tests
         run: cargo test
       - name: Build (--all-features)
-        run: cargo build --all-features
+        run: cargo build --features "default bindgen array"
       - name: Run tests (--all-features)
-        run: cargo test --all-features -- --nocapture
+        run: cargo test --features "default bindgen array" -- --nocapture
 
   ubuntu_lts:
     name: "ci ubuntu-lts"
-    runs-on: "ubuntu-20.04"
+    runs-on: "ubuntu-22.04"
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Install build deps
         shell: bash
         run: |
           sudo apt-get update -y
-          sudo apt-get install libgdal-dev gdal-bin build-essential curl pkg-config libclang-dev -y
-          export C_INCLUDE_PATH=/usr/include/gdal:$C_INCLUDE_PATH
-          export CPLUS_INCLUDE_PATH=/usr/include/gdal:$CPLUS_INCLUDE_PATH
-          sudo ldconfig
+          sudo apt-get install libgdal-dev gdal-bin build-essential curl pkg-config libclang-dev valgrind -y
           curl --proto '=https' --tlsv1.2 --retry 10 --retry-connrefused -fsSL "https://sh.rustup.rs" | sh -s -- --profile minimal --default-toolchain none -y
           echo "${CARGO_HOME:-$HOME/.cargo}/bin" >> $GITHUB_PATH
-
-      - name: Setup building
-        run: |
-          export CC="clang-9"
-          export CXX="clang++-9"
 
       - name: Install stable
         run: |
@@ -104,18 +101,67 @@ jobs:
       - name: Check with Clippy
         run: cargo clippy --all-targets -- -D warnings
       - name: Check with Clippy (--all-features)
-        run: cargo clippy --all-targets --all-features -- -D warnings
+        run: cargo clippy --all-targets --features "default bindgen array" -- -D warnings
       - name: Build
         run: cargo build
       - name: Run tests
         run: cargo test
       - name: Build (--all-features)
-        run: cargo build --all-features
+        run: cargo build --features "default bindgen array"
       - name: Run tests (--all-features)
-        run: cargo test --all-features -- --nocapture
-      - name: Install valgrind and cargo-valgrind
+        run: cargo test --features "default bindgen array" -- --nocapture
+      - name: Install cargo-valgrind
+        run: cargo install cargo-valgrind
+      # There's a possible leak in Rust 1.83 and generating suppressions on CI is hard
+      # - name: Run --lib tests under valgrind
+      #   run: cargo valgrind test --lib
+
+  gdal_static:
+    name: "ci gdal-static"
+    strategy:
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+          - macos-15-intel # x86_64
+          - macos-15 # aarch64
+    env:
+      CMAKE_POLICY_VERSION_MINIMUM: 3.5
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: Install stable
         run: |
-          sudo apt-get install valgrind -y
-          cargo install cargo-valgrind
-      - name: Run --lib tests under valgrind
-        run: cargo valgrind test --lib
+          rustup install --no-self-update --profile minimal stable
+          rustup component add rustfmt clippy
+      # we need to have the sqlite binary in path for building proj from source
+      - name: Install Sqlite (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          choco install sqlite
+          echo "C:\ProgramData\chocolatey\lib\SQLite\tools" >> $GITHUB_PATH
+          sqlite3 --version
+      - name: Install Sqlite (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y sqlite3
+      # use the minimal driver set for clippy as the other
+      # drivers do not change the rust code
+      # enable `driver_sqlite` to force statically linking libsqlite3 for proj
+      - name: Check with Clippy (bundled)
+        run: cargo clippy --all-targets --features "gdal-sys/bundled gdal-src gdal-src/driver_sqlite" -- -D warnings
+      # we only build tests here as we have disabled features
+      # that are required for running tests
+      - name: Build bundled gdal (minimal features)
+        # we use cargo test --no-run here because
+        # tests do not pass due to missing libgeos but we want to have a complete build (including linking)
+        run: cargo test --features "gdal-sys/bundled gdal-src gdal-src/driver_sqlite" --no-run
+      - name: Test bundled (all features)
+        run: cargo test --features "gdal-sys/bundled gdal-src gdal-src/all_drivers gdal-src/geos_static"
+      - name: Check that all files necessary to build gdal are included
+        if: matrix.os != 'macos-15-intel'
+        run: cargo package -p gdal-src -F all_drivers

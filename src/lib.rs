@@ -1,7 +1,7 @@
 #![crate_name = "gdal"]
 #![crate_type = "lib"]
-// Enable `doc_cfg` features when `docsrs` is defined by docs.rs config
-#![cfg_attr(docsrs, feature(doc_cfg))]
+// Document all features on docs.rs
+#![cfg_attr(docsrs, feature(doc_auto_cfg))]
 #![doc(test(attr(deny(warnings), allow(dead_code, unused_variables))))]
 
 //! # GDAL
@@ -30,11 +30,11 @@
 //!
 //! ## Version support
 //!
-//! As a general rule, only GDAL versions in Ubuntu LTS-1 (previous LTS version, that is, GDAL 3.0 in 20.04 at this moment) are supported.
+//! As a general rule, only GDAL versions in Ubuntu LTS-1 (previous LTS version, that is, GDAL 3.4 in 22.04 at this moment) and newer are supported.
 //! `gdal-sys` might support earlier versions using the `bindgen` feature flag, but `gdal` does not.
 //!
 //! Building this crate assumes a compatible version of GDAL is installed with the corresponding header files and shared libraries.
-//! This repository includes pre-generated bindings for GDAL 3.0 through 3.8 (see the`gdal-sys/prebuilt-bindings` directory).
+//! This repository includes pre-generated bindings for GDAL 3.4 through 3.12 (see the `gdal-sys/prebuilt-bindings` directory).
 //! If you're compiling against another version of GDAL, you can enable the `bindgen` feature flag to have the bindings generated on the fly.
 //!
 //! ## Show Me Code!
@@ -47,7 +47,7 @@
 //! use gdal::Dataset;
 //! # fn main() -> gdal::errors::Result<()> {
 //! let ds = Dataset::open("fixtures/m_3607824_se_17_1_20160620_sub.tif")?;
-//! println!("This {} is in '{}' and has {} bands.", ds.driver().long_name(), ds.spatial_ref()?.name()?, ds.raster_count());
+//! println!("This {} is in '{}' and has {} bands.", ds.driver().long_name(), ds.spatial_ref()?.name().unwrap(), ds.raster_count());
 //! # Ok(())
 //! # }
 //! ```
@@ -120,14 +120,18 @@ pub mod raster;
 pub mod spatial_ref;
 #[cfg(test)]
 pub mod test_utils;
+#[cfg(any(major_ge_4, all(major_is_3, minor_ge_10)))]
+mod thread_safe;
 mod utils;
 pub mod vector;
 pub mod version;
 pub mod vsi;
 
-pub use dataset::Dataset;
+pub use dataset::{Dataset, DatasetCapability};
 pub use geo_transform::{GeoTransform, GeoTransformEx};
 pub use options::{DatasetOptions, GdalOpenFlags};
+#[cfg(any(major_ge_4, all(major_is_3, minor_ge_10)))]
+pub use thread_safe::ThreadSafeDataset;
 
 pub use driver::{Driver, DriverManager, DriverType};
 pub use gcp::{Gcp, GcpRef};

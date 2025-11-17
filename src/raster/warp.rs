@@ -1,9 +1,10 @@
-use crate::dataset::Dataset;
-use crate::utils::_last_cpl_err;
-use gdal_sys::{self, CPLErr, GDALResampleAlg};
 use std::ptr::{null, null_mut};
 
+use gdal_sys::{CPLErr, GDALResampleAlg};
+
+use crate::dataset::Dataset;
 use crate::errors::*;
+use crate::utils::_last_cpl_err;
 
 pub fn reproject(src: &Dataset, dst: &Dataset) -> Result<()> {
     let rv = unsafe {

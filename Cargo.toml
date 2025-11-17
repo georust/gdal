@@ -2,7 +2,7 @@
 name = "gdal"
 description = "GDAL bindings for Rust"
 license = "MIT"
-version = "0.16.0"
+version = "0.18.0"
 authors = [
     "Alex Morega <alex@grep.ro>",
     "Johannes Drönner <droenner@informatik.uni-marburg.de>",
@@ -10,7 +10,7 @@ authors = [
 categories = ["science::geo", "api-bindings"]
 repository = "https://github.com/georust/gdal"
 edition = "2021"
-rust-version = "1.58"
+rust-version = "1.80"
 
 [features]
 default = []
@@ -18,14 +18,13 @@ bindgen = ["gdal-sys/bindgen"]
 array = ["ndarray"]
 
 [dependencies]
-thiserror = "1.0"
-libc = "0.2"
-geo-types = { version = "0.7.11" }
-gdal-sys = { path = "gdal-sys", version = "^0.9" }
-ndarray = { version = "0.15", optional = true }
+thiserror = "2.0"
+geo-types = { version = "0.7.16" }
+gdal-sys = { path = "gdal-sys", version = "0.11" }
+gdal-src = { path = "gdal-src", version = "0.4", optional = true, default-features = false }
+ndarray = { version = "0.17", optional = true }
 chrono = { version = "0.4.26", default-features = false }
-bitflags = "2.4"
-once_cell = "1.18"
+bitflags = "2.10"
 
 [build-dependencies]
 semver = "1.0"
@@ -33,10 +32,10 @@ semver = "1.0"
 [dev-dependencies]
 tempfile = "3.8"
 # Only used in the example
-arrow = { version = "50.0", default-features = false, features = ["ffi"] }
+arrow-array = { version = "57.0", default-features = false, features = ["ffi"] }
 
 [workspace]
-members = ["gdal-sys"]
+members = ["gdal-src", "gdal-sys"]
 
 # docs.rs-specific configuration
 [package.metadata.docs.rs]
@@ -44,3 +43,23 @@ members = ["gdal-sys"]
 features = ["array"]
 # define attribute `docsrs` for feature badges
 rustdoc-args = ["--cfg", "docsrs"]
+
+[lints.rust.unexpected_cfgs]
+level = "warn"
+check-cfg = [
+    'cfg(major_is_3)',
+    'cfg(major_ge_3)',
+    'cfg(major_ge_4)',
+    'cfg(minor_ge_1)',
+    'cfg(minor_ge_2)',
+    'cfg(minor_ge_3)',
+    'cfg(minor_ge_4)',
+    'cfg(minor_ge_5)',
+    'cfg(minor_ge_6)',
+    'cfg(minor_ge_7)',
+    'cfg(minor_ge_8)',
+    'cfg(minor_ge_9)',
+    'cfg(minor_ge_10)',
+    'cfg(minor_ge_11)',
+    'cfg(minor_ge_12)',
+]

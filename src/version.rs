@@ -54,7 +54,8 @@ use std::fmt::Write;
 /// Details: [`const char *GDALVersionInfo(const char*)`](https://gdal.org/api/raster_c_api.html#_CPPv415GDALVersionInfoPKc)
 pub fn version_info(key: &str) -> String {
     let c_key = CString::new(key.as_bytes()).unwrap();
-    _string(unsafe { gdal_sys::GDALVersionInfo(c_key.as_ptr()) })
+    let rv = unsafe { gdal_sys::GDALVersionInfo(c_key.as_ptr()) };
+    _string(rv).unwrap_or_default()
 }
 
 /// Convenience functions for the various pre-defined queryable properties of GDAL version information.
@@ -130,13 +131,19 @@ mod tests {
     fn test_version_info() {
         let release_date = version_info("RELEASE_DATE");
         let release_name = version_info("RELEASE_NAME");
+        let mut release_nickname = version_info("RELEASE_NICKNAME");
+        let xyzzy = version_info("XYZZY");
         let version_text = version_info("--version");
-
         let mut date_iter = release_date.chars();
 
+        if release_nickname != xyzzy {
+            release_nickname = format!(r#" "{release_nickname}""#)
+        } else {
+            release_nickname.clear();
+        }
+
         let expected_text: String = format!(
-            "GDAL {}, released {}/{}/{}",
-            release_name,
+            "GDAL {release_name}{release_nickname}, released {}/{}/{}",
             date_iter.by_ref().take(4).collect::<String>(),
             date_iter.by_ref().take(2).collect::<String>(),
             date_iter.by_ref().take(2).collect::<String>(),
@@ -144,7 +151,12 @@ mod tests {
 
         // Use starts_with() instead of equality check, because on a debug
         // GDAL build, version_text will end with " (debug build)".
-        assert!(version_text.starts_with(&expected_text));
+        assert_eq!(
+            version_text
+                .strip_suffix(" (debug build)")
+                .unwrap_or(&version_text),
+            &expected_text
+        );
     }
 
     #[test]

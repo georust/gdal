@@ -73,7 +73,7 @@ impl<'a> Transaction<'a> {
     }
 }
 
-impl<'a> Deref for Transaction<'a> {
+impl Deref for Transaction<'_> {
     type Target = Dataset;
 
     fn deref(&self) -> &Self::Target {
@@ -81,13 +81,13 @@ impl<'a> Deref for Transaction<'a> {
     }
 }
 
-impl<'a> DerefMut for Transaction<'a> {
+impl DerefMut for Transaction<'_> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         self.dataset
     }
 }
 
-impl<'a> Drop for Transaction<'a> {
+impl Drop for Transaction<'_> {
     fn drop(&mut self) {
         if self.rollback_on_drop {
             // We silently swallow any errors, because we have no way to report them from a drop

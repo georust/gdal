@@ -3,10 +3,9 @@
 //! This module provides safe access to a subset of the [GDAL CPL functions](https://gdal.org/api/cpl.html).
 //!
 
-use std::ffi::CString;
+use std::ffi::{c_char, c_int, CString};
 use std::fmt::{Debug, Display, Formatter};
 use std::mem::ManuallyDrop;
-use std::ops::Deref;
 use std::ptr;
 use std::str::FromStr;
 
@@ -15,7 +14,6 @@ use gdal_sys::{
     CSLFindString, CSLFindStringCaseSensitive, CSLGetField, CSLPartialFindString, CSLSetNameValue,
     CSLTokenizeString2,
 };
-use libc::{c_char, c_int};
 
 use crate::errors::{GdalError, Result};
 use crate::utils::_string;
@@ -96,7 +94,7 @@ impl CslStringList {
     ///
     /// Returns `Err(GdalError::BadArgument)` on invalid value, `Ok(())` otherwise.
     fn check_valid_value(value: &str) -> Result<()> {
-        if value.contains(|c| c == '\n' || c == '\r') {
+        if value.contains(['\n', '\r']) {
             Err(GdalError::BadArgument(format!(
                 "Invalid characters in value: '{value}'"
             )))
@@ -179,11 +177,7 @@ impl CslStringList {
         // we know already `name` will never exist in a valid CslStringList.
         let key = CString::new(name).ok()?;
         let c_value = unsafe { CSLFetchNameValue(self.as_ptr(), key.as_ptr()) };
-        if c_value.is_null() {
-            None
-        } else {
-            Some(_string(c_value))
-        }
+        _string(c_value)
     }
 
     /// Perform a case <u>insensitive</u> search for the given string
@@ -241,20 +235,13 @@ impl CslStringList {
         if index > c_int::MAX as usize {
             return None;
         }
+
         // In the C++ implementation, an index-out-of-bounds returns an empty string, not an error.
         // We don't want to check against `len` because that scans the list.
         // See: https://github.com/OSGeo/gdal/blob/fada29feb681e97f0fc4e8861e07f86b16855681/port/cpl_string.cpp#L181-L182
         let field = unsafe { CSLGetField(self.as_ptr(), index as c_int) };
-        if field.is_null() {
-            return None;
-        }
 
-        let field = _string(field);
-        if field.is_empty() {
-            None
-        } else {
-            Some(field.deref().into())
-        }
+        _string(field).filter(|s| !s.is_empty()).map(|s| s.into())
     }
 
     /// Determine the number of entries in the list.
@@ -270,7 +257,7 @@ impl CslStringList {
     }
 
     /// Get an iterator over the `name=value` elements of the list.
-    pub fn iter(&self) -> CslStringListIterator {
+    pub fn iter(&self) -> CslStringListIterator<'_> {
         CslStringListIterator::new(self)
     }
 
@@ -491,7 +478,7 @@ impl<'a> CslStringListIterator<'a> {
     }
 }
 
-impl<'a> Iterator for CslStringListIterator<'a> {
+impl Iterator for CslStringListIterator<'_> {
     type Item = CslStringListEntry;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -500,18 +487,13 @@ impl<'a> Iterator for CslStringListIterator<'a> {
         }
 
         let field = unsafe {
-            // Equivalent to, but less traversals than:
-            // CSLGetField(self.list.as_ptr(), self.idx as libc::c_int)
+            // Equivalent to, but fewer traversals than:
+            // CSLGetField(self.list.as_ptr(), self.idx as c_int)
             let slice = std::slice::from_raw_parts(self.list.list_ptr, self.count);
             slice[self.idx]
         };
         self.idx += 1;
-        if field.is_null() {
-            None
-        } else {
-            let entry = _string(field);
-            Some(entry.deref().into())
-        }
+        _string(field).map(|s| s.into())
     }
 }
 

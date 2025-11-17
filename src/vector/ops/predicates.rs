@@ -26,7 +26,7 @@ impl Geometry {
     ///
     /// # Notes
     /// * Geometry validity is not checked, and invalid geometry will generate unpredictable results.
-    /// Use [`Geometry::is_valid`] if validity might be in question.
+    ///   Use [`Geometry::is_valid`] if validity might be in question.
     /// * If GEOS is *not* enabled, this function will always return `false`. Check with [`VersionInfo::has_geos`][has_geos].
     ///
     /// See: [`OGR_G_Contains`][OGR_G_Contains]
@@ -44,7 +44,7 @@ impl Geometry {
     ///
     /// # Notes
     /// * Geometry validity is not checked, and invalid geometry will generate unpredictable results.
-    /// Use [`Geometry::is_valid`] if validity might be in question.
+    ///   Use [`Geometry::is_valid`] if validity might be in question.
     /// * If GEOS is *not* enabled, this function will always return `false`. Check with [`VersionInfo::has_geos`][has_geos].
     ///
     /// See: [`OGR_G_Disjoint`][OGR_G_Disjoint]
@@ -62,7 +62,7 @@ impl Geometry {
     ///
     /// # Notes
     /// * Geometry validity is not checked, and invalid geometry will generate unpredictable results.
-    /// Use [`Geometry::is_valid`] if validity might be in question.
+    ///   Use [`Geometry::is_valid`] if validity might be in question.
     /// * If GEOS is *not* enabled, this function will always return `false`. Check with [`VersionInfo::has_geos`][has_geos].
     ///
     /// See: [`OGR_G_Touches`][OGR_G_Touches]
@@ -81,7 +81,7 @@ impl Geometry {
     ///
     /// # Notes
     /// * Geometry validity is not checked, and invalid geometry will generate unpredictable results.
-    /// Use [`Geometry::is_valid`] if validity might be in question.
+    ///   Use [`Geometry::is_valid`] if validity might be in question.
     /// * If GEOS is *not* enabled, this function will always return `false`. Check with [`VersionInfo::has_geos`][has_geos].
     ///
     /// See: [`OGR_G_Crosses`][OGR_G_Crosses]
@@ -99,7 +99,7 @@ impl Geometry {
     ///
     /// # Notes
     /// * Geometry validity is not checked, and invalid geometry will generate unpredictable results.
-    /// Use [`Geometry::is_valid`] if validity might be in question.
+    ///   Use [`Geometry::is_valid`] if validity might be in question.
     /// * If GEOS is *not* enabled, this function will always return `false`. Check with [`VersionInfo::has_geos`][has_geos].
     ///
     /// See: [`OGR_G_Within`][OGR_G_Within]
@@ -119,7 +119,7 @@ impl Geometry {
     ///
     /// # Notes
     /// * Geometry validity is not checked, and invalid geometry will generate unpredictable results.
-    /// Use [`Geometry::is_valid`] if validity might be in question.
+    ///   Use [`Geometry::is_valid`] if validity might be in question.
     /// * If GEOS is *not* enabled, this function will always return `false`. Check with [`VersionInfo::has_geos`][has_geos].
     ///
     /// See: [`OGR_G_Overlaps`][OGR_G_Overlaps]

@@ -1,7 +1,7 @@
 use crate::errors::*;
 use crate::gdal_major_object::MajorObject;
 use crate::utils::{_last_cpl_err, _last_null_pointer_err, _string, _string_array};
-use gdal_sys::{self, CPLErr};
+use gdal_sys::CPLErr;
 use std::ffi::CString;
 
 /// General-Purpose Metadata API
@@ -59,10 +59,7 @@ pub trait Metadata: MajorObject {
     /// ```
     fn description(&self) -> Result<String> {
         let c_res = unsafe { gdal_sys::GDALGetDescription(self.gdal_object_ptr()) };
-        if c_res.is_null() {
-            return Err(_last_null_pointer_err("GDALGetDescription"));
-        }
-        Ok(_string(c_res))
+        _string(c_res).ok_or_else(|| _last_null_pointer_err("GDALGetDescription"))
     }
 
     /// Metadata in GDAL is partitioned into namespaces, knows as "domains" in the
@@ -150,9 +147,7 @@ pub trait Metadata: MajorObject {
                         c_domain.as_ptr(),
                     )
                 };
-                if !c_res.is_null() {
-                    return Some(_string(c_res));
-                }
+                return _string(c_res);
             }
         }
         None
@@ -226,7 +221,7 @@ pub trait Metadata: MajorObject {
     /// DERIVED_SUBDATASETS: DERIVED_SUBDATASET_1_NAME=DERIVED_SUBDATASET:LOGAMPLITUDE:fixtures/tinymarble.tif
     /// DERIVED_SUBDATASETS: DERIVED_SUBDATASET_1_DESC=log10 of amplitude of input bands from fixtures/tinymarble.tif
     /// ```
-    fn metadata(&self) -> MetadataIter
+    fn metadata(&self) -> MetadataIter<'_>
     where
         Self: Sized,
     {
@@ -290,7 +285,7 @@ impl<'a> MetadataIter<'a> {
     }
 }
 
-impl<'a> Iterator for MetadataIter<'a> {
+impl Iterator for MetadataIter<'_> {
     type Item = MetadataEntry;
 
     fn next(&mut self) -> Option<Self::Item> {

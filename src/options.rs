@@ -1,6 +1,7 @@
+use std::ffi::c_uint;
+
 use bitflags::bitflags;
 use gdal_sys::GDALAccess;
-use libc::c_uint;
 
 /// Open options for [`crate::Dataset`]
 #[derive(Debug, Default)]
@@ -40,7 +41,6 @@ bitflags! {
         /// Allow gnm drivers to be used.
         const GDAL_OF_GNM = 0x08;
         /// Allow multidimensional raster drivers to be used.
-        #[cfg(all(major_ge_3,minor_ge_1))]
         const GDAL_OF_MULTIDIM_RASTER = 0x10;
         /// Emit error message in case of failed open.
         const GDAL_OF_VERBOSE_ERROR = 0x40;
@@ -48,6 +48,10 @@ bitflags! {
         /// registered in the global list of opened dataset.
         /// Cannot be used with GDAL_OF_SHARED.
         const GDAL_OF_INTERNAL = 0x80;
+        /// Open in thread-safe mode. Not compatible with
+        /// GDAL_OF_VECTOR, GDAL_OF_MULTIDIM_RASTER or GDAL_OF_UPDATE.
+        #[cfg(any(all(major_ge_3, minor_ge_10), major_ge_4))]
+        const GDAL_OF_THREAD_SAFE = 0x800;
 
         /// Default strategy for cached blocks.
         const GDAL_OF_DEFAULT_BLOCK_ACCESS = 0;

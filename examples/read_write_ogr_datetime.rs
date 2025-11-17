@@ -19,7 +19,7 @@ fn run() -> gdal::errors::Result<()> {
     let mut ds = drv.create_vector_only(path.to_str().unwrap())?;
     let lyr = ds.create_layer(Default::default())?;
 
-    // Copy the origin layer shema to the destination layer:
+    // Copy the origin layer schema to the destination layer:
     for field in layer_a.defn().fields() {
         let field_defn = FieldDefn::new(&field.name(), field.field_type())?;
         field_defn.set_width(field.width());
@@ -35,10 +35,10 @@ fn run() -> gdal::errors::Result<()> {
             ft.set_geometry(geom.clone())?;
         }
         // copy each field value of the feature:
-        for field in defn.fields() {
+        for (idx, field) in defn.fields().enumerate() {
             ft.set_field(
-                &field.name(),
-                &match feature_a.field(field.name())?.unwrap() {
+                idx,
+                &match feature_a.field(idx)?.unwrap() {
                     // add one day to dates
                     FieldValue::DateValue(value) => {
                         println!("{} = {}", field.name(), value);

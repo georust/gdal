@@ -14,9 +14,8 @@
 
 #[cfg(any(major_ge_4, all(major_is_3, minor_ge_6)))]
 fn run() -> gdal::errors::Result<()> {
-    use arrow::array::{Array as _, BinaryArray};
-    use arrow::ffi_stream::{ArrowArrayStreamReader, FFI_ArrowArrayStream};
-    use arrow::record_batch::RecordBatchReader;
+    use arrow_array::ffi_stream::{ArrowArrayStreamReader, FFI_ArrowArrayStream};
+    use arrow_array::{Array as _, BinaryArray, RecordBatchReader};
     use gdal::cpl::CslStringList;
     use gdal::vector::*;
     use gdal::Dataset;

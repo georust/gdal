@@ -6,7 +6,7 @@ use std::vec::IntoIter;
 #[cfg(feature = "ndarray")]
 use ndarray::Array2;
 
-/// `Buffer<T>` manages cell values in in raster I/O operations.
+/// [`Buffer<T>`] manages cell values in in raster I/O operations.
 ///
 /// It conceptually represents a 2-D array backed by a `Vec<T>` with row-major organization
 /// to represent `shape` (cols, rows).
@@ -15,7 +15,14 @@ use ndarray::Array2;
 /// implementations. The underlying data can be accessed linearly via [`Buffer<T>::data()`]
 /// and [`Buffer<T>::data_mut()`]. [`IntoIterator`] is also provided.
 ///
-/// If the `ndarray` feature is enabled, a `Buffer<T>` can be converted (without copy)
+/// <div class="warning">
+///
+/// This struct uses the row-major order for indexing, that is, `(row, col)`.
+/// However, [`Buffer<T>::shape()`] returns `(cols, rows)`.
+///
+/// </div>
+///
+/// If the `ndarray` feature is enabled, a [`Buffer<T>`] can be converted (without copy)
 /// to an `Array2<T>` via [`Buffer<T>::to_array()`].
 ///
 /// # Example
@@ -84,8 +91,20 @@ impl<T: GdalType> Buffer<T> {
         (self.shape, self.data)
     }
 
+    /// Returns the width (number of columns) of the buffer.
+    #[doc(alias = "columns")]
+    pub fn width(&self) -> usize {
+        self.shape.0
+    }
+
+    /// Returns the height (number of rows) of the buffer.
+    #[doc(alias = "rows")]
+    pub fn height(&self) -> usize {
+        self.shape.1
+    }
+
     /// Gets the 2-d shape of the buffer.
-    //
+    ///
     /// Returns `(cols, rows)`
     ///
     /// # Notes
@@ -94,12 +113,12 @@ impl<T: GdalType> Buffer<T> {
         self.shape
     }
 
-    /// Get a slice over the buffer contents.
+    /// Get a slice over the buffer contents, in row-major order.
     pub fn data(&self) -> &[T] {
         self.data.as_slice()
     }
 
-    /// Get a mutable slice over the buffer contents.
+    /// Get a mutable slice over the buffer contents, in row-major order.
     pub fn data_mut(&mut self) -> &mut [T] {
         self.data.as_mut_slice()
     }
@@ -115,7 +134,6 @@ impl<T: GdalType> Buffer<T> {
     }
 
     #[cfg(feature = "ndarray")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "ndarray")))]
     /// Convert `self` into an [`ndarray::Array2<T>`].
     pub fn to_array(self) -> crate::errors::Result<Array2<T>> {
         // Array2 shape is (rows, cols) and Buffer shape is (cols in x-axis, rows in y-axis)
@@ -135,7 +153,7 @@ impl<T: GdalType> Buffer<T> {
     #[inline]
     #[track_caller]
     fn vec_index_for(&self, coord: (usize, usize)) -> usize {
-        if coord.0 >= self.shape.0 || coord.1 >= self.shape.1 {
+        if coord.0 >= self.shape.1 || coord.1 >= self.shape.0 {
             Self::panic_bad_index(self.shape, coord);
         }
         coord.0 * self.shape.0 + coord.1
@@ -201,7 +219,11 @@ impl<T: GdalType + Copy> From<Array2<T>> for Buffer<T> {
         let shape = value.shape();
         let (cols, rows) = (shape[1], shape[0]);
         let data: Vec<T> = if value.is_standard_layout() {
-            value.into_raw_vec()
+            let (data, offset) = value.into_raw_vec_and_offset();
+            match offset {
+                None | Some(0) => data,
+                Some(offset) => data[offset..].to_vec(),
+            }
         } else {
             value.iter().copied().collect()
         };
@@ -214,7 +236,7 @@ impl<T: GdalType + Copy> From<Array2<T>> for Buffer<T> {
 #[cfg(test)]
 mod tests {
     use crate::raster::Buffer;
-    use ndarray::{Array2, ShapeBuilder};
+    use ndarray::{arr2, s, Array2, ShapeBuilder};
 
     #[test]
     fn convert_to() {
@@ -239,8 +261,8 @@ mod tests {
 
     #[test]
     fn shapes() {
-        let s1 = (10, 5).into_shape().set_f(true);
-        let s2 = (10, 5).into_shape().set_f(false);
+        let s1 = (10, 5).set_f(true);
+        let s2 = (10, 5).set_f(false);
 
         let a1 = Array2::from_shape_fn(s1, |(y, x)| y as i32 * 5 + x as i32);
         let a2 = Array2::from_shape_fn(s2, |(y, x)| y as i32 * 5 + x as i32);
@@ -257,17 +279,46 @@ mod tests {
     }
 
     #[test]
-    fn index() {
-        let b = Buffer::new((5, 7), (0..5 * 7).collect());
-        assert_eq!(b[(0, 0)], 0);
-        assert_eq!(b[(1, 1)], 5 + 1);
-        assert_eq!(b[(4, 5)], 4 * 5 + 5);
+    fn offset() {
+        let arr = arr2(&[[0, 1, 2], [10, 11, 12]]);
+        let slice = arr.slice_move(s![1.., ..]);
 
-        let mut b = b;
-        b[(2, 2)] = 99;
-        assert_eq!(b[(2, 1)], 2 * 5 + 1);
-        assert_eq!(b[(2, 2)], 99);
-        assert_eq!(b[(2, 3)], 2 * 5 + 3);
+        let expected = Buffer::new((3, 1), (10..13).collect());
+        let buffer = Buffer::from(slice);
+
+        assert_eq!(buffer, expected);
+    }
+
+    #[test]
+    fn index() {
+        // Tests if there is one-to-one mapping between whole buffer, and whole range of indices
+        fn indices_biject_buffer(cols: usize, rows: usize) {
+            // Empty buffer
+            let mut b = Buffer::new((cols, rows), vec![0; cols * rows]);
+
+            // Tests mapping is injective
+            for x in 0..cols {
+                for y in 0..rows {
+                    if b[(y, x)] == 1 {
+                        panic!();
+                    } else {
+                        b[(y, x)] = 1;
+                    }
+                }
+            }
+
+            // Tests mapping is surjective
+            for x in 0..cols {
+                for y in 0..rows {
+                    if b[(y, x)] == 0 {
+                        panic!();
+                    }
+                }
+            }
+        }
+
+        indices_biject_buffer(5, 7);
+        indices_biject_buffer(7, 5);
     }
 
     #[test]
@@ -299,6 +350,6 @@ mod tests {
     #[should_panic]
     fn index_bounds_panic() {
         let b = Buffer::new((5, 7), (0..5 * 7).collect());
-        let _ = b[(5, 0)];
+        let _ = b[(0, 5)];
     }
 }

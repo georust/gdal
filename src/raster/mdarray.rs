@@ -1,8 +1,8 @@
-use super::GdalType;
-use crate::errors::*;
-use crate::spatial_ref::SpatialRef;
-use crate::utils::{_last_cpl_err, _last_null_pointer_err, _string, _string_array};
-use crate::{cpl::CslStringList, Dataset};
+use std::{
+    ffi::{c_char, c_void, CString},
+    fmt::{Debug, Display},
+};
+
 use gdal_sys::{
     CPLErr, CSLDestroy, GDALAttributeGetDataType, GDALAttributeGetDimensionsSize, GDALAttributeH,
     GDALAttributeReadAsDouble, GDALAttributeReadAsDoubleArray, GDALAttributeReadAsInt,
@@ -18,13 +18,15 @@ use gdal_sys::{
     GDALMDArrayGetNoDataValueAsDouble, GDALMDArrayGetSpatialRef, GDALMDArrayGetTotalElementsCount,
     GDALMDArrayGetUnit, GDALMDArrayH, GDALMDArrayRelease, OSRDestroySpatialReference, VSIFree,
 };
-use libc::c_void;
-use std::ffi::CString;
-use std::os::raw::c_char;
 
 #[cfg(feature = "ndarray")]
 use ndarray::{ArrayD, IxDyn};
-use std::fmt::{Debug, Display};
+
+use super::GdalType;
+use crate::errors::*;
+use crate::spatial_ref::SpatialRef;
+use crate::utils::{_last_cpl_err, _last_null_pointer_err, _string, _string_array};
+use crate::{cpl::CslStringList, Dataset};
 
 /// Represent an MDArray in a Group
 ///
@@ -97,7 +99,7 @@ impl<'a> MDArray<'a> {
         unsafe { GDALMDArrayGetTotalElementsCount(self.c_mdarray) }
     }
 
-    pub fn dimensions(&self) -> Result<Vec<Dimension>> {
+    pub fn dimensions(&self) -> Result<Vec<Dimension<'_>>> {
         let mut num_dimensions: usize = 0;
 
         let c_dimensions = unsafe { GDALMDArrayGetDimensions(self.c_mdarray, &mut num_dimensions) };
@@ -247,7 +249,6 @@ impl<'a> MDArray<'a> {
     }
 
     #[cfg(feature = "ndarray")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "array")))]
     /// Read an [`ArrayD<T>`] from this band. T implements [`GdalType`].
     ///
     /// # Arguments
@@ -329,16 +330,11 @@ impl<'a> MDArray<'a> {
 
             let strings = string_pointers
                 .into_iter()
-                .map(|string_ptr| {
-                    if string_ptr.is_null() {
-                        String::new()
-                    } else {
-                        let string = _string(string_ptr);
-
-                        VSIFree(string_ptr as *mut c_void);
-
-                        string
-                    }
+                .filter_map(|ptr| {
+                    let s = _string(ptr);
+                    // GDAL allows `VSIFree(nullptr)`
+                    VSIFree(ptr as *mut c_void);
+                    s
                 })
                 .collect();
 
@@ -374,9 +370,8 @@ impl<'a> MDArray<'a> {
     pub fn unit(&self) -> String {
         unsafe {
             // should not be freed
-            let c_unit = GDALMDArrayGetUnit(self.c_mdarray);
-
-            _string(c_unit)
+            let c_ptr = GDALMDArrayGetUnit(self.c_mdarray);
+            _string(c_ptr).unwrap_or_default()
         }
     }
 
@@ -409,12 +404,13 @@ impl<'a> MDArray<'a> {
     ///
     /// TODO: add option to pass progress callback (`pfnProgress`)
     ///
-    #[cfg(any(all(major_is_3, minor_ge_2), major_ge_4))]
     pub fn get_statistics(
         &self,
         force: bool,
         is_approx_ok: bool,
     ) -> Result<Option<MdStatisticsAll>> {
+        use std::ffi::c_int;
+
         let mut statistics = MdStatisticsAll {
             min: 0.,
             max: 0.,
@@ -427,8 +423,8 @@ impl<'a> MDArray<'a> {
             gdal_sys::GDALMDArrayGetStatistics(
                 self.c_mdarray,
                 self.c_dataset,
-                libc::c_int::from(is_approx_ok),
-                libc::c_int::from(force),
+                c_int::from(is_approx_ok),
+                c_int::from(force),
                 &mut statistics.min,
                 &mut statistics.max,
                 &mut statistics.mean,
@@ -485,7 +481,8 @@ impl<'a> Group<'a> {
     }
 
     pub fn name(&self) -> String {
-        _string(unsafe { GDALGroupGetName(self.c_group) })
+        let c_ptr = unsafe { GDALGroupGetName(self.c_group) };
+        _string(c_ptr).unwrap_or_default()
     }
 
     pub fn group_names(&self, options: CslStringList) -> Vec<String> {
@@ -512,7 +509,7 @@ impl<'a> Group<'a> {
         }
     }
 
-    pub fn open_md_array(&self, name: &str, options: CslStringList) -> Result<MDArray> {
+    pub fn open_md_array(&self, name: &str, options: CslStringList) -> Result<MDArray<'_>> {
         let name = CString::new(name)?;
 
         unsafe {
@@ -554,7 +551,7 @@ impl<'a> Group<'a> {
         }
     }
 
-    pub fn dimensions(&self, options: CslStringList) -> Result<Vec<Dimension>> {
+    pub fn dimensions(&self, options: CslStringList) -> Result<Vec<Dimension<'_>>> {
         unsafe {
             let mut num_dimensions: usize = 0;
             let c_dimensions =
@@ -621,10 +618,11 @@ impl<'a> Dimension<'a> {
     }
 
     pub fn name(&self) -> String {
-        _string(unsafe { GDALDimensionGetName(self.c_dimension) })
+        let c_ptr = unsafe { GDALDimensionGetName(self.c_dimension) };
+        _string(c_ptr).unwrap_or_default()
     }
 
-    pub fn indexing_variable(&self) -> MDArray {
+    pub fn indexing_variable(&self) -> MDArray<'_> {
         unsafe {
             let c_md_array = GDALDimensionGetIndexingVariable(self.c_dimension);
 
@@ -709,7 +707,8 @@ impl ExtendedDataType {
     }
 
     pub fn name(&self) -> String {
-        _string(unsafe { GDALExtendedDataTypeGetName(self.c_data_type) })
+        let c_ptr = unsafe { GDALExtendedDataTypeGetName(self.c_data_type) };
+        _string(c_ptr).unwrap_or_default()
     }
 }
 
@@ -764,12 +763,9 @@ impl Attribute {
     }
 
     pub fn read_as_string(&self) -> String {
-        unsafe {
-            // SAFETY: should no be freed
-            let c_string = GDALAttributeReadAsString(self.c_attribute);
-
-            _string(c_string)
-        }
+        // should not be freed
+        let c_ptr = unsafe { GDALAttributeReadAsString(self.c_attribute) };
+        _string(c_ptr).unwrap_or_default()
     }
 
     pub fn read_as_string_array(&self) -> Vec<String> {
@@ -827,8 +823,7 @@ impl Dataset {
     /// You must have opened the dataset with the `GdalOpenFlags::GDAL_OF_MULTIDIM_RASTER`
     /// flag in order for it to work.
     ///
-    #[cfg(all(major_ge_3, minor_ge_1))]
-    pub fn root_group(&self) -> Result<Group> {
+    pub fn root_group(&self) -> Result<Group<'_>> {
         unsafe {
             let c_group = gdal_sys::GDALDatasetGetRootGroup(self.c_dataset());
             if c_group.is_null() {
@@ -848,8 +843,7 @@ mod tests {
     use crate::{test_utils::TempFixture, Dataset, GdalOpenFlags};
 
     #[test]
-    #[cfg_attr(not(all(major_ge_3, minor_ge_4)), ignore)]
-    #[cfg(any(all(major_is_3, minor_ge_2), major_ge_4))]
+    #[cfg_attr(feature = "gdal-src", ignore)]
     fn test_root_group_name() {
         let fixture = "/vsizip/fixtures/byte_no_cf.zarr.zip";
 
@@ -866,8 +860,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(not(all(major_ge_3, minor_ge_4)), ignore)]
-    #[cfg(any(all(major_is_3, minor_ge_2), major_ge_4))]
+    #[cfg_attr(feature = "gdal-src", ignore)]
     fn test_array_names() {
         let fixture = "/vsizip/fixtures/byte_no_cf.zarr.zip";
 
@@ -888,8 +881,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(not(all(major_ge_3, minor_ge_4)), ignore)]
-    #[cfg(any(all(major_is_3, minor_ge_2), major_ge_4))]
+    #[cfg_attr(feature = "gdal-src", ignore)]
     fn test_n_dimension() {
         let fixture = "/vsizip/fixtures/byte_no_cf.zarr.zip";
 
@@ -909,8 +901,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(not(all(major_ge_3, minor_ge_4)), ignore)]
-    #[cfg(any(all(major_is_3, minor_ge_2), major_ge_4))]
+    #[cfg_attr(feature = "gdal-src", ignore)]
     fn test_n_elements() {
         let fixture = "/vsizip/fixtures/byte_no_cf.zarr.zip";
 
@@ -930,8 +921,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(not(all(major_ge_3, minor_ge_4)), ignore)]
-    #[cfg(any(all(major_is_3, minor_ge_2), major_ge_4))]
+    #[cfg_attr(feature = "gdal-src", ignore)]
     fn test_dimension_name() {
         let fixture = "/vsizip/fixtures/byte_no_cf.zarr.zip";
 
@@ -966,8 +956,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(not(all(major_ge_3, minor_ge_4)), ignore)]
-    #[cfg(any(all(major_is_3, minor_ge_2), major_ge_4))]
+    #[cfg_attr(feature = "gdal-src", ignore)]
     fn test_dimension_size() {
         let fixture = "/vsizip/fixtures/byte_no_cf.zarr.zip";
 
@@ -991,8 +980,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(not(all(major_ge_3, minor_ge_4)), ignore)]
-    #[cfg(any(all(major_is_3, minor_ge_2), major_ge_4))]
+    #[cfg_attr(feature = "gdal-src", ignore)]
     fn test_read_data() {
         let fixture = "/vsizip/fixtures/byte_no_cf.zarr.zip";
 
@@ -1028,8 +1016,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(not(all(major_ge_3, minor_ge_4)), ignore)]
-    #[cfg(any(all(major_is_3, minor_ge_1), major_ge_4))]
+    #[cfg_attr(feature = "gdal-src", ignore)]
     fn test_read_string_array() {
         // Beware https://github.com/georust/gdal/issues/299 if you want to reuse this
         // This can't be Zarr because it doesn't support string arrays
@@ -1062,8 +1049,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(not(all(major_ge_3, minor_ge_4)), ignore)]
-    #[cfg(any(all(major_is_3, minor_ge_2), major_ge_4))]
+    #[cfg_attr(feature = "gdal-src", ignore)]
     fn test_datatype() {
         let fixture = "/vsizip/fixtures/byte_no_cf.zarr.zip";
 
@@ -1089,8 +1075,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(not(all(major_ge_3, minor_ge_4)), ignore)]
-    #[cfg(any(all(major_is_3, minor_ge_2), major_ge_4))]
+    #[cfg_attr(feature = "gdal-src", ignore)]
     fn test_spatial_ref() {
         let fixture = "/vsizip/fixtures/byte_no_cf.zarr.zip";
 
@@ -1115,8 +1100,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(not(all(major_ge_3, minor_ge_4)), ignore)]
-    #[cfg(any(all(major_is_3, minor_ge_2), major_ge_4))]
+    #[cfg_attr(feature = "gdal-src", ignore)]
     fn test_no_data_value() {
         let fixture = "/vsizip/fixtures/byte_no_cf.zarr.zip";
 
@@ -1137,8 +1121,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(not(all(major_ge_3, minor_ge_4)), ignore)]
-    #[cfg(any(all(major_is_3, minor_ge_2), major_ge_4))]
+    #[cfg_attr(feature = "gdal-src", ignore)]
     fn test_attributes() {
         let fixture = "/vsizip/fixtures/cf_nasa_4326.zarr.zip";
 
@@ -1189,8 +1172,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(not(all(major_ge_3, minor_ge_4)), ignore)]
-    #[cfg(any(all(major_is_3, minor_ge_2), major_ge_4))]
+    #[cfg_attr(feature = "gdal-src", ignore)]
     fn test_unit() {
         let fixture = "/vsizip/fixtures/cf_nasa_4326.zarr.zip";
 
@@ -1230,8 +1212,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(not(all(major_ge_3, minor_ge_4)), ignore)]
-    #[cfg(any(all(major_is_3, minor_ge_2), major_ge_4))]
+    #[cfg_attr(feature = "gdal-src", ignore)]
     fn test_stats() {
         // make a copy to avoid writing the statistics into the original file
         let fixture = TempFixture::fixture("byte_no_cf.zarr.zip");

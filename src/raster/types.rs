@@ -1,12 +1,16 @@
-use crate::errors::{GdalError, Result};
-use crate::utils::_string;
+use std::{
+    ffi::{c_int, CString},
+    fmt::{Debug, Display, Formatter},
+};
+
 use gdal_sys::{
     GDALAdjustValueToDataType, GDALDataType, GDALDataTypeIsConversionLossy, GDALDataTypeIsFloating,
     GDALDataTypeIsInteger, GDALDataTypeIsSigned, GDALDataTypeUnion, GDALFindDataTypeForValue,
     GDALGetDataTypeByName, GDALGetDataTypeName, GDALGetDataTypeSizeBits, GDALGetDataTypeSizeBytes,
 };
-use std::ffi::CString;
-use std::fmt::{Debug, Display, Formatter};
+
+use crate::errors::{GdalError, Result};
+use crate::utils::_string;
 
 /// Provides ergonomic access to functions describing [`GDALDataType`] ordinals.
 ///
@@ -99,15 +103,7 @@ impl GdalDataType {
     /// ```
     pub fn name(&self) -> String {
         let c_str = unsafe { GDALGetDataTypeName(self.gdal_ordinal()) };
-        if c_str.is_null() {
-            // This case shouldn't happen, because `self` only exists for valid
-            // GDALDataType ordinals.
-            panic!(
-                "GDALGetDataTypeName unexpectedly returned an empty name for {:?}",
-                &self
-            );
-        }
-        _string(c_str)
+        _string(c_str).unwrap_or_default()
     }
 
     /// Get the [`GDALDataType`] size in **bits**.
@@ -171,8 +167,8 @@ impl GdalDataType {
     /// assert_eq!(<u8>::datatype().adjust_value(1000.2334), Clamped(255.));
     /// ```
     pub fn adjust_value<N: GdalType + Into<f64>>(&self, value: N) -> AdjustedValue {
-        let mut is_clamped: libc::c_int = 0;
-        let mut is_rounded: libc::c_int = 0;
+        let mut is_clamped: c_int = 0;
+        let mut is_rounded: c_int = 0;
 
         let result = unsafe {
             GDALAdjustValueToDataType(

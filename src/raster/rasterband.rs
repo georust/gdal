@@ -1,8 +1,8 @@
-use crate::dataset::Dataset;
-use crate::gdal_major_object::MajorObject;
-use crate::metadata::Metadata;
-use crate::raster::{GdalDataType, GdalType};
-use crate::utils::{_last_cpl_err, _last_null_pointer_err, _string};
+use std::ffi::{c_int, c_void, CString};
+use std::fmt::{Debug, Display, Formatter};
+use std::marker::PhantomData;
+use std::str::FromStr;
+
 use gdal_sys::{
     self, CPLErr, GDALColorEntry, GDALColorInterp, GDALColorTableH, GDALComputeRasterMinMax,
     GDALCreateColorRamp, GDALCreateColorTable, GDALDestroyColorTable, GDALGetDefaultHistogramEx,
@@ -10,17 +10,17 @@ use gdal_sys::{
     GDALMajorObjectH, GDALPaletteInterp, GDALRIOResampleAlg, GDALRWFlag, GDALRasterBandH,
     GDALRasterIOExtraArg, GDALSetColorEntry, GDALSetDefaultHistogramEx, GDALSetRasterColorTable,
 };
-use libc::c_int;
-use std::ffi::{c_void, CString};
-use std::fmt::{Debug, Display, Formatter};
-use std::marker::PhantomData;
-use std::str::FromStr;
 
+use crate::dataset::Dataset;
 use crate::errors::*;
+use crate::gdal_major_object::MajorObject;
+use crate::metadata::Metadata;
 use crate::raster::buffer::Buffer;
 use crate::raster::ResampleAlg::{
     Average, Bilinear, Cubic, CubicSpline, Gauss, Lanczos, Mode, NearestNeighbour,
 };
+use crate::raster::{GdalDataType, GdalType};
+use crate::utils::{_last_cpl_err, _last_null_pointer_err, _string};
 
 /// [Dataset] methods for raster datasets.
 impl Dataset {
@@ -30,8 +30,8 @@ impl Dataset {
     ///
     /// # Errors
     /// Returns an error if the band cannot be read, including in the case the index is 0.
-    pub fn rasterband(&self, band_index: usize) -> Result<RasterBand> {
-        let band_index = libc::c_int::try_from(band_index)?;
+    pub fn rasterband(&self, band_index: usize) -> Result<RasterBand<'_>> {
+        let band_index = c_int::try_from(band_index)?;
 
         unsafe {
             let c_band = gdal_sys::GDALGetRasterBand(self.c_dataset(), band_index);
@@ -44,7 +44,7 @@ impl Dataset {
 
     /// Get the bands of a dataset.
     ///
-    /// Returns an iterator over the [`RasterBands`]s in the current [`Dataset`].
+    /// Returns an iterator over the [`RasterBand`]s in the current [`Dataset`].
     ///
     /// # Example
     ///
@@ -56,7 +56,7 @@ impl Dataset {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn rasterbands(&self) -> impl Iterator<Item = Result<RasterBand>> {
+    pub fn rasterbands(&self) -> impl Iterator<Item = Result<RasterBand<'_>>> {
         (1..=self.raster_count()).map(|idx| self.rasterband(idx))
     }
 
@@ -237,12 +237,13 @@ pub struct RasterIOExtraArg {
     pub n_version: usize,
     pub e_resample_alg: ResampleAlg,
     pub pfn_progress: gdal_sys::GDALProgressFunc,
-    p_progress_data: *mut libc::c_void,
+    p_progress_data: *mut c_void,
     pub b_floating_point_window_validity: usize,
     pub df_x_off: f64,
     pub df_y_off: f64,
     pub df_x_size: f64,
     pub df_y_size: f64,
+    pub b_use_only_this_scale: bool,
 }
 
 impl Default for RasterIOExtraArg {
@@ -257,6 +258,7 @@ impl Default for RasterIOExtraArg {
             df_y_off: 0.0,
             df_x_size: 0.0,
             df_y_size: 0.0,
+            b_use_only_this_scale: false,
         }
     }
 }
@@ -273,6 +275,8 @@ impl From<RasterIOExtraArg> for GDALRasterIOExtraArg {
             df_y_off,
             df_x_size,
             df_y_size,
+            #[allow(unused)]
+            b_use_only_this_scale,
         } = arg;
 
         GDALRasterIOExtraArg {
@@ -285,6 +289,8 @@ impl From<RasterIOExtraArg> for GDALRasterIOExtraArg {
             dfYOff: df_y_off,
             dfXSize: df_x_size,
             dfYSize: df_y_size,
+            #[cfg(all(major_ge_3, minor_ge_12))]
+            bUseOnlyThisScale: if b_use_only_this_scale { 1 } else { 0 },
         }
     }
 }
@@ -855,7 +861,7 @@ impl<'a> RasterBand<'a> {
     }
 
     /// Get the color table for this band if it has one.
-    pub fn color_table(&self) -> Option<ColorTable> {
+    pub fn color_table(&self) -> Option<ColorTable<'_>> {
         let c_color_table = unsafe { gdal_sys::GDALGetRasterColorTable(self.c_rasterband) };
         if c_color_table.is_null() {
             return None;
@@ -935,7 +941,7 @@ impl<'a> RasterBand<'a> {
     }
 
     pub fn overview(&self, overview_index: usize) -> Result<RasterBand<'a>> {
-        let overview_index = libc::c_int::try_from(overview_index)?;
+        let overview_index = c_int::try_from(overview_index)?;
 
         unsafe {
             let c_band = self.c_rasterband;
@@ -950,13 +956,8 @@ impl<'a> RasterBand<'a> {
     /// Return the unit of the rasterband.
     /// If there is no unit, the empty string is returned.
     pub fn unit(&self) -> String {
-        let str_ptr = unsafe { gdal_sys::GDALGetRasterUnitType(self.c_rasterband) };
-
-        if str_ptr.is_null() {
-            return String::new();
-        }
-
-        _string(str_ptr)
+        let c_ptr = unsafe { gdal_sys::GDALGetRasterUnitType(self.c_rasterband) };
+        _string(c_ptr).unwrap_or_default()
     }
 
     /// Read the band mask flags for a GDAL `RasterBand`.
@@ -983,7 +984,7 @@ impl<'a> RasterBand<'a> {
     }
 
     /// Open the mask-`Rasterband`
-    pub fn open_mask_band(&self) -> Result<RasterBand> {
+    pub fn open_mask_band(&self) -> Result<RasterBand<'_>> {
         unsafe {
             let mask_band_ptr = gdal_sys::GDALGetMaskBand(self.c_rasterband);
             if mask_band_ptr.is_null() {
@@ -1017,8 +1018,8 @@ impl<'a> RasterBand<'a> {
         let rv = unsafe {
             GDALGetRasterStatistics(
                 self.c_rasterband,
-                libc::c_int::from(is_approx_ok),
-                libc::c_int::from(force),
+                c_int::from(is_approx_ok),
+                c_int::from(force),
                 &mut statistics.min,
                 &mut statistics.max,
                 &mut statistics.mean,
@@ -1050,7 +1051,7 @@ impl<'a> RasterBand<'a> {
         unsafe {
             GDALComputeRasterMinMax(
                 self.c_rasterband,
-                libc::c_int::from(is_approx_ok),
+                c_int::from(is_approx_ok),
                 &mut min_max as *mut f64,
             )
         };
@@ -1079,7 +1080,7 @@ impl<'a> RasterBand<'a> {
                 &mut max,
                 &mut n_buckets,
                 &mut counts as *mut *mut u64,
-                libc::c_int::from(force),
+                c_int::from(force),
                 None,
                 std::ptr::null_mut(),
             )
@@ -1104,7 +1105,7 @@ impl<'a> RasterBand<'a> {
     /// * `max` - Histogram upper bound
     /// * `counts` - Histogram values for each bucket
     pub fn set_default_histogram(&self, min: f64, max: f64, counts: &mut [u64]) -> Result<()> {
-        let n_buckets = libc::c_int::try_from(counts.len())?;
+        let n_buckets = c_int::try_from(counts.len())?;
 
         let rv = unsafe {
             GDALSetDefaultHistogramEx(self.c_rasterband, min, max, n_buckets, counts.as_mut_ptr())
@@ -1139,7 +1140,7 @@ impl<'a> RasterBand<'a> {
             ));
         }
 
-        let n_buckets = libc::c_int::try_from(n_buckets)?;
+        let n_buckets = c_int::try_from(n_buckets)?;
         let mut counts = vec![0; n_buckets as usize];
 
         let rv = unsafe {
@@ -1149,8 +1150,8 @@ impl<'a> RasterBand<'a> {
                 max,
                 n_buckets,
                 counts.as_mut_ptr(),
-                libc::c_int::from(include_out_of_range),
-                libc::c_int::from(is_approx_ok),
+                c_int::from(include_out_of_range),
+                c_int::from(is_approx_ok),
                 None,
                 std::ptr::null_mut(),
             )
@@ -1163,6 +1164,38 @@ impl<'a> RasterBand<'a> {
                 counts: HistogramCounts::RustAllocated(counts),
             }),
             _ => Err(_last_cpl_err(rv)),
+        }
+    }
+
+    /// Compute a checksum for an image region.
+    ///
+    /// # Arguments
+    /// * `window` - the window position from top left
+    /// * `window_size` - the window size
+    ///
+    /// # Notes
+    ///
+    /// Floating-point data is converted to 32bit integer, so the fractional parts
+    /// will not affect the checksum. Real and imaginary components of complex bands
+    /// influence the result.
+    ///
+    /// See also:
+    /// [`GDALChecksumImage`](https://gdal.org/en/stable/api/gdal_alg.html#_CPPv417GDALChecksumImage15GDALRasterBandHiiii)
+    pub fn checksum(&self, window: (isize, isize), window_size: (usize, usize)) -> Result<u16> {
+        let rv = unsafe {
+            gdal_sys::GDALChecksumImage(
+                self.c_rasterband,
+                window.0.try_into()?,
+                window.1.try_into()?,
+                window_size.0.try_into()?,
+                window_size.1.try_into()?,
+            )
+        };
+        if rv == -1 {
+            let cpl_err = unsafe { gdal_sys::CPLGetLastErrorType() };
+            Err(_last_cpl_err(cpl_err))
+        } else {
+            Ok(rv as u16)
         }
     }
 }
@@ -1250,20 +1283,20 @@ impl Drop for HistogramCounts {
     fn drop(&mut self) {
         match self {
             HistogramCounts::GdalAllocated(p, _) => unsafe {
-                gdal_sys::VSIFree(*p as *mut libc::c_void);
+                gdal_sys::VSIFree(*p as *mut c_void);
             },
             HistogramCounts::RustAllocated(_) => {}
         }
     }
 }
 
-impl<'a> MajorObject for RasterBand<'a> {
+impl MajorObject for RasterBand<'_> {
     fn gdal_object_ptr(&self) -> GDALMajorObjectH {
         self.c_rasterband
     }
 }
 
-impl<'a> Metadata for RasterBand<'a> {}
+impl Metadata for RasterBand<'_> {}
 
 /// Represents a color interpretation of a RasterBand
 #[derive(Debug, PartialEq, Eq)]
@@ -1362,8 +1395,8 @@ impl ColorInterpretation {
 
     /// Returns the name of this color interpretation.
     pub fn name(&self) -> String {
-        let rv = unsafe { gdal_sys::GDALGetColorInterpretationName(self.c_int()) };
-        _string(rv)
+        let c_ptr = unsafe { gdal_sys::GDALGetColorInterpretationName(self.c_int()) };
+        _string(c_ptr).unwrap_or_default()
     }
 }
 

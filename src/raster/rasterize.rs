@@ -1,8 +1,8 @@
 use std::convert::TryFrom;
+use std::ffi::c_void;
 use std::ptr;
 
-use gdal_sys::{self, CPLErr};
-use libc::c_void;
+use gdal_sys::CPLErr;
 
 use crate::cpl::CslStringList;
 use crate::dataset::Dataset;

@@ -2,7 +2,79 @@
 
 ## Unreleased
 
-- Added `Rasterband::fill`
+### Breaking
+
+  - Bump `ndarray` dependency to 0.17 ([#678](https://github.com/georust/gdal/pull/678))
+
+### Added
+
+  - Add pre-built bindings for GDAL 3.12 ([#684](https://github.com/georust/gdal/pull/663))
+  - Add pre-built bindings for GDAL 3.11 ([#663](https://github.com/georust/gdal/pull/663))
+  - Bump bundled GDAL to 3.12 ([#687](https://github.com/georust/gdal/pull/687))
+  - Add `Dataset::try_into_thread_safe` ([#677](https://github.com/georust/gdal/pull/677))
+  - Add `RasterBand::checksum` ([#676](https://github.com/georust/gdal/pull/676))
+
+## 0.18
+
+### Breaking
+
+  - Drop support for GDAL <3.4 ([#578](https://github.com/georust/gdal/pull/578))
+  - Regenerate the pre-built bindings with `std::ffi` instead of `libc` for C types ([#573](https://github.com/georust/gdal/pull/573))
+  - Include OS-specific versions of the pre-built bindings ([#574](https://github.com/georust/gdal/pull/574))
+  - Upgrade `ndarray` dependency to 0.16 ([#569](https://github.com/georust/gdal/pull/569))
+  - Upgrade `thiserror` dependency to 2.0 ([#586](https://github.com/georust/gdal/pull/586))
+  - Update `Feature::field`, `Feature::set_field`, `Feature::set_field_string`, `Feature::set_field_string_list`, `Feature::set_field_double`, `Feature::set_field_double_list`, `Feature::set_field_integer`, `Feature::set_field_integer_list`, `Feature::set_field_integer64`, `Feature::set_field_integer64_list`, `Feature::set_field_datetime`, `Feature::set_field_null`, `Feature::unset_field` to take a field index, not a name ([#581](https://github.com/georust/gdal/pull/581))
+  - Drop `Feature::field_as_integer_by_name`, `Feature::field_as_integer64_by_name`, `Feature::field_as_double_by_name`, `Feature::field_as_string_by_name`, `Feature::field_as_datetime_by_name` ([#581](https://github.com/georust/gdal/pull/581))
+  - Update `Feature::field_count` to return `usize` instead of `i32` ([#581](https://github.com/georust/gdal/pull/581))
+  - Update `Feature::field_as_integer`, `Feature::field_as_integer64`, `Feature::field_as_double`, `Feature::field_as_string`, `Feature::field_as_datetime` to take the field index as `usize` instead of `i32` ([#581](https://github.com/georust/gdal/pull/581))
+  - Drop `LayerAccess::create_feature_fields` ([#581](https://github.com/georust/gdal/pull/581))
+  - Drop `Feature::geometry_by_name` ([#594](https://github.com/georust/gdal/pull/594))
+  - Update `SpatialRef::auth_name`, `SpatialRef::name`, `SpatialRef::angular_units_name`, `SpatialRef::linear_units_name` to return `Option<String>` instead of `Result<String>` ([#589](https://github.com/georust/gdal/pull/589))
+  - Rename `Geometry::get_point_vec` to `get_points` and take a `&mut Vec`, to reduce allocations ([#600](https://github.com/georust/gdal/pull/600))
+
+### Added
+
+  - Add `Dataset::delete_layer` ([#583](https://github.com/georust/gdal/pull/583))
+  - Add `Dataset::has_capability` ([#585](https://github.com/georust/gdal/pull/585))
+  - Add a `bundled` feature for `gdal-sys` for building and statically linking a minimal bundled version of GDAL ([#517](https://github.com/georust/gdal/pull/517))
+  - Add pre-built bindings for GDAL 3.10 ([#573](https://github.com/georust/gdal/pull/573))
+  - Add methods `alternative_name`, `is_nullable`, `is_unique`, `default_value` to `Field` ([#561](https://github.com/georust/gdal/pull/561))
+  - Add `Defn::geometry_type` ([#562](https://github.com/georust/gdal/pull/562))
+  - Add `Defn::field_index` and `Feature::field_index` ([#581](https://github.com/georust/gdal/pull/581))
+  - Add `Defn::geometry_field_index` and `Feature::geometry_field_index` ([#594](https://github.com/georust/gdal/pull/594))
+  - Add `Dataset::has_capability` for dataset capability check ([#581](https://github.com/georust/gdal/pull/585))
+  - Add methods `add_point_zm`, `add_point_m`, `set_point_zm`, `set_point_m`, `get_point_zm`, `get_points_zm`, `iso_wkt` and `iso_wkb` to `Geometry` ([#600](https://github.com/georust/gdal/pull/600))
+  - Add functions `geometry_type_flatten`, `geometry_type_set_z`, `geometry_type_set_m`, `geometry_type_set_modifier`, `geometry_type_has_z` and `geometry_type_has_m` to `vector::geometry` ([#600](https://github.com/georust/gdal/pull/600))
+  - Make `GeometryRef` public ([#601](https://github.com/georust/gdal/pull/601))
+
+### Fixed
+
+  - Fix conversion from `ndarray` when the data is offsetted from the start of the buffer ([#569](https://github.com/georust/gdal/pull/569))
+  - Use ISO WKT for the `Debug` implementation of `Geometry`, in order to properly display measure values ([#600](https://github.com/georust/gdal/pull/600))
+  - Reset layer when dropping the feature iterator, not when starting ([#611](https://github.com/georust/gdal/pull/611))
+
+### Removed
+
+  - Bump MSRV to 1.80 ([#573](https://github.com/georust/gdal/pull/573))
+  - Drop `libc` and `once_cell` and dependencies ([#573](https://github.com/georust/gdal/pull/573))
+
+## 0.17.1
+
+### Added
+
+ - Add `Buffer<T>::width` and `Buffer<T>::height` ([#550](https://github.com/georust/gdal/pull/550))
+
+### Fixed
+
+ - Fix incorrect bounds check in `Buffer<T>` indexing ([#550](https://github.com/georust/gdal/pull/550))
+
+## 0.17
+
+- Added pre-built bindings for GDAL 3.9
+
+   - <https://github.com/georust/gdal/pull/539>
+
+- Added `RasterBand::fill`
   - <https://github.com/georust/gdal/pull/528>
 
 - Added `Dataset::rasterbands`.
@@ -36,8 +108,8 @@
 - Implemented `IntoIterator`, `Index` and `IndexMut` for `Buffer<T>`.
 - **Breaking**: `Buffer<T>::size` is now private and accessed via `Buffer<T>::shape().
 - **Breaking**: `Buffer<T>::data` is now private and accessed via `Buffer<T>::data().
-- **Breaking**: Removed `Rasterband::read_as_array`, changed signature of `Rasterband::read_block` to return a `Buffer<T>`.
-- **Breaking**: `Rasterband::write` and `Rasterband::write_block` now require a `&mut Buffer<T>` to handle possible case of drivers temporarily mutating input buffer.
+- **Breaking**: Removed `RasterBand::read_as_array`, changed signature of `RasterBand::read_block` to return a `Buffer<T>`.
+- **Breaking**: `RasterBand::write` and `RasterBand::write_block` now require a `&mut Buffer<T>` to handle possible case of drivers temporarily mutating input buffer.
 
   - <https://github.com/georust/gdal/pull/494>
 
@@ -46,7 +118,7 @@
   - <https://github.com/georust/gdal/pull/501>
   - <https://github.com/georust/gdal/pull/502>
 
-- **Breaking**: Changed a number of APIs using `isize` when `usize` is semantically more appropriate: `Driver::create.*`, `Rasterband::overview`, `Dataset::{layer|into_layer|layer_count}`.
+- **Breaking**: Changed a number of APIs using `isize` when `usize` is semantically more appropriate: `Driver::create.*`, `RasterBand::overview`, `Dataset::{layer|into_layer|layer_count}`.
 
   - <https://github.com/georust/gdal/pull/497>
 
@@ -78,7 +150,6 @@
 - Added pre-built bindings for GDAL 3.8
 
    - <https://github.com/georust/gdal/pull/466>
-
 
 - Added `{Display|FromStr} for ResampleAlg` and `ResampleAlg::iter`.
 
@@ -209,7 +280,7 @@
 
   - <https://github.com/georust/gdal/pull/362>
 
-- Added `Rasterband::c_rasterband` to obtain the raw C pointer to `GDALRasterBandH`
+- Added `RasterBand::c_rasterband` to obtain the raw C pointer to `GDALRasterBandH`
 
   - <https://github.com/georust/gdal/pull/359>
 
@@ -380,7 +451,7 @@
 
   - <https://github.com/georust/gdal/pull/295>
 
-- Add `Rasterband::set_scale` and `Rasterband::set_offset` methods
+- Add `RasterBand::set_scale` and `RasterBand::set_offset` methods
 
   - <https://github.com/georust/gdal/pull/294>
 
@@ -739,7 +810,7 @@ let mut dataset = driver
 - [API extensions](https://github.com/georust/gdal/pull/35)
 - [Extend the existing possibilities of writing ogr datasets](https://github.com/georust/gdal/pull/31)
 - [Allow to transform ogr geometries to other SRS](https://github.com/georust/gdal/pull/29)
-- [Move ffi into a seperate crate](https://github.com/georust/gdal/pull/26)
+- [Move ffi into a separate crate](https://github.com/georust/gdal/pull/26)
 - [Added rasterband.rs and moved all band functions](https://github.com/georust/gdal/pull/24)
 
 ## 0.2.1

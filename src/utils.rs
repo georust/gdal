@@ -1,39 +1,44 @@
-use gdal_sys::{self, CPLErr};
-use libc::c_char;
-use std::ffi::{CStr, CString};
+use std::ffi::{c_char, CStr, CString};
 use std::path::{Path, PathBuf};
+
+use gdal_sys::CPLErr;
 
 use crate::errors::*;
 
-pub fn _string(raw_ptr: *const c_char) -> String {
-    let c_str = unsafe { CStr::from_ptr(raw_ptr) };
-    c_str.to_string_lossy().into_owned()
+/// Makes a copy of a C string, returns `None` for a null pointer.
+pub fn _string(raw_ptr: *const c_char) -> Option<String> {
+    if raw_ptr.is_null() {
+        None
+    } else {
+        let c_str = unsafe { CStr::from_ptr(raw_ptr) };
+        Some(c_str.to_string_lossy().into_owned())
+    }
 }
 
-pub(crate) fn _string_tuple(raw_ptr: *const c_char, delim: char) -> Option<(String, String)> {
-    let c_str = unsafe { CStr::from_ptr(raw_ptr) };
-    c_str
-        .to_string_lossy()
-        .split_once(delim)
-        .map(|(k, v)| (k.to_string(), v.to_string()))
-}
-
+/// Converts an array of C strings to Rust `String`s, skipping any null pointers.
 pub fn _string_array(raw_ptr: *mut *mut c_char) -> Vec<String> {
     _convert_raw_ptr_array(raw_ptr, _string)
 }
 
-pub fn _pathbuf(raw_ptr: *const c_char) -> PathBuf {
-    let c_str = unsafe { CStr::from_ptr(raw_ptr) };
-    c_str.to_string_lossy().into_owned().into()
+/// Makes a `PathBuf` from a C string, returns `None` for a null pointer.
+pub fn _pathbuf(raw_ptr: *const c_char) -> Option<PathBuf> {
+    if raw_ptr.is_null() {
+        None
+    } else {
+        let c_str = unsafe { CStr::from_ptr(raw_ptr) };
+        Some(c_str.to_string_lossy().into_owned().into())
+    }
 }
 
+/// Converts an array of C strings to Rust `PathBuf`s, skipping any null pointers.
 pub fn _pathbuf_array(raw_ptr: *mut *mut c_char) -> Vec<PathBuf> {
     _convert_raw_ptr_array(raw_ptr, _pathbuf)
 }
 
+/// Converts an array of C strings, skipping any null pointers.
 fn _convert_raw_ptr_array<F, R>(raw_ptr: *mut *mut c_char, convert: F) -> Vec<R>
 where
-    F: Fn(*const c_char) -> R,
+    F: Fn(*const c_char) -> Option<R>,
 {
     let mut ret_val = Vec::new();
     let mut i = 0;
@@ -47,9 +52,10 @@ where
             if next.is_null() {
                 break;
             }
-            let value = convert(next);
+            if let Some(value) = convert(next) {
+                ret_val.push(value);
+            }
             i += 1;
-            ret_val.push(value);
         }
     }
     ret_val
@@ -63,7 +69,7 @@ pub fn _last_cpl_err(cpl_err_class: CPLErr::Type) -> GdalError {
     GdalError::CplError {
         class: cpl_err_class,
         number: last_err_no,
-        msg: last_err_msg,
+        msg: last_err_msg.unwrap_or_default(),
     }
 }
 
@@ -72,7 +78,7 @@ pub fn _last_null_pointer_err(method_name: &'static str) -> GdalError {
     unsafe { gdal_sys::CPLErrorReset() };
     GdalError::NullPointer {
         method_name,
-        msg: last_err_msg,
+        msg: last_err_msg.unwrap_or_default(),
     }
 }
 

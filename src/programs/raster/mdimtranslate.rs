@@ -1,16 +1,17 @@
+use std::{
+    borrow::Borrow,
+    ffi::{c_char, c_int, CString},
+    mem::ManuallyDrop,
+    path::{Path, PathBuf},
+    ptr::{null, null_mut},
+};
+
+use gdal_sys::{GDALMultiDimTranslate, GDALMultiDimTranslateOptions};
+
 use crate::{
     errors::*,
     utils::{_last_null_pointer_err, _path_to_c_string},
     Dataset,
-};
-use gdal_sys::{GDALMultiDimTranslate, GDALMultiDimTranslateOptions};
-use libc::{c_char, c_int};
-use std::{
-    borrow::Borrow,
-    ffi::CString,
-    mem::ManuallyDrop,
-    path::{Path, PathBuf},
-    ptr::{null, null_mut},
 };
 
 use crate::programs::destination::DatasetDestination;
@@ -160,7 +161,7 @@ mod tests {
     use crate::{DriverManager, GdalOpenFlags};
 
     #[test]
-    #[cfg_attr(not(all(major_ge_3, minor_ge_4)), ignore)]
+    #[cfg_attr(feature = "gdal-src", ignore)]
     fn test_build_tiff_from_path() {
         let fixture = "/vsizip/fixtures/cf_nasa_4326.zarr.zip";
 
@@ -192,7 +193,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(not(all(major_ge_3, minor_ge_4)), ignore)]
+    #[cfg_attr(feature = "gdal-src", ignore)]
     fn test_build_tiff_from_dataset() {
         let fixture = "/vsizip/fixtures/cf_nasa_4326.zarr.zip";
 
