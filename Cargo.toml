@@ -11,6 +11,7 @@ categories = ["science::geo", "api-bindings"]
 repository = "https://github.com/georust/gdal"
 edition = "2021"
 rust-version = "1.80"
+include = ["CHANGES.md", "Cargo.toml", "README.md", "build.rs", "src/**/*.rs"]
 
 [features]
 default = []

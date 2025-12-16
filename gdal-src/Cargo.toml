@@ -41,6 +41,7 @@ include = [
     "/source/ogr/ogrsf_frmts/sxf/data",
     "/source/scripts/gdal-bash-completion.sh",
     "/src/lib.rs",
+    "!/source/swig/python/setup.py.in",
 ]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
