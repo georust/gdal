@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.19
+
 ### Breaking
 
   - Bump `ndarray` dependency to 0.17 ([#678](https://github.com/georust/gdal/pull/678))
