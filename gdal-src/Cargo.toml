@@ -68,7 +68,7 @@ geos-sys = { version = "2.0.6", optional = true }
 geos-src = { version = "0.2.3", optional = true }
 
 [build-dependencies]
-cmake = "0.1.50"
+cmake = "0.1.57"
 
 [features]
 default = []
