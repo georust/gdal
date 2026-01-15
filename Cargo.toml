@@ -24,7 +24,7 @@ geo-types = { version = "0.7.18" }
 gdal-sys = { path = "gdal-sys", version = "0.12" }
 gdal-src = { path = "gdal-src", version = "0.3", optional = true, default-features = false }
 ndarray = { version = "0.17", optional = true }
-chrono = { version = "0.4.26", default-features = false }
+chrono = { version = "0.4.43", default-features = false }
 bitflags = "2.10"
 
 [build-dependencies]
