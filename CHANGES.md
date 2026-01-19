@@ -6,6 +6,10 @@
 
   - Drop support for GDAL <3.8 ([#716](https://github.com/georust/gdal/pull/716))
 
+### Added
+
+  - Add bindings for VRT APIs to gdal-sys ([#706](https://github.com/georust/gdal/pull/706))
+
 ## 0.19
 
 ### Breaking

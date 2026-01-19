@@ -9,7 +9,7 @@ use std::path::{Path, PathBuf};
 #[cfg(feature = "bindgen")]
 pub fn write_bindings(include_paths: Vec<String>, out_path: &Path) {
     // To generate the bindings manually, use
-    // bindgen --constified-enum-module ".*" --ctypes-prefix ::std::ffi --allowlist-function "(CPL|CSL|GDAL|OGR|OSR|OCT|VSI).*" wrapper.h -- $(pkg-config --cflags-only-I gdal) -fretain-comments-from-system-headers
+    // bindgen --constified-enum-module ".*" --ctypes-prefix ::std::ffi --allowlist-function "(CPL|CSL|GDAL|OGR|OSR|OCT|VSI|VRT).*" wrapper.h -- $(pkg-config --cflags-only-I gdal) -fretain-comments-from-system-headers
     // If you add a new pre-built version, make sure to bump the docs.rs version in main.
     // If you update this command consider updating the command in `DEVELOPMENT.md`
 
@@ -25,7 +25,8 @@ pub fn write_bindings(include_paths: Vec<String>, out_path: &Path) {
         .allowlist_function("OGR.*")
         .allowlist_function("OSR.*")
         .allowlist_function("OCT.*")
-        .allowlist_function("VSI.*");
+        .allowlist_function("VSI.*")
+        .allowlist_function("VRT.*");
 
     for path in include_paths {
         builder = builder
