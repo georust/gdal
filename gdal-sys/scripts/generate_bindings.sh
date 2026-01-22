@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+# Intended to be run inside a Docker container. See the "Generating Bindings"
+# section in DEVELOPMENT.md for details.
+
 # install dependencies
 apt update && apt install -y libclang-dev mingw-w64 gcc-i686-linux-gnu pkg-config rustfmt xz-utils curl
 
