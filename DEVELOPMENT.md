@@ -17,6 +17,25 @@ These steps assume that there are no fundamental changes to the gdal build syste
 
 # Generating Bindings
 
+## Using the Scripts (Recommended)
+
+Scripts are provided in `gdal-sys/scripts/` to automate binding generation:
+
+```bash
+# Generate bindings for all GDAL versions (3.4 through 3.12)
+cd gdal-sys/scripts
+./generate_all_bindings.sh
+
+# Generate bindings for a specific GDAL version
+./generate_all_bindings.sh 3_11
+```
+
+The scripts use Docker images for each GDAL version and handle differences in Ubuntu base versions (mingw gcc versions vary: 9 on Ubuntu 20.04, 10 on 22.04, 13 on 24.04).
+
+## Manual Generation
+
+If you prefer to generate bindings manually or need to debug the process:
+
 ```bash
 docker run -it --rm -v ./gdal-sys:/gdal-sys:z -w /gdal-sys -e GDAL_VERSION=3_12 ghcr.io/osgeo/gdal:ubuntu-full-3.12.0 bash
 # everything from now on is inside of the container
@@ -38,15 +57,15 @@ mkdir /gdal-sys/prebuilt-bindings/$GDAL_VERSION
 # all targets
 #
 # 64 bit linux/macos
-bindgen --rust-target 1.77 --rust-edition 2021 --constified-enum-module ".*" --ctypes-prefix ::std::ffi --allowlist-function "(CPL|CSL|GDAL|OGR|OSR|OCT|VSI).*" /gdal-sys/wrapper.h > /gdal-sys/prebuilt-bindings/$GDAL_VERSION/gdal_x86_64-unknown-linux-gnu.rs
+bindgen --rust-target 1.77 --rust-edition 2021 --constified-enum-module ".*" --ctypes-prefix ::std::ffi --allowlist-function "(CPL|CSL|GDAL|OGR|OSR|OCT|VSI|VRT).*" /gdal-sys/wrapper.h > /gdal-sys/prebuilt-bindings/$GDAL_VERSION/gdal_x86_64-unknown-linux-gnu.rs
 # 32 bit linux/macos
-bindgen --rust-target 1.77 --rust-edition 2021 --constified-enum-module ".*" --ctypes-prefix ::std::ffi --allowlist-function "(CPL|CSL|GDAL|OGR|OSR|OCT|VSI).*" /gdal-sys/wrapper.h -- -target i686-unknown-linux-gnu --sysroot /usr/i686-linux-gnu/ -I /usr/include > /gdal-sys/prebuilt-bindings/$GDAL_VERSION/gdal_i686-unknown-linux-gnu.rs
+bindgen --rust-target 1.77 --rust-edition 2021 --constified-enum-module ".*" --ctypes-prefix ::std::ffi --allowlist-function "(CPL|CSL|GDAL|OGR|OSR|OCT|VSI|VRT).*" /gdal-sys/wrapper.h -- -target i686-unknown-linux-gnu --sysroot /usr/i686-linux-gnu/ -I /usr/include > /gdal-sys/prebuilt-bindings/$GDAL_VERSION/gdal_i686-unknown-linux-gnu.rs
 
 # make sure we don't get the wrong system headers
 rm /usr/include/stdio.h /usr/include/stdlib.h /usr/include/limits.h /usr/include/features-time64.h /usr/include/features.h /usr/include/malloc.h /usr/include/string.h /usr/include/ctype.h /usr/include/errno.h /usr/include/math.h /usr/include/stdint.h /usr/include/time.h
 
 # 64 bit windows
-bindgen --rust-target 1.77 --rust-edition 2021 --constified-enum-module ".*" --ctypes-prefix ::std::ffi --allowlist-function "(CPL|CSL|GDAL|OGR|OSR|OCT|VSI).*" /gdal-sys/wrapper.h -- -target x86_64-pc-windows-gnu -I /usr/include/ -I /usr/lib/gcc/x86_64-w64-mingw32/13-win32/include > /gdal-sys/prebuilt-bindings/$GDAL_VERSION/gdal_x86_64-pc-windows-gnu.rs
+bindgen --rust-target 1.77 --rust-edition 2021 --constified-enum-module ".*" --ctypes-prefix ::std::ffi --allowlist-function "(CPL|CSL|GDAL|OGR|OSR|OCT|VSI|VRT).*" /gdal-sys/wrapper.h -- -target x86_64-pc-windows-gnu -I /usr/include/ -I /usr/lib/gcc/x86_64-w64-mingw32/13-win32/include > /gdal-sys/prebuilt-bindings/$GDAL_VERSION/gdal_x86_64-pc-windows-gnu.rs
 # 32 bit windows
-bindgen --rust-target 1.77 --rust-edition 2021 --constified-enum-module ".*" --ctypes-prefix ::std::ffi --allowlist-function "(CPL|CSL|GDAL|OGR|OSR|OCT|VSI).*" /gdal-sys/wrapper.h -- -target i686-pc-windows-gnu -I /usr/include/ -I /usr/lib/gcc/i686-w64-mingw32/13-win32/include/ > /gdal-sys/prebuilt-bindings/$GDAL_VERSION/gdal_i686-pc-windows-gnu.rs
+bindgen --rust-target 1.77 --rust-edition 2021 --constified-enum-module ".*" --ctypes-prefix ::std::ffi --allowlist-function "(CPL|CSL|GDAL|OGR|OSR|OCT|VSI|VRT).*" /gdal-sys/wrapper.h -- -target i686-pc-windows-gnu -I /usr/include/ -I /usr/lib/gcc/i686-w64-mingw32/13-win32/include/ > /gdal-sys/prebuilt-bindings/$GDAL_VERSION/gdal_i686-pc-windows-gnu.rs
 ```
