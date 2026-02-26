@@ -77,11 +77,11 @@ impl<'a> Feature<'a> {
     ///
     /// If the field has an unhandled type, returns a [`GdalError::UnhandledFieldType`].
     ///
-    /// If the field is null, returns `None`.
+    /// If the field is null or not set, returns `None`.
     pub fn field(&self, field_idx: usize) -> Result<Option<FieldValue>> {
         let field_idx = field_idx.try_into()?;
 
-        if unsafe { gdal_sys::OGR_F_IsFieldNull(self.c_feature, field_idx) } != 0 {
+        if unsafe { gdal_sys::OGR_F_IsFieldSetAndNotNull(self.c_feature, field_idx) } == 0 {
             return Ok(None);
         }
 
