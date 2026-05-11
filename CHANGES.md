@@ -8,6 +8,7 @@
 
 ### Added
 
+  - Add support for GDAL 3.13 ([#714](https://github.com/georust/gdal/pull/714))
   - Add bindings for VRT APIs to gdal-sys ([#706](https://github.com/georust/gdal/pull/706))
 
 ## 0.19
