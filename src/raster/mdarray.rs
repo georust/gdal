@@ -1070,7 +1070,10 @@ mod tests {
         let datatype = md_array.datatype();
 
         assert_eq!(datatype.class(), ExtendedDataTypeClass::Numeric);
+        #[cfg(not(all(major_ge_3, minor_ge_13)))]
         assert_eq!(datatype.numeric_datatype(), GDALDataType::GDT_Byte);
+        #[cfg(all(major_ge_3, minor_ge_13))]
+        assert_eq!(datatype.numeric_datatype(), GDALDataType::GDT_UInt8);
         assert_eq!(datatype.name(), "");
     }
 
