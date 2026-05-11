@@ -21,4 +21,5 @@ semver = "1.0"
 
 [features]
 default = []
+bindgen = ["dep:bindgen"]
 bundled = ["dep:gdal-src"]

@@ -291,6 +291,8 @@ impl From<RasterIOExtraArg> for GDALRasterIOExtraArg {
             dfYSize: df_y_size,
             #[cfg(all(major_ge_3, minor_ge_12))]
             bUseOnlyThisScale: if b_use_only_this_scale { 1 } else { 0 },
+            #[cfg(all(major_ge_3, minor_ge_13))]
+            bOperateInBufType: 0,
         }
     }
 }
