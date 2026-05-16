@@ -189,21 +189,10 @@ impl Dataset {
     /// Flush all write cached data to disk.
     ///
     /// See [`gdal_sys::GDALFlushCache`].
-    ///
-    /// Note: on GDAL versions older than 3.7, this function always succeeds.
     pub fn flush_cache(&mut self) -> Result<()> {
-        #[cfg(any(all(major_ge_3, minor_ge_7), major_ge_4))]
-        {
-            let rv = unsafe { gdal_sys::GDALFlushCache(self.c_dataset) };
-            if rv != CPLErr::CE_None {
-                return Err(_last_cpl_err(rv));
-            }
-        }
-        #[cfg(not(any(all(major_is_3, minor_ge_7), major_ge_4)))]
-        {
-            unsafe {
-                gdal_sys::GDALFlushCache(self.c_dataset);
-            }
+        let rv = unsafe { gdal_sys::GDALFlushCache(self.c_dataset) };
+        if rv != CPLErr::CE_None {
+            return Err(_last_cpl_err(rv));
         }
         Ok(())
     }
@@ -211,23 +200,12 @@ impl Dataset {
     /// Close the dataset.
     ///
     /// See [`gdal_sys::GDALClose`].
-    ///
-    /// Note: on GDAL versions older than 3.7.0, this function always succeeds.
     pub fn close(mut self) -> Result<()> {
         self.closed = true;
 
-        #[cfg(any(all(major_ge_3, minor_ge_7), major_ge_4))]
-        {
-            let rv = unsafe { gdal_sys::GDALClose(self.c_dataset) };
-            if rv != CPLErr::CE_None {
-                return Err(_last_cpl_err(rv));
-            }
-        }
-        #[cfg(not(any(all(major_is_3, minor_ge_7), major_ge_4)))]
-        {
-            unsafe {
-                gdal_sys::GDALClose(self.c_dataset);
-            }
+        let rv = unsafe { gdal_sys::GDALClose(self.c_dataset) };
+        if rv != CPLErr::CE_None {
+            return Err(_last_cpl_err(rv));
         }
         Ok(())
     }

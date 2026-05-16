@@ -30,11 +30,11 @@
 //!
 //! ## Version support
 //!
-//! As a general rule, only GDAL versions in Ubuntu LTS-1 (previous LTS version, that is, GDAL 3.4 in 22.04 at this moment) and newer are supported.
+//! As a general rule, only GDAL versions in Ubuntu LTS-1 (previous LTS version, that is, GDAL 3.8 in 24.04 at this moment) and newer are supported.
 //! `gdal-sys` might support earlier versions using the `bindgen` feature flag, but `gdal` does not.
 //!
 //! Building this crate assumes a compatible version of GDAL is installed with the corresponding header files and shared libraries.
-//! This repository includes pre-generated bindings for GDAL 3.4 through 3.12 (see the `gdal-sys/prebuilt-bindings` directory).
+//! This repository includes pre-generated bindings for GDAL 3.8 through 3.12 (see the `gdal-sys/prebuilt-bindings` directory).
 //! If you're compiling against another version of GDAL, you can enable the `bindgen` feature flag to have the bindings generated on the fly.
 //!
 //! ## Show Me Code!
@@ -135,7 +135,6 @@ pub use thread_safe::ThreadSafeDataset;
 
 pub use driver::{Driver, DriverManager, DriverType};
 pub use gcp::{Gcp, GcpRef};
-#[cfg(any(major_ge_4, all(major_is_3, minor_ge_6)))]
 pub use gdal_sys::ArrowArrayStream;
 pub use metadata::{Metadata, MetadataEntry};
 

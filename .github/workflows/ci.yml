@@ -30,10 +30,6 @@ jobs:
           - 3.10.3
           - 3.9.3
           - 3.8.5
-          - 3.7.3
-          - 3.6.4
-          - 3.5.3
-          - 3.4.3
 
     runs-on: ubuntu-latest
     container:
