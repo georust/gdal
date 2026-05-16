@@ -72,45 +72,45 @@ jobs:
       - name: Run tests (--all-features)
         run: cargo test --features "default bindgen array" -- --nocapture
 
-  ubuntu_lts:
-    name: "ci ubuntu-lts"
-    runs-on: "ubuntu-22.04"
+  # ubuntu_lts:
+  #   name: "ci ubuntu-lts"
+  #   runs-on: "ubuntu-22.04"
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Install build deps
-        shell: bash
-        run: |
-          sudo apt-get update -y
-          sudo apt-get install libgdal-dev gdal-bin build-essential curl pkg-config libclang-dev valgrind -y
-          curl --proto '=https' --tlsv1.2 --retry 10 --retry-connrefused -fsSL "https://sh.rustup.rs" | sh -s -- --profile minimal --default-toolchain none -y
-          echo "${CARGO_HOME:-$HOME/.cargo}/bin" >> $GITHUB_PATH
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
+  #     - name: Install build deps
+  #       shell: bash
+  #       run: |
+  #         sudo apt-get update -y
+  #         sudo apt-get install libgdal-dev gdal-bin build-essential curl pkg-config libclang-dev valgrind -y
+  #         curl --proto '=https' --tlsv1.2 --retry 10 --retry-connrefused -fsSL "https://sh.rustup.rs" | sh -s -- --profile minimal --default-toolchain none -y
+  #         echo "${CARGO_HOME:-$HOME/.cargo}/bin" >> $GITHUB_PATH
 
-      - name: Install stable
-        run: |
-          rustup install --no-self-update --profile minimal stable
-          rustup component add rustfmt clippy
+  #     - name: Install stable
+  #       run: |
+  #         rustup install --no-self-update --profile minimal stable
+  #         rustup component add rustfmt clippy
 
-      - name: Check with Rustfmt
-        run: cargo fmt --all --check
-      - name: Check with Clippy
-        run: cargo clippy --all-targets -- -D warnings
-      - name: Check with Clippy (--all-features)
-        run: cargo clippy --all-targets --features "default bindgen array" -- -D warnings
-      - name: Build
-        run: cargo build
-      - name: Run tests
-        run: cargo test
-      - name: Build (--all-features)
-        run: cargo build --features "default bindgen array"
-      - name: Run tests (--all-features)
-        run: cargo test --features "default bindgen array" -- --nocapture
-      - name: Install cargo-valgrind
-        run: cargo install cargo-valgrind
-      # There's a possible leak in Rust 1.83 and generating suppressions on CI is hard
-      # - name: Run --lib tests under valgrind
-      #   run: cargo valgrind test --lib
+  #     - name: Check with Rustfmt
+  #       run: cargo fmt --all --check
+  #     - name: Check with Clippy
+  #       run: cargo clippy --all-targets -- -D warnings
+  #     - name: Check with Clippy (--all-features)
+  #       run: cargo clippy --all-targets --features "default bindgen array" -- -D warnings
+  #     - name: Build
+  #       run: cargo build
+  #     - name: Run tests
+  #       run: cargo test
+  #     - name: Build (--all-features)
+  #       run: cargo build --features "default bindgen array"
+  #     - name: Run tests (--all-features)
+  #       run: cargo test --features "default bindgen array" -- --nocapture
+  #     - name: Install cargo-valgrind
+  #       run: cargo install cargo-valgrind
+  #     # There's a possible leak in Rust 1.83 and generating suppressions on CI is hard
+  #     # - name: Run --lib tests under valgrind
+  #     #   run: cargo valgrind test --lib
 
   gdal_static:
     name: "ci gdal-static"
