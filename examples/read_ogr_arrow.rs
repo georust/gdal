@@ -12,8 +12,7 @@
 //! [similar](https://github.com/georust/gdal/blob/87497bf28509ea1b66b8e64000bd6b33fde0f31b/examples/read_ogr_arrow.rs#L23)
 //! when using `arrow2`.
 
-#[cfg(any(major_ge_4, all(major_is_3, minor_ge_6)))]
-fn run() -> gdal::errors::Result<()> {
+fn main() -> gdal::errors::Result<()> {
     use arrow_array::ffi_stream::{ArrowArrayStreamReader, FFI_ArrowArrayStream};
     use arrow_array::{Array as _, BinaryArray, RecordBatchReader};
     use gdal::cpl::CslStringList;
@@ -73,13 +72,4 @@ fn run() -> gdal::errors::Result<()> {
     }
 
     Ok(())
-}
-
-#[cfg(not(any(major_ge_4, all(major_is_3, minor_ge_6))))]
-fn run() -> gdal::errors::Result<()> {
-    Ok(())
-}
-
-fn main() -> gdal::errors::Result<()> {
-    run()
 }

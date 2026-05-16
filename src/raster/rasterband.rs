@@ -737,7 +737,6 @@ impl<'a> RasterBand<'a> {
     ///
     /// # Notes
     /// See also: [`GDALGetRasterNoDataValueAsUInt64`](https://gdal.org/api/raster_c_api.html#_CPPv432GDALGetRasterNoDataValueAsUInt6415GDALRasterBandHPi)
-    #[cfg(all(major_ge_3, minor_ge_5))]
     pub fn no_data_value_u64(&self) -> Option<u64> {
         let mut pb_success = 1;
         let no_data = unsafe {
@@ -759,7 +758,6 @@ impl<'a> RasterBand<'a> {
     /// See also:
     /// [`GDALSetRasterNoDataValueAsUInt64`](https://gdal.org/api/raster_c_api.html#_CPPv432GDALSetRasterNoDataValueAsUInt6415GDALRasterBandH8uint64_t),
     /// [`GDALDeleteRasterNoDataValue`](https://gdal.org/api/raster_c_api.html#_CPPv427GDALDeleteRasterNoDataValue15GDALRasterBandH)
-    #[cfg(all(major_ge_3, minor_ge_5))]
     pub fn set_no_data_value_u64(&mut self, no_data: Option<u64>) -> Result<()> {
         let rv = if let Some(no_data) = no_data {
             unsafe { gdal_sys::GDALSetRasterNoDataValueAsUInt64(self.c_rasterband, no_data) }
@@ -785,7 +783,6 @@ impl<'a> RasterBand<'a> {
     ///
     /// # Notes
     /// See also: [`GDALGetRasterNoDataValueAsInt64`](https://gdal.org/api/gdalrasterband_cpp.html#_CPPv4N14GDALRasterBand21GetNoDataValueAsInt64EPi)
-    #[cfg(all(major_ge_3, minor_ge_5))]
     pub fn no_data_value_i64(&self) -> Option<i64> {
         let mut pb_success = 1;
         let no_data = unsafe {
@@ -807,7 +804,6 @@ impl<'a> RasterBand<'a> {
     /// See also:
     /// [`GDALSetRasterNoDataValueAsInt64`](https://gdal.org/api/raster_c_api.html#_CPPv431GDALSetRasterNoDataValueAsInt6415GDALRasterBandH7int64_t),
     /// [`GDALDeleteRasterNoDataValue`](https://gdal.org/api/raster_c_api.html#_CPPv427GDALDeleteRasterNoDataValue15GDALRasterBandH)
-    #[cfg(all(major_ge_3, minor_ge_5))]
     pub fn set_no_data_value_i64(&mut self, no_data: Option<i64>) -> Result<()> {
         let rv = if let Some(no_data) = no_data {
             unsafe { gdal_sys::GDALSetRasterNoDataValueAsInt64(self.c_rasterband, no_data) }

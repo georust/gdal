@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Breaking
+
+  - Drop support for GDAL <3.8 ([#716](https://github.com/georust/gdal/pull/716))
+
 ## 0.19
 
 ### Breaking

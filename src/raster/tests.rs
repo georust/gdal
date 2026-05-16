@@ -445,7 +445,6 @@ fn test_get_no_data_value() -> Result<()> {
 }
 
 #[test]
-#[cfg(all(major_ge_3, minor_ge_5))]
 fn test_no_data_value_i64() -> Result<()> {
     let driver = DriverManager::get_driver_by_name("MEM")?;
     let ds = driver.create_with_band_type::<i64, _>("test_no_data_value_i64", 1, 1, 1)?;
@@ -458,7 +457,6 @@ fn test_no_data_value_i64() -> Result<()> {
 }
 
 #[test]
-#[cfg(all(major_ge_3, minor_ge_5))]
 fn test_no_data_value_u64() -> Result<()> {
     let driver = DriverManager::get_driver_by_name("MEM")?;
     let ds = driver.create_with_band_type::<u64, _>("test_no_data_value_u64", 1, 1, 1)?;

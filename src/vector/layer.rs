@@ -465,7 +465,6 @@ pub trait LayerAccess: Sized {
     /// # Safety
     /// This uses the Arrow C Data Interface to operate on raw pointers provisioned from Rust.
     /// These pointers must be valid and provisioned according to the ArrowArrayStream spec.
-    #[cfg(any(major_ge_4, all(major_is_3, minor_ge_6)))]
     unsafe fn read_arrow_stream(
         &mut self,
         out_stream: *mut gdal_sys::ArrowArrayStream,
