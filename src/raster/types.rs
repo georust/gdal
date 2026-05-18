@@ -346,9 +346,13 @@ pub trait GdalType {
 impl GdalType for u8 {
     fn gdal_ordinal() -> GDALDataType::Type {
         #[cfg(not(all(major_ge_3, minor_ge_13)))]
-        { GDALDataType::GDT_Byte }
+        {
+            GDALDataType::GDT_Byte
+        }
         #[cfg(all(major_ge_3, minor_ge_13))]
-        { GDALDataType::GDT_UInt8 }
+        {
+            GDALDataType::GDT_UInt8
+        }
     }
 }
 
