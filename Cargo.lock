@@ -270,7 +270,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
- "windows-sys 0.59.0",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -363,9 +363,9 @@ dependencies = [
 
 [[package]]
 name = "geos-src"
-version = "0.2.3"
+version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c8f5247861370ecfcd91a239376c572021cf355cddf52a6602ebbf403d9bb99e"
+checksum = "63ee625c548bdf7ead03c75779d156ddfe48dc57820d336eeb39407c19f9a3b5"
 dependencies = [
  "cmake",
 ]
@@ -895,7 +895,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys",
- "windows-sys 0.59.0",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -990,7 +990,7 @@ dependencies = [
  "getrandom 0.3.3",
  "once_cell",
  "rustix",
- "windows-sys 0.59.0",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
