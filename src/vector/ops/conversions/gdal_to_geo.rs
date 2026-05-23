@@ -3,6 +3,7 @@ use std::convert::{TryFrom, TryInto};
 use gdal_sys::OGRwkbGeometryType;
 
 use crate::errors::GdalError;
+use crate::vector::geometry::CoordinateLayout;
 use crate::vector::Geometry;
 
 impl TryFrom<&Geometry> for geo_types::Geometry<f64> {
@@ -44,11 +45,14 @@ impl TryFrom<&Geometry> for geo_types::Geometry<f64> {
                 )))
             }
             OGRwkbGeometryType::wkbLineString => {
-                let mut gdal_coords: Vec<(f64, f64, f64)> = Vec::new();
-                geo.get_points(&mut gdal_coords);
+                let mut gdal_coords: Vec<f64> = vec![0.0; geo.point_count() * 2];
+                geo.get_points(&mut gdal_coords, CoordinateLayout::XyXy)?;
                 let coords = gdal_coords
-                    .into_iter()
-                    .map(|(x, y, _)| geo_types::Coord { x, y })
+                    .chunks(2)
+                    .map(|points| geo_types::Coord {
+                        x: points[0],
+                        y: points[1],
+                    })
                     .collect();
                 Ok(geo_types::Geometry::LineString(geo_types::LineString(
                     coords,
