@@ -267,7 +267,6 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(not(all(major_ge_3, minor_ge_5)), ignore)]
     fn test_set_gcps() {
         let fixture = TempFixture::fixture("gcp.tif");
         let dataset = Dataset::open(fixture).unwrap();

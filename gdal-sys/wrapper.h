@@ -25,6 +25,7 @@
  *  extra includes
  */
 #include "gdalwarper.h"
+#include "gdal_vrt.h"
 
 /**
  * Include ArrowArrayStream header for recent GDAL versions

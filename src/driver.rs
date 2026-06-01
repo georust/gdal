@@ -671,12 +671,8 @@ mod tests {
         if DriverManager::get_driver_by_name("GPKG").is_ok() {
             assert!(drivers("test.gpkg", true).contains("GPKG"));
             assert!(drivers("my.test.gpkg", true).contains("GPKG"));
-            // `gpkg.zip` only supported from gdal version 3.7
-            // https://gdal.org/drivers/vector/gpkg.html#compressed-files
-            if cfg!(all(major_ge_3, minor_ge_7)) {
-                assert!(drivers("test.gpkg.zip", true).contains("GPKG"));
-                assert!(drivers("my.test.gpkg.zip", true).contains("GPKG"));
-            }
+            assert!(drivers("test.gpkg.zip", true).contains("GPKG"));
+            assert!(drivers("my.test.gpkg.zip", true).contains("GPKG"));
         }
         if DriverManager::get_driver_by_name("GTiff").is_ok() {
             assert!(drivers("test.tiff", false).contains("GTiff"));

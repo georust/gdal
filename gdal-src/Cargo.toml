@@ -1,6 +1,6 @@
 [package]
 name = "gdal-src"
-version = "0.4.0+3.12.0"
+version = "0.3.0+3.12.1"
 edition = "2021"
 links = "gdal_src"
 description = "Build script for compiling GDAL from source."
@@ -41,6 +41,7 @@ include = [
     "/source/ogr/ogrsf_frmts/sxf/data",
     "/source/scripts/gdal-bash-completion.sh",
     "/src/lib.rs",
+    "!/source/swig/python/setup.py.in",
 ]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -49,7 +50,7 @@ include = [
 [dependencies]
 link-cplusplus = "1.0"
 proj-sys = { version = "0.27.0", features = ["bundled_proj"] }
-libsqlite3-sys = { version = ">=0.28.0,<0.36", features = [
+libsqlite3-sys = { version = ">=0.28.0,<0.37", features = [
     "bundled",
 ], optional = true }
 hdf5-sys = { package = "hdf5-metno-sys", version = "0.10.1", optional = true, features = [
@@ -59,7 +60,7 @@ hdf5-sys = { package = "hdf5-metno-sys", version = "0.10.1", optional = true, fe
 ] }
 netcdf-sys = { version = "0.8.3", optional = true, features = ["static"] }
 pq-src = { version = "0.3.9", optional = true, default-features = false }
-curl-sys = { version = "0.4.84", features = ["static-curl"], optional = true }
+curl-sys = { version = "0.4.85", features = ["static-curl"], optional = true }
 libz-sys = { version = "1.1.15", features = ["static"], optional = true }
 geos-sys = { version = "2.0.6", optional = true }
 # we need to depend directly on `geos-src` for the static
@@ -67,7 +68,7 @@ geos-sys = { version = "2.0.6", optional = true }
 geos-src = { version = "0.2.3", optional = true }
 
 [build-dependencies]
-cmake = "0.1.50"
+cmake = "0.1.57"
 
 [features]
 default = []

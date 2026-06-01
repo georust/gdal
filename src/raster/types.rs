@@ -34,7 +34,6 @@ pub enum GdalDataType {
     /// Eight bit unsigned integer
     UInt8 = GDALDataType::GDT_Byte,
     /// Eight bit signed integer
-    #[cfg(any(all(major_ge_3, minor_ge_7), major_ge_4))]
     Int8 = GDALDataType::GDT_Int8,
     /// Sixteen bit unsigned integer
     UInt16 = GDALDataType::GDT_UInt16,
@@ -44,10 +43,8 @@ pub enum GdalDataType {
     UInt32 = GDALDataType::GDT_UInt32,
     /// Thirty two bit signed integer
     Int32 = GDALDataType::GDT_Int32,
-    #[cfg(all(major_ge_3, minor_ge_5))]
     /// 64 bit unsigned integer (GDAL >= 3.5)
     UInt64 = GDALDataType::GDT_UInt64,
-    #[cfg(all(major_ge_3, minor_ge_5))]
     /// 64 bit signed integer  (GDAL >= 3.5)
     Int64 = GDALDataType::GDT_Int64,
     /// Thirty two bit floating point
@@ -205,19 +202,7 @@ impl GdalDataType {
     pub fn iter() -> impl Iterator<Item = GdalDataType> {
         use GdalDataType::*;
         [
-            UInt8,
-            #[cfg(any(all(major_ge_3, minor_ge_7), major_ge_4))]
-            Int8,
-            UInt16,
-            Int16,
-            UInt32,
-            Int32,
-            #[cfg(all(major_ge_3, minor_ge_5))]
-            UInt64,
-            #[cfg(all(major_ge_3, minor_ge_5))]
-            Int64,
-            Float32,
-            Float64,
+            UInt8, Int8, UInt16, Int16, UInt32, Int32, UInt64, Int64, Float32, Float64,
         ]
         .iter()
         .copied()
@@ -265,15 +250,12 @@ impl TryFrom<u32> for GdalDataType {
         match value {
             GDT_Unknown => Ok(GdalDataType::Unknown),
             GDT_Byte => Ok(GdalDataType::UInt8),
-            #[cfg(any(all(major_ge_3, minor_ge_7), major_ge_4))]
             GDT_Int8 => Ok(GdalDataType::Int8),
             GDT_UInt16 => Ok(GdalDataType::UInt16),
             GDT_Int16 => Ok(GdalDataType::Int16),
             GDT_UInt32 => Ok(GdalDataType::UInt32),
             GDT_Int32 => Ok(GdalDataType::Int32),
-            #[cfg(all(major_ge_3, minor_ge_5))]
             GDT_UInt64 => Ok(GdalDataType::UInt64),
-            #[cfg(all(major_ge_3, minor_ge_5))]
             GDT_Int64 => Ok(GdalDataType::Int64),
             GDT_Float32 => Ok(GdalDataType::Float32),
             GDT_Float64 => Ok(GdalDataType::Float64),
@@ -344,7 +326,6 @@ impl GdalType for u8 {
 }
 
 /// Provides evidence `i8` is a valid [`GDALDataType`].
-#[cfg(any(all(major_ge_3, minor_ge_7), major_ge_4))]
 impl GdalType for i8 {
     fn gdal_ordinal() -> GDALDataType::Type {
         GDALDataType::GDT_Int8
@@ -365,7 +346,6 @@ impl GdalType for u32 {
     }
 }
 
-#[cfg(all(major_ge_3, minor_ge_5))]
 /// Provides evidence `u64` is a valid [`GDALDataType`].
 impl GdalType for u64 {
     fn gdal_ordinal() -> GDALDataType::Type {
@@ -387,7 +367,6 @@ impl GdalType for i32 {
     }
 }
 
-#[cfg(all(major_ge_3, minor_ge_5))]
 /// Provides evidence `i64` is a valid [`GDALDataType`].
 impl GdalType for i64 {
     fn gdal_ordinal() -> GDALDataType::Type {
@@ -430,12 +409,10 @@ mod tests {
                     assert!(t.is_integer(), "{}", &name);
                     assert!(!t.is_floating(), "{}", &name);
                 }
-                #[cfg(any(all(major_ge_3, minor_ge_7), major_ge_4))]
                 GDT_Int8 => {
                     assert!(t.is_integer(), "{}", &name);
                     assert!(!t.is_floating(), "{}", &name);
                 }
-                #[cfg(all(major_ge_3, minor_ge_5))]
                 GDT_UInt64 | GDT_Int64 => {
                     assert!(t.is_integer(), "{}", &name);
                     assert!(!t.is_floating(), "{}", &name);
@@ -451,18 +428,15 @@ mod tests {
                 GDT_Byte | GDT_UInt16 | GDT_UInt32 => {
                     assert!(!t.is_signed(), "{}", &name);
                 }
-                #[cfg(all(major_ge_3, minor_ge_5))]
                 GDT_UInt64 => {
                     assert!(!t.is_signed(), "{}", &name);
                 }
-                #[cfg(any(all(major_ge_3, minor_ge_7), major_ge_4))]
                 GDT_Int8 => {
                     assert!(t.is_signed(), "{}", &name);
                 }
                 GDT_Int16 | GDT_Int32 | GDT_Float32 | GDT_Float64 => {
                     assert!(t.is_signed(), "{}", &name);
                 }
-                #[cfg(all(major_ge_3, minor_ge_5))]
                 GDT_Int64 => {
                     assert!(t.is_signed(), "{}", &name);
                 }
@@ -505,7 +479,6 @@ mod tests {
         assert_eq!(u8d.union(u16d), u16d);
         assert_eq!(f32d.union(i32d), f64d);
 
-        #[cfg(all(major_ge_3, minor_ge_5))]
         {
             let u32d = <u32>::datatype();
             let i64d = <i64>::datatype();
@@ -517,10 +490,7 @@ mod tests {
     fn test_for_value() {
         assert_eq!(GdalDataType::for_value(0), <u8>::datatype());
         assert_eq!(GdalDataType::for_value(256), <u16>::datatype());
-        #[cfg(any(all(major_ge_3, minor_ge_7), major_ge_4))]
         assert_eq!(GdalDataType::for_value(-1), <i8>::datatype());
-        #[cfg(not(any(all(major_is_3, minor_ge_7), major_ge_4)))]
-        assert_eq!(GdalDataType::for_value(-1), <i16>::datatype());
         assert_eq!(
             GdalDataType::for_value(<u16>::MAX as f64 * -2.0),
             <i32>::datatype()

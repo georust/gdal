@@ -2,7 +2,7 @@
 name = "gdal"
 description = "GDAL bindings for Rust"
 license = "MIT"
-version = "0.18.0"
+version = "0.19.0"
 authors = [
     "Alex Morega <alex@grep.ro>",
     "Johannes Drönner <droenner@informatik.uni-marburg.de>",
@@ -11,6 +11,7 @@ categories = ["science::geo", "api-bindings"]
 repository = "https://github.com/georust/gdal"
 edition = "2021"
 rust-version = "1.80"
+include = ["CHANGES.md", "Cargo.toml", "README.md", "build.rs", "src/**/*.rs"]
 
 [features]
 default = []
@@ -19,20 +20,20 @@ array = ["ndarray"]
 
 [dependencies]
 thiserror = "2.0"
-geo-types = { version = "0.7.16" }
-gdal-sys = { path = "gdal-sys", version = "0.11" }
-gdal-src = { path = "gdal-src", version = "0.4", optional = true, default-features = false }
+geo-types = { version = "0.7.18" }
+gdal-sys = { path = "gdal-sys", version = "0.12" }
+gdal-src = { path = "gdal-src", version = "0.3", optional = true, default-features = false }
 ndarray = { version = "0.17", optional = true }
-chrono = { version = "0.4.26", default-features = false }
+chrono = { version = "0.4.43", default-features = false }
 bitflags = "2.10"
 
 [build-dependencies]
 semver = "1.0"
 
 [dev-dependencies]
-tempfile = "3.8"
+tempfile = "3.25"
 # Only used in the example
-arrow-array = { version = "57.0", default-features = false, features = ["ffi"] }
+arrow-array = { version = "57.3", default-features = false, features = ["ffi"] }
 
 [workspace]
 members = ["gdal-src", "gdal-sys"]
