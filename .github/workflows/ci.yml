@@ -44,9 +44,10 @@ jobs:
       - name: Install build deps
         shell: bash
         run: |
+          apt-get update -y || true
+          apt-get install -y curl gnupg
           curl -LO https://apache.jfrog.io/artifactory/arrow/ubuntu/apache-arrow-apt-source-latest-$(grep -F VERSION_CODENAME /etc/os-release | cut -d= -f2).deb
           apt-get update -y || true
-          apt-get install gnupg -y
           dpkg -i apache-arrow-apt-source-latest-$(grep -F VERSION_CODENAME /etc/os-release | cut -d= -f2).deb
           apt-get update -y
           apt-get install build-essential curl pkg-config libclang-dev -y
