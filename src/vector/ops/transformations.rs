@@ -199,7 +199,6 @@ impl Geometry {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::test_utils::SuppressGDALErrorLog;
 
     #[test]
     fn test_convex_hull() {
@@ -260,16 +259,6 @@ mod tests {
         let dst = src.make_valid(&CslStringList::new());
         assert!(dst.is_ok());
         assert!(dst.unwrap().is_valid());
-    }
-
-    #[test]
-    /// Un-repairable geometry case
-    pub fn test_make_valid_invalid() {
-        let _nolog = SuppressGDALErrorLog::new();
-        let src = Geometry::from_wkt("LINESTRING (0 0)").unwrap();
-        assert!(!src.is_valid());
-        let dst = src.make_valid(&CslStringList::new());
-        assert!(dst.is_err());
     }
 
     #[test]

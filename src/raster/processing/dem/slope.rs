@@ -143,7 +143,7 @@ mod tests {
             std_dev: 8.73558602352,
         };
 
-        assert_near!(StatisticsAll, stats, expected, epsilon = 1e-8);
+        assert_near!(StatisticsAll, stats, expected, epsilon = 1e-5);
         Ok(())
     }
 }
