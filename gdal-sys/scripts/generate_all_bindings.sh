@@ -12,6 +12,7 @@
 #   GDAL 3.10.x -> Ubuntu 24.04 (mingw gcc 13)
 #   GDAL 3.11.x -> Ubuntu 24.04 (mingw gcc 13)
 #   GDAL 3.12.x -> Ubuntu 24.04 (mingw gcc 13)
+#   GDAL 3.13.x -> Ubuntu 26.04 (mingw gcc 13)
 
 set -e
 
@@ -36,6 +37,7 @@ get_docker_tag() {
         3_10) echo "3.10.3" ;;
         3_11) echo "3.11.5" ;;
         3_12) echo "3.12.1" ;;
+        3_13) echo "3.13.1" ;;
         *)    echo "" ;;
     esac
 }
@@ -47,7 +49,7 @@ generate_bindings() {
 
     if [ -z "$docker_tag" ]; then
         echo "Error: Unknown version '$version_folder'"
-        echo "Available versions: 3_8 3_9 3_10 3_11 3_12"
+        echo "Available versions: 3_8 3_9 3_10 3_11 3_12 3_13"
         return 1
     fi
 
@@ -78,7 +80,7 @@ else
     # Generate bindings for all versions (sorted)
     echo "Generating prebuilt bindings for all GDAL versions..."
     echo ""
-    for version_folder in 3_8 3_9 3_10 3_11 3_12; do
+    for version_folder in 3_8 3_9 3_10 3_11 3_12 3_13; do
         generate_bindings "$version_folder"
     done
 

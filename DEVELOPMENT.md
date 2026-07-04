@@ -22,7 +22,7 @@ These steps assume that there are no fundamental changes to the gdal build syste
 Scripts are provided in `gdal-sys/scripts/` to automate binding generation:
 
 ```bash
-# Generate bindings for all supported GDAL versions (3.8 through 3.12)
+# Generate bindings for all supported GDAL versions (3.8 through 3.13)
 cd gdal-sys/scripts
 ./generate_all_bindings.sh
 
