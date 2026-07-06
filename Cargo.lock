@@ -372,9 +372,9 @@ dependencies = [
 
 [[package]]
 name = "geos-sys"
-version = "2.0.6"
+version = "2.0.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4dc873d24aefc72aa94c3c1c251afb82beb7be5926002746c0e1f585fef9854c"
+checksum = "48fc11f837935501a7beb10afd8ecec14e5180274acf87e5a36bf0f770485884"
 dependencies = [
  "geos-src",
  "libc",
