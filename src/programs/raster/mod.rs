@@ -2,6 +2,6 @@ mod mdimtranslate;
 mod vrt;
 
 pub use mdimtranslate::{
-    multi_dim_translate, MultiDimTranslateDestination, MultiDimTranslateOptions,
+    multi_dim_translate, MultiDimTranslateOptions,
 };
 pub use vrt::*;
