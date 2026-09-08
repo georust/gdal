@@ -7,7 +7,7 @@ use std::{
 use gdal_sys::{OGRErr, OSRAxisMappingStrategy};
 
 use crate::errors::*;
-use crate::utils::{_last_null_pointer_err, _string};
+use crate::utils::{_last_null_pointer_err, _string, _string_array};
 
 /// A OpenGIS Spatial Reference System definition.
 ///
@@ -636,6 +636,32 @@ impl TryFrom<u32> for AxisMappingStrategy {
 
 #[cfg(test)]
 mod tests {
+    /// Setting the PROJ search paths replaces them, and reading them back
+    /// reports what was set.
+    ///
+    /// The paths are **process-global**: the test restores whatever was there
+    /// before, so it does not move the ground under the other tests. It also
+    /// runs behind a mutex, because two tests writing a global at the same time
+    /// would make each other flaky rather than fail honestly.
+    #[test]
+    fn test_proj_search_paths() {
+        use std::sync::Mutex;
+        static GUARD: Mutex<()> = Mutex::new(());
+        let _held = GUARD.lock().unwrap_or_else(|e| e.into_inner());
+
+        let original = super::get_proj_search_paths();
+
+        super::set_proj_search_paths(&["/tmp/proj-one", "/tmp/proj-two"]).unwrap();
+        assert_eq!(
+            super::get_proj_search_paths(),
+            vec!["/tmp/proj-one".to_string(), "/tmp/proj-two".to_string()]
+        );
+
+        let restore: Vec<&str> = original.iter().map(String::as_str).collect();
+        super::set_proj_search_paths(&restore).unwrap();
+        assert_eq!(super::get_proj_search_paths(), original);
+    }
+
     use super::*;
     use crate::assert_almost_eq;
 
@@ -971,4 +997,43 @@ mod tests {
             expected_geog_cs.to_wkt()
         );
     }
+}
+
+/// Set the search path(s) PROJ uses to find its resource files.
+///
+/// This wraps [`OSRSetPROJSearchPaths`], which is already bound in `gdal-sys`
+/// but has no safe wrapper here.  It is *not* the same thing as setting the
+/// `PROJ_DATA` configuration option: GDAL does not forward that option to PROJ,
+/// so a relocatable distribution that only sets the option keeps reading
+/// whatever paths were compiled into PROJ at build time.
+///
+/// The paths replace any previously configured ones, including those taken from
+/// the environment.
+///
+/// [`OSRSetPROJSearchPaths`]: https://gdal.org/api/ogr_srs_api.html#_CPPv421OSRSetPROJSearchPathsPPCKc
+pub fn set_proj_search_paths(paths: &[&str]) -> Result<()> {
+    let owned = paths
+        .iter()
+        .map(|p| CString::new(p.as_bytes()))
+        .collect::<std::result::Result<Vec<_>, _>>()?;
+    let mut raw: Vec<*const std::ffi::c_char> = owned.iter().map(|s| s.as_ptr()).collect();
+    raw.push(std::ptr::null());
+    unsafe { gdal_sys::OSRSetPROJSearchPaths(raw.as_ptr()) };
+    Ok(())
+}
+
+/// The search path(s) PROJ currently uses, as GDAL sees them.
+///
+/// With nothing configured this reports the defaults PROJ was built with, which
+/// makes it the way to learn where the resource files actually live before
+/// overriding the paths.
+#[must_use]
+pub fn get_proj_search_paths() -> Vec<String> {
+    let list = unsafe { gdal_sys::OSRGetPROJSearchPaths() };
+    if list.is_null() {
+        return Vec::new();
+    }
+    let paths = _string_array(list);
+    unsafe { gdal_sys::CSLDestroy(list) };
+    paths
 }

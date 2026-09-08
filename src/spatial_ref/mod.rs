@@ -13,6 +13,6 @@ mod transform_opts;
 /// See [`OGRAxisOrientation`](https://gdal.org/api/ogr_srs_api.html#_CPPv418OGRAxisOrientation).
 pub type AxisOrientationType = gdal_sys::OGRAxisOrientation::Type;
 
-pub use srs::{AxisMappingStrategy, SpatialRef};
+pub use srs::{get_proj_search_paths, set_proj_search_paths, AxisMappingStrategy, SpatialRef};
 pub use transform::CoordTransform;
 pub use transform_opts::CoordTransformOptions;
