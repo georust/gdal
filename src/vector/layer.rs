@@ -445,6 +445,34 @@ pub trait LayerAccess: Sized {
         }
     }
 
+    /// Select fields that the driver may omit while reading features.
+    ///
+    /// This wraps [`OGR_L_SetIgnoredFields`], which is already bound in
+    /// `gdal-sys` but has no safe wrapper here.  Field names are validated as C
+    /// strings and retained until the call returns; GDAL copies the
+    /// null-terminated list into the layer state.
+    ///
+    /// Use the special names `OGR_GEOMETRY` and `OGR_STYLE` to ignore those
+    /// pseudo-fields when the underlying driver supports it.
+    ///
+    /// [`OGR_L_SetIgnoredFields`]: https://gdal.org/api/vector_c_api.html#_CPPv423OGR_L_SetIgnoredFields9OGRLayerHPPKc
+    fn set_ignored_fields(&mut self, field_names: &[&str]) -> Result<()> {
+        let names = field_names
+            .iter()
+            .map(|name| CString::new(*name))
+            .collect::<std::result::Result<Vec<_>, NulError>>()?;
+        let mut pointers = names.iter().map(|name| name.as_ptr()).collect::<Vec<_>>();
+        pointers.push(std::ptr::null());
+        let rv = unsafe { gdal_sys::OGR_L_SetIgnoredFields(self.c_layer(), pointers.as_mut_ptr()) };
+        if rv != OGRErr::OGRERR_NONE {
+            return Err(GdalError::OgrError {
+                err: rv,
+                method_name: "OGR_L_SetIgnoredFields",
+            });
+        }
+        Ok(())
+    }
+
     /// Read batches of columnar [Arrow](https://arrow.apache.org/) data from OGR.
     ///
     /// Extended options are available via [`crate::cpl::CslStringList`].
@@ -746,6 +774,73 @@ mod tests {
     use crate::vector::FieldValue;
     use crate::{assert_almost_eq, Dataset, DriverManager, GdalOpenFlags};
     use gdal_sys::OGRwkbGeometryType;
+
+    /// Ignoring a field keeps it out of the features that are read.
+    ///
+    /// The assertion is on the *effect*, not on the call returning `Ok`: the
+    /// field is present before, absent while ignored, and present again once
+    /// the ignore list is cleared. Without the last step this would also pass
+    /// for a layer that had simply stopped returning that field.
+    ///
+    /// The fixture is built by the test rather than checked in, and it is a
+    /// GeoPackage on purpose: `SetIgnoredFields` is advisory, and drivers are
+    /// free to ignore it. The GeoJSON driver does exactly that - the same test
+    /// written against `roads.geojson` passes before the fix and after it, which
+    /// would have made it worthless.
+    #[test]
+    fn test_set_ignored_fields() -> Result<()> {
+        use std::fs;
+
+        let path = fixture("ignored_fields.gpkg");
+        let _ = fs::remove_file(&path);
+
+        {
+            let driver = DriverManager::get_driver_by_name("GPKG").unwrap();
+            let mut ds = driver.create_vector_only(&path).unwrap();
+            let layer = ds.create_layer(Default::default()).unwrap();
+            layer.create_defn_fields(&[
+                ("kept", OGRFieldType::OFTString),
+                ("ignored", OGRFieldType::OFTString),
+            ])?;
+            let mut feature = Feature::new(layer.defn())?;
+            feature.set_geometry(Geometry::from_wkt("POINT (1 2)")?)?;
+            feature.set_field_string(0, "here")?;
+            feature.set_field_string(1, "gone")?;
+            feature.create(&layer)?;
+        }
+
+        let ds = Dataset::open(&path).unwrap();
+        let mut layer = ds.layer(0).unwrap();
+
+        let read = |layer: &mut Layer<'_>, name: &str| {
+            let feature = layer.features().next().unwrap();
+            let idx = feature.field_index(name).unwrap();
+            feature.field(idx).unwrap()
+        };
+
+        assert!(read(&mut layer, "ignored").is_some());
+
+        layer.set_ignored_fields(&["ignored"])?;
+        layer.reset_feature_reading();
+        assert!(
+            read(&mut layer, "ignored").is_none(),
+            "an ignored field is not read"
+        );
+        assert!(
+            read(&mut layer, "kept").is_some(),
+            "the fields that were not ignored are still read"
+        );
+
+        // Clearing the list brings it back, which is what makes the assertion
+        // above about *this* field rather than about the layer.
+        layer.set_ignored_fields(&[])?;
+        layer.reset_feature_reading();
+        assert!(read(&mut layer, "ignored").is_some());
+
+        drop(ds);
+        fs::remove_file(&path).unwrap();
+        Ok(())
+    }
 
     fn ds_with_layer<F>(ds_name: &str, layer_name: &str, f: F)
     where
