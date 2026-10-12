@@ -27,6 +27,12 @@ include = [
     "/source/frmts/grib/data",
     "/source/frmts/hdf5/data",
     "/source/frmts/netcdf/data",
+    "/source/frmts/nitf/data",
+    "/source/frmts/gti/data",
+    "/source/frmts/gdalg/data",
+    "/source/frmts/eeda/data",
+    "/source/frmts/pdf/data",
+    "/source/frmts/pds/data",
     "/source/frmts/pcidsk/sdk/raster/rastertypes.hh",
     "/source/gcore/data",
     "/source/gcore/Version.rc",
@@ -39,6 +45,10 @@ include = [
     "/source/ogr/ogrsf_frmts/dgn/data",
     "/source/ogr/ogrsf_frmts/vdv/data",
     "/source/ogr/ogrsf_frmts/sxf/data",
+    "/source/ogr/ogrsf_frmts/gml/data",
+    "/source/ogr/ogrsf_frmts/osm/data",
+    "/source/ogr/ogrsf_frmts/plscenes/data",
+    "/source/ogr/ogrsf_frmts/miramon/data",
     "/source/scripts/gdal-bash-completion.sh",
     "/src/lib.rs",
     "!/source/swig/python/setup.py.in",
@@ -95,6 +105,16 @@ all_drivers = [
     "driver_wmts",
     "driver_pg",
     "driver_postgis_raster",
+    "driver_mvt",
+    "driver_osm",
+    "driver_pmtiles",
+    "driver_mbtiles",
+    "driver_csw",
+    "driver_wfs",
+    "driver_oapif",
+    "driver_plscenes",
+    "driver_pds",
+    "driver_http",
 ]
 
 # note that libgeos is LGPL licensed
@@ -134,6 +154,7 @@ internal_drivers = [
     "driver_tiger",
     "driver_vdv",
     "driver_wasp",
+    "driver_aivector",
     # gdal internal
     "driver_aaigrid",
     "driver_adrg",
@@ -174,7 +195,7 @@ internal_drivers = [
     "driver_mrf",
     "driver_msgn",
     "driver_ngsgeoid",
-    "driver_nift",
+    "driver_nitf",
     "driver_northwood",
     "driver_ozi",
     "driver_pcidsk",
@@ -203,11 +224,26 @@ internal_drivers = [
     "driver_xpm",
     "driver_xyz",
     "driver_zmap",
+    "driver_gdalg",
+    "driver_gti",
+    "driver_esric",
+    "driver_rcm",
+    "driver_snap_tiff",
     # ogr and gdal
     "driver_idrisi",
     "driver_sdts",
     "driver_vrt",
     "driver_mem",
+    "driver_miramon",
+    "driver_e57",
+    "driver_libertiff",
+    "driver_pdf",
+    "driver_zarr",
+    "driver_gml",
+    "driver_kml",
+    "driver_georss",
+    "driver_jml",
+    "driver_gpsbabel",
 ]
 
 # ogr internal
@@ -235,6 +271,7 @@ driver_tab = []
 driver_tiger = []
 driver_vdv = []
 driver_wasp = []
+driver_aivector = []
 
 #gdal internal
 driver_aaigrid = []
@@ -276,7 +313,7 @@ driver_map = []
 driver_mrf = []
 driver_msgn = []
 driver_ngsgeoid = []
-driver_nift = []
+driver_nitf = []
 driver_northwood = []
 driver_ozi = []
 driver_pcidsk = []
@@ -306,12 +343,20 @@ driver_usgsdem = []
 driver_xpm = []
 driver_xyz = []
 driver_zmap = []
+driver_gdalg = []
+driver_gti = []
+driver_esric = []
+driver_rcm = []
+driver_snap_tiff = []
 
 # ogr and gdal
 driver_idrisi = []
 driver_sdts = []
 driver_vrt = []
 driver_mem = []
+driver_miramon = []
+driver_e57 = []
+driver_libertiff = []
 
 # external
 
@@ -337,15 +382,19 @@ driver_wmts = ["curl-sys"]
 
 # libexpat
 # (there exists no expat-sys crate)
-# driver_georss = []
-# driver_gml = []
-# driver_gpsbabel = []
+# These do not need expat: GDAL only uses it when it finds it, and the KML, GML,
+# GeoRSS and JML parsers fall back to CPL's own XML parser (CPL_MINIXML);
+# GPSBabel only execs the gpsbabel binary at run time.
+driver_georss = []
+driver_gml = []
+driver_gpsbabel = []
+driver_jml = []
+driver_kml = []
+# These really are built around expat, so they stay out until there is an
+# expat-sys crate (or a vendored expat) to point GDAL_USE_EXPAT at:
 # driver_gpx = []
-# driver_jml = []
-# driver_kml = []
 # driver_lvbag = []
 # driver_ods = []
-# driver_svg = []
 # driver_xlsx = []
 
 # libmysqlclient
@@ -363,19 +412,28 @@ driver_hdf5 = ["dep:hdf5-sys", "dep:libz-sys"]
 driver_netcdf = ["dep:netcdf-sys", "driver_hdf5", "dep:hdf5-sys"]
 
 # poppler
-#driver_pdf = []
+# Without poppler, podofo or pdfium GDAL builds a write-only PDF driver; the
+# JPEG/PNG/OpenJPEG/lcms2 requirements live inside GDAL's pdfium branch.
+driver_pdf = []
 
 # combined
-# these are missing at least one dependency
-# driver_mvt = [] # requires sqlite + geos
-# driver_osm = [] # requires sqlite + libexpat
-# driver_zarr = [] # requires liblz4, libxz, libzstd and libblosc
-# driver_mbtiles = ["driver_sqlite", "driver_mvt"] # also requires mvt (so geos)
-# driver_pmtiles = ["driver_mvt"]  # depends on driver_mvt
-# driver_csw = ["curl-sys", "driver_gml"]  # depends on gml driver
-# driver_wfs = ["curl-sys", "driver_gml"]
-# driver_pds = ["driver_gml"]
+# Geos is optional for mvt/pmtiles (`if (GDAL_USE_GEOS)`), and osm's expat use is
+# optional too, so sqlite is the only real dependency of these:
+driver_mvt = ["driver_sqlite"]
+driver_osm = ["driver_sqlite"]
+driver_pmtiles = ["driver_mvt"]
+driver_mbtiles = ["driver_sqlite", "driver_gpkg", "driver_mvt"]
+driver_zarr = []
+# csw/wfs/oapif/plscenes just need GDAL's gmlutils, which is always built
+# (`add_subdirectory(gmlutils)` is unconditional in ogr/ogrsf_frmts/CMakeLists.txt)
+driver_csw = ["curl-sys"]
+driver_wfs = ["curl-sys"]
+driver_oapif = ["curl-sys"]
+driver_plscenes = ["curl-sys"]
+# driver_pds is declared with the raster drivers above: one switch builds the
+# raster PDS/ISIS2/ISIS3/PDS4/VICAR drivers and, through GDAL_ENABLE_DRIVER_PDS,
+# the vector OGR_PDS one.
 
 # unclear
-driver_http = []
+driver_http = ["curl-sys"]
 driver_arg = []
