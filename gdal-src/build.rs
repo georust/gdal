@@ -119,6 +119,9 @@ fn main() {
     handle_ogr_driver!(config, "driver_sdts");
     handle_ogr_driver!(config, "driver_vrt");
     handle_ogr_driver!(config, "driver_mem");
+    handle_ogr_driver!(config, "driver_aivector");
+    // miramon is both a raster (MiraMonRaster, above) and a vector (MiraMonVector) driver
+    handle_ogr_driver!(config, "driver_miramon");
 
     handle_gdal_driver!(config, "driver_aaigrid");
     handle_gdal_driver!(config, "driver_adrg");
@@ -193,6 +196,14 @@ fn main() {
     handle_gdal_driver!(config, "driver_sdts");
     handle_gdal_driver!(config, "driver_vrt");
     handle_gdal_driver!(config, "driver_mem");
+
+    // internal drivers with no external dependency that the list never carried
+    handle_gdal_driver!(config, "driver_gti");
+    handle_gdal_driver!(config, "driver_gdalg");
+    handle_gdal_driver!(config, "driver_esric");
+    handle_gdal_driver!(config, "driver_snap_tiff");
+    handle_gdal_driver!(config, "driver_rcm");
+    handle_gdal_driver!(config, "driver_miramon");
 
     if cfg!(feature = "driver_sqlite") {
         let sqlite3_include_dir =
