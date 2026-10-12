@@ -122,6 +122,14 @@ fn main() {
     handle_ogr_driver!(config, "driver_aivector");
     // miramon is both a raster (MiraMonRaster, above) and a vector (MiraMonVector) driver
     handle_ogr_driver!(config, "driver_miramon");
+    // Listed upstream as needing libexpat, but GDAL only uses expat when it finds
+    // it: KML, GML, GeoRSS and JML fall back to CPL's own XML parser, and GPSBabel
+    // only execs the gpsbabel binary at run time.
+    handle_ogr_driver!(config, "driver_gml");
+    handle_ogr_driver!(config, "driver_kml");
+    handle_ogr_driver!(config, "driver_georss");
+    handle_ogr_driver!(config, "driver_jml");
+    handle_ogr_driver!(config, "driver_gpsbabel");
 
     handle_gdal_driver!(config, "driver_aaigrid");
     handle_gdal_driver!(config, "driver_adrg");
@@ -193,6 +201,8 @@ fn main() {
     handle_gdal_driver!(config, "driver_zmap");
     handle_gdal_driver!(config, "driver_idrisi");
     handle_gdal_driver!(config, "driver_pds");
+    // the OGR PDS driver (OGR_PDS) is gated on GDAL_ENABLE_DRIVER_PDS
+    handle_ogr_driver!(config, "driver_pds");
     handle_gdal_driver!(config, "driver_sdts");
     handle_gdal_driver!(config, "driver_vrt");
     handle_gdal_driver!(config, "driver_mem");
@@ -204,6 +214,12 @@ fn main() {
     handle_gdal_driver!(config, "driver_snap_tiff");
     handle_gdal_driver!(config, "driver_rcm");
     handle_gdal_driver!(config, "driver_miramon");
+    // raster drivers that build from the tree alone: PDF is write-only without
+    // poppler/podofo/pdfium, and E57, LIBERTIFF and ZARR are declared with NO_DEPS
+    handle_gdal_driver!(config, "driver_e57");
+    handle_gdal_driver!(config, "driver_libertiff");
+    handle_gdal_driver!(config, "driver_pdf");
+    handle_gdal_driver!(config, "driver_zarr");
 
     if cfg!(feature = "driver_sqlite") {
         let sqlite3_include_dir =
@@ -224,6 +240,10 @@ fn main() {
     // these drivers depend on sqlite
     handle_ogr_driver!(config, "driver_gpkg");
     handle_ogr_driver!(config, "driver_vfk");
+    handle_ogr_driver!(config, "driver_mvt");
+    handle_ogr_driver!(config, "driver_pmtiles");
+    handle_ogr_driver!(config, "driver_osm");
+    handle_gdal_driver!(config, "driver_mbtiles");
 
     if cfg!(feature = "driver_hdf5") {
         let hdf5_dir = std::env::var("DEP_HDF5_ROOT").expect("This is set by hdf5-sys");
@@ -283,10 +303,15 @@ fn main() {
 
     handle_ogr_driver!(config, "driver_amigocloud");
     handle_ogr_driver!(config, "driver_carto");
+    handle_ogr_driver!(config, "driver_csw");
+    handle_ogr_driver!(config, "driver_oapif");
+    handle_ogr_driver!(config, "driver_wfs");
+    handle_ogr_driver!(config, "driver_plscenes");
     // DAAS and EEDA are raster drivers (`frmts/daas`, `frmts/eeda`), so the option
     // GDAL reads is `GDAL_ENABLE_DRIVER_*`, not `OGR_ENABLE_DRIVER_*`.
     handle_gdal_driver!(config, "driver_daas");
     handle_gdal_driver!(config, "driver_eeda");
+    handle_gdal_driver!(config, "driver_http");
     handle_ogr_driver!(config, "driver_elastic");
     handle_ogr_driver!(config, "driver_ngw");
     handle_gdal_driver!(config, "driver_ogcapi");
