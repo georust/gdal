@@ -174,7 +174,7 @@ internal_drivers = [
     "driver_mrf",
     "driver_msgn",
     "driver_ngsgeoid",
-    "driver_nift",
+    "driver_nitf",
     "driver_northwood",
     "driver_ozi",
     "driver_pcidsk",
@@ -276,7 +276,7 @@ driver_map = []
 driver_mrf = []
 driver_msgn = []
 driver_ngsgeoid = []
-driver_nift = []
+driver_nitf = []
 driver_northwood = []
 driver_ozi = []
 driver_pcidsk = []

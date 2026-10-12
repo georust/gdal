@@ -159,7 +159,7 @@ fn main() {
     handle_gdal_driver!(config, "driver_mrf");
     handle_gdal_driver!(config, "driver_msgn");
     handle_gdal_driver!(config, "driver_ngsgeoid");
-    handle_gdal_driver!(config, "driver_nift");
+    handle_gdal_driver!(config, "driver_nitf");
     handle_gdal_driver!(config, "driver_northwood");
     handle_gdal_driver!(config, "driver_ozi");
     handle_gdal_driver!(config, "driver_pcidsk");
@@ -272,8 +272,10 @@ fn main() {
 
     handle_ogr_driver!(config, "driver_amigocloud");
     handle_ogr_driver!(config, "driver_carto");
-    handle_ogr_driver!(config, "driver_daas");
-    handle_ogr_driver!(config, "driver_eeda");
+    // DAAS and EEDA are raster drivers (`frmts/daas`, `frmts/eeda`), so the option
+    // GDAL reads is `GDAL_ENABLE_DRIVER_*`, not `OGR_ENABLE_DRIVER_*`.
+    handle_gdal_driver!(config, "driver_daas");
+    handle_gdal_driver!(config, "driver_eeda");
     handle_ogr_driver!(config, "driver_elastic");
     handle_ogr_driver!(config, "driver_ngw");
     handle_gdal_driver!(config, "driver_ogcapi");
