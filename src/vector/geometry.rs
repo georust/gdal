@@ -98,7 +98,7 @@ impl Geometry {
     pub unsafe fn into_c_geometry(mut self) -> OGRGeometryH {
         assert!(self.owned);
         self.owned = false;
-        self.c_geometry()
+        unsafe { self.c_geometry() }
     }
 
     pub fn set_point(&mut self, i: usize, point: (f64, f64, f64)) {
@@ -288,8 +288,8 @@ impl Geometry {
     pub unsafe fn get_unowned_geometry(&self, n: usize) -> Geometry {
         // get the n-th sub-geometry as a non-owned Geometry; don't keep this
         // object for long.
-        let c_geom = gdal_sys::OGR_G_GetGeometryRef(self.c_geometry(), n as c_int);
-        Geometry::with_c_geometry(c_geom, false)
+        let c_geom = unsafe { gdal_sys::OGR_G_GetGeometryRef(self.c_geometry(), n as c_int) };
+        unsafe { Geometry::with_c_geometry(c_geom, false) }
     }
 
     /// Get a reference to the geometry at given `index`

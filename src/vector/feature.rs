@@ -547,8 +547,8 @@ impl<'a> Feature<'a> {
             FieldValue::Integer64ListValue(value) => {
                 self.set_field_integer64_list(field_idx, value)
             }
-            FieldValue::StringValue(ref value) => self.set_field_string(field_idx, value.as_str()),
-            FieldValue::StringListValue(ref value) => {
+            FieldValue::StringValue(value) => self.set_field_string(field_idx, value.as_str()),
+            FieldValue::StringListValue(value) => {
                 let strs = value.iter().map(String::as_str).collect::<Vec<&str>>();
                 self.set_field_string_list(field_idx, &strs)
             }

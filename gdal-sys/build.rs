@@ -14,8 +14,8 @@ pub fn write_bindings(include_paths: Vec<String>, out_path: &Path) {
     // If you update this command consider updating the command in `DEVELOPMENT.md`
 
     let mut builder = bindgen::Builder::default()
-        .rust_target(bindgen::RustTarget::stable(77, 0).unwrap())
-        .rust_edition(bindgen::RustEdition::Edition2021)
+        .rust_target(bindgen::RustTarget::stable(85, 0).unwrap())
+        .rust_edition(bindgen::RustEdition::Edition2024)
         .header("wrapper.h")
         .constified_enum_module(".*")
         .ctypes_prefix("::std::ffi")

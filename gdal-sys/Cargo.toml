@@ -6,8 +6,8 @@ version = "0.12.0"
 repository = "https://github.com/georust/gdal"
 authors = ["Johannes Drönner <droenner@informatik.uni-marburg.de>"]
 categories = ["science::geo", "api-bindings"]
-edition = "2021"
-rust-version = "1.77"
+edition = "2024"
+rust-version = "1.85"
 links = "gdal"
 
 [dependencies]

@@ -4,6 +4,7 @@
 
 ### Breaking
 
+  - Adopt the Rust 2024 edition and raise the MSRV to 1.85
   - Drop support for GDAL <3.8 ([#716](https://github.com/georust/gdal/pull/716))
 
 ### Added

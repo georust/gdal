@@ -145,8 +145,9 @@ where
         let error_type: CplErrType = error_type.into();
 
         // reconstruct callback from user data pointer
-        let callback_raw = CPLGetErrorHandlerUserData();
-        let callback: &mut Box<ErrorCallbackType> = &mut *(callback_raw as *mut Box<_>);
+        let callback_raw = unsafe { CPLGetErrorHandlerUserData() };
+        let callback: &mut Box<ErrorCallbackType> =
+            unsafe { &mut *(callback_raw as *mut Box<ErrorCallbackType>) };
 
         callback(error_type, error_num, &error_msg);
     }

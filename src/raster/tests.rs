@@ -585,8 +585,7 @@ fn test_rasterband_lifetime() {
 
     let overview = {
         let rasterband = dataset.rasterband(1).unwrap();
-        let overview = rasterband.overview(0).unwrap();
-        overview
+        rasterband.overview(0).unwrap()
     };
 
     assert!(overview.no_data_value().is_none());
