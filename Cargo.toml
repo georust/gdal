@@ -10,7 +10,7 @@ authors = [
 categories = ["science::geo", "api-bindings"]
 repository = "https://github.com/georust/gdal"
 edition = "2024"
-rust-version = "1.85"
+rust-version = "1.88"
 include = ["CHANGES.md", "Cargo.toml", "README.md", "build.rs", "src/**/*.rs"]
 
 [features]
@@ -35,7 +35,7 @@ semver = "1.0"
 [dev-dependencies]
 tempfile = "3.27"
 # Only used in the example
-arrow-array = { version = "58.3", default-features = false, features = ["ffi"] }
+arrow-array = { version = "60.0", default-features = false, features = ["ffi"] }
 
 [workspace]
 members = ["gdal-src", "gdal-sys"]
