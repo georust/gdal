@@ -14,7 +14,7 @@ links = "gdal"
 gdal-src = { version = "0.3", path = "../gdal-src/", optional = true }
 
 [build-dependencies]
-bindgen = { version = "0.72", optional = true }
+bindgen = { version = "0.73", optional = true }
 pkg-config = "0.3"
 semver = "1.0"
 
@@ -22,3 +22,6 @@ semver = "1.0"
 [features]
 default = []
 bundled = ["dep:gdal-src"]
+bundled-driver-sqlite = ["bundled", "gdal-src/driver_sqlite"]
+bundled-all-drivers = ["bundled", "gdal-src/all_drivers"]
+bundled-geos-static = ["bundled", "gdal-src/geos_static"]
