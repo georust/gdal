@@ -6,7 +6,7 @@ use gdal_sys::{CPLErr, GDALDatasetH, OGRGeometryH};
 
 use crate::errors::*;
 use crate::utils::_last_cpl_err;
-use crate::vector::{sql, Geometry, Layer, LayerAccess};
+use crate::vector::{Geometry, Layer, LayerAccess, sql};
 
 /// The result of a SQL query executed by
 /// [`Dataset::execute_sql()`](Dataset::execute_sql()). It is just a thin wrapper around a
@@ -165,9 +165,9 @@ mod tests {
 
     use crate::test_utils::SuppressGDALErrorLog;
     use crate::{
-        test_utils::fixture,
-        vector::{sql, Geometry, LayerAccess},
         Dataset,
+        test_utils::fixture,
+        vector::{Geometry, LayerAccess, sql},
     };
 
     #[test]

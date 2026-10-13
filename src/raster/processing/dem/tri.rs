@@ -70,12 +70,12 @@ impl DemTriAlg {
 
 #[cfg(test)]
 mod tests {
+    use crate::Dataset;
     use crate::assert_near;
     use crate::errors::Result;
-    use crate::raster::processing::dem::terrain_ruggedness_index;
     use crate::raster::StatisticsAll;
-    use crate::test_utils::{fixture, InMemoryFixture};
-    use crate::Dataset;
+    use crate::raster::processing::dem::terrain_ruggedness_index;
+    use crate::test_utils::{InMemoryFixture, fixture};
 
     use super::*;
 

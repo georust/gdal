@@ -1,5 +1,5 @@
 use std::{
-    ffi::{c_char, c_void, CString},
+    ffi::{CString, c_char, c_void},
     fmt::{Debug, Display},
 };
 
@@ -26,7 +26,7 @@ use super::GdalType;
 use crate::errors::*;
 use crate::spatial_ref::SpatialRef;
 use crate::utils::{_last_cpl_err, _last_null_pointer_err, _string, _string_array};
-use crate::{cpl::CslStringList, Dataset};
+use crate::{Dataset, cpl::CslStringList};
 
 /// Represent an MDArray in a Group
 ///
@@ -840,7 +840,7 @@ mod tests {
     use super::*;
 
     use crate::options::DatasetOptions;
-    use crate::{test_utils::TempFixture, Dataset, GdalOpenFlags};
+    use crate::{Dataset, GdalOpenFlags, test_utils::TempFixture};
 
     #[test]
     #[cfg_attr(feature = "gdal-src", ignore)]
@@ -1147,10 +1147,12 @@ mod tests {
             .open_group("science", CslStringList::new())
             .unwrap();
 
-        assert!(group_science
-            .dimensions(Default::default())
-            .unwrap()
-            .is_empty());
+        assert!(
+            group_science
+                .dimensions(Default::default())
+                .unwrap()
+                .is_empty()
+        );
 
         let group_grids = group_science
             .open_group("grids", CslStringList::new())

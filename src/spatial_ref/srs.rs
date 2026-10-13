@@ -1,5 +1,5 @@
 use std::{
-    ffi::{c_char, c_int, CStr, CString},
+    ffi::{CStr, CString, c_char, c_int},
     ptr,
     str::FromStr,
 };
@@ -672,7 +672,10 @@ mod tests {
         let spatial_ref = SpatialRef::from_epsg(4326).unwrap();
         let wkt = spatial_ref.to_wkt().unwrap();
         // TODO: handle proj changes on lib level
-        assert_eq!("GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",\"7030\"]],AUTHORITY[\"EPSG\",\"6326\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AXIS[\"Latitude\",NORTH],AXIS[\"Longitude\",EAST],AUTHORITY[\"EPSG\",\"4326\"]]", wkt);
+        assert_eq!(
+            "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",\"7030\"]],AUTHORITY[\"EPSG\",\"6326\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AXIS[\"Latitude\",NORTH],AXIS[\"Longitude\",EAST],AUTHORITY[\"EPSG\",\"4326\"]]",
+            wkt
+        );
         let proj4string = spatial_ref.to_proj4().unwrap();
         assert_eq!("+proj=longlat +datum=WGS84 +no_defs", proj4string.trim());
     }

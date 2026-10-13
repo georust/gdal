@@ -1,5 +1,5 @@
 use std::{
-    ffi::{c_char, c_int, CString, NulError},
+    ffi::{CString, NulError, c_char, c_int},
     marker::PhantomData,
     mem::MaybeUninit,
     ptr::null_mut,
@@ -337,11 +337,7 @@ pub trait LayerAccess: Sized {
     /// For dynamic databases the count may not be exact.
     fn try_feature_count(&self) -> Option<u64> {
         let rv = unsafe { gdal_sys::OGR_L_GetFeatureCount(self.c_layer(), 0) };
-        if rv < 0 {
-            None
-        } else {
-            Some(rv as u64)
-        }
+        if rv < 0 { None } else { Some(rv as u64) }
     }
 
     /// Returns the extent of this layer as an axis-aligned bounding box, even if it requires
@@ -741,10 +737,10 @@ mod tests {
     use super::{LayerCaps::*, *};
     use crate::options::DatasetOptions;
     use crate::spatial_ref::AxisMappingStrategy;
-    use crate::test_utils::{fixture, open_gpkg_for_update, SuppressGDALErrorLog, TempFixture};
-    use crate::vector::feature::FeatureIterator;
+    use crate::test_utils::{SuppressGDALErrorLog, TempFixture, fixture, open_gpkg_for_update};
     use crate::vector::FieldValue;
-    use crate::{assert_almost_eq, Dataset, DriverManager, GdalOpenFlags};
+    use crate::vector::feature::FeatureIterator;
+    use crate::{Dataset, DriverManager, GdalOpenFlags, assert_almost_eq};
     use gdal_sys::OGRwkbGeometryType;
 
     fn ds_with_layer<F>(ds_name: &str, layer_name: &str, f: F)

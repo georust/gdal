@@ -518,7 +518,10 @@ mod tests {
     #[test]
     fn test_create_bbox() {
         let bbox = Geometry::bbox(-27., 33., 52., 85.).unwrap();
-        assert_eq!(bbox.json().unwrap(), "{ \"type\": \"Polygon\", \"coordinates\": [ [ [ -27.0, 85.0 ], [ 52.0, 85.0 ], [ 52.0, 33.0 ], [ -27.0, 33.0 ], [ -27.0, 85.0 ] ] ] }");
+        assert_eq!(
+            bbox.json().unwrap(),
+            "{ \"type\": \"Polygon\", \"coordinates\": [ [ [ -27.0, 85.0 ], [ 52.0, 85.0 ], [ 52.0, 33.0 ], [ -27.0, 33.0 ], [ -27.0, 85.0 ] ] ] }"
+        );
     }
 
     #[test]

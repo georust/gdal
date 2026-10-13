@@ -15,9 +15,9 @@
 fn main() -> gdal::errors::Result<()> {
     use arrow_array::ffi_stream::{ArrowArrayStreamReader, FFI_ArrowArrayStream};
     use arrow_array::{Array as _, BinaryArray, RecordBatchReader};
+    use gdal::Dataset;
     use gdal::cpl::CslStringList;
     use gdal::vector::*;
-    use gdal::Dataset;
     use std::path::Path;
 
     // Open a dataset and access a layer

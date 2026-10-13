@@ -25,15 +25,15 @@
 #![deny(missing_docs)]
 
 use std::{
-    ffi::{c_int, CStr, CString},
+    ffi::{CStr, CString, c_int},
     path::Path,
     ptr,
 };
 
+use crate::Dataset;
 use crate::cpl::CslStringList;
 use crate::errors::Result;
 use crate::utils::{_last_cpl_err, _path_to_c_string};
-use crate::Dataset;
 
 pub use aspect::*;
 pub use color_relief::*;

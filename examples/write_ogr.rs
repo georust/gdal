@@ -1,6 +1,6 @@
+use gdal::DriverManager;
 use gdal::errors::Result;
 use gdal::vector::{Defn, Feature, FieldDefn, Geometry, OGRFieldType};
-use gdal::DriverManager;
 use std::fs;
 
 fn main() -> Result<()> {

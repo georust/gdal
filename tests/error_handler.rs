@@ -51,13 +51,17 @@ fn error_handler_interleaved() {
     use std::thread;
     // Two racing threads trying to set error handlers
     // First one
-    thread::spawn(move || loop {
-        config::set_error_handler(move |_a, _b, _c| {});
+    thread::spawn(move || {
+        loop {
+            config::set_error_handler(move |_a, _b, _c| {});
+        }
     });
 
     // Second one
-    thread::spawn(move || loop {
-        config::set_error_handler(move |_a, _b, _c| {});
+    thread::spawn(move || {
+        loop {
+            config::set_error_handler(move |_a, _b, _c| {});
+        }
     });
 
     // A thread that provokes potential race conditions

@@ -395,9 +395,10 @@ mod tests {
         // Dataset metadata...
         let ds = Dataset::open(fixture("m_3607824_se_17_1_20160620_sub.tif")).unwrap();
         assert_eq!(ds.metadata_item("AREA_OR_POINT", ""), Some("Area".into()));
-        assert!(ds
-            .metadata()
-            .any(|e| e == MetadataEntry::new("", "AREA_OR_POINT", "Area")));
+        assert!(
+            ds.metadata()
+                .any(|e| e == MetadataEntry::new("", "AREA_OR_POINT", "Area"))
+        );
         assert!(ds.metadata().any(|e| e.domain == "DERIVED_SUBDATASETS"));
 
         // RasterBand metadata...

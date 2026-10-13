@@ -2,8 +2,8 @@ use std::num::NonZeroUsize;
 
 use crate::cpl::CslStringList;
 use crate::errors;
-use crate::raster::processing::dem::options::common_dem_options;
 use crate::raster::processing::dem::DemSlopeAlg;
+use crate::raster::processing::dem::options::common_dem_options;
 
 use super::options::CommonOptions;
 
@@ -83,13 +83,13 @@ impl SlopeOptions {
 
 #[cfg(test)]
 mod tests {
+    use crate::Dataset;
     use crate::cpl::CslStringList;
     use crate::errors::Result;
-    use crate::raster::processing::dem::slope;
     use crate::raster::StatisticsAll;
-    use crate::test_utils::{fixture, InMemoryFixture};
-    use crate::Dataset;
-    use crate::{assert_near, GeoTransformEx};
+    use crate::raster::processing::dem::slope;
+    use crate::test_utils::{InMemoryFixture, fixture};
+    use crate::{GeoTransformEx, assert_near};
 
     use super::*;
 

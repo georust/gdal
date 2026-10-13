@@ -83,7 +83,7 @@ pub use rasterband::{
     CmykEntry, ColorEntry, ColorInterpretation, ColorTable, GrayEntry, Histogram, HlsEntry,
     PaletteInterpretation, RasterBand, ResampleAlg, RgbaEntry, StatisticsAll, StatisticsMinMax,
 };
-pub use rasterize::{rasterize, BurnSource, MergeAlgorithm, OptimizeMode, RasterizeOptions};
+pub use rasterize::{BurnSource, MergeAlgorithm, OptimizeMode, RasterizeOptions, rasterize};
 pub use types::{AdjustedValue, GdalDataType, GdalType};
 pub use warp::reproject;
 

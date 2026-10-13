@@ -32,14 +32,14 @@ impl RoughnessOptions {
 
 #[cfg(test)]
 mod tests {
+    use crate::Dataset;
     use crate::assert_near;
     use crate::cpl::CslStringList;
     use crate::errors::Result;
+    use crate::raster::StatisticsAll;
     use crate::raster::processing::dem::roughness;
     use crate::raster::processing::dem::roughness::RoughnessOptions;
-    use crate::raster::StatisticsAll;
-    use crate::test_utils::{fixture, InMemoryFixture};
-    use crate::Dataset;
+    use crate::test_utils::{InMemoryFixture, fixture};
 
     #[test]
     fn test_options() -> Result<()> {

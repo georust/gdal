@@ -202,7 +202,9 @@ fn main() {
         .probe("gdal");
 
     if !found && cfg!(target_env = "msvc") && gdal_pkg_config.is_err() {
-        panic!("windows-msvc requires gdal_i.lib to be present in either $GDAL_LIB_DIR or $GDAL_HOME\\lib.");
+        panic!(
+            "windows-msvc requires gdal_i.lib to be present in either $GDAL_LIB_DIR or $GDAL_HOME\\lib."
+        );
     }
 
     if let Ok(gdal) = &gdal_pkg_config {
@@ -246,7 +248,9 @@ fn main() {
             // Special case output for this common error
             if matches!(pkg_config_err, pkg_config::Error::Command { cause, .. } if cause.kind() == std::io::ErrorKind::NotFound)
             {
-                panic!("Could not find `pkg-config` in your path. Please install it before building gdal-sys.");
+                panic!(
+                    "Could not find `pkg-config` in your path. Please install it before building gdal-sys."
+                );
             } else {
                 panic!("Error while running `pkg-config`: {pkg_config_err}");
             }
@@ -280,7 +284,10 @@ fn prebuilt_bindings_path(version: &Version) -> PathBuf {
     ));
 
     if !bindings_path.exists() {
-        panic!("No pre-built bindings available for GDAL version {}.{}. Enable the `bindgen` feature of the `gdal` or `gdal-sys` crate to generate them during build.", version.major, version.minor);
+        panic!(
+            "No pre-built bindings available for GDAL version {}.{}. Enable the `bindgen` feature of the `gdal` or `gdal-sys` crate to generate them during build.",
+            version.major, version.minor
+        );
     }
 
     bindings_path

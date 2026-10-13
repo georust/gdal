@@ -23,7 +23,7 @@
 //! Refer to [GDAL `ConfigOptions`](https://trac.osgeo.org/gdal/wiki/ConfigOptions) for
 //! a full list of options.
 
-use std::ffi::{c_char, c_void, CString};
+use std::ffi::{CString, c_char, c_void};
 use std::sync::{LazyLock, Mutex};
 
 use gdal_sys::{CPLErr, CPLErrorNum, CPLGetErrorHandlerUserData};

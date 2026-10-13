@@ -1,4 +1,4 @@
-use std::ffi::{c_char, CStr, CString};
+use std::ffi::{CStr, CString, c_char};
 use std::path::{Path, PathBuf};
 
 use gdal_sys::CPLErr;

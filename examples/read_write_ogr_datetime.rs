@@ -1,9 +1,9 @@
-use gdal::{vector::LayerAccess, DriverManager};
+use gdal::{DriverManager, vector::LayerAccess};
 
 fn run() -> gdal::errors::Result<()> {
     use chrono::Duration;
-    use gdal::vector::{Defn, Feature, FieldDefn, FieldValue};
     use gdal::Dataset;
+    use gdal::vector::{Defn, Feature, FieldDefn, FieldValue};
     use std::ops::Add;
     use std::path::Path;
 

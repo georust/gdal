@@ -3,7 +3,7 @@
 //! This module provides safe access to a subset of the [GDAL CPL functions](https://gdal.org/api/cpl.html).
 //!
 
-use std::ffi::{c_char, c_int, CString};
+use std::ffi::{CString, c_char, c_int};
 use std::fmt::{Debug, Display, Formatter};
 use std::mem::ManuallyDrop;
 use std::ptr;
@@ -189,11 +189,7 @@ impl CslStringList {
     pub fn find_string(&self, value: &str) -> Option<usize> {
         let value = CString::new(value).ok()?;
         let idx = unsafe { CSLFindString(self.as_ptr(), value.as_ptr()) };
-        if idx < 0 {
-            None
-        } else {
-            Some(idx as usize)
-        }
+        if idx < 0 { None } else { Some(idx as usize) }
     }
 
     /// Perform a case sensitive search for the given string
@@ -205,11 +201,7 @@ impl CslStringList {
     pub fn find_string_case_sensitive(&self, value: &str) -> Option<usize> {
         let value = CString::new(value).ok()?;
         let idx = unsafe { CSLFindStringCaseSensitive(self.as_ptr(), value.as_ptr()) };
-        if idx < 0 {
-            None
-        } else {
-            Some(idx as usize)
-        }
+        if idx < 0 { None } else { Some(idx as usize) }
     }
 
     /// Perform a case sensitive partial string search indicated by `fragment`.
@@ -221,11 +213,7 @@ impl CslStringList {
     pub fn partial_find_string(&self, fragment: &str) -> Option<usize> {
         let fragment = CString::new(fragment).ok()?;
         let idx = unsafe { CSLPartialFindString(self.as_ptr(), fragment.as_ptr()) };
-        if idx < 0 {
-            None
-        } else {
-            Some(idx as usize)
-        }
+        if idx < 0 { None } else { Some(idx as usize) }
     }
 
     /// Fetch the [`CslStringListEntry`] for the entry at the given index.

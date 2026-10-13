@@ -5,10 +5,10 @@ use std::marker::PhantomData;
 
 use gdal_sys::CPLErr;
 
+use crate::Dataset;
 use crate::errors::Result;
 use crate::spatial_ref::SpatialRef;
 use crate::utils::{_last_cpl_err, _string};
-use crate::Dataset;
 
 /// An owned Ground Control Point.
 #[derive(Clone, Debug, PartialEq, PartialOrd)]
@@ -225,9 +225,9 @@ impl Dataset {
 #[cfg(test)]
 mod tests {
     use super::Gcp;
-    use crate::spatial_ref::SpatialRef;
-    use crate::test_utils::{fixture, TempFixture};
     use crate::Dataset;
+    use crate::spatial_ref::SpatialRef;
+    use crate::test_utils::{TempFixture, fixture};
 
     #[test]
     fn test_gcp_spatial_ref() {
