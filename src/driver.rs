@@ -510,18 +510,21 @@ impl DriverManager {
             })
             .filter(move |d| {
                 if let Some(e) = &d.metadata_item("DMD_EXTENSION", "")
-                    && *e == ext {
-                        return true;
-                    }
+                    && *e == ext
+                {
+                    return true;
+                }
                 if let Some(e) = d.metadata_item("DMD_EXTENSIONS", "")
-                    && e.split(' ').any(|s| s == ext) {
-                        return true;
-                    }
+                    && e.split(' ').any(|s| s == ext)
+                {
+                    return true;
+                }
 
                 if let Some(pre) = d.metadata_item("DMD_CONNECTION_PREFIX", "")
-                    && path_lower.starts_with(&pre.to_ascii_lowercase()) {
-                        return true;
-                    }
+                    && path_lower.starts_with(&pre.to_ascii_lowercase())
+                {
+                    return true;
+                }
                 false
             })
     }
