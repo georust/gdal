@@ -1,5 +1,5 @@
 use std::{
-    ffi::{c_char, c_int, CStr, CString},
+    ffi::{CStr, CString, c_char, c_int},
     ptr,
     str::FromStr,
 };
@@ -55,7 +55,7 @@ impl SpatialRef {
     /// The handle passed to this function must be valid.
     pub unsafe fn from_c_obj(c_obj: gdal_sys::OGRSpatialReferenceH) -> Result<SpatialRef> {
         assert!(!c_obj.is_null(), "Expected a pointer that is not null");
-        let mut_c_obj = gdal_sys::OSRClone(c_obj);
+        let mut_c_obj = unsafe { gdal_sys::OSRClone(c_obj) };
         if mut_c_obj.is_null() {
             Err(_last_null_pointer_err("OSRClone"))
         } else {
@@ -672,7 +672,10 @@ mod tests {
         let spatial_ref = SpatialRef::from_epsg(4326).unwrap();
         let wkt = spatial_ref.to_wkt().unwrap();
         // TODO: handle proj changes on lib level
-        assert_eq!("GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",\"7030\"]],AUTHORITY[\"EPSG\",\"6326\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AXIS[\"Latitude\",NORTH],AXIS[\"Longitude\",EAST],AUTHORITY[\"EPSG\",\"4326\"]]", wkt);
+        assert_eq!(
+            "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",\"7030\"]],AUTHORITY[\"EPSG\",\"6326\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AXIS[\"Latitude\",NORTH],AXIS[\"Longitude\",EAST],AUTHORITY[\"EPSG\",\"4326\"]]",
+            wkt
+        );
         let proj4string = spatial_ref.to_proj4().unwrap();
         assert_eq!("+proj=longlat +datum=WGS84 +no_defs", proj4string.trim());
     }

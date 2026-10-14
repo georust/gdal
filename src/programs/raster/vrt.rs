@@ -1,6 +1,6 @@
 use std::{
     borrow::Borrow,
-    ffi::{c_char, c_int, CString},
+    ffi::{CString, c_char, c_int},
     path::Path,
     ptr::{null, null_mut},
 };
@@ -8,9 +8,9 @@ use std::{
 use gdal_sys::GDALBuildVRTOptions;
 
 use crate::{
+    Dataset,
     errors::*,
     utils::{_last_null_pointer_err, _path_to_c_string},
-    Dataset,
 };
 
 /// Wraps a [GDALBuildVRTOptions] object.

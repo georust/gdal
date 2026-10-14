@@ -147,7 +147,9 @@ impl<T: GdalType> Buffer<T> {
     #[inline(never)]
     #[track_caller]
     fn panic_bad_index(shape: (usize, usize), coord: (usize, usize)) -> ! {
-        panic!("index out of bounds: buffer has shape `{shape:?}` but coordinate `{coord:?}` was requested");
+        panic!(
+            "index out of bounds: buffer has shape `{shape:?}` but coordinate `{coord:?}` was requested"
+        );
     }
 
     #[inline]
@@ -236,7 +238,7 @@ impl<T: GdalType + Copy> From<Array2<T>> for Buffer<T> {
 #[cfg(test)]
 mod tests {
     use crate::raster::Buffer;
-    use ndarray::{arr2, s, Array2, ShapeBuilder};
+    use ndarray::{Array2, ShapeBuilder, arr2, s};
 
     #[test]
     fn convert_to() {

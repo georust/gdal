@@ -1,5 +1,5 @@
 use std::{
-    ffi::{c_int, CString},
+    ffi::{CString, c_int},
     fmt::{Debug, Display, Formatter},
 };
 

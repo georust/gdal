@@ -14,8 +14,8 @@ pub fn write_bindings(include_paths: Vec<String>, out_path: &Path) {
     // If you update this command consider updating the command in `DEVELOPMENT.md`
 
     let mut builder = bindgen::Builder::default()
-        .rust_target(bindgen::RustTarget::stable(77, 0).unwrap())
-        .rust_edition(bindgen::RustEdition::Edition2021)
+        .rust_target(bindgen::RustTarget::stable(85, 0).unwrap())
+        .rust_edition(bindgen::RustEdition::Edition2024)
         .header("wrapper.h")
         .constified_enum_module(".*")
         .ctypes_prefix("::std::ffi")
@@ -45,10 +45,10 @@ pub fn write_bindings(include_paths: Vec<String>, out_path: &Path) {
 fn env_dir(var: &str) -> Option<PathBuf> {
     let dir = env::var_os(var).map(PathBuf::from);
 
-    if let Some(ref dir) = dir {
-        if !dir.exists() {
-            panic!("{} was set to {}, which doesn't exist.", var, dir.display());
-        }
+    if let Some(ref dir) = dir
+        && !dir.exists()
+    {
+        panic!("{} was set to {}, which doesn't exist.", var, dir.display());
     }
 
     dir
@@ -128,16 +128,14 @@ fn main() {
                 found = true;
             }
         }
-        if !found {
-            if let Some(ref home_dir) = home_dir {
-                let home_lib_dir = home_dir.join("lib");
-                let lib_path = home_lib_dir.join("gdal_i.lib");
-                if lib_path.exists() {
-                    prefer_static = true;
-                    lib_name = String::from("gdal_i");
-                    lib_dir = Some(home_lib_dir);
-                    found = true;
-                }
+        if !found && let Some(ref home_dir) = home_dir {
+            let home_lib_dir = home_dir.join("lib");
+            let lib_path = home_lib_dir.join("gdal_i.lib");
+            if lib_path.exists() {
+                prefer_static = true;
+                lib_name = String::from("gdal_i");
+                lib_dir = Some(home_lib_dir);
+                found = true;
             }
         }
         if !found {
@@ -145,12 +143,12 @@ fn main() {
             // works in windows-gnu
             if let Some(ref home_dir) = home_dir {
                 let bin_dir = home_dir.join("bin");
-                if bin_dir.exists() {
-                    if let Some(name) = find_gdal_dll(&bin_dir).unwrap() {
-                        prefer_static = false;
-                        lib_dir = Some(bin_dir);
-                        lib_name = name;
-                    }
+                if bin_dir.exists()
+                    && let Some(name) = find_gdal_dll(&bin_dir).unwrap()
+                {
+                    prefer_static = false;
+                    lib_dir = Some(bin_dir);
+                    lib_name = name;
                 }
             }
         }
@@ -202,7 +200,9 @@ fn main() {
         .probe("gdal");
 
     if !found && cfg!(target_env = "msvc") && gdal_pkg_config.is_err() {
-        panic!("windows-msvc requires gdal_i.lib to be present in either $GDAL_LIB_DIR or $GDAL_HOME\\lib.");
+        panic!(
+            "windows-msvc requires gdal_i.lib to be present in either $GDAL_LIB_DIR or $GDAL_HOME\\lib."
+        );
     }
 
     if let Ok(gdal) = &gdal_pkg_config {
@@ -212,10 +212,11 @@ fn main() {
         if version.is_none() {
             // development GDAL versions look like 3.7.2dev, which is not valid semver
             let mut version_string = gdal.version.trim().to_string();
-            if let Some(idx) = version_string.rfind(|c: char| c.is_ascii_digit()) {
-                if idx + 1 < version_string.len() && !version_string[idx + 1..].starts_with('-') {
-                    version_string.insert(idx + 1, '-');
-                }
+            if let Some(idx) = version_string.rfind(|c: char| c.is_ascii_digit())
+                && idx + 1 < version_string.len()
+                && !version_string[idx + 1..].starts_with('-')
+            {
+                version_string.insert(idx + 1, '-');
             }
 
             if let Ok(pkg_version) = Version::parse(&version_string) {
@@ -246,7 +247,9 @@ fn main() {
             // Special case output for this common error
             if matches!(pkg_config_err, pkg_config::Error::Command { cause, .. } if cause.kind() == std::io::ErrorKind::NotFound)
             {
-                panic!("Could not find `pkg-config` in your path. Please install it before building gdal-sys.");
+                panic!(
+                    "Could not find `pkg-config` in your path. Please install it before building gdal-sys."
+                );
             } else {
                 panic!("Error while running `pkg-config`: {pkg_config_err}");
             }
@@ -280,7 +283,10 @@ fn prebuilt_bindings_path(version: &Version) -> PathBuf {
     ));
 
     if !bindings_path.exists() {
-        panic!("No pre-built bindings available for GDAL version {}.{}. Enable the `bindgen` feature of the `gdal` or `gdal-sys` crate to generate them during build.", version.major, version.minor);
+        panic!(
+            "No pre-built bindings available for GDAL version {}.{}. Enable the `bindgen` feature of the `gdal` or `gdal-sys` crate to generate them during build.",
+            version.major, version.minor
+        );
     }
 
     bindings_path

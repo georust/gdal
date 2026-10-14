@@ -1,3 +1,4 @@
+use crate::DriverManager;
 use crate::dataset::Dataset;
 use crate::errors::Result;
 use crate::metadata::Metadata;
@@ -6,14 +7,13 @@ use crate::raster::{
     ByteBuffer, ColorEntry, ColorInterpretation, ColorTable, GdalDataType, RasterCreationOptions,
     StatisticsAll, StatisticsMinMax,
 };
-use crate::test_utils::{fixture, TempFixture};
+use crate::test_utils::{TempFixture, fixture};
 use crate::vsi::unlink_mem_file;
-use crate::DriverManager;
 use std::path::Path;
 use std::str::FromStr;
 
 #[cfg(feature = "ndarray")]
-use ndarray::{arr2, Array2, Axis};
+use ndarray::{Array2, Axis, arr2};
 
 #[test]
 fn test_open() {
@@ -585,8 +585,7 @@ fn test_rasterband_lifetime() {
 
     let overview = {
         let rasterband = dataset.rasterband(1).unwrap();
-        let overview = rasterband.overview(0).unwrap();
-        overview
+        rasterband.overview(0).unwrap()
     };
 
     assert!(overview.no_data_value().is_none());
@@ -664,7 +663,9 @@ fn test_rasterize() {
     let values = rb.read_as::<u8>((0, 0), (5, 5), (5, 5), None).unwrap();
     assert_eq!(
         values.data(),
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0,]
+        [
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0,
+        ]
     );
 }
 

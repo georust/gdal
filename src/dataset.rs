@@ -12,7 +12,7 @@ use crate::options::DatasetOptions;
 use crate::raster::RasterCreationOptions;
 use crate::utils::{_last_cpl_err, _last_null_pointer_err, _path_to_c_string, _string};
 use crate::{
-    gdal_major_object::MajorObject, spatial_ref::SpatialRef, Driver, GeoTransform, Metadata,
+    Driver, GeoTransform, Metadata, gdal_major_object::MajorObject, spatial_ref::SpatialRef,
 };
 
 pub struct DatasetCapability(&'static CStr);
@@ -360,9 +360,9 @@ impl Drop for Dataset {
 mod tests {
     use gdal_sys::GDALAccess;
 
+    use crate::GdalOpenFlags;
     use crate::dataset::DatasetCapability;
     use crate::test_utils::{fixture, open_gpkg_for_update};
-    use crate::GdalOpenFlags;
 
     use super::*;
 

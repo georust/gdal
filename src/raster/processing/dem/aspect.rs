@@ -1,6 +1,6 @@
 use std::num::NonZeroUsize;
 
-use super::options::{common_dem_options, CommonOptions};
+use super::options::{CommonOptions, common_dem_options};
 use crate::cpl::CslStringList;
 use crate::errors;
 use crate::raster::processing::dem::DemSlopeAlg;
@@ -68,13 +68,13 @@ impl AspectOptions {
 
 #[cfg(test)]
 mod tests {
+    use crate::Dataset;
     use crate::assert_near;
     use crate::cpl::CslStringList;
     use crate::errors::Result;
-    use crate::raster::processing::dem::aspect;
     use crate::raster::StatisticsAll;
-    use crate::test_utils::{fixture, InMemoryFixture};
-    use crate::Dataset;
+    use crate::raster::processing::dem::aspect;
+    use crate::test_utils::{InMemoryFixture, fixture};
 
     use super::*;
 

@@ -1,6 +1,6 @@
 use std::{
     convert::TryInto,
-    ffi::{c_char, c_double, c_int, c_longlong, CString, NulError},
+    ffi::{CString, NulError, c_char, c_double, c_int, c_longlong},
     ptr, slice,
 };
 
@@ -65,11 +65,7 @@ impl<'a> Feature<'a> {
     /// Returns the feature identifier, or `None` if none has been assigned.
     pub fn fid(&self) -> Option<u64> {
         let fid = unsafe { gdal_sys::OGR_F_GetFID(self.c_feature) };
-        if fid < 0 {
-            None
-        } else {
-            Some(fid as u64)
-        }
+        if fid < 0 { None } else { Some(fid as u64) }
     }
 
     /// Get the value of a field. If the field exists, it returns a [`FieldValue`] wrapper,
@@ -371,13 +367,13 @@ impl<'a> Feature<'a> {
                 second as u32,
             );
         match rv {
-            LocalResult::None => Err(
-                GdalError::DateError(format!("Unable to reconstruct valid date from fields: {year}, {month}, {day}, {hour}, {minute}, {second}"))
-            ),
+            LocalResult::None => Err(GdalError::DateError(format!(
+                "Unable to reconstruct valid date from fields: {year}, {month}, {day}, {hour}, {minute}, {second}"
+            ))),
             LocalResult::Single(d) => Ok(d),
-            LocalResult::Ambiguous(d1, d2) => Err(
-                GdalError::DateError(format!("ambiguous date conversion; either '{d1}' or '{d2}'"))
-            )
+            LocalResult::Ambiguous(d1, d2) => Err(GdalError::DateError(format!(
+                "ambiguous date conversion; either '{d1}' or '{d2}'"
+            ))),
         }
     }
 
@@ -547,8 +543,8 @@ impl<'a> Feature<'a> {
             FieldValue::Integer64ListValue(value) => {
                 self.set_field_integer64_list(field_idx, value)
             }
-            FieldValue::StringValue(ref value) => self.set_field_string(field_idx, value.as_str()),
-            FieldValue::StringListValue(ref value) => {
+            FieldValue::StringValue(value) => self.set_field_string(field_idx, value.as_str()),
+            FieldValue::StringListValue(value) => {
                 let strs = value.iter().map(String::as_str).collect::<Vec<&str>>();
                 self.set_field_string_list(field_idx, &strs)
             }
@@ -881,8 +877,8 @@ pub fn field_type_to_name(ty: OGRFieldType::Type) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::test_utils::fixture;
     use crate::Dataset;
+    use crate::test_utils::fixture;
 
     #[test]
     fn test_field_type_to_name() {

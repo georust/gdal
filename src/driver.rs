@@ -1,4 +1,4 @@
-use std::ffi::{c_int, CString};
+use std::ffi::{CString, c_int};
 use std::path::Path;
 use std::sync::Once;
 
@@ -509,21 +509,21 @@ impl DriverManager {
                 }
             })
             .filter(move |d| {
-                if let Some(e) = &d.metadata_item("DMD_EXTENSION", "") {
-                    if *e == ext {
-                        return true;
-                    }
+                if let Some(e) = &d.metadata_item("DMD_EXTENSION", "")
+                    && *e == ext
+                {
+                    return true;
                 }
-                if let Some(e) = d.metadata_item("DMD_EXTENSIONS", "") {
-                    if e.split(' ').any(|s| s == ext) {
-                        return true;
-                    }
+                if let Some(e) = d.metadata_item("DMD_EXTENSIONS", "")
+                    && e.split(' ').any(|s| s == ext)
+                {
+                    return true;
                 }
 
-                if let Some(pre) = d.metadata_item("DMD_CONNECTION_PREFIX", "") {
-                    if path_lower.starts_with(&pre.to_ascii_lowercase()) {
-                        return true;
-                    }
+                if let Some(pre) = d.metadata_item("DMD_CONNECTION_PREFIX", "")
+                    && path_lower.starts_with(&pre.to_ascii_lowercase())
+                {
+                    return true;
                 }
                 false
             })

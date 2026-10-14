@@ -1,4 +1,4 @@
-use std::ffi::{c_int, c_void, CString};
+use std::ffi::{CString, c_int, c_void};
 use std::fmt::{Debug, Display, Formatter};
 use std::marker::PhantomData;
 use std::str::FromStr;
@@ -15,10 +15,10 @@ use crate::dataset::Dataset;
 use crate::errors::*;
 use crate::gdal_major_object::MajorObject;
 use crate::metadata::Metadata;
-use crate::raster::buffer::Buffer;
 use crate::raster::ResampleAlg::{
     Average, Bilinear, Cubic, CubicSpline, Gauss, Lanczos, Mode, NearestNeighbour,
 };
+use crate::raster::buffer::Buffer;
 use crate::raster::{GdalDataType, GdalType};
 use crate::utils::{_last_cpl_err, _last_null_pointer_err, _string};
 

@@ -2,8 +2,8 @@ use std::num::NonZeroUsize;
 
 use crate::cpl::CslStringList;
 use crate::errors;
-use crate::raster::processing::dem::options::common_dem_options;
 use crate::raster::processing::dem::DemSlopeAlg;
+use crate::raster::processing::dem::options::common_dem_options;
 
 use super::options::CommonOptions;
 
@@ -157,13 +157,13 @@ impl ShadingMode {
 
 #[cfg(test)]
 mod tests {
+    use crate::Dataset;
     use crate::assert_near;
     use crate::cpl::CslStringList;
     use crate::errors::Result;
-    use crate::raster::processing::dem::hillshade;
     use crate::raster::StatisticsAll;
-    use crate::test_utils::{fixture, InMemoryFixture};
-    use crate::Dataset;
+    use crate::raster::processing::dem::hillshade;
+    use crate::test_utils::{InMemoryFixture, fixture};
 
     use super::*;
 

@@ -167,7 +167,7 @@ pub fn rasterize(
         .collect();
     let burn_values: Vec<f64> = burn_values
         .iter()
-        .flat_map(|burn| std::iter::repeat(burn).take(bands.len()))
+        .flat_map(|burn| std::iter::repeat_n(burn, bands.len()))
         .copied()
         .collect();
 

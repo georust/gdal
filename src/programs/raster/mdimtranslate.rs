@@ -1,6 +1,6 @@
 use std::{
     borrow::Borrow,
-    ffi::{c_char, c_int, CString},
+    ffi::{CString, c_char, c_int},
     mem::ManuallyDrop,
     path::{Path, PathBuf},
     ptr::{null, null_mut},
@@ -9,9 +9,9 @@ use std::{
 use gdal_sys::{GDALMultiDimTranslate, GDALMultiDimTranslateOptions};
 
 use crate::{
+    Dataset,
     errors::*,
     utils::{_last_null_pointer_err, _path_to_c_string},
-    Dataset,
 };
 
 /// Wraps a [GDALMultiDimTranslateOptions] object.

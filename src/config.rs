@@ -23,7 +23,7 @@
 //! Refer to [GDAL `ConfigOptions`](https://trac.osgeo.org/gdal/wiki/ConfigOptions) for
 //! a full list of options.
 
-use std::ffi::{c_char, c_void, CString};
+use std::ffi::{CString, c_char, c_void};
 use std::sync::{LazyLock, Mutex};
 
 use gdal_sys::{CPLErr, CPLErrorNum, CPLGetErrorHandlerUserData};
@@ -145,8 +145,9 @@ where
         let error_type: CplErrType = error_type.into();
 
         // reconstruct callback from user data pointer
-        let callback_raw = CPLGetErrorHandlerUserData();
-        let callback: &mut Box<ErrorCallbackType> = &mut *(callback_raw as *mut Box<_>);
+        let callback_raw = unsafe { CPLGetErrorHandlerUserData() };
+        let callback: &mut Box<ErrorCallbackType> =
+            unsafe { &mut *(callback_raw as *mut Box<ErrorCallbackType>) };
 
         callback(error_type, error_num, &error_msg);
     }

@@ -1,4 +1,4 @@
-use std::ffi::{c_int, CString};
+use std::ffi::{CString, c_int};
 
 use gdal_sys::{
     OGRFeatureDefnH, OGRFieldDefnH, OGRFieldType, OGRGeomFieldDefnH, OGRwkbGeometryType,

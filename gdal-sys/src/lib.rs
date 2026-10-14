@@ -2,6 +2,7 @@
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 #![allow(unnecessary_transmutes)]
+#![allow(clippy::manual_div_ceil)]
 #![allow(clippy::ptr_offset_with_cast)]
 #![allow(clippy::missing_safety_doc)]
 #![allow(clippy::upper_case_acronyms)]

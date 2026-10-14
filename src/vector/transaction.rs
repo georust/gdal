@@ -1,5 +1,5 @@
-use crate::errors::{GdalError, Result};
 use crate::Dataset;
+use crate::errors::{GdalError, Result};
 use gdal_sys::OGRErr;
 use std::ops::{Deref, DerefMut};
 
@@ -181,9 +181,9 @@ impl Dataset {
 
 #[cfg(test)]
 mod tests {
+    use crate::Dataset;
     use crate::test_utils::{fixture, open_gpkg_for_update};
     use crate::vector::{Geometry, LayerAccess};
-    use crate::Dataset;
 
     fn polygon() -> Geometry {
         Geometry::from_wkt("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))").unwrap()
