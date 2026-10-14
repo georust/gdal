@@ -138,8 +138,8 @@ pub trait Metadata: MajorObject {
     /// # }
     /// ```
     fn metadata_item(&self, key: &str, domain: &str) -> Option<String> {
-        if let Ok(c_key) = CString::new(key.to_owned()) {
-            if let Ok(c_domain) = CString::new(domain.to_owned()) {
+        if let Ok(c_key) = CString::new(key.to_owned())
+            && let Ok(c_domain) = CString::new(domain.to_owned()) {
                 let c_res = unsafe {
                     gdal_sys::GDALGetMetadataItem(
                         self.gdal_object_ptr(),
@@ -149,7 +149,6 @@ pub trait Metadata: MajorObject {
                 };
                 return _string(c_res);
             }
-        }
         None
     }
 
