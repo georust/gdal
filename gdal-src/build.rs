@@ -46,6 +46,8 @@ fn main() {
     if cfg!(feature = "nobuild") {
         return;
     }
+    let is_msvc = std::env::var("CARGO_CFG_TARGET_ENV").as_deref() == Ok("msvc");
+
     // gdal doesn't like non clean builds so we remove any artifact from an older build
     // https://github.com/OSGeo/gdal/issues/10125
     // This hopefully does not break all the caching as we don't rerun the build script
@@ -87,7 +89,10 @@ fn main() {
         .define("GDAL_FIND_PACKAGE_PROJ_MODE", "MODULE")
         .define("PROJ_INCLUDE_DIR", print_path(&proj_include))
         .define("PROJ_LIBRARY", print_path(&proj_library))
-        .define("ACCEPT_MISSING_LINUX_FS_HEADER", "ON");
+        .define("ACCEPT_MISSING_LINUX_FS_HEADER", "ON")
+        // these are not needed for the bundled build
+        .define("CMAKE_DISABLE_FIND_PACKAGE_Python", "ON")
+        .define("CMAKE_DISABLE_FIND_PACKAGE_SWIG", "ON");
     // enable the gpkg driver
 
     // simple drivers without external dependencies
@@ -322,7 +327,7 @@ fn main() {
         config.define("GEOS_LIBRARY", print_path(&lib_path));
     }
 
-    if cfg!(target_env = "msvc") {
+    if is_msvc {
         // otherwise there are linking issues
         // because rust always links the
         // MSVC release runtime
@@ -331,10 +336,10 @@ fn main() {
         // https://github.com/OSGeo/PROJ/commit/6e9b324ab7bf5909df7e68409e060282db14fa54#diff-af8fe2f9d33a9c3408ff7683bfebd1e2334b4506f559add92406be3e150268fb
         config.cxxflag("-DPROJ_DLL=");
         // that windows library is somehow required
-        println!("cargo:rustc-link-lib=Wbemuuid");
+        println!("cargo:rustc-link-lib=wbemuuid");
         // proj uses these two on Windows
-        println!("cargo:rustc-link-lib=Ole32");
-        println!("cargo:rustc-link-lib=Shell32");
+        println!("cargo:rustc-link-lib=ole32");
+        println!("cargo:rustc-link-lib=shell32");
     }
 
     let res = config.build();
