@@ -517,11 +517,8 @@ impl<'a> Feature<'a> {
         let hour = value.hour() as c_int;
         let minute = value.minute() as c_int;
         let second = value.second() as c_int;
-        let tzflag: c_int = if value.offset().local_minus_utc() == 0 {
-            0
-        } else {
-            100 + (value.offset().local_minus_utc() / (15 * 60))
-        };
+        // OGR uses 100 for UTC and 100 + offset in 15 minute steps otherwise (0 means unknown)
+        let tzflag: c_int = 100 + (value.offset().local_minus_utc() / (15 * 60));
 
         unsafe {
             gdal_sys::OGR_F_SetFieldDateTime(
@@ -900,6 +897,43 @@ mod tests {
         let highway_idx = feature.field_index("highway").unwrap();
         feature.set_field_null(highway_idx).unwrap();
         assert!(feature.field(highway_idx).unwrap().is_none());
+    }
+
+    #[test]
+    fn test_set_field_datetime_tzflag() {
+        let ds = Dataset::open(fixture("points_with_datetime.json")).unwrap();
+
+        let mut layer = ds.layers().next().expect("layer");
+        let mut feature = layer.features().next().expect("feature");
+        let dt_idx = feature.field_index("dt").unwrap();
+
+        // (UTC offset in seconds, OGR timezone flag)
+        for (offset_secs, expected) in [(0, 100), (2 * 3600, 108), (-5 * 3600, 80)] {
+            let value = FixedOffset::east_opt(offset_secs)
+                .unwrap()
+                .with_ymd_and_hms(2011, 7, 14, 19, 43, 37)
+                .unwrap();
+            feature.set_field_datetime(dt_idx, value).unwrap();
+
+            let (mut year, mut month, mut day, mut hour, mut minute, mut second) =
+                (0, 0, 0, 0, 0, 0);
+            let mut tzflag: c_int = 0;
+            unsafe {
+                gdal_sys::OGR_F_GetFieldAsDateTime(
+                    feature.c_feature(),
+                    dt_idx as c_int,
+                    &mut year,
+                    &mut month,
+                    &mut day,
+                    &mut hour,
+                    &mut minute,
+                    &mut second,
+                    &mut tzflag,
+                );
+            }
+            assert_eq!(tzflag, expected);
+            assert_eq!(feature.field_as_datetime(dt_idx).unwrap(), Some(value));
+        }
     }
 
     #[test]

@@ -13,6 +13,10 @@
   - Bump bundled GDAL to 3.13 ([#724](https://github.com/georust/gdal/pull/724))
   - Add bindings for VRT APIs to gdal-sys ([#706](https://github.com/georust/gdal/pull/706))
 
+### Fixed
+
+  - `Feature::set_field_datetime` now stores UTC values as UTC instead of an unknown timezone ([#732](https://github.com/georust/gdal/issues/732))
+
 ## 0.19
 
 ### Breaking
