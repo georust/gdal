@@ -80,8 +80,9 @@ pub use mdarray::{
     Attribute, Dimension, ExtendedDataType, ExtendedDataTypeClass, Group, MDArray, MdStatisticsAll,
 };
 pub use rasterband::{
-    CmykEntry, ColorEntry, ColorInterpretation, ColorTable, GrayEntry, Histogram, HlsEntry,
-    PaletteInterpretation, RasterBand, ResampleAlg, RgbaEntry, StatisticsAll, StatisticsMinMax,
+    CmykEntry, ColorEntry, ColorInterpretation, ColorTable, FloatingPointWindow, GrayEntry,
+    Histogram, HlsEntry, PaletteInterpretation, RasterBand, RasterIOOptions, ResampleAlg,
+    RgbaEntry, StatisticsAll, StatisticsMinMax,
 };
 pub use rasterize::{rasterize, BurnSource, MergeAlgorithm, OptimizeMode, RasterizeOptions};
 pub use types::{AdjustedValue, GdalDataType, GdalType};
