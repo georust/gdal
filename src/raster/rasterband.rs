@@ -1,6 +1,7 @@
 use std::ffi::{c_int, c_void, CString};
 use std::fmt::{Debug, Display, Formatter};
 use std::marker::PhantomData;
+use std::num::NonZeroUsize;
 use std::str::FromStr;
 
 use gdal_sys::{
@@ -297,6 +298,125 @@ impl From<RasterIOExtraArg> for GDALRasterIOExtraArg {
     }
 }
 
+/// A read window with sub-pixel precision, in pixels of the band.
+///
+/// GDAL samples the source pixels from this window instead of the integer window of a read, e.g.
+/// the pixel under the center of every buffer pixel for [`ResampleAlg::NearestNeighbour`].
+/// The integer window of the read must still be given, see [`FloatingPointWindow::integer_window`].
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct FloatingPointWindow {
+    x_off: f64,
+    y_off: f64,
+    x_size: f64,
+    y_size: f64,
+}
+
+impl FloatingPointWindow {
+    /// Creates a window from its offset to the top left corner (`x_off` in pixels, `y_off` in
+    /// lines) and its size (`x_size` in pixels, `y_size` in lines).
+    ///
+    /// Returns `Err(GdalError::BadArgument)` unless all values are finite, the offsets are not
+    /// negative and the sizes are positive. Whether the window lies inside the band is checked by
+    /// GDAL when reading.
+    pub fn new(x_off: f64, y_off: f64, x_size: f64, y_size: f64) -> Result<Self> {
+        let valid_offset = |value: f64| value.is_finite() && value >= 0.0;
+        let valid_size = |value: f64| value.is_finite() && value > 0.0;
+        if !(valid_offset(x_off) && valid_offset(y_off) && valid_size(x_size) && valid_size(y_size))
+        {
+            return Err(GdalError::BadArgument(format!(
+                "invalid floating-point window: offset ({x_off}, {y_off}), size ({x_size}, {y_size})"
+            )));
+        }
+        Ok(Self {
+            x_off,
+            y_off,
+            x_size,
+            y_size,
+        })
+    }
+
+    /// Pixel offset to the top left corner.
+    pub fn x_off(&self) -> f64 {
+        self.x_off
+    }
+
+    /// Line offset to the top left corner.
+    pub fn y_off(&self) -> f64 {
+        self.y_off
+    }
+
+    /// Width in pixels.
+    pub fn x_size(&self) -> f64 {
+        self.x_size
+    }
+
+    /// Height in lines.
+    pub fn y_size(&self) -> f64 {
+        self.y_size
+    }
+
+    /// The integer window of a read with this floating-point window, as `(window, window_size)`.
+    ///
+    /// GDAL requires `x_off - window.0 < 1` and `window_size.0 - x_size < 1` (and the same for
+    /// `y`), see `GDALRasterIOExtraArg`. This method computes the window as GDAL does itself for
+    /// the sources of VRT datasets: the offset is rounded down and the size is rounded to the
+    /// nearest integer, but is at least 1.
+    pub fn integer_window(&self) -> ((isize, isize), (NonZeroUsize, NonZeroUsize)) {
+        let size = |size: f64| {
+            NonZeroUsize::new((size + 0.5).floor() as usize).unwrap_or(NonZeroUsize::MIN)
+        };
+        (
+            (self.x_off.floor() as isize, self.y_off.floor() as isize),
+            (size(self.x_size), size(self.y_size)),
+        )
+    }
+}
+
+/// Options for reading raster data.
+///
+/// For documentation, see `gdal_sys::GDALRasterIOExtraArg`.
+#[derive(Debug, Copy, Clone, PartialEq, Default)]
+#[non_exhaustive]
+pub struct RasterIOOptions {
+    /// The resample algorithm used for the interpolation. Default: `NearestNeighbor`.
+    pub resample_alg: Option<ResampleAlg>,
+    /// The window to sample the source pixels from, if it does not lie on whole pixels.
+    pub floating_point_window: Option<FloatingPointWindow>,
+}
+
+impl RasterIOOptions {
+    /// Sets the resample algorithm used for the interpolation.
+    pub fn with_resample_alg(mut self, resample_alg: ResampleAlg) -> Self {
+        self.resample_alg = Some(resample_alg);
+        self
+    }
+
+    /// Sets the window to sample the source pixels from.
+    pub fn with_floating_point_window(mut self, window: FloatingPointWindow) -> Self {
+        self.floating_point_window = Some(window);
+        self
+    }
+}
+
+impl From<&RasterIOOptions> for GDALRasterIOExtraArg {
+    fn from(options: &RasterIOOptions) -> Self {
+        let mut arg = RasterIOExtraArg {
+            e_resample_alg: options
+                .resample_alg
+                .unwrap_or(ResampleAlg::NearestNeighbour),
+            ..Default::default()
+        };
+        if let Some(window) = options.floating_point_window {
+            arg.b_floating_point_window_validity = 1;
+            arg.df_x_off = window.x_off;
+            arg.df_y_off = window.y_off;
+            arg.df_x_size = window.x_size;
+            arg.df_y_size = window.y_size;
+        }
+        arg.into()
+    }
+}
+
 /// Represents a single band of a dataset.
 ///
 /// This object carries the lifetime of the dataset that
@@ -395,18 +515,62 @@ impl<'a> RasterBand<'a> {
         buffer: &mut [T],
         e_resample_alg: Option<ResampleAlg>,
     ) -> Result<()> {
+        let options = RasterIOOptions {
+            resample_alg: e_resample_alg,
+            ..Default::default()
+        };
+        self.read_into_slice_with_options(window, window_size, size, buffer, &options)
+    }
+
+    /// Read data from this band into a slice, where `T` implements [`GdalType`], with further
+    /// [`RasterIOOptions`].
+    ///
+    /// # Arguments
+    /// * `window` - the window position from top left
+    /// * `window_size` - the window size (GDAL will interpolate data if window_size != buffer_size)
+    /// * `size` - the desired size to read
+    /// * `buffer` - a slice to hold the data (length must equal product of size parameter)
+    /// * `options` - the resample algorithm and the floating-point window. If there is a
+    ///   floating-point window, `window` and `window_size` must match it, see
+    ///   [`FloatingPointWindow::integer_window`].
+    ///
+    /// # Example
+    ///
+    /// ```rust, no_run
+    /// # fn main() -> gdal::errors::Result<()> {
+    /// use gdal::Dataset;
+    /// use gdal::raster::{FloatingPointWindow, RasterIOOptions};
+    /// let dataset = Dataset::open("fixtures/m_3607824_se_17_1_20160620_sub.tif")?;
+    /// let band1 = dataset.rasterband(1)?;
+    /// // two and a half pixels from the left, sampled into a buffer of 5 pixels
+    /// let window = FloatingPointWindow::new(10.0, 20.0, 2.5, 1.0)?;
+    /// let (offset, (width, height)) = window.integer_window();
+    /// let options = RasterIOOptions::default().with_floating_point_window(window);
+    /// let mut buf = vec![0u8; 5];
+    /// band1.read_into_slice_with_options::<u8>(
+    ///     offset,
+    ///     (width.get(), height.get()),
+    ///     (5, 1),
+    ///     &mut buf,
+    ///     &options,
+    /// )?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub fn read_into_slice_with_options<T: Copy + GdalType>(
+        &self,
+        window: (isize, isize),
+        window_size: (usize, usize),
+        size: (usize, usize),
+        buffer: &mut [T],
+        options: &RasterIOOptions,
+    ) -> Result<()> {
         let pixels = size.0 * size.1;
         if buffer.len() != pixels {
             return Err(GdalError::BufferSizeMismatch(buffer.len(), size));
         }
 
-        let resample_alg = e_resample_alg.unwrap_or(ResampleAlg::NearestNeighbour);
-
-        let mut options: GDALRasterIOExtraArg = RasterIOExtraArg {
-            e_resample_alg: resample_alg,
-            ..Default::default()
-        }
-        .into();
+        let mut options: GDALRasterIOExtraArg = options.into();
 
         let options_ptr: *mut GDALRasterIOExtraArg = &mut options;
 
@@ -465,16 +629,57 @@ impl<'a> RasterBand<'a> {
         shape: (usize, usize),
         e_resample_alg: Option<ResampleAlg>,
     ) -> Result<Buffer<T>> {
+        let options = RasterIOOptions {
+            resample_alg: e_resample_alg,
+            ..Default::default()
+        };
+        self.read_as_with_options(window, window_size, shape, &options)
+    }
+
+    /// Read a [`Buffer<T>`] from this band, where `T` implements [`GdalType`], with further
+    /// [`RasterIOOptions`].
+    ///
+    /// # Arguments
+    /// * `window` - the window position from top left
+    /// * `window_size` - the window size (GDAL will interpolate data if `window_size` != `buffer_size`)
+    /// * `buffer_size` - the desired size of the 'Buffer'
+    /// * `options` - the resample algorithm and the floating-point window. If there is a
+    ///   floating-point window, `window` and `window_size` must match it, see
+    ///   [`FloatingPointWindow::integer_window`].
+    ///
+    /// # Example
+    ///
+    /// ```rust, no_run
+    /// # fn main() -> gdal::errors::Result<()> {
+    /// use gdal::Dataset;
+    /// use gdal::raster::{FloatingPointWindow, RasterIOOptions};
+    /// let dataset = Dataset::open("fixtures/m_3607824_se_17_1_20160620_sub.tif")?;
+    /// let band1 = dataset.rasterband(1)?;
+    /// // two and a half pixels from the left, sampled into a buffer of 5 pixels
+    /// let window = FloatingPointWindow::new(10.0, 20.0, 2.5, 1.0)?;
+    /// let (offset, (width, height)) = window.integer_window();
+    /// let options = RasterIOOptions::default().with_floating_point_window(window);
+    /// let buf = band1.read_as_with_options::<u8>(
+    ///     offset,
+    ///     (width.get(), height.get()),
+    ///     (5, 1),
+    ///     &options,
+    /// )?;
+    /// assert_eq!(buf.shape(), (5, 1));
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub fn read_as_with_options<T: Copy + GdalType>(
+        &self,
+        window: (isize, isize),
+        window_size: (usize, usize),
+        shape: (usize, usize),
+        options: &RasterIOOptions,
+    ) -> Result<Buffer<T>> {
         let pixels = shape.0 * shape.1;
         let mut data: Vec<T> = Vec::with_capacity(pixels);
 
-        let resample_alg = e_resample_alg.unwrap_or(ResampleAlg::NearestNeighbour);
-
-        let mut options: GDALRasterIOExtraArg = RasterIOExtraArg {
-            e_resample_alg: resample_alg,
-            ..Default::default()
-        }
-        .into();
+        let mut options: GDALRasterIOExtraArg = options.into();
 
         let options_ptr: *mut GDALRasterIOExtraArg = &mut options;
 

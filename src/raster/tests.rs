@@ -1,10 +1,10 @@
 use crate::dataset::Dataset;
-use crate::errors::Result;
+use crate::errors::{GdalError, Result};
 use crate::metadata::Metadata;
 use crate::raster::rasterband::ResampleAlg;
 use crate::raster::{
-    ByteBuffer, ColorEntry, ColorInterpretation, ColorTable, GdalDataType, RasterCreationOptions,
-    StatisticsAll, StatisticsMinMax,
+    ByteBuffer, ColorEntry, ColorInterpretation, ColorTable, FloatingPointWindow, GdalDataType,
+    RasterCreationOptions, RasterIOOptions, StatisticsAll, StatisticsMinMax,
 };
 use crate::test_utils::{fixture, TempFixture};
 use crate::vsi::unlink_mem_file;
@@ -62,6 +62,82 @@ fn test_read_raster() {
     rb.read_into_slice((20, 30), (2, 3), (2, 3), buf.data_mut(), None)
         .unwrap();
     assert_eq!(buf.data(), vec!(7, 7, 7, 10, 8, 12));
+}
+
+#[test]
+fn test_read_raster_with_floating_point_window() {
+    let dataset = Dataset::open(fixture("tinymarble.tif")).unwrap();
+    let rb = dataset.rasterband(1).unwrap();
+    let read = |window: FloatingPointWindow| {
+        let (offset, (width, height)) = window.integer_window();
+        let size = (width.get(), height.get());
+        let options = RasterIOOptions::default().with_floating_point_window(window);
+        let rv = rb
+            .read_as_with_options::<u8>(offset, size, (2, 3), &options)
+            .unwrap();
+
+        let mut buf = vec![0; 6];
+        rb.read_into_slice_with_options(offset, size, (2, 3), &mut buf, &options)
+            .unwrap();
+        assert_eq!(rv.data(), buf);
+        rv
+    };
+
+    // a window on whole pixels reads the same as without a floating-point window
+    let aligned = read(FloatingPointWindow::new(20.0, 30.0, 2.0, 3.0).unwrap());
+    assert_eq!(aligned.data(), vec!(7, 7, 7, 10, 8, 12));
+
+    // the nearest neighbour of the buffer pixels' centers 21.25, 22.25 and 31.25, 32.25, 33.25
+    let shifted = read(FloatingPointWindow::new(20.75, 30.75, 2.0, 3.0).unwrap());
+    let expected = rb.read_as::<u8>((21, 31), (2, 3), (2, 3), None).unwrap();
+    assert_eq!(shifted.data(), expected.data());
+    assert_ne!(
+        shifted.data(),
+        aligned.data(),
+        "the window must shift the pixels"
+    );
+}
+
+#[test]
+fn test_floating_point_window_integer_window() {
+    let integer_window = |window: FloatingPointWindow| {
+        let (offset, (width, height)) = window.integer_window();
+        (offset, (width.get(), height.get()))
+    };
+    assert_eq!(
+        integer_window(FloatingPointWindow::new(20.75, 30.75, 2.0, 3.0).unwrap()),
+        ((20, 30), (2, 3))
+    );
+    assert_eq!(
+        integer_window(FloatingPointWindow::new(10.0, 20.0, 2.5, 1.4).unwrap()),
+        ((10, 20), (3, 1))
+    );
+    // never empty
+    assert_eq!(
+        integer_window(FloatingPointWindow::new(0.2, 0.2, 0.3, 0.3).unwrap()),
+        ((0, 0), (1, 1))
+    );
+}
+
+#[test]
+fn test_floating_point_window_rejects_invalid_values() {
+    for (x_off, y_off, x_size, y_size) in [
+        (f64::NAN, 0.0, 1.0, 1.0),
+        (0.0, f64::INFINITY, 1.0, 1.0),
+        (-0.5, 0.0, 1.0, 1.0),
+        (0.0, 0.0, 0.0, 1.0),
+        (0.0, 0.0, 1.0, -1.0),
+        (0.0, 0.0, f64::NAN, 1.0),
+        (0.0, 0.0, 1.0, f64::INFINITY),
+    ] {
+        assert!(
+            matches!(
+                FloatingPointWindow::new(x_off, y_off, x_size, y_size),
+                Err(GdalError::BadArgument(_))
+            ),
+            "({x_off}, {y_off}, {x_size}, {y_size}) must be rejected"
+        );
+    }
 }
 
 #[test]

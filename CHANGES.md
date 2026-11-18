@@ -12,6 +12,7 @@
   - Add pre-built bindings for GDAL 3.13 ([#723](https://github.com/georust/gdal/pull/723))
   - Bump bundled GDAL to 3.13 ([#724](https://github.com/georust/gdal/pull/724))
   - Add bindings for VRT APIs to gdal-sys ([#706](https://github.com/georust/gdal/pull/706))
+  - Add `RasterIOOptions` and `FloatingPointWindow` to read rasters with sub-pixel precision (`RasterBand::read_as_with_options`, `RasterBand::read_into_slice_with_options`) ([#738](https://github.com/georust/gdal/pull/738))
 
 ## 0.19
 
