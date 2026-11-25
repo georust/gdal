@@ -13,6 +13,10 @@
   - Bump bundled GDAL to 3.13 ([#724](https://github.com/georust/gdal/pull/724))
   - Add bindings for VRT APIs to gdal-sys ([#706](https://github.com/georust/gdal/pull/706))
 
+### Fixed
+
+  - Let a bundled GDAL resolve alongside `rusqlite` newer than 0.37: `gdal-src` depends on `proj-sys` 0.28 (bundled PROJ 9.9, MSRV 1.88) and allows any 0.x of `libsqlite3-sys` from 0.28 ([#741](https://github.com/georust/gdal/pull/741))
+
 ## 0.19
 
 ### Breaking
